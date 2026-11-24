@@ -395,6 +395,57 @@ public sealed class FilesNativeBrowserMutationTests
     }
 
     [AvaloniaFact]
+    public async Task Row_menu_targets_the_invoking_row_and_refuses_a_retargeted_selection()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var first = await CreateReviewedFolder(h, h.Parent.Value, "First", token);
+        var second = await CreateReviewedFolder(h, h.Parent.Value, "Second", token);
+        await using var view = new FilesNativeBrowserSurface(h.Browser, null, h.Workspace.Actor,
+            new Readiness(), CancellationToken.None);
+        var window = new Window { Width = 900, Height = 700 };
+        window.Template = new Avalonia.Controls.Templates.FuncControlTemplate<Window>((_, names) =>
+        {
+            var layers = new Avalonia.Controls.Primitives.VisualLayerManager { Child = view };
+            names.Register("PART_VisualLayerManager", layers);
+            return layers;
+        });
+        window.Show();
+        try
+        {
+            await view.InitializeAsync(token);
+            await view.OpenOriginalLocationAsync(h.Workspace.Configuration.StoreId, h.Parent.Value, token);
+            window.UpdateLayout();
+            var list = Assert.Single(view.GetVisualDescendants().OfType<ListBox>());
+            var firstRow = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == first);
+            var secondRow = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == second);
+            var secondContainer = Assert.IsType<ListBoxItem>(list.ContainerFromItem(secondRow));
+            var menu = Assert.IsType<ContextMenu>(secondContainer.ContextMenu);
+            var cut = Assert.Single(menu.Items.OfType<MenuItem>(), item => Equals(item.Header, "Cut"));
+
+            list.SelectedItem = firstRow;
+            secondContainer.RaiseEvent(new ContextRequestedEventArgs());
+            Assert.True(menu.IsOpen);
+            Assert.Same(secondRow, list.SelectedItem);
+            list.SelectedItem = firstRow;
+            list.SelectedItem = secondRow; // Returning to the original row does not revive a stale menu.
+            cut.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            Assert.False(view.IsActionAvailable("9to1.Files.CancelMove"));
+            menu.Close();
+
+            secondContainer.RaiseEvent(new ContextRequestedEventArgs());
+            Assert.True(menu.IsOpen);
+            Assert.True(cut.IsEnabled);
+            cut.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            await AwaitNativeRoleStateAsync(window, () => view.IsActionAvailable("9to1.Files.CancelMove") == true, token);
+            Assert.True(view.TryGetValue("MoveSelection", out var clipboard));
+            Assert.Contains("Second", Assert.IsType<string>(clipboard));
+            Assert.Equal(h.Parent, (await h.Workspace.Provider.GetAsync(second, token)).Value!.ParentId);
+        }
+        finally { await view.CloseAndDrainAsync(); window.Close(); }
+    }
+
+    [AvaloniaFact]
     public async Task Failed_Paste_keeps_the_original_Cut_until_its_reviewed_move_commits()
     {
         var token = TestContext.Current.CancellationToken;

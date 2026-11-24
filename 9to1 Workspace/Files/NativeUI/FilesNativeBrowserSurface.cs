@@ -29,6 +29,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     private readonly SemaphoreSlim _operations = new(1, 1);
     private readonly List<(Guid? ID, string Title, bool IsTrash)> _history = [(null, "Files", false)];
     private readonly ListBox _items = new();
+    private long _selectionEpoch;
     private readonly TextBox _search = new() { PlaceholderText = "Search this folder", Width = 280, MaxLength = 256 };
     private readonly TextBox _editName = new() { PlaceholderText = "Folder or item name", Width = 280, MaxLength = 255 };
     private readonly string _mutationSession = Guid.NewGuid().ToString("N");
@@ -96,6 +97,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         SizeChanged += (_, _) => Changed();
         _items.SelectionChanged += (_, _) =>
         {
+            _selectionEpoch++;
             if (!OriginalAlive()) { Changed(); return; }
             RunOriginalNativeMutation(() => { ClearOriginalTextPreview(); SharingSelectionChanged(); Changed(); });
         };
@@ -119,7 +121,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         _items.ContainerPrepared += (_, e) =>
         {
             if (e.Container is Control container && container.ContextMenu is null)
-                container.ContextMenu = BuildRowContextMenu();
+                container.ContextMenu = BuildRowContextMenu(container);
         };
         _items.KeyDown += async (_, args) =>
         { if (args.Key == Key.Enter) { args.Handled = true; await InvokeFromNativeEventAsync("9to1.Files.Open"); } };
@@ -374,7 +376,8 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
 
     private async Task InvokeFromNativeEventAsync(string command)
     {
-        try { await InvokeAsync(command, _lifetime.Token); }
+        if (IsActionAvailable(command) != true) return;
+        try { await DispatchAsync(command, null, _lifetime.Token); }
         catch (Exception)
         {
             // The exact original operation and any UI cleanup fault remain retained by the owner.
@@ -846,17 +849,33 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     private static readonly string[][] RowContextMenuCommands = [["Open", "9to1.Files.Open"], ["Preview", "9to1.Files.Preview"],
         ["Rename", "9to1.Files.Rename"], ["Cut", "9to1.Files.ChooseMove"], ["Move to Trash", "9to1.Files.Delete"], ["Restore", "9to1.Files.Restore"],
         ["Manage access", "9to1.Files.Share.Get"], ["Technical details", "9to1.Files.TechnicalDetails"]];
-    private ContextMenu BuildRowContextMenu()
+    private ContextMenu BuildRowContextMenu(Control container)
     {
         var context = new ContextMenu();
+        (FilesNativeBrowserPage Page, HostedItemMetadata Row, long SelectionEpoch)? captured = null;
         foreach (var (label, command) in RowContextMenuCommands.Select(row => (row[0], row[1])))
         {
             var menuItem = new MenuItem { Header = label };
-            menuItem.Click += async (_, _) => await InvokeFromNativeEventAsync(command);
+            menuItem.Click += async (_, _) =>
+            {
+                if (captured is not { } target || !context.IsOpen || !OriginalAlive() ||
+                    target.SelectionEpoch != _selectionEpoch || !ReferenceEquals(_page, target.Page) ||
+                    !ReferenceEquals(_items.ItemFromContainer(container), target.Row) ||
+                    !ReferenceEquals(_items.SelectedItem, target.Row) || IsActionAvailable(command) != true)
+                    return;
+                captured = null; // A menu invocation may address its original row only once.
+                await InvokeFromNativeEventAsync(command);
+            };
             context.Items.Add(menuItem);
         }
-        context.Opening += (_, _) =>
+        context.Opening += (_, args) =>
         {
+            captured = null;
+            if (!Available || _page is not { } page || _items.ItemFromContainer(container) is not HostedItemMetadata row ||
+                !page.Items.Any(item => ReferenceEquals(item, row)))
+            { args.Cancel = true; return; }
+            RunOriginalNativeMutation(() => _items.SelectedItem = row);
+            captured = (page, row, _selectionEpoch);
             foreach (var (menuItem, pair) in context.Items.OfType<MenuItem>().Zip(RowContextMenuCommands))
                 menuItem.IsEnabled = IsActionAvailable(pair[1]) == true;
         };
