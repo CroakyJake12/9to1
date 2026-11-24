@@ -47,12 +47,16 @@ public sealed partial class DeveloperProjectWorkbenchPage
 
     private string CuiPreviewStatus()
     {
-        if (_cuiPreviewLastValid is not { } valid) return _cuiPreviewRuntimeStatus;
-        if (_cuiPreviewSlot is null || !ReferenceEquals(_cuiPreviewSlot.Content, _cuiPreviewHost))
-            return "Preview is out of date. Preview this draft again.";
-        var current = CurrentSourceTab()?.Id == _cuiPreviewTab && CurrentDraftRevision() == _cuiPreviewDraftRevision &&
+        var valid = _cuiPreviewLastValid;
+        var mounted = valid is not null && _cuiPreviewSlot is { } slot &&
+            ReferenceEquals(slot.Content, _cuiPreviewHost);
+        var current = valid is not null && ReferenceEquals(valid, _cuiPreviewAttempt) &&
+            CurrentSourceTab() is { } tab && tab.Id == _cuiPreviewTab &&
+            StringComparer.Ordinal.Equals(tab.Path, valid.RelativePath) &&
+            CurrentDraftRevision() == _cuiPreviewDraftRevision &&
             StringComparer.Ordinal.Equals(CurrentEditorText(), _cuiPreviewText);
-        return _cuiPreviewRuntimeStatus + $" Showing {valid.RelativePath}." + (current ? "" : " Preview is out of date.");
+        return DeveloperPreviewEvidence.Describe(_cuiPreviewRuntimeStatus, valid?.RelativePath,
+            _cuiPreviewDraftRevision, mounted, current);
     }
 
     private bool IsCuiPreviewCaptureCurrent(Guid tab, long revision, string path, string text, ContentControl slot) =>
