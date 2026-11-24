@@ -13,6 +13,7 @@ namespace Haven.Application;
 /// Automation projection and executor. This data grants no model, file or task authority.</summary>
 public sealed class SpaceUserMessageGraph
 {
+    private static readonly UTF8Encoding StrictSourceUtf8 = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
     public const string ProfileId = "spaces.user-message.v1";
     public const string SourceType = "spaces.user-message.source";
     public const string TruncateType = "spaces.user-message.truncate";
@@ -329,6 +330,14 @@ public sealed class SpaceUserMessageGraph
         ArgumentNullException.ThrowIfNull(input);
         if (input.Id == Guid.Empty || input.ConversationId == Guid.Empty || input.Role != MessageRole.User || input.Content is null || input.Content.Length > 65536)
             throw Invalid("The graph requires the bounded actual original user message.");
+        // The shared typed graph serializes strings through JSON, which can
+        // substitute U+FFFD for malformed UTF-16. Refuse the actual source
+        // before that lossy boundary; literal, valid U+FFFD is still data.
+        try { _ = StrictSourceUtf8.GetByteCount(input.Content); }
+        catch (EncoderFallbackException)
+        {
+            throw Invalid("The original user message must contain well-formed Unicode; no replacement text was sent.");
+        }
         var run = await new AutomationGraphRunner([new SpaceUserMessageGraphExecutor(input.Content, captured)])
             .RunAsync(_projection.Definition, AutomationGraphRunMode.Real, token).ConfigureAwait(false);
         var output = run.Trace.SingleOrDefault(item => item.NodeId == _output);
