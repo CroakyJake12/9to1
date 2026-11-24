@@ -16,7 +16,7 @@ namespace Haven.Infrastructure;
 /// <summary>
 /// Represents conversation repository and keeps its related state and behavior together.
 /// </summary>
-public sealed partial class ConversationRepository(ISqliteConnectionFactory factory) : IConversationRepository, IConversationCreateOnlyRepository, IConversationBranchBoundRepository, ISpaceConversationSearch
+public sealed partial class ConversationRepository(ISqliteConnectionFactory factory) : IConversationRepository, IConversationCreateOnlyRepository, IConversationBranchBoundRepository, ISpaceConversationSearch, ITemporaryChatSaveRepository
 {
     /// <summary>
     /// Retrieves recent async for the current operation.
@@ -236,7 +236,14 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
     public async Task UpsertConversationAsync(Conversation conversation, CancellationToken cancellationToken)
     {
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await UpsertConversationWithinTransactionAsync(connection, null, conversation, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task UpsertConversationWithinTransactionAsync(SqliteConnection connection,
+        SqliteTransaction? transaction, Conversation conversation, CancellationToken cancellationToken)
+    {
         await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText = """
             INSERT INTO conversations(id, mode, kind, title, container_id, lesson_id, is_pinned, is_temporary, created_at, updated_at,is_archived,parent_conversation_id,compacted_at,space_id)
             VALUES($id,$mode,$kind,$title,$containerId,$lessonId,$isPinned,$isTemporary,$createdAt,$updatedAt,$isArchived,$parentConversationId,$compactedAt,$spaceId)
@@ -274,6 +281,15 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
         await ConversationProductionSchema.EnsureAsync(factory, cancellationToken).ConfigureAwait(false);
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        await AddMessageWithinTransactionAsync(connection, transaction, message, boundBranchId, requireCurrentBranch,
+            cancellationToken, attachmentIds).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task AddMessageWithinTransactionAsync(SqliteConnection connection, SqliteTransaction transaction,
+        ChatMessage message, Guid? boundBranchId, bool requireCurrentBranch, CancellationToken cancellationToken,
+        IReadOnlyList<Guid>? attachmentIds = null)
+    {
         if (boundBranchId is { } expected)
         {
             await using var admission = connection.CreateCommand();
@@ -350,7 +366,6 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
             if (await attachment.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
                 throw new InvalidOperationException("A submitted attachment is no longer pending on the original conversation branch.");
         }
-        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>

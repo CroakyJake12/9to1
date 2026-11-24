@@ -23,7 +23,7 @@ public sealed class UsageTrackingConversationRepository(
     IModelUsageRepository usageRepository,
     IProviderConfigurationStore configurations,
     IProviderPricingService pricingService,
-    ProviderUsageCaptureBuffer usageCapture) : IConversationRepository, IConversationCreateOnlyRepository, IConversationBranchBoundRepository, ISpaceConversationSearch
+    ProviderUsageCaptureBuffer usageCapture) : IConversationRepository, IConversationCreateOnlyRepository, IConversationBranchBoundRepository, ISpaceConversationSearch, ITemporaryChatSaveRepository
 {
     /// <summary>
     /// Stores turn started locally so this component can preserve the dependency, cache, or state between member calls.
@@ -80,6 +80,10 @@ public sealed class UsageTrackingConversationRepository(
     /// Empty conversation creation records no model usage; message usage accounting stays unchanged.</summary>
     public Task<bool> TryCreateConversationAsync(Conversation original, CancellationToken cancellationToken) =>
         inner.TryCreateConversationAsync(original, cancellationToken);
+
+    // These messages already ran as Temporary Chat; do not replay usage tracking or provider capture.
+    public Task<TemporaryChatSaveReceipt> SaveTemporaryChatAsync(TemporaryChatSaveRequest request, CancellationToken cancellationToken) =>
+        inner.SaveTemporaryChatAsync(request, cancellationToken);
 
     /// <summary>
     /// Performs add message asynchronously so I/O does not block the caller's thread.

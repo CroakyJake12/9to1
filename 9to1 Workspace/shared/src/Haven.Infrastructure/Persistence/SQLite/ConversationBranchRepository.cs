@@ -539,7 +539,7 @@ public sealed partial class ConversationProductionRepository(
         return draft;
     }
 
-    private static async Task InsertDraftAsync(SqliteConnection connection, SqliteTransaction transaction, ConversationDraft draft,
+    internal static async Task InsertDraftAsync(SqliteConnection connection, SqliteTransaction transaction, ConversationDraft draft,
         CancellationToken cancellationToken)
     {
         await using var command = connection.CreateCommand();
