@@ -394,6 +394,59 @@ public sealed class FilesNativeBrowserMutationTests
     }
 
     [AvaloniaFact]
+    public async Task Failed_Paste_keeps_the_original_Cut_until_its_reviewed_move_commits()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var source = await CreateReviewedFolder(h, h.Parent.Value, "Same name", token);
+        var occupiedFolder = await CreateReviewedFolder(h, h.Parent.Value, "Occupied destination", token);
+        var alternate = await CreateReviewedFolder(h, h.Parent.Value, "Free destination", token);
+        var existing = await CreateReviewedFolder(h, occupiedFolder.Value, "Same name", token);
+        await using var view = new FilesNativeBrowserSurface(h.Browser, null, h.Workspace.Actor,
+            new Readiness(), CancellationToken.None);
+        var window = new Window { Content = view, Width = 720, Height = 640 };
+        window.Show();
+        try
+        {
+            await view.InitializeAsync(token);
+            await view.OpenOriginalLocationAsync(h.Workspace.Configuration.StoreId, h.Parent.Value, token);
+            window.UpdateLayout();
+            var list = Assert.Single(view.GetVisualDescendants().OfType<ListBox>());
+            void Select(HostedItemId id) => list.SelectedItem = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == id);
+            async Task ApplyReviewedPasteAsync()
+            {
+                Assert.True(view.IsActionAvailable("9to1.Files.Move"));
+                await view.DispatchAsync("9to1.Files.Move", null, token);
+                var review = Assert.Single((await h.Permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
+                Assert.Equal("9to1.Files.Move", review.Scope.ActionName);
+                Assert.True((await h.Permissions.DecideAsync(review.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+                await view.DispatchAsync("9to1.Files.Apply", null, token);
+            }
+
+            Select(source);
+            await view.DispatchAsync("9to1.Files.ChooseMove", null, token);
+            Select(occupiedFolder);
+            await view.DispatchAsync("9to1.Files.Open", null, token);
+            await ApplyReviewedPasteAsync();
+
+            Assert.True(view.TryGetValue("MoveSelection", out var clipboard));
+            Assert.Contains("Same name", Assert.IsType<string>(clipboard));
+            Assert.True(view.IsActionAvailable("9to1.Files.CancelMove"), "the failed move must leave the original cut intact");
+            Assert.Equal(h.Parent, (await h.Workspace.Provider.GetAsync(source, token)).Value!.ParentId);
+            Assert.Equal(existing, Assert.Single(list.Items.Cast<HostedItemMetadata>()).Id);
+
+            await view.DispatchAsync("9to1.Files.Back", null, token);
+            Select(alternate);
+            await view.DispatchAsync("9to1.Files.Open", null, token);
+            await ApplyReviewedPasteAsync();
+            Assert.Equal(source, Assert.Single(list.Items.Cast<HostedItemMetadata>()).Id);
+            Assert.Equal(alternate, (await h.Workspace.Provider.GetAsync(source, token)).Value!.ParentId);
+            Assert.False(view.IsActionAvailable("9to1.Files.CancelMove"), "only the matching committed move consumes the cut");
+        }
+        finally { await view.CloseAndDrainAsync(); window.Close(); }
+    }
+
+    [AvaloniaFact]
     public async Task Distinct_native_presentations_reopen_the_same_canonical_store_and_folder()
     {
         var token = TestContext.Current.CancellationToken;

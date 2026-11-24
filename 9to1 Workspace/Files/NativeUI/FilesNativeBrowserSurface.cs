@@ -33,8 +33,28 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     private readonly TextBox _editName = new() { PlaceholderText = "Folder or item name", Width = 280, MaxLength = 255 };
     private readonly string _mutationSession = Guid.NewGuid().ToString("N");
     private FilesNativeBrowserService.PreparedMutation? _pendingMutation;
-    private sealed record MoveSource(FilesNativeBrowserPage Page, HostedItemMetadata Item);
+    private static readonly TimeSpan CutLifetime = TimeSpan.FromMinutes(15);
+    private readonly DispatcherTimer _cutExpiry = new() { Interval = CutLifetime };
+    private sealed record MoveSource(FilesNativeBrowserPage Page, HostedItemMetadata Item, DateTimeOffset ExpiresAt);
     private MoveSource? _moveSource;
+
+    private void SetCutSource(MoveSource? source)
+    {
+        _cutExpiry.Stop();
+        _moveSource = source;
+        if (source is null) return;
+        var remaining = source.ExpiresAt - DateTimeOffset.UtcNow;
+        if (remaining <= TimeSpan.Zero) return;
+        _cutExpiry.Interval = remaining;
+        _cutExpiry.Start();
+    }
+
+    private string ClipboardLabel => _moveSource is not { } cut ? "" :
+        cut.ExpiresAt <= DateTimeOffset.UtcNow ? "Cut expired. Select and cut the item again." :
+        _page is not { } page ? "Cut kept. Refresh Files before pasting." :
+        page.StoreID != cut.Page.StoreID ? "This location cannot receive the cut item." :
+        page.StoreRevision != cut.Page.StoreRevision ? "Files changed. Select and cut the original item again." :
+        $"Cut: ‘{cut.Item.Name}’. Open a destination and choose Paste (move).";
     private bool _showTechnicalDetails;
     private readonly ComboBox _sort = new()
     {
@@ -107,6 +127,11 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         { if (args.Key == Key.Enter) { args.Handled = true; await InvokeFromNativeEventAsync("9to1.Files.Search"); } };
         _search.TextChanged += (_, _) => { if (OriginalAlive()) RunOriginalNativeMutation(Changed); };
         _editName.TextChanged += (_, _) => { if (OriginalAlive()) RunOriginalNativeMutation(Changed); };
+        _cutExpiry.Tick += (_, _) =>
+        {
+            _cutExpiry.Stop();
+            if (OriginalAlive()) RunOriginalNativeMutation(Changed);
+        };
         KeyDown += async (_, args) =>
         {
             if (args.Handled || !Available) return;
@@ -118,8 +143,8 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
             {
                 Key.F5 => "9to1.Files.Refresh",
                 Key.Delete when _items.IsKeyboardFocusWithin => "9to1.Files.Delete",
-                Key.X when args.KeyModifiers == KeyModifiers.Control && _items.IsKeyboardFocusWithin => "9to1.Files.ChooseMove",
-                Key.V when args.KeyModifiers == KeyModifiers.Control && _items.IsKeyboardFocusWithin => "9to1.Files.Move",
+                Key.X when (args.KeyModifiers is KeyModifiers.Control or KeyModifiers.Meta) && _items.IsKeyboardFocusWithin => "9to1.Files.ChooseMove",
+                Key.V when (args.KeyModifiers is KeyModifiers.Control or KeyModifiers.Meta) && _items.IsKeyboardFocusWithin => "9to1.Files.Move",
                 Key.Left when args.KeyModifiers == KeyModifiers.Alt => "9to1.Files.Back",
                 Key.Right when args.KeyModifiers == KeyModifiers.Alt => "9to1.Files.Forward",
                 Key.Up when args.KeyModifiers == KeyModifiers.Alt => "9to1.Files.Up",
@@ -253,7 +278,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
             "CanCancelMove" => IsActionAvailable("9to1.Files.CancelMove"),
             "CanShowDetails" => IsActionAvailable("9to1.Files.TechnicalDetails"),
             "TechnicalDetailsLabel" => _showTechnicalDetails ? "Hide technical details" : "Technical details",
-            "MoveSelection" => _page is null || _moveSource is null ? "" : $"Choose a destination for ‘{_moveSource.Item.Name}’.",
+            "MoveSelection" => ClipboardLabel,
             "CanApply" => IsActionAvailable("9to1.Files.Apply"),
             "CanCancelReview" => IsActionAvailable("9to1.Files.CancelReview"),
             "CanRetryAudit" => IsActionAvailable("9to1.Files.RetryAudit"),
@@ -308,7 +333,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         "9to1.Files.ChooseMove" => Available && _pendingMutation is null && _page is { } movePage
             && _items.SelectedItem is HostedItemMetadata moveRow && _browser.CanMoveNativeSelection(movePage, moveRow),
         "9to1.Files.Move" => Available && _pendingMutation is null && _moveSource is { } source
-            && _page is { } destination && _browser.CanPrepareNativeMove(source.Page, source.Item, destination),
+            && source.ExpiresAt > DateTimeOffset.UtcNow && _page is { } destination && _browser.CanPrepareNativeMove(source.Page, source.Item, destination),
         "9to1.Files.CancelMove" => Available && _pendingMutation is null && _moveSource is not null,
         "9to1.Files.TechnicalDetails" => Available && _page is { } detailsPage
             && _items.SelectedItem is HostedItemMetadata detailsRow && detailsPage.Items.Any(item => ReferenceEquals(item, detailsRow)),
@@ -391,12 +416,12 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
             { _showTechnicalDetails = !_showTechnicalDetails; return; }
             if (command == "9to1.Files.ChooseMove")
             {
-                _moveSource = new(originalPage!, originalSelection!);
-                _status = $"Open the destination folder, then choose Move here for ‘{originalSelection!.Name}’.";
+                SetCutSource(new(originalPage!, originalSelection!, DateTimeOffset.UtcNow + CutLifetime));
+                _status = $"Cut ‘{originalSelection!.Name}’. It remains in the original folder until a move is confirmed.";
                 return;
             }
             if (command == "9to1.Files.CancelMove")
-            { _moveSource = null; _status = "Move cancelled. The item remains in its original folder."; return; }
+            { SetCutSource(null); _status = "Cut cleared. The item remains in its original folder."; return; }
             if (command == "9to1.Files.Move")
             {
                 _pendingMutation = await _browser.PrepareNativeMoveAsync(originalMove!.Page, originalMove.Item,
@@ -435,7 +460,12 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
                 var outcome = await _browser.ApplyNativeMutationAsync(_pendingMutation!, linked.Token);
                 RequireRetainedPage(); _status = outcome.Message;
                 if (outcome.AwaitingHomeReview) return;
-                if (outcome.Operation is not null) _moveSource = null;
+                // A refused provider outcome or a successful unrelated action
+                // must not consume the previously captured cut item.
+                if (ReferenceEquals(_moveSource, originalMove) && originalMove is { } cut &&
+                    outcome.Operation is { IsSuccess: true, Value: { Operation: "Move", State: FilesOperationState.Committed } committed } &&
+                    committed.ItemId == cut.Item.Id)
+                    SetCutSource(null);
                 if (outcome.AuditRecorded) _pendingMutation = null;
                 completedMessage = outcome.Message;
                 _editName.Text = "";
@@ -515,7 +545,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
             else handled = error;
             try
             {
-                ClearSources();
+                ClearSources(preserveCut: !terminal);
                 _status = OriginalAlive() ? error.Message : "Files view closed";
             }
             catch (Exception cleanup)
@@ -548,8 +578,9 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
                 (command is "9to1.Files.Open" or "9to1.Files.Preview" or "9to1.Files.Rename" or "9to1.Files.Delete" or "9to1.Files.Restore" or "9to1.Files.ChooseMove" or "9to1.Files.TechnicalDetails")
                     && _items.SelectedItem as HostedItemMetadata != originalSelection)
                 throw new InvalidOperationException("The original Files selection changed before navigation.");
-            if (command == "9to1.Files.Move" && !ReferenceEquals(_moveSource, originalMove))
-                throw new InvalidOperationException("The original item selected for moving changed.");
+            if (command == "9to1.Files.Move" && (!ReferenceEquals(_moveSource, originalMove) ||
+                originalMove is null || originalMove.ExpiresAt <= DateTimeOffset.UtcNow))
+                throw new InvalidOperationException("The original Files cut item changed or expired.");
         }
     }
 
@@ -597,7 +628,8 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
 
     private async Task RequireReadyAsync(CancellationToken token)
     { if ((await _readiness.CheckAsync(token)).State != CuiSceneAvailabilityState.Ready) throw new UnauthorizedAccessException("Home cannot authorise this Files view."); }
-    private void ClearSources()
+    private void ClearSources() => ClearSources(preserveCut: false);
+    private void ClearSources(bool preserveCut)
     {
         ClearOriginalTextPreview();
         ClearOriginalShareScopeEditor();
@@ -607,7 +639,8 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         _page = null; _originalPageCurrent = null; _items.SelectedItem = null; _items.ItemsSource = null;
         RetireUnrepresentedDetailsRows();
         _query = ""; _search.Text = ""; _editName.Text = "";
-        _moveSource = null; _showTechnicalDetails = false;
+        if (!preserveCut) SetCutSource(null);
+        _showTechnicalDetails = false;
         if (_closing || _disposed || _lifetime.IsCancellationRequested)
         { _history.Clear(); _history.Add((null, "Files", false)); _historyIndex = 0; }
         Changed();
@@ -811,7 +844,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     }
     private bool _detailsRowsWide;
     private static readonly string[][] RowContextMenuCommands = [["Open", "9to1.Files.Open"], ["Preview", "9to1.Files.Preview"],
-        ["Rename", "9to1.Files.Rename"], ["Move to Trash", "9to1.Files.Delete"], ["Restore", "9to1.Files.Restore"],
+        ["Rename", "9to1.Files.Rename"], ["Cut", "9to1.Files.ChooseMove"], ["Move to Trash", "9to1.Files.Delete"], ["Restore", "9to1.Files.Restore"],
         ["Manage access", "9to1.Files.Share.Get"], ["Technical details", "9to1.Files.TechnicalDetails"]];
     private ContextMenu BuildRowContextMenu()
     {

@@ -238,7 +238,7 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
             else handled = error;
             try
             {
-                ClearSources();
+                ClearSources(preserveCut: !terminal);
                 var observed = IsPendingShareReview ? _browser.ReadObservedNativeShareMutation(_pendingMutation!) : null;
                 var committed = IsPendingShareReview && _browser.WasNativeShareMutationCommitted(_pendingMutation!);
                 _status = !OriginalAlive() ? "Files view closed" : committed

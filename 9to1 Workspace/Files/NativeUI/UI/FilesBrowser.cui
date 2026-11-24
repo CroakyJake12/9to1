@@ -57,10 +57,10 @@
         <Button id="files-rename" content="Rename" action="9to1.Files.Rename" accessible-name="Review renaming the selected item in Home" Interactive="{Binding CanRename}" />
         <Button id="files-delete" content="Move to Trash" action="9to1.Files.Delete" accessible-name="Review moving the selected item to recoverable Trash in Home" Interactive="{Binding CanDelete}" />
         <Button id="files-restore" content="Restore" action="9to1.Files.Restore" accessible-name="Review restoring the selected deleted item to its original folder in Home" Interactive="{Binding CanRestore}" />
-        <Button id="files-choose-move" content="Move…" action="9to1.Files.ChooseMove" accessible-name="Choose a destination folder for the selected item" Interactive="{Binding CanChooseMove}" />
-        <Button id="files-move" content="Move here" action="9to1.Files.Move" accessible-name="Review moving the original selected item into this folder in Home" Interactive="{Binding CanMove}" />
-        <Button id="files-cancel-move" content="Cancel move" action="9to1.Files.CancelMove" accessible-name="Cancel choosing a move destination" Interactive="{Binding CanCancelMove}" />
-        <Text text="{Binding MoveSelection}" accessible-name="Item being moved" />
+        <Button id="files-choose-move" content="Cut" action="9to1.Files.ChooseMove" accessible-name="Cut the selected item without moving it yet" Interactive="{Binding CanChooseMove}" />
+        <Button id="files-move" content="Paste (move)" action="9to1.Files.Move" accessible-name="Review pasting the original cut item into this folder in Home" Interactive="{Binding CanMove}" />
+        <Button id="files-cancel-move" content="Clear cut" action="9to1.Files.CancelMove" accessible-name="Clear the Files cut item" Interactive="{Binding CanCancelMove}" />
+        <Text text="{Binding MoveSelection}" accessible-name="Files clipboard" />
         <Text text="{Binding PendingChange}" accessible-name="Pending Files change" />
         <Button id="files-apply" content="Apply" action="9to1.Files.Apply" accessible-name="Apply the original Home-reviewed Files change" Interactive="{Binding CanApply}" />
         <Button id="files-cancel-review" content="Cancel change" action="9to1.Files.CancelReview" accessible-name="Cancel the pending change before execution" Interactive="{Binding CanCancelReview}" />

@@ -310,7 +310,7 @@ public sealed partial class FilesNativeBrowserSurface
                 if (!terminal && retained is not null && _activeFolderTab is { } active)
                 {
                     active.State = retained; RestoreFolderTabNavigation(retained);
-                    _editName.Text = retainedName; _moveSource = retainedMove;
+                    _editName.Text = retainedName; SetCutSource(retainedMove);
                 }
                 _status = OriginalAlive() ? error.Message : "Files view closed";
             }
