@@ -27,6 +27,7 @@ const CERTS_ENDPOINT = 'https://www.googleapis.com/oauth2/v3/certs';
 const DRIVE_FILE_ID = 'fixture-document-01';
 const ROOT_FOLDER_ID = 'google-root-drive-fixture-id';
 const UPLOADED_FILE_ID = 'fixture-upload-01';
+const CREATED_FOLDER_ID = 'fixture-folder-created';
 const FILE_BYTES = new TextEncoder().encode('fixture Drive content\n');
 
 assert.equal(miniflareVersion, '5.20261113.0-beta');
@@ -85,6 +86,8 @@ test('production Worker uses Workerd SQLite and cross-worker session RPC without
     writeFileSync(resolve(assetDirectory, '_framework/test.wasm'), wasm);
     const googleCalls = [];
     let nonce;
+    let assignments = 0;
+    let createdFolder;
 
     const { privateKey, publicKey } = await generateKeyPair('RS256', { extractable: true });
     const publicJwk = { ...await exportJWK(publicKey), kid: 'files-drive-fixture-key', alg: 'RS256', use: 'sig' };
@@ -137,7 +140,7 @@ test('production Worker uses Workerd SQLite and cross-worker session RPC without
       });
     }
     if (url.origin === 'https://www.googleapis.com' && url.pathname === '/drive/v3/files/generateIds' && request.method === 'GET') {
-      return Response.json({ ids: [UPLOADED_FILE_ID] });
+      return Response.json({ ids: [assignments++ === 0 ? UPLOADED_FILE_ID : CREATED_FOLDER_ID] });
     }
     if (url.origin === 'https://www.googleapis.com' && url.pathname === '/upload/drive/v3/files' && request.method === 'POST') {
       assert.equal(url.searchParams.get('uploadType'), 'multipart');
@@ -148,6 +151,20 @@ test('production Worker uses Workerd SQLite and cross-worker session RPC without
       const now = new Date().toISOString();
       return Response.json({ ...metadata, size: '0', version: '1', createdTime: now, modifiedTime: now,
         ownedByMe: true, trashed: false, shared: false, capabilities: { canDownload: true } });
+    }
+    if (url.origin === 'https://www.googleapis.com' && url.pathname === '/drive/v3/files' && request.method === 'POST') {
+      const body = await request.json();
+      assert.equal(body.id, CREATED_FOLDER_ID);
+      assert.equal(body.mimeType, 'application/vnd.google-apps.folder');
+      assert.deepEqual(body.parents, [ROOT_FOLDER_ID]);
+      const now = new Date().toISOString();
+      createdFolder = { ...body, version: '1', createdTime: now, modifiedTime: now, trashed: false,
+        ownedByMe: true, shared: false, capabilities: { canAddChildren: true } };
+      return Response.json(createdFolder);
+    }
+    if (url.origin === 'https://www.googleapis.com' && url.pathname === '/drive/v3/files/' + CREATED_FOLDER_ID && request.method === 'GET') {
+      assert.ok(createdFolder);
+      return Response.json(createdFolder);
     }
     if (url.origin === 'https://www.googleapis.com' && url.pathname === '/drive/v3/files' && request.method === 'GET') {
       const query = url.searchParams.get('q');
@@ -411,7 +428,32 @@ test('production Worker uses Workerd SQLite and cross-worker session RPC without
     assert.deepEqual(await jsonResponse(await request(mf, '/changes?limit=1')), changePage);
     const resumed = await jsonResponse(await request(mf, '/changes?limit=1&after=' + uploadEvent.cursor.revision));
     assert.deepEqual(resumed, { status: 200, body: { items: [], nextPageToken: null } });
+
     assert.deepEqual(googleCalls, callsBeforeRestart, 'SQLite-backed context and quota read must not make new provider calls');
+
+    const folderRequest = (name, id, itemId) => request(mf, '/operations', {
+      method: 'POST', origin: FILES_ORIGIN, body: JSON.stringify({ newName: name,
+        operation: { id: { value: id }, actorId: OWNER_ACCOUNT_ID, operation: 'CreateFolder', state: 'Pending',
+          itemId: { value: itemId }, payload: { newName: name } } }),
+    });
+    const capturedId = 'a1cf4f82-59fc-454c-81dd-622880a186ab';
+    const canonicalItemId = '2953055c-f325-4cb5-9525-197f1893fe61';
+    const collision = await jsonResponse(await folderRequest('Existing sibling.txt', capturedId, canonicalItemId));
+    assert.equal(collision.body.error.code, 'NameConflict');
+    assert.equal(assignments, 1, 'an observed occupied name does not allocate another provider ID');
+    const createId = 'ea840eb3-e658-4bdb-aa01-b042efdfeda5';
+    const original = await jsonResponse(await folderRequest('Staged folder', createId, canonicalItemId));
+    assert.equal(original.body.value.state, 'Committed');
+    assert.equal(original.body.value.itemId.value, canonicalItemId);
+    assert.deepEqual(await jsonResponse(await folderRequest('Staged folder', createId, canonicalItemId)), original);
+    const alternate = await jsonResponse(await folderRequest('Staged folder', '1f405520-d4dd-43d9-a48b-c1349511b4ea',
+      'f29e50ed-0a5b-4bd9-b43b-3eba969e19fd'));
+    assert.equal(alternate.body.error.code, 'NameConflict', 'a new operation cannot sidestep the known commit');
+    assert.equal(googleCalls.filter(call => call.path === '/drive/v3/files' && call.method === 'POST').length, 1);
+    const createdChange = await jsonResponse(await request(mf, '/changes?after=' + uploadEvent.cursor.revision));
+    assert.equal(createdChange.body.items.length, 1);
+    assert.equal(createdChange.body.items[0].operationId.value, createId);
+
   } finally {
     try { if (mf) await mf.dispose(); }
     finally {

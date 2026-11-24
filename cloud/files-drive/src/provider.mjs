@@ -306,7 +306,17 @@ export class DriveProvider {
         ? await this.#createPlan(intent, row.provider_id, token, signal)
         : await this.#updatePlan(intent, token, signal);
       signal?.throwIfAborted();
-      this.#store.stageOperation(intent.id, 'issuing', plan.googleId);
+      if (intent.operation === 'CreateFolder') {
+        this.#store.storage.transactionSync(() => {
+          const fresh = this.#store.operation(intent.id);
+          if (fresh?.stage !== 'prepared' || fresh.provider_id !== plan.googleId) throw uncertain();
+          const prior = this.#store.previousFolderCreate(intent, 'committed');
+          if (this.#store.previousFolderCreate(intent, 'issuing') || (prior?.id ?? null) !== plan.priorCreateId) {
+            throw failure(409, 'NameConflict', 'Another Files operation changed this folder name. Check its status before trying again.');
+          }
+          this.#store.stageOperation(intent.id, 'issuing', plan.googleId);
+        });
+      } else this.#store.stageOperation(intent.id, 'issuing', plan.googleId);
       await this.#store.storage.sync();
       writeMayHaveRun = true;
       let result;
@@ -335,6 +345,13 @@ export class DriveProvider {
       const file = plan.before ? patchAck(result.value, plan.before, plan.googleId) : requireFile(result.value, plan.googleId);
       return await this.#commit(intent, plan.googleId, file);
     } catch (error) {
+      // Another handle may already have admitted this very intent. A stale
+      // plan cannot claim the operation was unissued even if this call did no I/O.
+      if (!writeMayHaveRun && intent.operation === 'CreateFolder') {
+        try {
+          writeMayHaveRun = ['issuing', 'committed'].includes(this.#store.operation(intent.id)?.stage);
+        } catch { writeMayHaveRun = true; }
+      }
       return resultError(error, intent.operation, intent.itemId, this.#now(), !writeMayHaveRun, writeMayHaveRun);
     } finally {
       this.#active.delete(intent.id);
@@ -381,6 +398,23 @@ export class DriveProvider {
     const parent = remoteId(this.#store.googleId(intent.destinationParentId));
     const folder = await this.#folder(parent, token, signal);
     if (folder.capabilities?.canAddChildren !== true) throw capability('Google Drive does not allow creating items in that folder.');
+    if (parent === this.#store.get('googleRoot') && intent.destinationParentId !== null) {
+      throw failure(400, 'InvalidState', 'Use the canonical Google Drive root as the destination.');
+    }
+    if (this.#store.previousFolderCreate(intent, 'issuing')) {
+      throw failure(409, 'NameConflict', 'Another new folder with this name has an unconfirmed outcome. Check the original operation.');
+    }
+    const prior = this.#store.previousFolderCreate(intent, 'committed');
+    if (prior?.provider_id) {
+      // Search may lag a successful write. Verify the concrete provider identity.
+      let previousFile;
+      try { previousFile = await this.#file(prior.provider_id, token, signal); }
+      catch (error) { if (error?.code !== 'ItemNotFound') throw error; }
+      if (previousFile?.trashed === false && previousFile.name === intent.newName && firstParent(previousFile) === parent) {
+        throw failure(409, 'NameConflict', 'That Google Drive folder already contains an item with this name.');
+      }
+    }
+    await this.#assertDestinationNameAvailable(parent, intent.newName, null, token, signal);
     const mapping = this.#store.byId(intent.itemId);
     if (mapping && (mapping.google_id !== reserved || mapping.metadata !== null)) {
       throw failure(409, 'InvalidState', 'The folder identity is already in use.');
@@ -394,12 +428,14 @@ export class DriveProvider {
     // The folder can be listed while the POST reply is missing. Reserve its
     // local identity in the same transaction as the provider's generated ID.
     this.#store.storage.transactionSync(() => {
+      const fresh = this.#store.operation(intent.id);
+      if (fresh?.stage !== 'prepared' || (fresh.provider_id !== null && fresh.provider_id !== googleId)) throw uncertain();
       this.#store.ensureIdInTransaction(googleId, intent.itemId);
       this.#store.stageOperation(intent.id, 'prepared', googleId);
     });
     await this.#store.storage.sync();
     return {
-      googleId, method: 'POST', url: requestUrl('v3', 'files', { fields: DRIVE_FILE_FIELDS }),
+      googleId, priorCreateId: prior?.id ?? null, method: 'POST', url: requestUrl('v3', 'files', { fields: DRIVE_FILE_FIELDS }),
       body: { id: googleId, mimeType: FOLDER, name: intent.newName, parents: [parent],
         appProperties: { [OPERATION_PROPERTY]: intent.id } },
     };

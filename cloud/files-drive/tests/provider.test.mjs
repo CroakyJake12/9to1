@@ -175,7 +175,7 @@ test('Trash loads recently modified items first and binds pagination to that ord
 });
 
 test('create keeps canonical identity across lost reply, refused reconciliation, an intervening list, and replay', async t => {
-  const f = fixture(t, { limits: { unitsPerMinute: 65 } });
+  const f = fixture(t, { limits: { unitsPerMinute: 165 } });
   const request = operation('CreateFolder', null, { name: 'Private folder' });
   f.model.lost = true;
   const lost = await f.provider.mutate(request);
@@ -203,7 +203,7 @@ test('create keeps canonical identity across lost reply, refused reconciliation,
 });
 
 test('quota refused before create leaves a genuinely unissued intent and reuses its fixed provider ID', async t => {
-  const f = fixture(t, { limits: { unitsPerMinute: 60 } });
+  const f = fixture(t, { limits: { unitsPerMinute: 160 } });
   const request = operation('CreateFolder', null, { name: 'Resumable folder' });
   const refused = await f.provider.mutate(request);
   assert.equal(refused.error.code, 'QuotaExceeded');
@@ -422,4 +422,86 @@ test('confirmed Drive edits publish metadata and the original result with exactl
   assert.deepEqual(await provider.mutate(edit), result);
   assert.equal(store.changes(event.cursor.revision).items.length, 0);
   assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 1);
+});
+
+test('new folder refuses an observed name collision before allocating or mutating', async t => {
+  const f = fixture(t);
+  const occupied = file('existing-folder', { name: "Jacob's work", mimeType: FOLDER });
+  f.remote.set(occupied.id, occupied);
+  const request = operation('CreateFolder', null, { name: occupied.name });
+  const result = await f.provider.mutate(request);
+  assert.equal(result.error.code, 'NameConflict');
+  assert.deepEqual(result.error.details, { notStarted: 'true' });
+  assert.equal(f.model.ids, 0);
+  assert.equal(f.model.calls.filter(call => call.method === 'POST').length, 0);
+  assert.equal(f.store.changes(0).items.length, 0);
+  f.remote.delete(occupied.id);
+  const committed = await f.reopen().provider.mutate(request);
+  assert.equal(committed.value.state, 'Committed');
+  assert.deepEqual(committed.value.itemId, request.operation.itemId);
+  assert.deepEqual(await f.provider.mutate(request), committed);
+  assert.equal(f.model.calls.filter(call => call.method === 'POST').length, 1);
+});
+
+test('a committed or uncertain new folder blocks another identity when the name index has not caught up', async t => {
+  const f = fixture(t);
+  f.model.list = () => ({ files: [], incompleteSearch: false });
+  const first = operation('CreateFolder', null, { name: 'Lagging search' });
+  const alternative = operation('CreateFolder', null, { name: 'Lagging search' });
+
+  f.model.lost = true;
+  const uncertain = await f.provider.mutate(first);
+  assert.equal(uncertain.error.code, 'ProviderUnavailable');
+  assert.equal(f.store.operation(first.operation.id).stage, 'issuing');
+  assert.equal((await f.reopen().provider.mutate(alternative)).error.code, 'NameConflict');
+  const settled = await f.reopen().provider.mutate(first);
+  assert.equal(settled.value.state, 'Committed');
+  const sameName = await f.reopen().provider.mutate(alternative);
+  assert.equal(sameName.error.code, 'NameConflict');
+  assert.deepEqual(sameName.error.details, { notStarted: 'true' });
+  assert.equal(f.model.calls.filter(call => call.method === 'POST').length, 1);
+  assert.equal(f.store.changes(0).items.length, 1);
+  assert.equal(f.remote.size, 2, 'only root and original folder exist');
+
+  // The scoped evidence is a check of the current file, not a permanent
+  // reservation: once the actual previous folder is trashed the name is free.
+  const committedRow = f.store.operation(first.operation.id);
+  f.remote.get(committedRow.provider_id).trashed = true;
+  const reopened = await f.reopen().provider.mutate(alternative);
+  assert.equal(reopened.value.state, 'Committed');
+  assert.equal(f.model.calls.filter(call => call.method === 'POST').length, 2);
+  assert.equal(f.store.changes(0).items.length, 2);
+
+});
+
+test('independent concurrent folder intents cannot both dispatch against identical preflight answers', async t => {
+  const f = fixture(t);
+  // Both handles use the same underlying Durable Object SQLite fixture and see an empty advisory provider listing.
+  f.model.list = () => ({ files: [] });
+  const work = [
+    f.provider.mutate(operation('CreateFolder', null, { name: 'Parallel' })),
+    f.reopen().provider.mutate(operation('CreateFolder', null, { name: 'Parallel' })),
+  ];
+  const results = await Promise.all(work);
+  assert.equal(results.filter(result => result.value?.state === 'Committed').length, 1);
+  assert.equal(results.filter(result => result.error?.code === 'NameConflict').length, 1);
+  assert.equal(f.model.calls.filter(call => call.method === 'POST').length, 1);
+  assert.equal(f.store.changes(0).items.length, 1);
+});
+
+test('two callers recovering the same preallocated folder cannot reset or resend that admission', async t => {
+  const f = fixture(t, { limits: { unitsPerMinute: 160 } });
+  const original = operation('CreateFolder', null, { name: 'Prepared retry target' });
+  const lowered = await f.provider.mutate(original);
+  assert.equal(lowered.error.code, 'QuotaExceeded');
+  assert.equal(f.store.operation(original.operation.id).provider_id, 'generated-1');
+  f.model.now += 120_000;
+
+  const [one, two] = await Promise.all([f.reopen().provider.mutate(original), f.reopen().provider.mutate(original)]);
+  assert.ok([one, two].some(result => result.value?.state === 'Committed'));
+  const receipt = await f.reopen().provider.mutate(original);
+  assert.deepEqual(receipt.value.itemId, original.operation.itemId);
+  assert.equal(f.store.operation(original.operation.id).provider_id, 'generated-1');
+  assert.equal(f.model.calls.filter(call => call.method === 'POST').length, 1);
+  assert.equal(f.store.changes(0).items.length, 1);
 });

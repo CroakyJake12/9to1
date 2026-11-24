@@ -15,6 +15,9 @@ export class DriveStore {
       this.query(`CREATE TABLE IF NOT EXISTS files_operations (
         id TEXT PRIMARY KEY, intent TEXT NOT NULL, stage TEXT NOT NULL,
         provider_id TEXT, result TEXT, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`);
+      this.query(`CREATE INDEX IF NOT EXISTS files_folder_create_target ON files_operations(
+        stage, COALESCE(json_extract(intent,'$.destinationParentId'),''), json_extract(intent,'$.newName'), updated_at DESC, id DESC)
+        WHERE json_extract(intent,'$.operation') = 'CreateFolder'`);
       this.query(`CREATE TABLE IF NOT EXISTS files_pages (
         id TEXT PRIMARY KEY, context TEXT NOT NULL, provider_token TEXT NOT NULL, expires_at INTEGER NOT NULL)`);
       this.query(`CREATE TABLE IF NOT EXISTS files_changes (
@@ -105,6 +108,12 @@ export class DriveStore {
       this.query('INSERT INTO files_operations VALUES (?,?,\'prepared\',NULL,NULL,?,?)', id, JSON.stringify(intent), this.now(), this.now());
       return this.operation(id);
     });
+  }
+  previousFolderCreate(intent, stage) {
+    return this.query(`SELECT id, provider_id FROM files_operations
+      WHERE json_extract(intent,'$.operation') = 'CreateFolder' AND stage=?
+        AND COALESCE(json_extract(intent,'$.destinationParentId'),'')=? AND json_extract(intent,'$.newName')=? AND id<>?
+      ORDER BY updated_at DESC,id DESC LIMIT 1`, stage, intent.destinationParentId ?? '', intent.newName, intent.id)[0] ?? null;
   }
   stageOperation(id, stage, providerId = null, result = null) {
     this.query('UPDATE files_operations SET stage=?,provider_id=COALESCE(?,provider_id),result=?,updated_at=? WHERE id=?',
