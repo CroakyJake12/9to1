@@ -8,16 +8,8 @@ using Haven.Desktop.HavenUI.Backend;
 namespace Haven.Desktop.Views.Pages.Home;
 
 /// <summary>
-/// Desktop-only packaged-SVG icon family for the authored Home/NewTab icon rail (the 56px rail in
-/// <c>UnifiedHome.cui</c>). It composes with the shared canonical browser catalog, mirroring the
-/// Spaces rail family: known rail icon keys are decoded from strict, filled, rounded packaged SVG
-/// assets painted with the live scoped semantic <c>CuiTextBrush</c>; every other source falls
-/// through to the existing catalog, so non-rail glyphs keep their honest current behavior.
-///
-/// The resolver is a *registration adapter*: it exists because the Home surface must render genuine
-/// filled rounded SVG (the shared <c>HavenIconCatalog</c> is stroke geometry, so it cannot express
-/// fills). Hosts that render the Home surface call <see cref="Register"/> on their control registry;
-/// the authored <c>UnifiedHome.cui</c> document and <see cref="HomeRailCuiBindings"/> are unchanged.
+/// The packaged, filled SVG family retained for Home app fallbacks, shortcut artwork, and
+/// secondary controls. Home navigation uses separate outline sources from the canonical catalogue.
 /// </summary>
 public static class HomeRailPackagedIcons
 {

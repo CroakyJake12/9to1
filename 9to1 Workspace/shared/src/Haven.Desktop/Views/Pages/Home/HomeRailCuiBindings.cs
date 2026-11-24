@@ -51,6 +51,12 @@ internal sealed class HomeRailCuiBindings : ICuiWritableBindingContext, INotifyP
     public bool TryGetValue(string path, out object? value)
     {
         var section = _section();
+        // Keep the original full idle hit surface. An outline belongs to the selected row only.
+        if (path.StartsWith("rail.", StringComparison.Ordinal) && path.EndsWith("BorderWidth", StringComparison.Ordinal))
+        {
+            value = path.AsSpan(5, path.Length - 5 - "BorderWidth".Length).SequenceEqual(section) ? "1.5" : "0";
+            return true;
+        }
         value = path switch
         {
             "rail.appsSelected" => section == "apps",
@@ -59,6 +65,7 @@ internal sealed class HomeRailCuiBindings : ICuiWritableBindingContext, INotifyP
             "rail.settingsSelected" => section == "settings",
             "rail.homeVisible" => section != "settings",
             "rail.pageGap" => section is "settings" or "newtab" ? 0d : 8d,
+            "rail.roundedCanvas" => section is "dashboard" or "newtab",
             "rail.pagePadding" => section is "settings" or "newtab" ? "0" : "16",
             "rail.eventsSelected" => section == "events",
             "rail.librarySelected" => section == "library",

@@ -11,6 +11,16 @@ public static class HavenIconCatalog
 
     public static HavenGeometry Resolve(string? key) => (key ?? string.Empty).Trim().ToLowerInvariant() switch
     {
+        "layout-dashboard" => Geometry(RoundedBox(3, 3, 7, 10, 1.5), RoundedBox(14, 3, 7, 6, 1.5),
+            RoundedBox(3, 17, 7, 4, 1.5), RoundedBox(14, 13, 7, 8, 1.5)),
+        "square-plus" => Geometry(RoundedBox(3, 3, 18, 18, 2.5), Line((8, 12), (16, 12)), Line((12, 8), (12, 16))),
+        "library-shelves" => Geometry(RoundedBox(3, 5, 4, 15, 1), RoundedBox(8.5, 5, 4, 15, 1),
+            Line((14, 6), (17, 5), (21, 19), (18, 20), (14, 6))),
+        "assistant-bot" => Geometry(RoundedBox(4, 8, 16, 12, 2.5), Line((12, 8), (12, 4), (8, 4)),
+            Line((1, 13), (4, 13)), Line((20, 13), (23, 13)), Line((9, 12), (9, 15)), Line((15, 12), (15, 15))),
+        "devices-network" => Geometry(RoundedBox(9, 3, 6, 5, 1), RoundedBox(2.5, 16, 6, 5, 1),
+            RoundedBox(15.5, 16, 6, 5, 1), Line((12, 8), (12, 12)), Line((5.5, 16), (5.5, 12), (18.5, 12), (18.5, 16))),
+        "account-user" => Geometry(Circle(12, 8, 3.5), Arc((5, 20), (19, 20), (7, 6)), Line((5, 20), (19, 20))),
         "home" => Geometry(Line((3, 11), (12, 3), (21, 11)), Line((5, 9), (5, 21), (10, 21), (10, 15), (14, 15), (14, 21), (19, 21), (19, 9))),
         "wave" => Geometry(Line((3, 10), (3, 14)), Line((7, 6), (7, 18)), Line((12, 3), (12, 21)), Line((17, 7), (17, 17)), Line((21, 10), (21, 14))),
         "shield" => Geometry(new HavenPathFigure(new HavenPoint(12, 3),
