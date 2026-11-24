@@ -234,6 +234,12 @@ public sealed record StackFreeze(
     StackFreezeState State,
     Guid? CreatedAtRevisionId = null);
 
+public sealed record StackPromotionPath(string Path, string? RenameTo, StackMutationKind Kind,
+    IReadOnlyList<string> ReviewFlags);
+public sealed record StackPromotionPreview(Guid ProjectId, Guid SourceDomainId, string SourceName, Guid SourceRevisionId,
+    Guid TargetDomainId, string TargetName, Guid TargetRevisionId, int ExcludedWorkingChanges, int TotalCommittedChanges,
+    IReadOnlyList<StackPromotionPath> Paths);
+
 public sealed record StackAuditEntry(
     Guid Id,
     DateTimeOffset Timestamp,

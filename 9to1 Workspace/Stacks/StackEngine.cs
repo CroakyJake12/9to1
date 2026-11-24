@@ -272,6 +272,61 @@ public sealed class StackEngine
         }
     }
 
+    /// <summary>Read-only comparison of committed changes against the immediate parent, not a merge authorization.</summary>
+    public async Task<StackPromotionPreview> PreviewPromotionAsync(Guid domainId, StackActor actor,
+        CancellationToken cancellationToken = default)
+    {
+        Demand(actor, StackCapability.ViewSource, domainId.ToString("D"));
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var state = await GetStateAsync(cancellationToken).ConfigureAwait(false);
+            var source = FindDomain(state, domainId);
+            if (source.IsDeleted || source.ParentId is not { } targetId)
+                throw Failure(StackFailureCode.InvalidHierarchy, "Select an active Branch, Twig or Leaf with a parent.", domainId);
+            var target = FindDomain(state, targetId);
+            if (target.IsDeleted) throw Failure(StackFailureCode.InvalidHierarchy, "The parent domain is deleted.", target.Id);
+
+            // Exclude the parent's working changes and the viewer's own staged drafts.
+            var parent = target.BaseTree.Where(pair => pair.Value is not null)
+                .ToDictionary(pair => pair.Key, pair => pair.Value!.Copy(), StringComparer.OrdinalIgnoreCase);
+            foreach (var mutation in target.LocalChanges.Values)
+                ApplyToTree(parent, NormalizeMutation(mutation));
+            var targetWorking = target.WorkingChanges.Values.SelectMany(Touched)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var unresolved = state.Conflicts.Where(row => !row.IsResolved &&
+                (row.DomainId == target.Id || row.DomainId == source.Id)).Select(row => row.Path)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            var rows = new List<StackPromotionPath>();
+            var total = 0;
+            foreach (var mutation in source.LocalChanges.Values.OrderBy(row => row.Path, StringComparer.OrdinalIgnoreCase))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var paths = Touched(mutation).ToArray();
+                var flags = new List<string>(5);
+                if (paths.Any(path => !Equivalent(source.BaseTree.GetValueOrDefault(path), parent.GetValueOrDefault(path))))
+                    flags.Add("Parent differs from source base");
+                if (paths.Any(targetWorking.Contains)) flags.Add("Parent has an uncommitted edit");
+                if (paths.Any(unresolved.Contains)) flags.Add("Unresolved conflict");
+                if (paths.Any(path => ActiveFreeze(state, source, path) is not null || ActiveFreeze(state, target, path) is not null))
+                    flags.Add("Active Freeze");
+                if (state.Roots.Any(root => root.IsActive && IsDescendantOrSelf(state, target.Id, root.OwnerDomainId) &&
+                    paths.Any(path => root.Paths.Any(owned => StackPath.IsWithin(path, owned)))))
+                    flags.Add("Authoritative Root");
+                total++;
+                if (rows.Count < 100) rows.Add(new(mutation.Path, mutation.RenameTo, mutation.Kind, flags.AsReadOnly()));
+            }
+            return new(state.ProjectId, source.Id, source.Name, source.HeadRevisionId ?? source.BaseRevisionId,
+                target.Id, target.Name, target.HeadRevisionId ?? target.BaseRevisionId, source.WorkingChanges.Count,
+                total, rows.AsReadOnly());
+        }
+        finally { _gate.Release(); }
+
+        static IEnumerable<string> Touched(StackMutation mutation) => mutation.RenameTo is { } destination
+            ? [mutation.Path, destination] : [mutation.Path];
+    }
+
     public async Task<StackRevision> CreateCommitAsync(
         Guid domainId,
         string message,

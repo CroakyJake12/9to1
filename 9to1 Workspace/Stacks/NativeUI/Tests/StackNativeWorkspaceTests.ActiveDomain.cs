@@ -58,7 +58,7 @@ public sealed partial class StackNativeWorkspaceTests
                 return true;
             }
             catch { RetainedFailures.Add((workspace, loader, root, window)); throw; }
-        }));
+        }, CancellationToken.None));
     }
 
     [Fact]

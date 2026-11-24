@@ -102,6 +102,8 @@
               <Button action="9to1.Stacks.PreviousDiff" content="Previous diff" />
               <Button action="9to1.Stacks.NextDiff" content="Next diff" />
             </Container>
+            <Button name="StacksPreviewPromotion" action="9to1.Stacks.PreviewPromotion" content="Compare committed changes with parent" Interactive="{Binding CanPreviewPromotion}" />
+            <Text text="{Binding PromotionSummary}" text-wrapping="Wrap" accessible-name="Read-only source and parent revision comparison" />
             <Input name="StacksCommitMessage" accessible-name="Commit message" Type="Text" Value="{Binding CommitMessage, mode=TwoWay}" />
             <Button name="StacksCommit" action="9to1.Stacks.Commit" content="Commit working changes" />
           </Container>

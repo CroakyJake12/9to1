@@ -239,6 +239,41 @@ public sealed class StackEngineTests
     }
 
     [Fact]
+    public async Task PromotionPreviewNamesBothCommittedRevisionsAndDoesNotWriteOrIncludeDrafts()
+    {
+        string directory = NewDirectory();
+        var engine = await CreateProjectAsync(directory);
+        var project = await engine.GetProjectSummaryAsync(Admin);
+        Guid main = (await engine.OpenProjectAsync()).Id;
+        await engine.ApplyChangeAsync(main, Upsert("old.txt", "seed"), Admin);
+        var targetHead = await engine.CreateCommitAsync(main, "Seed", Admin);
+        var branch = await engine.CreateBranchAsync(project.ProjectId, "Topic", Admin);
+        await engine.ApplyChangeAsync(branch.Id,
+            new(StackMutationKind.Rename, "old.txt", RenameTo: "new.txt"), Admin);
+        var branchHead = await engine.CreateCommitAsync(branch.Id, "Rename", Admin);
+        await engine.ApplyChangeAsync(branch.Id, Upsert("hidden-draft.txt", "not committed"), Admin);
+        await engine.ApplyChangeAsync(main, Upsert("new.txt", "uncommitted parent"), Admin);
+        await engine.CreateFreezeAsync(main, "new.txt", [branch.Id], "Hold transition", null, null, Admin);
+        var manifest = Path.Combine(directory, JsonFileStackProjectStore.ManifestRelativePath);
+        var before = await File.ReadAllBytesAsync(manifest);
+
+        var preview = await engine.PreviewPromotionAsync(branch.Id, Admin);
+        var rename = Assert.Single(preview.Paths);
+        Assert.Equal(branchHead.Id, preview.SourceRevisionId);
+        Assert.Equal(targetHead.Id, preview.TargetRevisionId);
+        Assert.Equal(main, preview.TargetDomainId);
+        Assert.Equal(1, preview.ExcludedWorkingChanges);
+        Assert.Equal("old.txt", rename.Path); Assert.Equal("new.txt", rename.RenameTo);
+        Assert.Contains("Parent has an uncommitted edit", rename.ReviewFlags);
+        Assert.Contains("Active Freeze", rename.ReviewFlags);
+        Assert.Equal(before, await File.ReadAllBytesAsync(manifest));
+        await Assert.ThrowsAsync<StackFailureException>(() => engine.PreviewPromotionAsync(main, Admin));
+        var noView = new StackActor("unadmitted", new HashSet<StackCapability>());
+        Assert.Equal(StackFailureCode.PermissionDenied, (await Assert.ThrowsAsync<StackFailureException>(
+            () => engine.PreviewPromotionAsync(branch.Id, noView))).Code);
+    }
+
+    [Fact]
     public async Task ExistingConflictAndAcceptedProposalCannotWriteThroughActiveFreeze()
     {
         var engine = await CreateProjectAsync(NewDirectory());
