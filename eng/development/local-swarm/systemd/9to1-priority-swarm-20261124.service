@@ -1,0 +1,11 @@
+[Unit]
+Description=Ordered local development swarm
+
+[Service]
+Type=simple
+WorkingDirectory=/home/jacob/9to1-swarm-harness-20261124
+ExecStart=/usr/bin/python3 -B /home/jacob/9to1-swarm-harness-20261124/priority_harness.py run
+Restart=no
+TimeoutStopSec=20
+RuntimeMaxSec=2700
+UMask=0077

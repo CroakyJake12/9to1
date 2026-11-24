@@ -1,0 +1,11 @@
+[Unit]
+Description=21:20 London development backstop
+
+[Timer]
+OnCalendar=2026-11-24 21:20:00 Europe/London
+AccuracySec=1
+Persistent=true
+Unit=9to1-priority-swarm-20261124.service
+
+[Install]
+WantedBy=timers.target

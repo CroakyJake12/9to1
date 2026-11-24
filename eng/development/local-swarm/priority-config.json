@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "revision": "2026-11-24-priority-3",
+  "deployment_verified": true,
+  "fallback_load_allowed": false,
+  "start_by_local": "2026-11-24T21:20:00+00:00",
+  "qualification": "MISSION and canonical queue read on PC. All five scoped source/test pairs tracked at base5fae19b and clean at21:24UK. P0 order Spaces/Assistants,Dulche,Build,Files. Fullfeature/nativeacceptance not implied by scoped tests.",
+  "tasks": [
+    {
+      "ticket_id": "Q39",
+      "group": "P0 Spaces and Assistants",
+      "order": 10,
+      "focused_slice": "Implement or add a missing regression for bounded composer send admission: while one real backend send is held, fill the eight pending positions, submit one additional newer draft (including its attachments if supported), and prove the capacity refusal preserves that unsent draft/attachments and does not dispatch a ninth queued request. Existing ChatSpaceConcurrencyAcceptanceTests already cover ordinary completion preserving newer drafts; do not duplicate that case or edit that dirty test file. The actual queue owner is ChatSpaceController.Sending.cs. Extend only the owned routing fixture as needed to observe held dispatch and real calls. Scoped IX-SPACES-018 admission/recovery coverage, not full IME/native acceptance.",
+      "task": [
+        "Q39-P3",
+        "9to1 Workspace/Spaces/Source/Chat/ChatSpaceController.Sending.cs",
+        "9to1 Workspace/Spaces/Tests/ChatSpaceControllerRoutingTests.cs",
+        "9to1 Workspace/Spaces/Tests/HavenOS.Spaces.Tests.csproj",
+        "ChatSpaceControllerRoutingTests",
+        "9to1 Workspace/Spaces/Source/Chat/"
+      ]
+    },
+    {
+      "ticket_id": "Q42",
+      "group": "P0 Spaces and Assistants",
+      "order": 20,
+      "focused_slice": "Use the existing ConfigureAsync/OpenAssistantAsync canonical bridge paths and the actual test fixtures. Verify or implement the exact missing case where renaming the currently opened Assistant preserves its AssistantIdentity, existing Main conversation/history and does not start a task. Use the owned production methods; required scoped API additions are permitted, but do not duplicate the canonical bridge or infer native UI acceptance. Inspect existing coverage first and add a genuinely missing behavioral regression only.",
+      "task": [
+        "Q42-P3",
+        "9to1 Workspace/Assistants/Core/AssistantsWorkspaceController.cs",
+        "9to1 Workspace/Assistants/Tests/AssistantsWorkspaceControllerTests.cs",
+        "9to1 Workspace/Assistants/Tests/HavenOS.Assistants.Core.Tests.csproj",
+        "AssistantsWorkspaceControllerTests",
+        "9to1 Workspace/Assistants/Core/"
+      ]
+    },
+    {
+      "ticket_id": "Q57",
+      "group": "P0 Dulche",
+      "order": 10,
+      "focused_slice": "The real owner is TaskExecutionCoordinator.RunControls.cs. Add a missing stop-boundary regression (or focused fix if demonstrated): a stale expected ExecutionID must refuse before stopping the live original provider, preserve its current state/history, and leave the correct current run controllable. Use existing original-run fixtures and production StopOriginalRunAsync. Existing tests cover ordinary stop, actor revocation and reconstructed owner; avoid duplicating those cases. Do not route this task to HomeDulcheRuntimeService. Broader durable restart and UI acceptance remain unverified.",
+      "task": [
+        "Q57-P3",
+        "9to1 Workspace/shared/src/Haven.Application/Execution/TaskExecutionCoordinator.RunControls.cs",
+        "9to1 Workspace/shared/tests/Haven.Desktop.Tests/TaskRunOriginalRunControlTests.cs",
+        "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
+        "ChatCloudPermissionCallerTests|ChatCanonicalContextProducerTests",
+        "9to1 Workspace/shared/src/Haven.Application/Execution/"
+      ]
+    },
+    {
+      "ticket_id": "Q21",
+      "group": "P0 Build",
+      "order": 10,
+      "focused_slice": "Existing production OpenAsync reuses a dirty editor only after a fresh genuine source read; lines157-164 refuse RevisionConflict if underlying text changed. Exercise a missing regression: reopen the same canonical document after an external source edit while an unsaved draft exists, verify the existing EditorId and draft remain intact, no duplicate buffer is enrolled, and the refusal is the actual RevisionConflict. Use existing fixture source mutation APIs from the supplied tests. This is a concrete buffer-preservation slice of IX-BUILD-001; do not invent split-pane or filesystem-rename ownership or block merely because full native split/rename acceptance is broader.",
+      "task": [
+        "Q21-P3",
+        "9to1 Workspace/Dev/DeveloperSourceReviewSession.cs",
+        "9to1 Workspace/Dev/Tests/DeveloperSourceReviewSessionTests.cs",
+        "9to1 Workspace/Dev/Tests/HavenOS.Dev.Tests.csproj",
+        "DeveloperTaskWorkspaceServiceTests",
+        "9to1 Workspace/Dev/"
+      ]
+    },
+    {
+      "ticket_id": "Q11",
+      "requirement_id": "IX-FILES-001",
+      "group": "P0 Files",
+      "order": 10,
+      "focused_slice": "The actual FilesNativeBrowserSurface.Tabs.cs owns independent per-tab folder history, query and selected canonical identity. Add native headless interaction coverage for changing folder tabs and returning to the original tab without opening/duplicating its selected file; test failure of the current owner/read during a tab switch preserves original location/history/selection. Use existing FilesNativeBrowserSurfaceTests real Files/Home fixture and public binding/DispatchAsync APIs (9to1.Files.Tab.New/Select). Existing tests cover ordinary Back/Forward/Up but no dedicated folder-tab case was found. Fix a real owner bug if the test demonstrates one; do not substitute mock cross-provider transfer acceptance.",
+      "task": [
+        "Q11-P3",
+        "9to1 Workspace/Files/NativeUI/FilesNativeBrowserSurface.Tabs.cs",
+        "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserSurfaceTests.cs",
+        "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
+        "FilesNativeBrowserSurfaceTests",
+        "9to1 Workspace/Files/NativeUI/"
+      ]
+    }
+  ],
+  "needs_scope_validation": [
+    "Other P0 Spaces remain in the canonical 64-ticket queue; this is the first dispatch, not a full source allocation.",
+    "Dulche \u2192 Build \u2192 Files \u2192 P1 follow in mission order once actual scoped owner mappings are validated. Do not repeat old blocked mapping without repairing its ownership."
+  ]
+}
