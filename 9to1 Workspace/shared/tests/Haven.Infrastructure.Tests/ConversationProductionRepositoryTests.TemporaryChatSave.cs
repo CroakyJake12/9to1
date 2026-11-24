@@ -148,6 +148,33 @@ public sealed partial class ConversationProductionRepositoryTests
         Assert.Equal(request.History.Count, (await conversations.GetMessagesAsync(request.Original.Id, default)).Count);
     }
 
+    [Fact]
+    public async Task TemporaryChatSaveCannotBeBypassedByGenericLifecycleUpdateEvenWithNewMetadata()
+    {
+        var database = await CreateDatabaseAsync();
+        var history = new ConversationRepository(database);
+        var request = StartedTemporaryChatSave();
+        var ordinary = ConversationAt(DateTimeOffset.UtcNow);
+        await history.UpsertConversationAsync(ordinary, default);
+        await history.UpsertConversationAsync(request.Original, default);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => history.UpsertConversationAsync(
+            ordinary with { IsTemporary = true, Title = "Must not reclassify" }, default));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => history.UpsertConversationAsync(
+            request.Original with { IsTemporary = false, Title = "Must not save" }, default));
+        Assert.Equal(ordinary.Title, (await history.GetAsync(ordinary.Id, default))!.Title);
+        Assert.Equal(request.Original.Title, (await history.GetAsync(request.Original.Id, default))!.Title);
+        Assert.True((await history.GetAsync(request.Original.Id, default))!.IsTemporary);
+        await history.UpsertConversationAsync(ordinary with { Title = "Ordinary rename" }, default);
+        Assert.Equal("Ordinary rename", (await history.GetAsync(ordinary.Id, default))!.Title);
+
+        // Exact owned temporary placeholder may still change ONLY inside the
+        // subsequent typed local history and draft transaction.
+        var saved = await history.SaveTemporaryChatAsync(request with { ExpectedPlaceholder = request.Original }, default);
+        Assert.False(saved.Conversation.IsTemporary);
+        Assert.Equal(request.History.Select(message => message.Id),
+            (await history.GetMessagesAsync(request.Original.Id, default)).Select(message => message.Id));
+    }
+
     private static TemporaryChatSaveRequest StartedTemporaryChatSave()
     {
         var now = DateTimeOffset.UtcNow;

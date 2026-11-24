@@ -55,7 +55,7 @@ public sealed partial class ConversationProductionRepositoryTests
         var legacy = TemporaryTransferShare(old);
         await production.UpsertShareAsync(legacy, default);
         // A legacy caller may have marked the row Temporary while a share was installed.
-        await history.UpsertConversationAsync(old with { IsTemporary = true }, default);
+        await SetLegacyTemporaryFlagAsync(database, old.Id);
         var rejected = TemporaryTransferShare(old);
 
         await Assert.ThrowsAsync<TemporaryChatMustBeSavedException>(() => production.UpsertShareAsync(rejected, default));
@@ -106,7 +106,7 @@ public sealed partial class ConversationProductionRepositoryTests
             await held.MessagesEntered.Task.WaitAsync(TimeSpan.FromSeconds(10));
             // An older toggle can still replace the flag while this release is gathering its
             // projections. Update the real SQLite row, not the export's already-read record.
-            await history.UpsertConversationAsync(saved with { IsTemporary = true }, default);
+            await SetLegacyTemporaryFlagAsync(database, saved.Id);
         }
         finally
         {
@@ -114,6 +114,17 @@ public sealed partial class ConversationProductionRepositoryTests
         }
 
         await Assert.ThrowsAsync<TemporaryChatMustBeSavedException>(() => export);
+    }
+
+    // Reproduce older on-disk data without granting current public API calls
+    // permission to bypass the Temporary lifecycle boundary.
+    private static async Task SetLegacyTemporaryFlagAsync(ISqliteConnectionFactory database, Guid conversationId)
+    {
+        await using var connection = await database.OpenAsync(default);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE conversations SET is_temporary=1 WHERE id=$id;";
+        command.Parameters.AddWithValue("$id", conversationId.ToString());
+        Assert.Equal(1, await command.ExecuteNonQueryAsync());
     }
 
     private sealed class HeldExportHistory(ConversationRepository history) : IConversationRepository

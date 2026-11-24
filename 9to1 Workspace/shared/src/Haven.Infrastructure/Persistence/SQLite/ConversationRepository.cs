@@ -240,7 +240,8 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
     }
 
     private static async Task UpsertConversationWithinTransactionAsync(SqliteConnection connection,
-        SqliteTransaction? transaction, Conversation conversation, CancellationToken cancellationToken)
+        SqliteTransaction? transaction, Conversation conversation, CancellationToken cancellationToken,
+        bool allowTemporarySaveTransition = false)
     {
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
@@ -250,7 +251,9 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
             ON CONFLICT(id) DO UPDATE SET mode=excluded.mode, kind=excluded.kind, title=excluded.title,
               container_id=excluded.container_id, lesson_id=excluded.lesson_id, is_pinned=excluded.is_pinned,
               is_temporary=excluded.is_temporary, updated_at=excluded.updated_at,is_archived=excluded.is_archived,
-              parent_conversation_id=excluded.parent_conversation_id,compacted_at=excluded.compacted_at,space_id=excluded.space_id;
+              parent_conversation_id=excluded.parent_conversation_id,compacted_at=excluded.compacted_at,space_id=excluded.space_id
+            WHERE conversations.is_temporary=excluded.is_temporary
+               OR ($allowTemporarySaveTransition=1 AND conversations.is_temporary=1 AND excluded.is_temporary=0);
             """;
         command.Parameters.AddWithValue("$id", conversation.Id.ToString());
         command.Parameters.AddWithValue("$mode", (int)conversation.Mode);
@@ -266,7 +269,11 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
         command.Parameters.AddWithValue("$parentConversationId", (object?)conversation.ParentConversationId?.ToString() ?? DBNull.Value);
         command.Parameters.AddWithValue("$compactedAt", (object?)conversation.CompactedAt?.ToString("O") ?? DBNull.Value);
         command.Parameters.AddWithValue("$spaceId", (object?)conversation.SpaceId?.ToString() ?? DBNull.Value);
-        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        command.Parameters.AddWithValue("$allowTemporarySaveTransition", allowTemporarySaveTransition ? 1 : 0);
+        // The predicate is part of the write itself: a stale projection or a
+        // second writer cannot race a separate read and relabel stored history.
+        if (await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
+            throw new InvalidOperationException("Stored conversation history cannot change its Temporary lifecycle through a generic update.");
     }
 
     /// <summary>

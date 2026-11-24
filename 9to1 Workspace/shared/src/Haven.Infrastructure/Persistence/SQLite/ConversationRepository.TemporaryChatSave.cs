@@ -66,7 +66,8 @@ public sealed partial class ConversationRepository
                 throw new InvalidOperationException("The local conversation identity is already in use.");
         }
         else
-            await UpsertConversationWithinTransactionAsync(connection, transaction, saved, cancellationToken).ConfigureAwait(false);
+            await UpsertConversationWithinTransactionAsync(connection, transaction, saved, cancellationToken,
+                allowTemporarySaveTransition: true).ConfigureAwait(false);
 
         var savedBranchId = branchId ?? await EnsureCurrentBranchCoreAsync(connection, transaction, id, cancellationToken).ConfigureAwait(false);
         foreach (var message in history)
