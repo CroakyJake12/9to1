@@ -19,6 +19,71 @@ namespace HavenOS.Apps.Assistants.NativeUI.Tests;
 public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
 {
     [Fact]
+    public async Task Workspace_remembers_each_canonical_assistant_without_touching_the_draft_or_routing()
+    {
+        using var lifetime = new CancellationTokenSource();
+        await using var native = HeadlessUnitTestSession.StartNew(typeof(AssistantsTestApplication));
+        Assert.True(await native.Dispatch<bool>(async () =>
+        {
+            var calls = new List<(string Command, object? Parameter)>();
+            var bindings = Bindings(calls);
+            var first = Definition();
+            // The same visible ID in another namespace must not share this preference.
+            var second = first with { Identity = first.Identity with { NamespaceId = "another-owner" } };
+            var snapshot = AssistantsWorkspaceSnapshot.Empty with
+            { Revision = 1, SelectedAssistant = first, Assistants = [first, second] };
+            bindings.ShowWork();
+            bindings.ApplySnapshot(snapshot);
+            Assert.True(bindings.TrySetValue("Prompt", "Unsent draft"));
+            var registry = AssistantsNativeCuiSurface.CreateAvatarRegistry();
+            var composer = new Panel();
+            registry.RegisterObjectRenderer("AssistantConversation", _ => composer);
+            using var loader = new CuiControlLoader(registry);
+            loader.SetBindingContext(bindings); loader.SetActionDispatcher(bindings);
+            var window = new Window { Width = 900, Height = 700 };
+            try
+            {
+                var (tree, diagnostics) = loader.LoadMarkup(AssistantsCuiScenes.ReadSource(AssistantsCuiScene.Work));
+                Assert.Empty(diagnostics);
+                var root = Assert.IsAssignableFrom<Control>(tree);
+                loader.WireBindings(root);
+                window.Content = root; window.Show(); window.UpdateLayout();
+                bool Open() => bindings.TryGetValue("ShowAssistantWorkspace", out var result) && result is true;
+                Button Toggle() => Assert.Single(root.GetVisualDescendants().OfType<Button>(),
+                    b => b.Tag as string == "ToggleAssistantWorkspace");
+                Task Click()
+                {
+                    Toggle().RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    return loader.WhenActionsIdleAsync();
+                }
+
+                Assert.False(Open());
+                await Click();
+                Assert.True(Open());
+                Assert.Equal("Close workspace", Toggle().Content);
+                Assert.True(composer.IsEffectivelyVisible);
+                Assert.Equal("Unsent draft", bindings.Prompt);
+
+                bindings.ApplySnapshot(snapshot with { Revision = 2, SelectedAssistant = second });
+                Assert.False(Open());
+                await bindings.DispatchAsync("assistants.workspace.toggle", first.Identity, lifetime.Token);
+                Assert.False(Open());
+                bindings.ApplySnapshot(snapshot with { Revision = 3,
+                    SelectedAssistant = first with { Revision = first.Revision + 1 } });
+                Assert.True(Open());
+                Assert.True(composer.IsEffectivelyVisible);
+                await Click();
+                Assert.False(Open());
+                Assert.True(composer.IsEffectivelyVisible);
+                Assert.Equal("Unsent draft", bindings.Prompt);
+                Assert.Empty(calls); // Disclosure issues no canonical work/action/store command.
+            }
+            finally { loader.Dispose(); await loader.WhenActionsIdleAsync(); window.Close(); }
+            return true;
+        }, lifetime.Token));
+    }
+
+    [Fact]
     public async Task Authored_configuration_renders_typed_tool_connected_project_and_effort_rows_and_routes_the_same_second_row()
     {
         using var lifetime = new CancellationTokenSource();

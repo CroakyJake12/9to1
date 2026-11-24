@@ -1,5 +1,6 @@
 <Cui id="assistants.work" version="1">
   <Actions>
+    <Action name="ToggleAssistantWorkspace" command="assistants.workspace.toggle" parameter="{Binding WorkspaceAssistantIdentity}" />
     <Action name="OpenConversation" command="assistants.conversation.open" parameter="{Binding conversation}" />
     <Action name="ChooseOriginalProject" command="assistants.project.choose" parameter="{Binding project}" />
     <Action name="ResumeCompatiblePending" command="assistants.project.pending.resume" parameter="{Binding pending}" />
@@ -12,6 +13,7 @@
           <Button id="work-home" action="assistants.home" Margin="0,0,8,8">Assistants</Button>
           <Button id="assistant-edit" action="assistants.configuration.open" Margin="0,0,8,8" Interactive="{Binding CanConfigure}">Configure</Button>
           <Button id="new-conversation" action="assistants.conversation.new" Margin="0,0,8,8" Interactive="{Binding CanNewConversation}">New conversation</Button>
+          <Button id="assistant-workspace-toggle" action="ToggleAssistantWorkspace" Margin="0,0,8,8" Interactive="{Binding CanToggleAssistantWorkspace}" Text="{Binding AssistantWorkspaceToggleLabel}" />
         </Container>
         <Container Type="Grid" AccessibleName="Assistant identity" ColumnSizes="Auto 1fr" RowSizes="Auto">
           <Object Type="AssistantAvatar" Text="{Binding SelectedAssistantAvatarKey}" Width="56" Height="56" AccessibleName="{Binding SelectedAssistantAvatarLabel}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,14,0" />
@@ -73,8 +75,6 @@
       <Container Orientation="Horizontal" AccessibleName="Assistant actions" Type="Wrap">
         <Button id="new-project-task" action="assistants.project.newtask" Margin="0,0,8,8" Interactive="{Binding CanNewProjectTask}">New project Task</Button>
         <Button id="open-assistant-dev" action="assistants.development.open" Margin="0,0,8,8" Interactive="{Binding CanOpenDevelopment}">Open current Task in Dev</Button>
-        <Button action="assistants.memory.open" Margin="0,0,8,8" Interactive="{Binding CanInspectMemory}">Assistant memory</Button>
-        <Button action="assistants.resources.open" Margin="0,0,8,8" Interactive="{Binding CanInspectResources}">Resources</Button>
         <Button action="assistants.work.refresh" Margin="0,0,8,8" Interactive="{Binding CanRefreshWork}">Current work</Button>
         <Button action="assistants.proactivity.configure" Margin="0,0,8,8" Interactive="{Binding CanConfigureProactivity}">Check-ins</Button>
         <Button action="assistants.computer.open" Margin="0,0,8,8" Interactive="{Binding CanOpenMiniComputer}">Mini Computer</Button>
@@ -111,11 +111,18 @@
         <Button action="assistants.project.refresh" Interactive="{Binding CanRefreshProjects}">Refresh newest matching projects</Button>
         <Button action="assistants.project.cancel" Interactive="{Binding CanCloseProjectSelection}">Cancel project selection</Button>
       </Container>
-      <Container Type="Vertical Stack" VerticalScrolling="True" MaxHeight="200" CellGap="8" Active="{Binding HasSelectedConversations}">
-        <Text FontSize="18" FontWeight="SemiBold">Conversations</Text>
-        <Repeat Source="{Binding SelectedConversations}" As="conversation" Key="{Binding conversation.Id}">
-          <Button action="OpenConversation" Text="{Binding conversation.Title}" Margin="0,0,0,6" Interactive="{Binding conversation.CanOpen}" />
-        </Repeat>
+      <Container id="assistant-workspace" Type="Vertical Stack" AccessibleName="Assistant workspace" CellGap="8" Active="{Binding ShowAssistantWorkspace}">
+        <Text FontSize="18" FontWeight="SemiBold">Workspace</Text>
+        <Container Orientation="Horizontal" Type="Wrap" AccessibleName="Assistant sources and memory">
+          <Button action="assistants.memory.open" Margin="0,0,8,8" Interactive="{Binding CanInspectMemory}">Assistant memory</Button>
+          <Button action="assistants.resources.open" Margin="0,0,8,8" Interactive="{Binding CanInspectResources}">Resources</Button>
+        </Container>
+        <Container Type="Vertical Stack" VerticalScrolling="True" MaxHeight="200" CellGap="8" Active="{Binding HasSelectedConversations}">
+          <Text FontSize="18" FontWeight="SemiBold">Conversations</Text>
+          <Repeat Source="{Binding SelectedConversations}" As="conversation" Key="{Binding conversation.Id}">
+            <Button action="OpenConversation" Text="{Binding conversation.Title}" Margin="0,0,0,6" Interactive="{Binding conversation.CanOpen}" />
+          </Repeat>
+        </Container>
       </Container>
       <Container Type="Vertical Stack" VerticalScrolling="True" MaxHeight="200" CellGap="8" Active="{Binding HasSelectedWork}">
         <Text FontSize="18" FontWeight="SemiBold">Tasks and ongoing work</Text>

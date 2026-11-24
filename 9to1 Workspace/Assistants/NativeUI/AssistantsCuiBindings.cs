@@ -16,6 +16,7 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
     private readonly Action<Action> _publish;
     private readonly Func<bool> _isCurrent;
     private AssistantsWorkspaceSnapshot _snapshot = AssistantsWorkspaceSnapshot.Empty;
+    private readonly HashSet<AssistantIdentity> _openAssistantWorkspaces = [];
     private AssistantConfigurationDraft? _draft;
     private AssistantModelChoice? _selectedModel;
     private string _prompt = "";
@@ -293,6 +294,7 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
 
     public bool? IsActionAvailable(string command) => !_unavailable && Current && !_snapshot.IsRetiring && (command switch
     {
+        "assistants.workspace.toggle" => _route == "work" && _snapshot.SelectedAssistant is not null,
         "assistants.project.newtask" => CanNewConversation && !_projectBusy,
         "assistants.development.open" => _hasDevelopmentRoute && _snapshot.ConversationBinding is not null && _snapshot.Work?.Controls?.CanonicalTaskContext is not null && !Busy && !_projectBusy,
         "assistants.project.choose" => !_hasPendingProjectSubmission && _projectChooserVisible && _projectRows.Count != 0 &&
@@ -355,6 +357,18 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
         if (!IsCurrentOriginalRepeatAction(command, parameter)) return ValueTask.CompletedTask;
         if (IsActionAvailable(command) != true)
             return ValueTask.FromException(new InvalidOperationException("This Assistant action is unavailable."));
+        if (command == "assistants.workspace.toggle")
+        {
+            if (parameter is AssistantIdentity identity && identity == _snapshot.SelectedAssistant?.Identity)
+                _publish(() =>
+                {
+                    if (cancellationToken.IsCancellationRequested ||
+                        IsActionAvailable(command) != true || _snapshot.SelectedAssistant?.Identity != identity) return;
+                    if (!_openAssistantWorkspaces.Add(identity)) _openAssistantWorkspaces.Remove(identity);
+                    PublishAssistantWorkspace();
+                });
+            return ValueTask.CompletedTask;
+        }
         return _dispatch(command, parameter, cancellationToken);
     }
 
@@ -378,6 +392,17 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
         _publish(() => { if (Current) _values.Set(key, value); });
     }
 
+    private void PublishAssistantWorkspace()
+    {
+        var identity = _snapshot.SelectedAssistant?.Identity;
+        var canToggle = IsActionAvailable("assistants.workspace.toggle") == true;
+        var open = canToggle && identity is not null && _openAssistantWorkspaces.Contains(identity);
+        Set("WorkspaceAssistantIdentity", identity);
+        Set("CanToggleAssistantWorkspace", canToggle);
+        Set("ShowAssistantWorkspace", open);
+        Set("AssistantWorkspaceToggleLabel", open ? "Close workspace" : "Workspace");
+    }
+
     private void Refresh()
     {
         RefreshTaskProgress();
@@ -389,6 +414,7 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
         Set("CanInspectMemory", IsActionAvailable("assistants.memory.open") == true); Set("ShowMemory", _route == "memory"); Set("ShowMiniComputer", _route == "mini-computer");
         Set("ShowLegacyMigration", _route == "migration");
         Set("ShowHome", _route == "home"); Set("ShowConfiguration", _route == "configuration"); Set("ShowWork", _route == "work");
+        PublishAssistantWorkspace();
         Set("Assistants", _snapshot.Assistants.Select(definition => new AssistantRow(definition.Identity,
             $"{Uri.EscapeDataString(definition.Identity.DenId)}/{Uri.EscapeDataString(definition.Identity.NamespaceId)}/{Uri.EscapeDataString(definition.Identity.DefinitionId)}", definition.Configuration.Name, definition.Configuration.Description,
             definition.Configuration.Archived ? "Archived" : definition.Configuration.Enabled ? "Enabled" : "Disabled", usable && !Busy, definition.Configuration.IconResourceId)).ToArray());
