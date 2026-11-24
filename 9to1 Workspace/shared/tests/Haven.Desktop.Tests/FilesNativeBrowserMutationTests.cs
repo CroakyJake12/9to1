@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text;
 using System.Security.Cryptography;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using System.Globalization;
