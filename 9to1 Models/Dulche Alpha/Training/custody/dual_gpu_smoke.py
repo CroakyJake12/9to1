@@ -1,6 +1,7 @@
 """Operator-owned two-rank CUDA smoke, with no model, optimizer or network listener."""
 
 import argparse
+import ctypes
 import json
 import os
 import re
@@ -26,6 +27,38 @@ def _identity(attempt, rank, expected_uuid):
         raise CustodyError("The smoke requires a fresh attempt, rank and exact GPU UUID.")
 
 
+def _cuda_driver_identity():
+    """Read the real UUID and CC of visible ordinal zero without trusting its mask."""
+    try:
+        driver = ctypes.CDLL("libcuda.so.1")
+        uuid_symbol = "cuDeviceGetUuid_v2" if hasattr(driver, "cuDeviceGetUuid_v2") else "cuDeviceGetUuid"
+        number = ctypes.c_int
+        pnum = ctypes.POINTER(number)
+        uuid_type = ctypes.c_ubyte * 16
+
+        def checked(name, types, *args):
+            function = getattr(driver, name)
+            function.argtypes = types
+            function.restype = number
+            result = function(*args)
+            if result != 0:
+                raise CustodyError(f"CUDA driver {name} failed with result {result}.")
+
+        count, device, major, minor = (number() for _ in range(4))
+        binary_uuid = uuid_type()
+        checked("cuInit", [ctypes.c_uint], 0)
+        checked("cuDeviceGetCount", [pnum], ctypes.byref(count))
+        if count.value != 1:
+            raise CustodyError("The CUDA driver must see exactly one admitted device.")
+        checked("cuDeviceGet", [pnum, number], ctypes.byref(device), 0)
+        checked(uuid_symbol, [ctypes.POINTER(uuid_type), number], ctypes.byref(binary_uuid), device.value)
+        checked("cuDeviceComputeCapability", [pnum, pnum, number],
+                ctypes.byref(major), ctypes.byref(minor), device.value)
+    except (AttributeError, OSError) as error:
+        raise CustodyError("The CUDA driver cannot verify the admitted device UUID.") from error
+    return "GPU-" + str(UUID(bytes=bytes(binary_uuid))), (major.value, minor.value)
+
+
 def _cuda_device(torch, rank, expected_uuid):
     if os.environ.get("CUDA_VISIBLE_DEVICES") != expected_uuid:
         raise CustodyError("CUDA visibility must be exactly the approved GPU UUID.")
@@ -42,7 +75,11 @@ def _cuda_device(torch, rank, expected_uuid):
         value = identifier.lower().removeprefix("gpu-")
         observed = "GPU-" + value
     else:
-        raise CustodyError("The Torch runtime cannot verify the CUDA device UUID.")
+        observed = None
+    if observed is None or _GPU.fullmatch(observed) is None:
+        observed, driver_capability = _cuda_driver_identity()
+        if driver_capability != _CAPABILITY[rank]:
+            raise CustodyError("The CUDA driver reports a different compute capability for this rank.")
     if observed != expected_uuid or (props.major, props.minor) != _CAPABILITY[rank]:
         raise CustodyError("Observed CUDA identity or compute capability differs from the admitted rank.")
     return torch.device("cuda:0")

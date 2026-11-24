@@ -1,12 +1,16 @@
+import ctypes
 from importlib.util import find_spec
 import json
+import os
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 import unittest
-from uuid import uuid4
+from unittest.mock import patch
+from uuid import UUID, uuid4
 
 from custody.artifacts import CustodyError
-from custody.dual_gpu_smoke import _MARKER, _pipe_pair, _verified_receipts
+from custody.dual_gpu_smoke import _MARKER, _cuda_device, _cuda_driver_identity, _pipe_pair, _verified_receipts
 
 _IDS = ("GPU-00000000-0000-0000-0000-000000000001", "GPU-00000000-0000-0000-0000-000000000002")
 _ROOT = str(Path(__file__).resolve().parents[1])
@@ -14,6 +18,53 @@ _ROOT = str(Path(__file__).resolve().parents[1])
 
 def command(code, *args):
     return [sys.executable, "-I", "-B", "-c", f"import sys; sys.path.insert(0, {_ROOT!r})\n" + code, *args]
+
+
+class CudaDriverIdentityTests(unittest.TestCase):
+    def driver(self, *, count=1, uuid_api_error=0, legacy=False):
+        raw_uuid = UUID(_IDS[0][4:]).bytes
+        def write_int(ptr, value):
+            ctypes.cast(ptr, ctypes.POINTER(ctypes.c_int))[0] = value
+            return 0
+        def fill_uuid(ptr, device):
+            self.assertEqual(device, 17)
+            if not uuid_api_error:
+                ctypes.memmove(ptr, raw_uuid, 16)
+            return uuid_api_error
+        def capability(major, minor, device):
+            self.assertEqual(device, 17)
+            write_int(major, 12)
+            return write_int(minor, 0)
+        def get_device(ptr, ordinal):
+            self.assertEqual(ordinal, 0)
+            return write_int(ptr, 17)
+        driver = {"cuInit": lambda flags: flags, "cuDeviceGetCount": lambda ptr: write_int(ptr, count),
+                  "cuDeviceGet": get_device, "cuDeviceComputeCapability": capability,
+                  "cuDeviceGetUuid": fill_uuid}
+        if not legacy:
+            driver["cuDeviceGetUuid_v2"] = fill_uuid
+            driver["cuDeviceGetUuid"] = lambda *_: self.fail("v2 must be preferred")
+        return SimpleNamespace(**driver)
+
+    def test_driver_fallback_checks_ordinal_uuid_and_compute_capability(self):
+        torch = SimpleNamespace(cuda=SimpleNamespace(is_available=lambda: True, device_count=lambda: 1,
+                              get_device_properties=lambda _: SimpleNamespace(major=12, minor=0, uuid=object())),
+                                device=lambda device: device)
+        for legacy in (False, True):
+            with patch("custody.dual_gpu_smoke.ctypes.CDLL", return_value=self.driver(legacy=legacy)):
+                self.assertEqual(_cuda_driver_identity(), (_IDS[0], (12, 0)))
+                with patch.dict(os.environ, {"CUDA_VISIBLE_DEVICES": _IDS[0]}):
+                    self.assertEqual(_cuda_device(torch, 0, _IDS[0]), "cuda:0")
+                with patch.dict(os.environ, {"CUDA_VISIBLE_DEVICES": _IDS[1]}):
+                    with self.assertRaisesRegex(CustodyError, "differs"):
+                        _cuda_device(torch, 0, _IDS[1])
+
+    def test_driver_fails_closed_for_bad_count_or_uuid_kernel_status(self):
+        for driver, expected in ((self.driver(count=2), "exactly one"),
+                                 (self.driver(uuid_api_error=100), "cuDeviceGetUuid_v2.*100")):
+            with patch("custody.dual_gpu_smoke.ctypes.CDLL", return_value=driver):
+                with self.assertRaisesRegex(CustodyError, expected):
+                    _cuda_driver_identity()
 
 
 class OwnedPairTests(unittest.TestCase):
