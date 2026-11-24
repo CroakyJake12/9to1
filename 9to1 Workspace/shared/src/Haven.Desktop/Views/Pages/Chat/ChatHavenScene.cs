@@ -100,6 +100,8 @@ internal sealed partial class ChatHavenScene : IDisposable
         Messages = (DynamicUIRuntime)Root.DescendantsAndSelf().Single(element => element.Name == "Messages");
         EmptyState = Root.DescendantsAndSelf().Single(element => element.Name == "EmptyState");
         Status = (HavenText)Root.DescendantsAndSelf().Single(element => element.Name == "Status");
+        TemporaryToggle = (HavenButton)Root.DescendantsAndSelf().Single(element => element.Name == "TemporaryToggle");
+        TemporaryToggle.Invoked += (_, _) => TemporaryToggleRequested?.Invoke(this, EventArgs.Empty);
         AttachmentStatus = (HavenText)Root.DescendantsAndSelf().Single(element => element.Name == "AttachmentStatus");
         ManageAttachments = (HavenButton)Root.DescendantsAndSelf().Single(element => element.Name == "ManageAttachments");
         RecoveryHost = Root.DescendantsAndSelf().OfType<NativeHost>().Single(element => element.Name == "RecoveryHost");
@@ -154,6 +156,20 @@ internal sealed partial class ChatHavenScene : IDisposable
     public DynamicUIRuntime Messages { get; }
     public HavenElement EmptyState { get; }
     public HavenText Status { get; }
+    internal HavenButton TemporaryToggle { get; }
+    internal event EventHandler? TemporaryToggleRequested;
+
+    internal void SetTemporaryControl(bool available, bool isTemporary)
+    {
+        var state = isTemporary ? "Temporary: on" : "Temporary: off";
+        TemporaryToggle.SetValue(HavenProperties.Visibility, available ? HavenVisibility.Visible : HavenVisibility.Collapsed);
+        if (TemporaryToggle.Content == state) return;
+        TemporaryToggle.Content = state;
+        TemporaryToggle.Accessibility.AccessibleName = isTemporary
+            ? "Temporary Chat, on. Select to save locally."
+            : "Temporary Chat, off. Select to turn on for a new chat.";
+        TemporaryToggle.Variant = isTemporary ? ButtonVariant.Secondary : ButtonVariant.Ghost;
+    }
     public HavenText AttachmentStatus { get; }
     public HavenButton ManageAttachments { get; }
     public NativeHost RecoveryHost { get; }
@@ -774,15 +790,17 @@ internal sealed partial class ChatHavenScene : IDisposable
     {
         const string markup = """
             <Page Name="ChatRoot" Layout="Overlay" Background="Transparent">
-              <Container Name="Workspace" Layout="Grid" Width="100%" Height="100%" Rows="1fr Auto" Padding="32px 10px 32px 4px" Gap="12px">
-                <Container Name="ConversationViewport" Row="0" Layout="Overlay" Width="100%" Overflow="Scroll" Clip="true">
+              <Container Name="Workspace" Layout="Grid" Width="100%" Height="100%" Rows="Auto 1fr Auto" Padding="32px 10px 32px 4px" Gap="12px">
+                <Button Name="TemporaryToggle" Row="0" Variant="Ghost" Content="Temporary Chat" MinHeight="30px"
+                        HorizontalAlignment="End" Visibility="Collapsed" />
+                <Container Name="ConversationViewport" Row="1" Layout="Overlay" Width="100%" Overflow="Scroll" Clip="true">
                   <Container Name="EmptyState" Layout="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" Gap="10px">
                     <Text Content="How can I help?" Level="H1" HorizontalAlignment="Center" />
                     <Text Content="Start a conversation or attach context below." FontSize="13" Foreground="TextSecondary" HorizontalAlignment="Center" />
                   </Container>
                   <DynamicUIRuntime Name="Messages" Width="100%" MaxWidth="980px" HorizontalAlignment="Center" />
                 </Container>
-                <Container Name="Footer" Row="1" Layout="Vertical" Width="100%" MaxWidth="900px" HorizontalAlignment="Center" Gap="7px">
+                <Container Name="Footer" Row="2" Layout="Vertical" Width="100%" MaxWidth="900px" HorizontalAlignment="Center" Gap="7px">
                   <Container Name="ContextCard" Layout="Vertical" Width="100%" HorizontalAlignment="Center" Gap="6px" Padding="12px 14px" Visibility="Collapsed">
                     <Container Name="ContextHeaderRow" Layout="Horizontal" Width="100%" Gap="8px">
                       <Button Name="ContextToggle" Variant="Ghost" Content="Show context" MinHeight="30px" />

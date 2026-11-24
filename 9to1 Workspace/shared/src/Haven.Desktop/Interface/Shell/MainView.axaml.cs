@@ -1025,7 +1025,8 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             _workflowTemplate,
             _customTemplate,
             Haven.Desktop.App.Services?.GetService<IMessageAttachmentService>(),
-            Haven.Desktop.App.Services?.GetService<IConversationProductionRepository>());
+            Haven.Desktop.App.Services?.GetService<IConversationProductionRepository>(),
+            enableFreshChatTemporaryLifecycle: true);
         page.ModelChanged += OnNewChatModelChanged;
         page.ConversationStateChanged += OnNewChatConversationStateChanged;
         page.AddActionSelected += OnNewChatAddActionSelected;
@@ -3848,16 +3849,16 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         ApplyShellVisualState();
     }
 
-    private void OnSavedChatSelected(object? sender, RoutedEventArgs e)
+    private async void OnSavedChatSelected(object? sender, RoutedEventArgs e)
     {
-        _newChatPage?.SetTemporary(false);
-        StoredChatLabel.Text = "Saved Chat";
+        if (_newChatPage is not { } page) return;
+        await page.SetTemporaryAsync(false);
     }
 
-    private void OnTemporaryChatSelected(object? sender, RoutedEventArgs e)
+    private async void OnTemporaryChatSelected(object? sender, RoutedEventArgs e)
     {
-        _newChatPage?.SetTemporary(true);
-        StoredChatLabel.Text = "Temporary Chat";
+        if (_newChatPage is not { } page) return;
+        await page.SetTemporaryAsync(true);
     }
 
     private bool _focusTopRailTabAfterRefresh;
@@ -3925,6 +3926,8 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         StoredChatDropdown.IsVisible = _edition == HavenShellEdition.New
                                        && CurrentPage is NewChatPage newChatPage
                                        && !newChatPage.HasStarted;
+        if (CurrentPage is NewChatPage storedChat)
+            StoredChatLabel.Text = storedChat.IsTemporary ? "Temporary Chat" : "Saved Chat";
         CheckPendingOriginalFilesPublication();
         GoModeLabel.Text = CurrentPage is NewDashboardPage ? "Dashboard" : CurrentPage is NewChatPage ? "Chat" : "Go";
         CheckPendingOriginalFilesPublication();

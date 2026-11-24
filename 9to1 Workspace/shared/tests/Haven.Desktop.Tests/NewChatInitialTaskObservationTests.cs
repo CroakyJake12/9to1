@@ -712,11 +712,12 @@ public sealed partial class ChatCloudPermissionCallerTests
         return InitialUiCapturedLease(owner) ?? throw new InvalidOperationException("No actual source-issued lease was captured.");
     }
     private static NewChatPage CreateNativeComposerPage(Rig rig, string directory, NativeComposerDraftStore drafts,
-        IConversationSafetyService? safety = null)
+        IConversationSafetyService? safety = null, IConversationRepository? conversationWrites = null,
+        bool enableFreshChatTemporaryLifecycle = false)
     {
         var paths = NativeComposerProxy<IAppPaths>((name, _) => name == "get_DataDirectory" ? directory : Path.Combine(directory, name));
         var local = new GenUiLocalActionRegistry(); var instances = new GenUiInstanceStore();
-        return new(new HavenEventBus(), rig.Conversations, rig.Client, rig.Service, safety ?? new Safety(),
+        return new(new HavenEventBus(), conversationWrites ?? rig.Conversations, rig.Client, rig.Service, safety ?? new Safety(),
             NativeComposerProxy<IConversationVersioningService>((name, _) => throw new InvalidOperationException("Unexpected versioning: " + name)),
             new UserPreferencesService(paths),
             new GenerativeUiEventRouter([], new NativeComposerAudit(), instances), instances,
@@ -724,7 +725,8 @@ public sealed partial class ChatCloudPermissionCallerTests
             new ChoicePromptTemplateRuntime(local), new ChecklistTemplateRuntime(local, instances), new DataGridTemplateRuntime(local),
             new CardDeckTemplateRuntime(local, instances), new GraphTemplateRuntime(local), new TaskListTemplateRuntime(local),
             new DashboardTemplateRuntime(local), new AssessmentTemplateRuntime(local), new WorkflowTemplateRuntime(local),
-            new CustomTemplateRuntime(local, instances), conversationProduction: drafts.Source);
+            new CustomTemplateRuntime(local, instances), conversationProduction: drafts.Source,
+            enableFreshChatTemporaryLifecycle: enableFreshChatTemporaryLifecycle);
     }
     private sealed class NativeComposerDraftStore
     {

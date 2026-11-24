@@ -1221,6 +1221,7 @@ public sealed class ChatPageViewModel : ObservableObject
                             switch (item.Kind)
                             {
                                 case ChatStreamEventKind.UserMessage when item.Message is not null:
+                                    _legacyChatsWithObservedInput.Add(item.Message.ConversationId);
                                     Messages.Add(new MessageBubbleViewModel(item.Message, ShowConfidence));
                                     RaiseMessageStateChanged();
                                     break;
@@ -1483,8 +1484,16 @@ public sealed class ChatPageViewModel : ObservableObject
     /// <summary>
     /// Performs the toggle temporary step owned by this component.
     /// </summary>
+    private readonly HashSet<Guid> _legacyChatsWithObservedInput = [];
     private void ToggleTemporary()
     {
+        if (IsSending || HasMessages || _legacyChatsWithObservedInput.Contains(_conversation.Id))
+        {
+            Status = IsTemporary
+                ? "Use the native Chat page to confirm Save. This conversation remains Temporary."
+                : "A started chat cannot become Temporary. Start a separate new chat.";
+            return;
+        }
         IsTemporary = !IsTemporary;
         ConversationChanged?.Invoke(this, EventArgs.Empty);
     }
