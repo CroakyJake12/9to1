@@ -103,12 +103,13 @@ class RankSftStep:
         self._prepared = PreparedRankClip(self._plan, rank=self._rank, parameters=self._params)
         return self._prepared.receipt
 
-    def apply_and_stage(self, decision, publish_fragment):
+    def apply_and_stage(self, decision, publish_fragment, *, before_optimizer=None):
         """Apply once and stage real optimizer state via the owner-supplied publisher."""
         import torch
 
         self._require_unclaimed()
-        if self._prepared is None or not callable(publish_fragment) or type(decision) is not ClipDecision:
+        if (self._prepared is None or not callable(publish_fragment) or type(decision) is not ClipDecision
+                or (before_optimizer is not None and not callable(before_optimizer))):
             raise CustodyError("The SFT rank has no prepared gradient or checkpoint publisher.")
         if not math.isfinite(decision.norm) or decision.norm <= 0:
             raise CustodyError("SFT requires nonzero finite accumulated gradients.")
@@ -126,6 +127,8 @@ class RankSftStep:
             name, delta = None, 0.0
             if any_grad:
                 before = witness[1].detach().clone() if witness else None
+                if before_optimizer is not None:
+                    before_optimizer()
                 self._optimizer.step()
                 if witness:
                     name, param = witness

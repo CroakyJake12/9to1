@@ -74,3 +74,38 @@ class SftCustodyTests(unittest.TestCase):
         for value, ref in zip(actual, expected):
             torch.testing.assert_close(value, ref, rtol=0, atol=0)
             self.assertIsNone(value.grad)
+
+    @unittest.skipUnless(find_spec("torch"), "requires installed PyTorch")
+    def test_cancel_after_joint_clip_before_optimizer_mutates_no_parameters_or_state(self):
+        import torch
+        from .rank_grad_clip import ClipPlan, GradientSlot
+        from .rank_sft import RankSftStep
+
+        plan = ClipPlan(self.attempt.attempt_id, 1, self.owners, (GradientSlot(1, "y"),))
+        parameter = torch.nn.Parameter(torch.tensor([3.0]))
+        before = parameter.detach().clone()
+        adam = torch.optim.AdamW([parameter], lr=0.01)
+        a = RankSftStep(self.checkpoint, plan, rank=0, parameters=(), optimizer=None, grad_accum=1)
+        b = RankSftStep(self.checkpoint, plan, rank=1, parameters=(("y", parameter),), optimizer=adam, grad_accum=1)
+        a.microbatch(0, lambda: None)
+        b.microbatch(0, lambda backward: backward(parameter.square().sum()))
+        receipts = (a.prepare_clip(), b.prepare_clip())
+        decision = decide_global_clip(plan, receipts)
+
+        def cancelled():
+            # The guard is after global clipping, but no optimizer side effects exist.
+            self.assertLessEqual(parameter.grad.norm().item(), 1.0)
+            self.assertEqual(adam.state_dict()["state"], {})
+            torch.testing.assert_close(parameter, before, rtol=0, atol=0)
+            raise CustodyError("lease revoked before optimizer")
+
+        def unexpected_publish():
+            self.fail("cancelled rank should not publish")
+
+        with self.assertRaisesRegex(CustodyError, "lease revoked"):
+            b.apply_and_stage(decision, unexpected_publish, before_optimizer=cancelled)
+        torch.testing.assert_close(parameter, before, rtol=0, atol=0)
+        self.assertEqual(adam.state_dict()["state"], {})
+        self.assertIsNone(self.checkpoint.committed())
+        with self.assertRaisesRegex(CustodyError, "no longer replayable"):
+            b.apply_and_stage(decision, unexpected_publish)
