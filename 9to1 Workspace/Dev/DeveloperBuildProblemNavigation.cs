@@ -22,10 +22,28 @@ public static class DeveloperBuildProblemNavigation
     public static bool TryResolveCurrentSavedText(CodeDiagnostic diagnostic, string text, out int offset,
         CancellationToken token = default)
     {
-        offset = 0; var start = diagnostic.Range.Start;
-        if (start.Line < 0 || start.Character < 0 || start.Line == int.MaxValue || start.Character == int.MaxValue) return false;
-        return DeveloperTextNavigation.TryResolve(text,
-            ((long)start.Line + 1).ToString(CultureInfo.InvariantCulture) + ":" + ((long)start.Character + 1).ToString(CultureInfo.InvariantCulture),
-            out offset, token);
+        return TryResolveCurrentSavedRange(diagnostic, text, out offset, out _, token);
+    }
+
+    /// <summary>Resolve both reported UTF-16 endpoints; never clamp a stale range or select a partial one.</summary>
+    public static bool TryResolveCurrentSavedRange(CodeDiagnostic diagnostic, string text, out int offset,
+        out int length, CancellationToken token = default)
+    {
+        offset = length = 0;
+        token.ThrowIfCancellationRequested();
+        if (!Resolve(diagnostic.Range.Start, out var start) || !Resolve(diagnostic.Range.End, out var end) ||
+            end < start) return false;
+        offset = start;
+        length = end - start;
+        return true;
+
+        bool Resolve(CodePosition position, out int coordinate)
+        {
+            coordinate = 0;
+            if (position.Line is < 0 or int.MaxValue || position.Character is < 0 or int.MaxValue) return false;
+            return DeveloperTextNavigation.TryResolve(text,
+                (position.Line + 1).ToString(CultureInfo.InvariantCulture) + ":" +
+                (position.Character + 1).ToString(CultureInfo.InvariantCulture), out coordinate, token);
+        }
     }
 }

@@ -272,9 +272,16 @@ public sealed class ProductionCodeIntelligenceService(
         cancellationToken.ThrowIfCancellationRequested();
         var root = Path.GetFullPath(workspaceRoot);
         var truncated = output.Length > maximumCharacters;
-        using var lines = new StringReader(truncated ? output[..maximumCharacters] : output);
+        var endOfCapture = maximumCharacters;
+        if (truncated && output[maximumCharacters] is not ('\r' or '\n') &&
+            output[maximumCharacters - 1] is not ('\r' or '\n'))
+        {
+            // A prefix ending within a row is not evidence of a complete diagnostic.
+            endOfCapture = output.AsSpan(0, maximumCharacters).LastIndexOfAny('\r', '\n') + 1;
+        }
+        using var lines = new StringReader(truncated ? output[..endOfCapture] : output);
         var result = new List<CodeDiagnostic>(); var seen = new HashSet<CodeDiagnostic>();
-        var rejected = 0; var unmatched = 0;
+        var rejected = truncated && endOfCapture < maximumCharacters ? 1 : 0; var unmatched = 0;
         while (lines.ReadLine() is { } line)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -287,7 +294,8 @@ public sealed class ProductionCodeIntelligenceService(
             if (rawPath.Length is 0 or > 4096 || rawPath.Any(char.IsControl) ||
                 !TryCoordinate(match.Groups["line"], out var startLine) || !TryCoordinate(match.Groups["column"], out var startColumn))
             { rejected++; continue; }
-            var endLine = startLine; var endColumn = startColumn + 1;
+            // MSBuild point diagnostics have no end. Do not invent an adjacent UTF-16 column.
+            var endLine = startLine; var endColumn = startColumn;
             if (match.Groups["endLine"].Success &&
                 (!TryCoordinate(match.Groups["endLine"], out endLine) || !TryCoordinate(match.Groups["endColumn"], out endColumn) ||
                  endLine < startLine || endLine == startLine && endColumn < startColumn))
