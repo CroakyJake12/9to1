@@ -681,11 +681,26 @@ public sealed partial class ConversationProductionRepository(
     {
         await EnsureSchemaAsync(cancellationToken).ConfigureAwait(false);
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        // Same writer transaction as the share insertion: do not trust a caller's stale
+        // saved-state preflight or allow reusing one conversation's share ID under another.
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        await using (var admission = connection.CreateCommand())
+        {
+            admission.Transaction = transaction;
+            admission.CommandText = "SELECT is_temporary FROM conversations WHERE id=$conversationId;";
+            admission.Parameters.AddWithValue("$conversationId", session.ConversationId.ToString());
+            var temporary = await admission.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false)
+                ?? throw new InvalidOperationException("Conversation not found.");
+            if (Convert.ToInt64(temporary, System.Globalization.CultureInfo.InvariantCulture) != 0)
+                throw new TemporaryChatMustBeSavedException();
+        }
         await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText = """
             INSERT INTO shared_sessions(id,conversation_id,token_hash,bind_address,port,state,created_at,expires_at,stopped_at)
             VALUES($id,$conversationId,$tokenHash,$bindAddress,$port,$state,$createdAt,$expiresAt,$stoppedAt)
-            ON CONFLICT(id) DO UPDATE SET state=excluded.state,expires_at=excluded.expires_at,stopped_at=excluded.stopped_at;
+            ON CONFLICT(id) DO UPDATE SET state=excluded.state,expires_at=excluded.expires_at,stopped_at=excluded.stopped_at
+            WHERE shared_sessions.conversation_id=excluded.conversation_id;
             """;
         command.Parameters.AddWithValue("$id", session.Id.ToString());
         command.Parameters.AddWithValue("$conversationId", session.ConversationId.ToString());
@@ -696,7 +711,10 @@ public sealed partial class ConversationProductionRepository(
         command.Parameters.AddWithValue("$createdAt", session.CreatedAt.ToString("O"));
         command.Parameters.AddWithValue("$expiresAt", session.ExpiresAt.ToString("O"));
         command.Parameters.AddWithValue("$stoppedAt", (object?)session.StoppedAt?.ToString("O") ?? DBNull.Value);
-        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        if (await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
+            throw new InvalidOperationException("This share belongs to another conversation.");
+        cancellationToken.ThrowIfCancellationRequested();
+        await transaction.CommitAsync(CancellationToken.None).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -718,8 +736,7 @@ public sealed partial class ConversationProductionRepository(
     /// </summary>
     public async Task<ConversationExportDocument> BuildExportAsync(Guid conversationId, CancellationToken cancellationToken)
     {
-        var conversation = await conversations.GetAsync(conversationId, cancellationToken).ConfigureAwait(false)
-                           ?? throw new InvalidOperationException("Conversation not found.");
+        var conversation = await RequireExportableConversationAsync(conversationId, cancellationToken).ConfigureAwait(false);
         var branches = await GetBranchesAsync(conversationId, cancellationToken).ConfigureAwait(false);
         var messages = await conversations.GetMessagesAsync(conversationId, cancellationToken).ConfigureAwait(false);
         var attachments = await GetAttachmentsAsync(conversationId, null, cancellationToken).ConfigureAwait(false);
@@ -735,7 +752,17 @@ public sealed partial class ConversationProductionRepository(
             """;
         versionsCommand.Parameters.AddWithValue("$conversationId", conversationId.ToString());
         var versions = await ReadVersionsAsync(versionsCommand, cancellationToken).ConfigureAwait(false);
+        // The existing export projections use separate repository reads. Recheck the durable
+        // lifecycle at the output boundary rather than relying on the earlier admission alone.
+        await RequireExportableConversationAsync(conversationId, cancellationToken).ConfigureAwait(false);
         return new ConversationExportDocument(conversation, branches, messages, versions, attachments, bookmarks, DateTimeOffset.UtcNow);
+    }
+
+    private async Task<Conversation> RequireExportableConversationAsync(Guid conversationId, CancellationToken cancellationToken)
+    {
+        var conversation = await conversations.GetAsync(conversationId, cancellationToken).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("Conversation not found.");
+        return conversation.IsTemporary ? throw new TemporaryChatMustBeSavedException() : conversation;
     }
 
     /// <summary>

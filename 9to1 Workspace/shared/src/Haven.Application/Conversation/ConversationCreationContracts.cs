@@ -27,3 +27,10 @@ public sealed record TemporaryChatSaveRequest(Conversation Original, IReadOnlyLi
 
 /// <summary>Acknowledges the single committed local transaction.</summary>
 public sealed record TemporaryChatSaveReceipt(Conversation Conversation, Guid BranchId);
+
+/// <summary>An unsaved Temporary Chat cannot be sent to an export or sharing destination.</summary>
+public sealed class TemporaryChatMustBeSavedException()
+    : InvalidOperationException("Save this Temporary Chat before exporting or sharing it.")
+{
+    public const string Code = "must-save-first";
+}

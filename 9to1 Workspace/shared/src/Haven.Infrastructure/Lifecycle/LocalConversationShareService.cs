@@ -23,7 +23,8 @@ namespace Haven.Infrastructure;
 /// Represents local conversation share service and keeps its related state and behavior together.
 /// </summary>
 public sealed class LocalConversationShareService(
-    IConversationProductionRepository conversations) : ILocalConversationShareService
+    IConversationProductionRepository conversations,
+    IConversationRepository conversationHistory) : ILocalConversationShareService
 {
     /// <summary>
     /// Stores active locally so this component can preserve the dependency, cache, or state between member calls.
@@ -39,6 +40,11 @@ public sealed class LocalConversationShareService(
         if (duration < TimeSpan.FromMinutes(1) || duration > TimeSpan.FromHours(24))
             throw new ArgumentOutOfRangeException(nameof(duration), "LAN shares may last from one minute to 24 hours.");
 
+        var conversation = await conversationHistory.GetAsync(conversationId, cancellationToken).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("Conversation not found.");
+        if (conversation.IsTemporary)
+            throw new TemporaryChatMustBeSavedException();
+
         await StopAsync(conversationId, cancellationToken).ConfigureAwait(false);
         var address = FindPrivateAddress()
                       ?? throw new InvalidOperationException("No private local-network address is available. Connect to a private Wi-Fi or Ethernet network before sharing.");
@@ -53,7 +59,15 @@ public sealed class LocalConversationShareService(
         var session = new SharedSession(
             Guid.NewGuid(), conversationId, tokenHash, address.ToString(), port,
             SharedSessionState.Active, now, now.Add(duration), null);
-        await conversations.UpsertShareAsync(session, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await conversations.UpsertShareAsync(session, cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            listener.Stop();
+            throw;
+        }
 
         var cancellation = new CancellationTokenSource();
         var runtime = new ShareRuntime(session, token, listener, cancellation);
@@ -188,7 +202,16 @@ public sealed class LocalConversationShareService(
                     return;
                 }
 
-                var document = await conversations.BuildExportAsync(runtime.Session.ConversationId, runtime.Cancellation.Token).ConfigureAwait(false);
+                ConversationExportDocument document;
+                try
+                {
+                    document = await conversations.BuildExportAsync(runtime.Session.ConversationId, runtime.Cancellation.Token).ConfigureAwait(false);
+                }
+                catch (TemporaryChatMustBeSavedException)
+                {
+                    await WriteResponseAsync(stream, 404, "Not Found", "The share link is invalid or has expired.", "text/plain; charset=utf-8", runtime.Cancellation.Token).ConfigureAwait(false);
+                    return;
+                }
                 var html = BuildHtml(document, runtime.Session.ExpiresAt);
                 await WriteResponseAsync(stream, 200, "OK", html, "text/html; charset=utf-8", runtime.Cancellation.Token).ConfigureAwait(false);
             }
