@@ -234,6 +234,18 @@ public sealed class SiteNativeAuthoringSession(ISiteNativeWorkspaceAuthority wor
         return new SiteDocumentRenderer().Render(sameProject, sameSitePage.PageId, SiteRenderContext.PagePreview);
     });
 
+    public Task<SiteResponsiveLayoutObservation> InspectResponsiveAsync(SiteNativeAuthoringPage samePage, SiteProject sameProject,
+        SitePage sameSitePage, SiteComponent sameComponent, string? breakpoint, AuthenticatedResourceActor actor,
+        CancellationToken token = default) => PublishAsync(async () =>
+    {
+        await RevalidateCoreAsync(samePage, actor, token).ConfigureAwait(false);
+        if (!samePage.Projects.Any(item => ReferenceEquals(item, sameProject)) ||
+            !sameProject.Pages.Any(item => ReferenceEquals(item, sameSitePage)) ||
+            !sameProject.Components.Any(item => ReferenceEquals(item, sameComponent)))
+            throw new UnauthorizedAccessException("Retain the original project, page and component to inspect responsive layout.");
+        return SiteResponsiveLayout.Inspect(sameProject, sameSitePage.PageId, sameComponent.ComponentId, breakpoint);
+    });
+
     private IssuedPage RequirePage(SiteNativeAuthoringPage page, AuthenticatedResourceActor actor) =>
         _pages.TryGetValue(page, out var original) && original.Actor == actor ? original
             : throw new UnauthorizedAccessException("Retain the SAME privately issued Sites page and original actor.");

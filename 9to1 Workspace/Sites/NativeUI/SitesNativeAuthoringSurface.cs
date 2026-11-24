@@ -44,6 +44,7 @@ public sealed class SitesNativeAuthoringSurface : UserControl, IAsyncDisposable,
     private bool _closing;
     private Task? _close;
     private string _status = "Opening Sites";
+    private string? _responsiveEvidence;
     public new event PropertyChangedEventHandler? PropertyChanged;
 
     public SitesNativeAuthoringSurface(SiteNativeAuthoringSession session, AuthenticatedResourceActor originalActor,
@@ -74,7 +75,7 @@ public sealed class SitesNativeAuthoringSurface : UserControl, IAsyncDisposable,
             });
         };
         _components.SelectionChanged += (_, _) =>
-        { PublishNativeChange(() => { if (Component is { } component && _pending is null) _text.Text = Text(component); Changed(); }); };
+        { PublishNativeChange(() => { if (Component is { } component && _pending is null) _text.Text = Text(component); _responsiveEvidence = null; Changed(); }); };
         _name.TextChanged += (_, _) => { PublishNativeChange(Changed); };
         _path.TextChanged += (_, _) => { PublishNativeChange(Changed); };
         _text.TextChanged += (_, _) => { PublishNativeChange(Changed); };
@@ -133,12 +134,19 @@ public sealed class SitesNativeAuthoringSurface : UserControl, IAsyncDisposable,
         "9to1.Sites.AddHeading" or "9to1.Sites.AddText" => Editing && Project is not null && SelectedPage is not null,
         "9to1.Sites.SaveText" => Editing && Project is not null && Component is not null,
         "9to1.Sites.Preview" => Editing && Project is not null && SelectedPage is not null,
+        "9to1.Sites.InspectDesktop" => Editing && Project is not null && SelectedPage is not null && Component is not null,
+        "9to1.Sites.InspectTablet" => CanInspectBreakpoint("tablet"),
+        "9to1.Sites.InspectMobile" => CanInspectBreakpoint("mobile"),
         "9to1.Sites.Apply" => Available && _pending is { HasAuditRecovery: false } pending
             && (pending.Approval.IsAllowed || pending.Approval.State == HomePermissionRequestState.PendingApproval),
         "9to1.Sites.CancelReview" => Available && _pending is { HasAuditRecovery: false, ObservedResult: null },
         "9to1.Sites.RetryAudit" => Available && _pending is { HasAuditRecovery: true },
         _ => false
     };
+    private bool CanInspectBreakpoint(string name) =>
+        Editing && SelectedPage is not null && Component is not null && Project is { } project &&
+        project.DesignSystem.Breakpoints.TryGetValue(name, out var width) && width > 0;
+
     public bool TryGetValue(string path, out object? value)
     {
         value = path switch
@@ -148,11 +156,16 @@ public sealed class SitesNativeAuthoringSurface : UserControl, IAsyncDisposable,
             "CanRefresh" => IsActionAvailable("9to1.Sites.Refresh"), "CanCreateProject" => IsActionAvailable("9to1.Sites.CreateProject"),
             "CanCreatePage" => IsActionAvailable("9to1.Sites.CreatePage"), "CanAdd" => IsActionAvailable("9to1.Sites.AddText"),
             "CanSaveText" => IsActionAvailable("9to1.Sites.SaveText"), "CanPreview" => IsActionAvailable("9to1.Sites.Preview"),
+            "ResponsiveLayout" => _responsiveEvidence ?? "Select a component to inspect its saved layout at a named breakpoint. Nothing is edited or published.",
+            "CanInspectDesktop" => IsActionAvailable("9to1.Sites.InspectDesktop"),
+            "CanInspectTablet" => IsActionAvailable("9to1.Sites.InspectTablet"),
+            "CanInspectMobile" => IsActionAvailable("9to1.Sites.InspectMobile"),
             "CanApply" => IsActionAvailable("9to1.Sites.Apply"), "CanCancel" => IsActionAvailable("9to1.Sites.CancelReview"),
             "CanRetryAudit" => IsActionAvailable("9to1.Sites.RetryAudit"), _ => null
         };
         return path is "Selection" or "PendingChange" or "Status" or "CanRefresh" or "CanCreateProject" or "CanCreatePage"
-            or "CanAdd" or "CanSaveText" or "CanPreview" or "CanApply" or "CanCancel" or "CanRetryAudit";
+            or "CanAdd" or "CanSaveText" or "CanPreview" or "CanApply" or "CanCancel" or "CanRetryAudit"
+            or "ResponsiveLayout" or "CanInspectDesktop" or "CanInspectTablet" or "CanInspectMobile";
     }
     public ValueTask DispatchAsync(string action, object? parameter, CancellationToken token = default)
     {
@@ -202,6 +215,22 @@ public sealed class SitesNativeAuthoringSurface : UserControl, IAsyncDisposable,
                 _status = rendered.Diagnostics.Any(item => item.IsError)
                     ? string.Join("; ", rendered.Diagnostics.Select(item => item.Message))
                     : "Saved page preview ready."; return;
+            }
+            if (action is "9to1.Sites.InspectDesktop" or "9to1.Sites.InspectTablet" or "9to1.Sites.InspectMobile")
+            {
+                var breakpoint = action == "9to1.Sites.InspectDesktop" ? null :
+                    action == "9to1.Sites.InspectTablet" ? "tablet" : "mobile";
+                var observed = await _session.InspectResponsiveAsync(originalPage!, project!, selectedPage!, component!,
+                    breakpoint, _actor, linked.Token);
+                Retained();
+                var viewport = breakpoint is null ? "Desktop / base" : $"{breakpoint} · max {observed.MaximumWidth} px";
+                var values = observed.Properties.Values.OrderBy(property => property.Name, StringComparer.Ordinal)
+                    .Select(property => property.Name + ": " + property.Value + (property.IsExplicitOverride
+                        ? " (override)" : property.InheritedFromBreakpoint is { } inherited
+                            ? " (inherited from " + inherited + ")" : " (base)"));
+                _responsiveEvidence = $"Saved revision {observed.ProjectRevision} · {viewport} • " +
+                    (observed.Properties.Count == 0 ? "No authored layout properties." : string.Join(" • ", values));
+                return;
             }
             var operation = action switch { "9to1.Sites.CreateProject" => "create", "9to1.Sites.CreatePage" => "page",
                 "9to1.Sites.AddHeading" => "heading", "9to1.Sites.AddText" => "text", "9to1.Sites.SaveText" => "save-text", _ => null };
@@ -265,7 +294,7 @@ public sealed class SitesNativeAuthoringSurface : UserControl, IAsyncDisposable,
             original.SetException(error); throw;
         }
     }
-    private void ClearPreview() { _preview.Children.Clear(); _html.Text = ""; }
+    private void ClearPreview() { _preview.Children.Clear(); _html.Text = ""; _responsiveEvidence = null; }
     private void Changed()
     {
         var editing = Editing;
