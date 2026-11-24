@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { CHUNK_BYTES, EXPORT_BYTES, JSON_BYTES } from './google-transport.mjs';
-import { DRIVE_FILE_FIELDS } from './provider.mjs';
+import { DRIVE_FILE_FIELDS, exactNameQuery } from './provider.mjs';
 import { API_PREFIX, FilesHttpError, guid } from './protocol.mjs';
 import { DRIVE_UNIT_COSTS, QuotaError } from './quota.mjs';
 
@@ -147,11 +147,6 @@ function uploadIntent(body = {}) {
 function progress(entry) {
   return { transferId: wrap(entry.transferId), itemId: wrap(entry.itemId), chunkBytes: CHUNK_BYTES,
     uploadedBytes: entry.uploadedBytes, totalBytes: entry.totalBytes, state: entry.state };
-}
-
-function exactNameQuery(parent, name) {
-  const escaped = name.replaceAll('\\', '\\\\').replaceAll("'", "\\'");
-  return "'" + parent + "' in parents and name = '" + escaped + "' and trashed = false";
 }
 
 function acknowledgedRange(headers, floor, ceiling, total) {

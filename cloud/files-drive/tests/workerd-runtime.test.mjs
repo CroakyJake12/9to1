@@ -97,7 +97,7 @@ test('production Worker uses Workerd SQLite and cross-worker session RPC without
     GOOGLE_DRIVE_CLIENT_SECRET: 'fixture-only-client-secret',
     DRIVE_ENCRYPTION_KEY: randomBytes(32).toString('base64url'),
     FILES_DEDICATED_GOOGLE_PROJECT: 'true',
-    DRIVE_CONDITIONAL_WRITES_VERIFIED: 'false',
+    DRIVE_CONDITIONAL_WRITES_VERIFIED: 'true',
     FILES_PROVIDER_VALIDATION_RUN: '2f7c006a-5b57-4bcb-8fef-207c9bfe50b8',
     };
 
@@ -150,13 +150,15 @@ test('production Worker uses Workerd SQLite and cross-worker session RPC without
         ownedByMe: true, trashed: false, shared: false, capabilities: { canDownload: true } });
     }
     if (url.origin === 'https://www.googleapis.com' && url.pathname === '/drive/v3/files' && request.method === 'GET') {
-      if (url.searchParams.get('q')?.includes('name = ')) return Response.json({ files: [] });
+      const query = url.searchParams.get('q');
+      if (query?.includes("name = 'Existing sibling.txt'")) return Response.json({ files: [{ id: 'occupied-name-fixture' }] });
+      if (query?.includes('name = ')) return Response.json({ files: [] });
       const now = new Date().toISOString();
       return Response.json({ files: [{
         id: DRIVE_FILE_ID, name: 'Fixture document.txt', mimeType: 'text/plain', version: '1',
         createdTime: now, modifiedTime: now, parents: ['google-root-drive-fixture-id'],
         size: String(FILE_BYTES.byteLength), ownedByMe: true, shared: false, trashed: false,
-        explicitlyTrashed: false, capabilities: { canDownload: true }, owners: [], appProperties: {},
+        explicitlyTrashed: false, capabilities: { canDownload: true, canRename: true }, owners: [], appProperties: {},
       }], nextPageToken: null, incompleteSearch: false });
     }
     if (url.origin === 'https://www.googleapis.com' && url.pathname === `/drive/v3/files/${DRIVE_FILE_ID}` && request.method === 'GET') {
@@ -165,7 +167,7 @@ test('production Worker uses Workerd SQLite and cross-worker session RPC without
         id: DRIVE_FILE_ID, name: 'Fixture document.txt', mimeType: 'text/plain', version: '1',
         createdTime: now, modifiedTime: now, parents: ['google-root-drive-fixture-id'],
         size: String(FILE_BYTES.byteLength), ownedByMe: true, shared: false, trashed: false,
-        explicitlyTrashed: false, capabilities: { canDownload: true }, owners: [], appProperties: {},
+        explicitlyTrashed: false, capabilities: { canDownload: true, canRename: true }, owners: [], appProperties: {},
       };
       if (url.searchParams.get('alt') === 'media') {
         assert.equal(request.headers.get('range'), `bytes=0-${FILE_BYTES.byteLength - 1}`);
@@ -352,6 +354,21 @@ test('production Worker uses Workerd SQLite and cross-worker session RPC without
     const deniedChanges = await jsonResponse(await request(mf, '/changes', { sid: sessionId('W') }));
     assert.equal(deniedChanges.status, 403);
 
+    const source = listing.body.items[0];
+    const renamePayload = { newName: 'Existing sibling.txt' };
+    const rename = await jsonResponse(await request(mf, '/operations', {
+      method: 'POST', body: JSON.stringify({ ...renamePayload, operation: {
+        id: { value: 'eafa4f3b-a391-4178-8c22-c5f305d06ce5' },
+        actorId: OWNER_ACCOUNT_ID, itemId: source.id, operation: 'Rename', state: 'Pending',
+        sourceParentId: source.parentId, baseRevisionId: source.currentRevisionId, payload: renamePayload,
+      } }), origin: FILES_ORIGIN,
+    }));
+    assert.equal(rename.status, 200);
+    assert.equal(rename.body.error.code, 'NameConflict');
+    assert.deepEqual(rename.body.error.details, { notStarted: 'true' });
+    assert.ok(googleCalls.every(call => call.method !== 'PATCH'));
+    assert.deepEqual(await jsonResponse(await request(mf, '/changes?limit=1')), changePage);
+
     const callsBeforeRestart = [...googleCalls];
     assert.deepEqual(callsBeforeRestart.slice(0, 4).map(call => [call.host, call.path, call.method]), [
       ['oauth2.googleapis.com', '/token', 'POST'],
@@ -359,8 +376,8 @@ test('production Worker uses Workerd SQLite and cross-worker session RPC without
       ['www.googleapis.com', '/drive/v3/files/root', 'GET'],
       ['www.googleapis.com', '/drive/v3/files', 'GET'],
     ]);
-    assert.equal(callsBeforeRestart.filter(call => call.path === `/drive/v3/files/${DRIVE_FILE_ID}`).length, 4,
-      'download setup, version checks and content must all use the Workerd outbound gate');
+    assert.equal(callsBeforeRestart.filter(call => call.path === `/drive/v3/files/${DRIVE_FILE_ID}`).length, 5,
+      'download setup, version checks, content and rename preflight must all use the Workerd outbound gate');
     const contextAfterList = await jsonResponse(await request(mf, '/context'));
     assert.equal(contextAfterList.status, 200);
     const usageBeforeRestart = contextAfterList.body.usage;

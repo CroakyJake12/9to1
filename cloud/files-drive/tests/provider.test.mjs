@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
-import { DriveProvider, strongDriveETag } from '../src/provider.mjs';
+import { DriveProvider, exactNameQuery, strongDriveETag } from '../src/provider.mjs';
 import { DriveStore } from '../src/store.mjs';
 import { DriveQuota } from '../src/quota.mjs';
 import { GoogleTransport } from '../src/google-transport.mjs';
@@ -61,7 +61,8 @@ function fixture(t, { limits, conditionalWrites = true } = {}) {
       const trash = query === 'trashed = true';
       const parent = /'([^']+)' in parents/.exec(query)?.[1];
       return response(200, { files: [...remote.values()].filter(value =>
-        value.trashed === trash && (trash || value.parents.includes(parent))) });
+        value.trashed === trash && (trash || value.parents.includes(parent)) &&
+        (!query.includes(" and name = ") || exactNameQuery(parent, value.name) === query)) });
     }
     if (method === 'POST') {
       const body = JSON.parse(options.body);
@@ -327,4 +328,64 @@ test('transfer helpers return current provider identity and reject a folder with
   actual.size = '79';
   actual.version = Number.MAX_SAFE_INTEGER + 1;
   await assert.rejects(f.provider.readRaw(item.id), { code: 'ProviderUnavailable' });
+});
+
+test('rename and move refuse observed exact-name collisions without mutating or discarding the intent', async t => {
+  const f = fixture(t);
+  const source = file('collision-source', { name: "Jacob's notes" });
+  const destination = file('collision-folder', { mimeType: FOLDER });
+  const occupying = file('collision-occupant', { name: "Jacob's notes", parents: [destination.id] });
+  const sibling = file('collision-sibling', { name: 'Existing folder' });
+  for (const existing of [source, destination, occupying, sibling]) f.remote.set(existing.id, existing);
+  const mapped = f.store.mapFile(source);
+  const folder = f.store.mapFile(destination);
+  const move = operation('Move', mapped, { destination: folder.id });
+  const rename = operation('Rename', mapped, { name: sibling.name });
+
+  for (const request of [rename, move]) {
+    const refused = await f.provider.mutate(request);
+    assert.equal(refused.error.code, 'NameConflict');
+    assert.deepEqual(refused.error.details, { notStarted: 'true' });
+    assert.equal(f.store.operation(request.operation.id).stage, 'prepared');
+  }
+  assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 0);
+  const exactQueries = f.model.calls.map(call => call.url.searchParams.get('q')).filter(Boolean);
+  assert.ok(exactQueries.includes("'collision-folder' in parents and name = 'Jacob" + String.fromCharCode(92) + "'s notes' and trashed = false"));
+  assert.equal(f.store.changes(0).items.length, 0);
+  assert.deepEqual(source.parents, ['my-root']);
+
+  f.remote.delete(occupying.id);
+  const moved = await f.reopen().provider.mutate(move);
+  assert.equal(moved.value.state, 'Committed');
+  assert.deepEqual(moved.value.itemId, mapped.id);
+  assert.deepEqual(source.parents, [destination.id]);
+  assert.equal(f.store.changes(0).items.length, 1);
+});
+
+test('an incomplete exact-name search never grants a Drive mutation', async t => {
+  const f = fixture(t);
+  const source = file('unchecked-source');
+  f.remote.set(source.id, source);
+  f.model.list = () => ({ files: [], incompleteSearch: true });
+  const result = await f.provider.mutate(operation('Rename', f.store.mapFile(source), { name: 'Unverified' }));
+  assert.equal(result.error.code, 'ProviderUnavailable');
+  assert.deepEqual(result.error.details, { notStarted: 'true' });
+  assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 0);
+  assert.equal(source.name, 'unchecked-source');
+});
+
+test('rename ignores the selected item but checks later collision pages', async t => {
+  const f = fixture(t);
+  const source = file('first-match');
+  f.remote.set(source.id, source);
+  const request = operation('Rename', f.store.mapFile(source), { name: 'Rename me' });
+  f.model.list = url => url.searchParams.get('pageToken') === 'next'
+    ? { files: [{ id: 'different-match' }] }
+    : { files: [{ id: source.id }], nextPageToken: 'next' };
+
+  assert.equal((await f.provider.mutate(request)).error.code, 'NameConflict');
+  assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 0);
+  f.model.list = () => ({ files: [{ id: source.id }] });
+  assert.equal((await f.provider.mutate(request)).value.state, 'Committed');
+  assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 1);
 });

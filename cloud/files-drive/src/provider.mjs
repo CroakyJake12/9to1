@@ -133,6 +133,11 @@ function requireFile(file, expected) {
   return file;
 }
 
+export function exactNameQuery(parent, name) {
+  const escaped = name.replaceAll('\\', '\\\\').replaceAll("'", "\\'");
+  return "'" + parent + "' in parents and name = '" + escaped + "' and trashed = false";
+}
+
 function firstParent(file) {
   return file.parents?.[0] ?? null;
 }
@@ -395,6 +400,29 @@ export class DriveProvider {
     };
   }
 
+  async #assertDestinationNameAvailable(parentId, name, originId, token, signal) {
+    if (typeof name !== 'string' || name.length > 255 || /[\u0000-\u001f\u007f]/.test(name)) throw badMetadata();
+    let cursor = null;
+    const visited = new Set();
+    for (let page = 0; page < MAX_SCAN_PAGES; page++) {
+      const result = await this.#get('v3', 'files', {
+        q: exactNameQuery(remoteId(parentId), name), spaces: 'drive', pageSize: '2', pageToken: cursor,
+        fields: 'files(id),nextPageToken,incompleteSearch',
+      }, token, signal, 'list');
+      if (!Array.isArray(result?.files) || result.files.length > 2 || result.incompleteSearch === true) throw badMetadata();
+      const ids = result.files.map(file => remoteId(file?.id));
+      if (ids.some(id => id !== originId)) {
+        throw failure(409, 'NameConflict', 'That Google Drive folder already contains an item with this name. Choose another name or destination, or skip this change.');
+      }
+      cursor = result.nextPageToken ?? null;
+      if (cursor === null) return;
+      if (typeof cursor !== 'string' || !cursor || cursor.length > 16384 || visited.has(cursor)) throw badMetadata();
+      visited.add(cursor);
+    }
+    // A bounded or incomplete read is not evidence that the name is free.
+    throw badMetadata();
+  }
+
   async #updatePlan(intent, token, signal) {
     if (!this.#conditionalWrites) throw capability('Google Drive version protection is unavailable for this action.');
     const row = this.#store.byId(intent.itemId);
@@ -430,8 +458,12 @@ export class DriveProvider {
       if (source.capabilities?.canRemoveChildren !== true || target.capabilities?.canAddChildren !== true) {
         throw capability('Google Drive does not allow moving the item between these folders.');
       }
+      await this.#assertDestinationNameAvailable(destination, before.name, googleId, token, signal);
       params.addParents = destination;
       params.removeParents = expectedSource;
+    }
+    if (operation === 'Rename') {
+      await this.#assertDestinationNameAvailable(expectedSource, intent.newName, googleId, token, signal);
     }
     const path = 'files/' + googleId;
     const current = await this.#request(requestUrl('v2', path, { fields: DRIVE_V2_PATCH_FIELDS }), token, { kind: 'metadata', signal });
