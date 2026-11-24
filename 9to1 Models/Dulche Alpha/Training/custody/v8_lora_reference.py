@@ -15,6 +15,7 @@ from .v8_sampler import V8_SOURCE_SHA256
 _PAGED_SHA = "2c1a0b615f935a8da7af9669cc99d7a7bc1e8833a5613e63e512f1bb870f2d21"
 _SHA = re.compile(r"[0-9a-f]{64}")
 _GIB = 1 << 30
+_CANONICAL_DOCS = {".gitattributes", "LICENSE"}
 
 
 def _identity(stat):
@@ -31,23 +32,38 @@ def _pinned_small(path, sha, limit=1024 * 1024):
     return value
 
 
+def _model_files(root):
+    checked_path(root, directory=True)
+    files = {path.name for path in root.iterdir()}
+    if ".cache" in files:
+        # Exact installed HF cache entry. Verify the directory itself, never
+        # walk or trust its content as model inputs.
+        cache = checked_path(root / ".cache", directory=True)
+        if cache.st_uid != os.geteuid():
+            raise CustodyError("The installed model cache directory must belong to the operator.")
+        files.remove(".cache")
+    return files
+
+
 def _verify_model(root, pins_path, pins_sha):
     """Exact flat local file set. No links, remote code, or byte transformations."""
     checked_path(root, directory=True)
     spec = json.loads(_pinned_small(pins_path, pins_sha))
     files = spec.get("files") if type(spec) is dict else None
     if (type(files) is not dict or not 1 <= len(files) <= 128
-            or any(len(relative_parts(name)) != 1 or type(sha) is not str or not _SHA.fullmatch(sha)
+            or any((name not in _CANONICAL_DOCS and len(relative_parts(name)) != 1)
+                   or type(sha) is not str or not _SHA.fullmatch(sha)
                    for name, sha in files.items())):
         raise CustodyError("Invalid trusted local v8 model file manifest.")
-    if {path.name for path in root.iterdir()} != set(files):
+    if _model_files(root) != set(files):
         raise CustodyError("The local v8 model directory is not the exact pinned file set.")
     if not {"config.json", "tokenizer_config.json", "model.safetensors.index.json"} <= files.keys():
         raise CustodyError("The model manifest must include config, tokenizer and Safetensors index.")
     observed = {}
     total = 0
     for name, sha in files.items():
-        if not name.endswith((".json", ".safetensors", ".txt", ".model", ".tiktoken", ".jinja", ".md")):
+        if name not in _CANONICAL_DOCS and not name.endswith(
+                (".json", ".safetensors", ".txt", ".model", ".tiktoken", ".jinja", ".md")):
             raise CustodyError("Unexpected executable or unreviewed model file type.")
         with _open_regular(root / name) as source:
             before = _identity(os.fstat(source.fileno()))
@@ -62,7 +78,7 @@ def _verify_model(root, pins_path, pins_sha):
 
 
 def _model_unchanged(root, observed):
-    if {path.name for path in root.iterdir()} != observed.keys():
+    if _model_files(root) != observed.keys():
         raise CustodyError("The pinned model directory changed during native loading.")
     for name, expected in observed.items():
         if _identity(checked_path(root / name, directory=False)) != expected:

@@ -23,13 +23,18 @@ class NativeReferenceBoundaryTests(unittest.TestCase):
             model = root / "model"
             model.mkdir()
             payloads = {"config.json": b"{}", "tokenizer_config.json": b"{}",
-                        "model.safetensors.index.json": b"{}", "model-00001-of-00001.safetensors": b"fixture"}
+                        "model.safetensors.index.json": b"{}", "model-00001-of-00001.safetensors": b"fixture",
+                        ".gitattributes": b"official metadata", "LICENSE": b"official license"}
             for file, data in payloads.items():
                 (model / file).write_bytes(data)
             pins = root / "pins.json"
             manifest = json.dumps({"files": {name: digest(data) for name, data in payloads.items()}}).encode()
             pins.write_bytes(manifest)
+            cache = model / ".cache"
+            cache.mkdir()
+            (cache / "untraversed").symlink_to(model / "unavailable")
             before = _verify_model(model, pins, digest(manifest))
+            self.assertEqual(set(before), set(payloads))
             _model_unchanged(model, before)
             (model / "extra.json").write_text("{}")
             with self.assertRaisesRegex(CustodyError, "exact pinned file set"):
@@ -40,6 +45,26 @@ class NativeReferenceBoundaryTests(unittest.TestCase):
                 _model_unchanged(model, before)
             with self.assertRaisesRegex(CustodyError, "failed verification"):
                 _verify_model(model, pins, digest(manifest))
+
+    def test_only_exact_real_owned_cache_and_two_pinned_doc_names_are_admitted(self):
+        from custody.v8_lora_reference import _model_files
+        with TemporaryDirectory() as tmp:
+            model = Path(tmp)
+            (model / ".cache").write_bytes(b"not a directory")
+            with self.assertRaisesRegex(CustodyError, "not a directory"):
+                _model_files(model)
+            (model / ".cache").unlink()
+            outside = model / "actual"
+            outside.mkdir()
+            (model / ".cache").symlink_to(outside)
+            with self.assertRaisesRegex(CustodyError, "links"):
+                _model_files(model)
+            (model / ".cache").unlink()
+            (model / ".cache").mkdir()
+            with patch("custody.v8_lora_reference.os.geteuid", return_value=os.geteuid() + 1):
+                with self.assertRaisesRegex(CustodyError, "operator"):
+                    _model_files(model)
+            self.assertEqual(_model_files(model), {"actual"})
 
     def test_system_and_cgroup_headroom_and_no_swap_must_all_hold(self):
         with TemporaryDirectory() as tmp:
