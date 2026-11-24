@@ -1,7 +1,9 @@
 using System.Collections;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Interactivity;
+using Avalonia.Input.Raw;
 using Avalonia.Input;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -21,7 +23,7 @@ namespace HavenOS.Apps.Assistants.NativeUI.Tests;
 public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
 {
     [Fact]
-    public async Task Workspace_keyboard_follows_the_exact_disclosure_and_does_not_take_Escape_from_the_composer()
+    public async Task Workspace_overlay_resizes_and_owns_only_its_exact_input_and_focus()
     {
         using var lifetime = new CancellationTokenSource();
         await using var native = HeadlessUnitTestSession.StartNew(typeof(AssistantsTestApplication));
@@ -30,13 +32,15 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
             var bindings = Bindings([]);
             var assistant = Definition();
             bindings.ShowWork();
-            bindings.ApplySnapshot(AssistantsWorkspaceSnapshot.Empty with { Revision = 1, SelectedAssistant = assistant });
+            var main = new AssistantConversationSummary(Guid.NewGuid(), "Main", DateTimeOffset.UtcNow, false, null) { IsMain = true };
+            bindings.ApplySnapshot(AssistantsWorkspaceSnapshot.Empty with
+            { Revision = 1, SelectedAssistant = assistant, Conversations = [main] });
             var registry = AssistantsNativeCuiSurface.CreateAvatarRegistry();
             var composer = new TextBox { Text = "Unsent draft" };
             registry.RegisterObjectRenderer("AssistantConversation", _ => composer);
             using var loader = new CuiControlLoader(registry);
             loader.SetBindingContext(bindings); loader.SetActionDispatcher(bindings);
-            var window = new Window { Width = 500, Height = 660 };
+            var window = new Window { Width = 940, Height = 660 };
             try
             {
                 var (tree, diagnostics) = loader.LoadMarkup(AssistantsCuiScenes.ReadSource(AssistantsCuiScene.Work));
@@ -56,6 +60,27 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
                 var unrelated = new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Escape };
                 composer.RaiseEvent(unrelated);
                 Assert.Equal(assistant.Identity, bindings.VisibleWorkspaceIdentity);
+                var pane = Assert.Single(root.GetVisualDescendants().OfType<CuiContainerControl>(), c => c.Name == "assistant-workspace");
+                var primary = Assert.Single(root.GetVisualDescendants().OfType<CuiContainerControl>(), c => c.Name == "assistant-work-main");
+                Assert.Equal(1, Grid.GetColumn(pane));
+                Assert.True(primary.IsEffectivelyEnabled);
+                window.Width = 500;
+                await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+                Assert.Equal(0, Grid.GetColumn(pane));
+                Assert.Equal(360, pane.Bounds.Width);
+                Assert.False(primary.IsEffectivelyEnabled);
+                Assert.False(primary.IsHitTestVisible);
+                Assert.Same(window, TopLevel.GetTopLevel(composer));
+                Assert.True(close.IsFocused);
+                var reachedAnotherControl = false;
+                for (var i = 0; i < 5; i++)
+                {
+                    window.KeyPressQwerty(PhysicalKey.Tab, RawInputModifiers.None);
+                    window.KeyReleaseQwerty(PhysicalKey.Tab, RawInputModifiers.None);
+                    Assert.True(pane.IsKeyboardFocusWithin);
+                    reachedAnotherControl |= !close.IsFocused;
+                }
+                Assert.True(reachedAnotherControl);
                 close.Focus();
                 var escape = new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Escape };
                 close.RaiseEvent(escape);
@@ -63,6 +88,41 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
                 Assert.True(escape.Handled);
                 Assert.Null(bindings.VisibleWorkspaceIdentity);
                 Assert.True(toggle.IsFocused);
+                Assert.True(primary.IsEffectivelyEnabled);
+                Assert.True(primary.IsHitTestVisible);
+                Assert.Same(window, TopLevel.GetTopLevel(composer));
+                Assert.Equal("Unsent draft", composer.Text);
+                // Open again at the compact width, then let the same pane become docked.
+                toggle.RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await loader.WhenActionsIdleAsync();
+                await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+                Assert.True(close.IsFocused);
+                Assert.False(primary.IsEffectivelyEnabled);
+                var backdrop = Assert.Single(root.GetVisualDescendants().OfType<CuiContainerControl>(), c => c.Name == "assistant-workspace-backdrop");
+                var target = backdrop.TranslatePoint(new Point(20, 30), window)!.Value;
+                var releaseAway = backdrop.TranslatePoint(new Point(110, 150), window)!.Value;
+                window.MouseDown(target, MouseButton.Left);
+                window.MouseMove(releaseAway);
+                window.MouseUp(releaseAway, MouseButton.Left);
+                Assert.Equal(assistant.Identity, bindings.VisibleWorkspaceIdentity);
+                var tapTarget = backdrop.TranslatePoint(new Point(70, 210), window)!.Value;
+                Assert.True(backdrop.IsEffectivelyVisible);
+                Assert.NotNull(backdrop.Background);
+                var hit = Assert.IsAssignableFrom<Visual>(window.InputHitTest(tapTarget));
+                Assert.Contains(backdrop, hit.GetSelfAndVisualAncestors());
+                window.MouseMove(tapTarget);
+                window.MouseDown(tapTarget, MouseButton.Left);
+                window.MouseUp(tapTarget, MouseButton.Left);
+                await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+                Assert.Null(bindings.VisibleWorkspaceIdentity);
+                Assert.True(toggle.IsFocused);
+                toggle.RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await loader.WhenActionsIdleAsync();
+                await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+                window.Width = 940;
+                await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+                Assert.Equal(1, Grid.GetColumn(pane));
+                Assert.True(primary.IsEffectivelyEnabled);
                 Assert.Equal("Unsent draft", composer.Text);
             }
             finally { loader.Dispose(); await loader.WhenActionsIdleAsync(); window.Close(); }
