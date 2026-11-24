@@ -28,6 +28,7 @@ const DRIVE_FILE_ID = 'fixture-document-01';
 const ROOT_FOLDER_ID = 'google-root-drive-fixture-id';
 const UPLOADED_FILE_ID = 'fixture-upload-01';
 const CREATED_FOLDER_ID = 'fixture-folder-created';
+const TRASHED_FILE_ID = 'fixture-trashed-file';
 const FILE_BYTES = new TextEncoder().encode('fixture Drive content\n');
 
 assert.equal(miniflareVersion, '5.20261113.0-beta');
@@ -88,6 +89,13 @@ test('production Worker uses Workerd SQLite and cross-worker session RPC without
     let nonce;
     let assignments = 0;
     let createdFolder;
+    const trashedFile = {
+      id: TRASHED_FILE_ID, name: 'Restore conflict.txt', mimeType: 'text/plain', version: '7',
+      createdTime: '2026-11-01T10:00:00Z', modifiedTime: '2026-11-02T10:00:00Z',
+      parents: [ROOT_FOLDER_ID], size: '1', ownedByMe: true, shared: false, trashed: true,
+      explicitlyTrashed: true, capabilities: { canUntrash: true },
+    };
+
 
     const { privateKey, publicKey } = await generateKeyPair('RS256', { extractable: true });
     const publicJwk = { ...await exportJWK(publicKey), kid: 'files-drive-fixture-key', alg: 'RS256', use: 'sig' };
@@ -166,8 +174,14 @@ test('production Worker uses Workerd SQLite and cross-worker session RPC without
       assert.ok(createdFolder);
       return Response.json(createdFolder);
     }
+    if (url.origin === 'https://www.googleapis.com' && url.pathname === '/drive/v3/files/' + TRASHED_FILE_ID && request.method === 'GET') {
+      return Response.json(trashedFile);
+    }
     if (url.origin === 'https://www.googleapis.com' && url.pathname === '/drive/v3/files' && request.method === 'GET') {
       const query = url.searchParams.get('q');
+      if (query === 'trashed = true') return Response.json({ files: [trashedFile] });
+      if (query?.includes("name = 'Restore conflict.txt'")) return Response.json({ files: [{ id: 'occupied-restore-fixture' }] });
+
       if (query?.includes("name = 'Existing sibling.txt'")) return Response.json({ files: [{ id: 'occupied-name-fixture' }] });
       if (query?.includes('name = ')) return Response.json({ files: [] });
       const now = new Date().toISOString();
@@ -453,6 +467,19 @@ test('production Worker uses Workerd SQLite and cross-worker session RPC without
     const createdChange = await jsonResponse(await request(mf, '/changes?after=' + uploadEvent.cursor.revision));
     assert.equal(createdChange.body.items.length, 1);
     assert.equal(createdChange.body.items[0].operationId.value, createId);
+
+    const trash = await jsonResponse(await request(mf, '/items?trash=true'));
+    const restoreSource = trash.body.items[0];
+    assert.equal(restoreSource.name, 'Restore conflict.txt');
+    const restore = await jsonResponse(await request(mf, '/operations', { method: 'POST', origin: FILES_ORIGIN,
+      body: JSON.stringify({ operation: { id: { value: '5d4a5bd9-89c4-4073-8d3d-e8554c644881' },
+        actorId: OWNER_ACCOUNT_ID, operation: 'Restore', state: 'Pending', itemId: restoreSource.id,
+        sourceParentId: restoreSource.parentId, baseRevisionId: restoreSource.currentRevisionId } }) }));
+    assert.equal(restore.body.error.code, 'NameConflict');
+    assert.deepEqual(restore.body.error.details, { notStarted: 'true' });
+    assert.ok(googleCalls.every(call => call.method !== 'PATCH'), 'refused restore cannot untrash a file remotely');
+    assert.deepEqual(await jsonResponse(await request(mf, '/items?trash=true')), trash, 'original remains recoverable');
+
 
   } finally {
     try { if (mf) await mf.dispose(); }

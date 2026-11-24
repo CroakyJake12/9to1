@@ -505,3 +505,29 @@ test('two callers recovering the same preallocated folder cannot reset or resend
   assert.equal(f.model.calls.filter(call => call.method === 'POST').length, 1);
   assert.equal(f.store.changes(0).items.length, 1);
 });
+
+test('restore into an occupied original folder preserves both identities and the recoverable Trash state', async t => {
+  const f = fixture(t);
+  const original = file('restore-source', { name: 'Restore specimen', trashed: true, explicitlyTrashed: true });
+  const occupant = file('restore-other', { name: original.name });
+  f.remote.set(original.id, original);
+  f.remote.set(occupant.id, occupant);
+  const row = (await f.provider.list({ trash: true })).items[0];
+  const request = operation('Restore', row);
+
+  const conflict = await f.provider.mutate(request);
+  assert.equal(conflict.error.code, 'NameConflict');
+  assert.deepEqual(conflict.error.details, { notStarted: 'true' });
+  assert.equal(f.remote.get(original.id).trashed, true);
+  assert.equal(f.remote.get(occupant.id).trashed, false);
+  assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 0);
+  assert.equal(f.store.changes(0).items.length, 0);
+
+  occupant.name = 'Free original name';
+  const receipt = await f.reopen().provider.mutate(request);
+  assert.equal(receipt.value.state, 'Committed');
+  assert.deepEqual(receipt.value.itemId, row.id);
+  assert.equal(f.remote.get(original.id).trashed, false);
+  assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 1);
+  assert.equal(f.store.changes(0).items.length, 1);
+});

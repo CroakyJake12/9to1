@@ -33,3 +33,5 @@ The default app caps are 50,000 request units per rolling minute, 10,000,000 per
 Folder creation checks the requested name in the actual destination with the bounded, metered provider preflight before allocating an ID. If this Files journal has a recent known commit for the exact destination/name, the worker checks that provider identity directly, even if search is stale. While an earlier same-name Files operation is unconfirmed, a new operation is not dispatched; retry the original submitted operation to reconcile its receipt. An occupied name returns a typed pre-operation conflict. Changing the requested name starts a new intent; it never overwrites the existing folder.
 
 This protects same-name folder creation through this Files worker. It does not create provider-wide name uniqueness against concurrent actions from other Google Drive clients, add copy/replace support, or claim that a timeout can be treated as a rejected write.
+
+Restoring from Trash also checks the original live folder for the exact name before asking the provider to untrash. A conflict leaves both originals untouched and the trashed item recoverable; no replacement is implied.

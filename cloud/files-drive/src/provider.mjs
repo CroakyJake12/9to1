@@ -488,7 +488,10 @@ export class DriveProvider {
     const body = {};
     if (operation === 'Rename') body.title = intent.newName;
     if (operation === 'Delete' || operation === 'Restore') body.labels = { trashed: operation === 'Delete' };
-    if (operation === 'Restore') await this.#folder(expectedSource, token, signal);
+    if (operation === 'Restore') {
+      await this.#folder(expectedSource, token, signal);
+      await this.#assertDestinationNameAvailable(expectedSource, before.name, googleId, token, signal);
+    }
     if (operation === 'Move') {
       const destination = remoteId(this.#store.googleId(intent.destinationParentId));
       const source = await this.#folder(expectedSource, token, signal);
