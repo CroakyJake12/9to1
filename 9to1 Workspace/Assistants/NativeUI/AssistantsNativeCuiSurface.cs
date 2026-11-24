@@ -44,6 +44,7 @@ public sealed partial class AssistantsNativeCuiSurface : UserControl, IDisposabl
     private Task? _close;
     private AssistantsCuiBindings? _bindings;
     private CuiSceneHost? _sceneHost;
+    private AssistantWorkspaceKeyboard? _workspaceKeyboard;
     private CuiControlRegistry? _registry;
     private Guid? _savedPromptConversation;
     private string _savedPrompt = "";
@@ -164,6 +165,8 @@ public sealed partial class AssistantsNativeCuiSurface : UserControl, IDisposabl
                     var availability = await SourceAsync(() => _scenes[index].ShowAsync(scene, token));
                     if (availability.State != CuiSceneAvailabilityState.Ready)
                         throw new UnauthorizedAccessException(availability.Message);
+                    if (definitions[index] == AssistantsCuiScene.Work)
+                        _workspaceKeyboard = new(_scenes[index], Bindings);
                 }
                 PublishSynchronous(() => ApplySnapshot(_controller.Snapshot));
             }, actual => _initialization = actual);
@@ -769,6 +772,7 @@ public sealed partial class AssistantsNativeCuiSurface : UserControl, IDisposabl
         {
             using var physical = EnterPhysical();
             _controller.StateChanged -= OnStateChanged;
+            _workspaceKeyboard?.Dispose(); _workspaceKeyboard = null;
             Content = null;
             _binding = null; _conversation.Clear(); _projectTarget = null; _originalProjectChoice = null; _projectSubmission = null; _projectSubmissionTarget = null;
             _hostRetirement.Dispose(); _viewCancellation.Dispose();

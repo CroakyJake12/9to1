@@ -296,6 +296,7 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
     {
         "assistants.conversation.archive.toggle" => _route == "work" && _snapshot.SelectedAssistant is { } activeAssistant &&
             _openAssistantWorkspaces.Contains(activeAssistant.Identity) && !Busy && !_streaming && HasSecondaryConversationArchiveOwner,
+        "assistants.workspace.close" => VisibleWorkspaceIdentity is not null,
         "assistants.workspace.toggle" => _route == "work" && _snapshot.SelectedAssistant is not null,
         "assistants.project.newtask" => CanNewConversation && !_projectBusy,
         "assistants.development.open" => _hasDevelopmentRoute && _snapshot.ConversationBinding is not null && _snapshot.Work?.Controls?.CanonicalTaskContext is not null && !Busy && !_projectBusy,
@@ -359,15 +360,17 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
         if (!IsCurrentOriginalRepeatAction(command, parameter)) return ValueTask.CompletedTask;
         if (IsActionAvailable(command) != true)
             return ValueTask.FromException(new InvalidOperationException("This Assistant action is unavailable."));
-        if (command == "assistants.workspace.toggle")
+        if (command is "assistants.workspace.toggle" or "assistants.workspace.close")
         {
             if (parameter is AssistantIdentity identity && identity == _snapshot.SelectedAssistant?.Identity)
                 _publish(() =>
                 {
                     if (cancellationToken.IsCancellationRequested ||
                         IsActionAvailable(command) != true || _snapshot.SelectedAssistant?.Identity != identity) return;
-                    if (!_openAssistantWorkspaces.Add(identity)) _openAssistantWorkspaces.Remove(identity);
+                    var open = command == "assistants.workspace.toggle" && _openAssistantWorkspaces.Add(identity);
+                    if (!open) _openAssistantWorkspaces.Remove(identity);
                     PublishAssistantWorkspace();
+                    WorkspaceDisclosureChanged?.Invoke(identity, open);
                 });
             return ValueTask.CompletedTask;
         }
@@ -395,6 +398,12 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
     }
 
     internal bool HasSecondaryConversationArchiveOwner { get; set; }
+
+    internal event Action<AssistantIdentity, bool>? WorkspaceDisclosureChanged;
+    internal AssistantIdentity? VisibleWorkspaceIdentity => _route == "work" && Current && !_unavailable && !_snapshot.IsRetiring &&
+        _snapshot.SelectedAssistant?.Identity is { } identity && _openAssistantWorkspaces.Contains(identity) ? identity : null;
+    internal AssistantIdentity? WorkRouteIdentity => _route == "work" && Current && !_unavailable && !_snapshot.IsRetiring
+        ? _snapshot.SelectedAssistant?.Identity : null;
 
     private void PublishAssistantWorkspace()
     {

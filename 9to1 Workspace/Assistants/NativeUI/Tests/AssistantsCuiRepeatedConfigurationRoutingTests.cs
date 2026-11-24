@@ -2,6 +2,8 @@ using System.Collections;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Interactivity;
+using Avalonia.Input;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
@@ -18,6 +20,56 @@ namespace HavenOS.Apps.Assistants.NativeUI.Tests;
 [Collection("Assistants native UI")]
 public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
 {
+    [Fact]
+    public async Task Workspace_keyboard_follows_the_exact_disclosure_and_does_not_take_Escape_from_the_composer()
+    {
+        using var lifetime = new CancellationTokenSource();
+        await using var native = HeadlessUnitTestSession.StartNew(typeof(AssistantsTestApplication));
+        Assert.True(await native.Dispatch<bool>(async () =>
+        {
+            var bindings = Bindings([]);
+            var assistant = Definition();
+            bindings.ShowWork();
+            bindings.ApplySnapshot(AssistantsWorkspaceSnapshot.Empty with { Revision = 1, SelectedAssistant = assistant });
+            var registry = AssistantsNativeCuiSurface.CreateAvatarRegistry();
+            var composer = new TextBox { Text = "Unsent draft" };
+            registry.RegisterObjectRenderer("AssistantConversation", _ => composer);
+            using var loader = new CuiControlLoader(registry);
+            loader.SetBindingContext(bindings); loader.SetActionDispatcher(bindings);
+            var window = new Window { Width = 500, Height = 660 };
+            try
+            {
+                var (tree, diagnostics) = loader.LoadMarkup(AssistantsCuiScenes.ReadSource(AssistantsCuiScene.Work));
+                Assert.Empty(diagnostics);
+                var root = Assert.IsAssignableFrom<Control>(tree);
+                loader.WireBindings(root);
+                using var keyboard = new AssistantWorkspaceKeyboard(root, bindings);
+                window.Content = root; window.Show(); window.UpdateLayout();
+                Button Button(string name) => Assert.Single(root.GetVisualDescendants().OfType<Button>(), b => b.Name == name);
+                var toggle = Button("assistant-workspace-toggle");
+                toggle.RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await loader.WhenActionsIdleAsync();
+                await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+                var close = Button("assistant-workspace-close");
+                Assert.True(close.IsFocused);
+                Assert.True(composer.Focus());
+                var unrelated = new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Escape };
+                composer.RaiseEvent(unrelated);
+                Assert.Equal(assistant.Identity, bindings.VisibleWorkspaceIdentity);
+                close.Focus();
+                var escape = new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Escape };
+                close.RaiseEvent(escape);
+                await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+                Assert.True(escape.Handled);
+                Assert.Null(bindings.VisibleWorkspaceIdentity);
+                Assert.True(toggle.IsFocused);
+                Assert.Equal("Unsent draft", composer.Text);
+            }
+            finally { loader.Dispose(); await loader.WhenActionsIdleAsync(); window.Close(); }
+            return true;
+        }, lifetime.Token));
+    }
+
     [Fact]
     public async Task Only_the_real_secondary_workspace_row_exposes_archive_and_restore()
     {

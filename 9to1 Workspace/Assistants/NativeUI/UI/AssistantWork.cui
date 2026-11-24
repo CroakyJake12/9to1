@@ -1,5 +1,6 @@
 <Cui id="assistants.work" version="1">
   <Actions>
+    <Action name="CloseAssistantWorkspace" command="assistants.workspace.close" parameter="{Binding WorkspaceAssistantIdentity}" />
     <Action name="ToggleAssistantWorkspace" command="assistants.workspace.toggle" parameter="{Binding WorkspaceAssistantIdentity}" />
     <Action name="ToggleConversationArchive" command="assistants.conversation.archive.toggle" parameter="{Binding conversation}" />
     <Action name="OpenConversation" command="assistants.conversation.open" parameter="{Binding conversation}" />
@@ -113,7 +114,10 @@
         <Button action="assistants.project.cancel" Interactive="{Binding CanCloseProjectSelection}">Cancel project selection</Button>
       </Container>
       <Container id="assistant-workspace" Type="Vertical Stack" AccessibleName="Assistant workspace" CellGap="8" Active="{Binding ShowAssistantWorkspace}">
-        <Text FontSize="18" FontWeight="SemiBold">Workspace</Text>
+        <Container Type="Wrap" CellGap="8">
+          <Text FontSize="18" FontWeight="SemiBold">Workspace</Text>
+          <Button id="assistant-workspace-close" action="CloseAssistantWorkspace">Close workspace</Button>
+        </Container>
         <Container Orientation="Horizontal" Type="Wrap" AccessibleName="Assistant sources and memory">
           <Button action="assistants.memory.open" Margin="0,0,8,8" Interactive="{Binding CanInspectMemory}">Assistant memory</Button>
           <Button action="assistants.resources.open" Margin="0,0,8,8" Interactive="{Binding CanInspectResources}">Resources</Button>
