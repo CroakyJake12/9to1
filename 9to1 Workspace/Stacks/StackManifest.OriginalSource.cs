@@ -144,8 +144,16 @@ public sealed partial class JsonFileStackProjectStore
     {
         if (new FileInfo(path).Length > MaximumOriginalMetadataBytes)
             throw new StackFailureException(StackFailureCode.MaterialisationFailed, "The source metadata exceeds the bounded reader capacity.", path, recoverable: true);
-        var original = File.ReadAllBytesAsync(path, token);
-        _originalReads.Add(original); // Retain the SAME raw file Task before any await.
+        Task<byte[]> original;
+        try { original = File.ReadAllBytesAsync(path, token); }
+        catch (Exception openFailure) when (openFailure is IOException or UnauthorizedAccessException)
+        {
+            // Some platforms report the physical open failure synchronously and return no
+            // Task. Retain that same exception in the owning read envelope rather than
+            // starting another read or losing the refused-open receipt.
+            original = Task.FromException<byte[]>(openFailure);
+        }
+        _originalReads.Add(original); // Keep the raw task if an actual task was returned.
         byte[] bytes;
         try { bytes = await original.ConfigureAwait(false); }
         catch (Exception observed)
