@@ -33,6 +33,7 @@ public sealed class SitesNativeAuthoringSurface : UserControl, IAsyncDisposable,
     private readonly TextBox _name = new() { PlaceholderText = "Project or page name", MaxLength = 120, Width = 220 };
     private readonly TextBox _path = new() { PlaceholderText = "Project folder or page route", MaxLength = 256, Width = 220 };
     private readonly TextBox _text = new() { PlaceholderText = "Heading or text", MaxLength = 65536, AcceptsReturn = true, MinHeight = 64 };
+    private readonly TextBox _maximumWidth = new() { PlaceholderText = "e.g. 100% or 36rem", MaxLength = 32, Width = 174 };
     private readonly StackPanel _preview = new();
     private readonly TextBox _html = new() { IsReadOnly = true, AcceptsReturn = true, MaxHeight = 160 };
     private readonly string _reviewSession = Guid.NewGuid().ToString("N");
@@ -44,7 +45,7 @@ public sealed class SitesNativeAuthoringSurface : UserControl, IAsyncDisposable,
     private bool _closing;
     private Task? _close;
     private string _status = "Opening Sites";
-    private string? _responsiveEvidence;
+    private string? _responsiveEvidence, _responsiveBreakpoint;
     public new event PropertyChangedEventHandler? PropertyChanged;
 
     public SitesNativeAuthoringSurface(SiteNativeAuthoringSession session, AuthenticatedResourceActor originalActor,
@@ -75,10 +76,11 @@ public sealed class SitesNativeAuthoringSurface : UserControl, IAsyncDisposable,
             });
         };
         _components.SelectionChanged += (_, _) =>
-        { PublishNativeChange(() => { if (Component is { } component && _pending is null) _text.Text = Text(component); _responsiveEvidence = null; Changed(); }); };
+        { PublishNativeChange(() => { if (Component is { } component && _pending is null) _text.Text = Text(component); ClearResponsive(); Changed(); }); };
         _name.TextChanged += (_, _) => { PublishNativeChange(Changed); };
         _path.TextChanged += (_, _) => { PublishNativeChange(Changed); };
         _text.TextChanged += (_, _) => { PublishNativeChange(Changed); };
+        _maximumWidth.TextChanged += (_, _) => { PublishNativeChange(Changed); };
     }
 
     public Task InitializeAsync(CancellationToken token = default) => TrackAsync(async () =>
@@ -93,6 +95,7 @@ public sealed class SitesNativeAuthoringSurface : UserControl, IAsyncDisposable,
         registry.BindAuthoredControl("sites-name-input", _ => _name); registry.BindAuthoredControl("sites-path-input", _ => _path);
         registry.BindAuthoredControl("sites-text-input", _ => _text); registry.BindAuthoredControl("sites-projects", _ => _projects);
         registry.BindAuthoredControl("sites-pages", _ => _pages); registry.BindAuthoredControl("sites-components", _ => _components);
+        registry.BindAuthoredControl("sites-maximum-width", _ => _maximumWidth);
         registry.BindAuthoredControl("sites-preview", _ => _preview); registry.BindAuthoredControl("sites-html-preview", _ => _html);
         _scene = new CuiSceneHost(registry);
         var available = await _scene.ShowAsync(new("sites", "Sites", "Authoring", Load(), this, this, _readiness), linked.Token);
@@ -137,6 +140,10 @@ public sealed class SitesNativeAuthoringSurface : UserControl, IAsyncDisposable,
         "9to1.Sites.InspectDesktop" => Editing && Project is not null && SelectedPage is not null && Component is not null,
         "9to1.Sites.InspectTablet" => CanInspectBreakpoint("tablet"),
         "9to1.Sites.InspectMobile" => CanInspectBreakpoint("mobile"),
+        "9to1.Sites.SetMaximumWidth" => CanEditResponsiveWidth && !string.IsNullOrWhiteSpace(_maximumWidth.Text),
+        "9to1.Sites.ResetMaximumWidth" => CanEditResponsiveWidth &&
+            Component!.Layout.BreakpointOverrides.TryGetValue(_responsiveBreakpoint!, out var rule) &&
+            rule.ChangedProperties.ContainsKey("max-width"),
         "9to1.Sites.Apply" => Available && _pending is { HasAuditRecovery: false } pending
             && (pending.Approval.IsAllowed || pending.Approval.State == HomePermissionRequestState.PendingApproval),
         "9to1.Sites.CancelReview" => Available && _pending is { HasAuditRecovery: false, ObservedResult: null },
@@ -146,6 +153,8 @@ public sealed class SitesNativeAuthoringSurface : UserControl, IAsyncDisposable,
     private bool CanInspectBreakpoint(string name) =>
         Editing && SelectedPage is not null && Component is not null && Project is { } project &&
         project.DesignSystem.Breakpoints.TryGetValue(name, out var width) && width > 0;
+
+    private bool CanEditResponsiveWidth => _responsiveBreakpoint is { } named && CanInspectBreakpoint(named);
 
     public bool TryGetValue(string path, out object? value)
     {
@@ -160,12 +169,15 @@ public sealed class SitesNativeAuthoringSurface : UserControl, IAsyncDisposable,
             "CanInspectDesktop" => IsActionAvailable("9to1.Sites.InspectDesktop"),
             "CanInspectTablet" => IsActionAvailable("9to1.Sites.InspectTablet"),
             "CanInspectMobile" => IsActionAvailable("9to1.Sites.InspectMobile"),
+            "CanSetMaximumWidth" => IsActionAvailable("9to1.Sites.SetMaximumWidth"),
+            "CanResetMaximumWidth" => IsActionAvailable("9to1.Sites.ResetMaximumWidth"),
             "CanApply" => IsActionAvailable("9to1.Sites.Apply"), "CanCancel" => IsActionAvailable("9to1.Sites.CancelReview"),
             "CanRetryAudit" => IsActionAvailable("9to1.Sites.RetryAudit"), _ => null
         };
         return path is "Selection" or "PendingChange" or "Status" or "CanRefresh" or "CanCreateProject" or "CanCreatePage"
             or "CanAdd" or "CanSaveText" or "CanPreview" or "CanApply" or "CanCancel" or "CanRetryAudit"
-            or "ResponsiveLayout" or "CanInspectDesktop" or "CanInspectTablet" or "CanInspectMobile";
+            or "ResponsiveLayout" or "CanInspectDesktop" or "CanInspectTablet" or "CanInspectMobile"
+            or "CanSetMaximumWidth" or "CanResetMaximumWidth";
     }
     public ValueTask DispatchAsync(string action, object? parameter, CancellationToken token = default)
     {
@@ -177,6 +189,8 @@ public sealed class SitesNativeAuthoringSurface : UserControl, IAsyncDisposable,
         Dispatcher.UIThread.VerifyAccess(); if (IsActionAvailable(action) != true) return;
         var originalPage = _page; var project = Project; var selectedPage = SelectedPage; var component = Component;
         var name = _name.Text ?? ""; var path = _path.Text ?? ""; var text = _text.Text ?? "";
+        var responsiveBreakpoint = _responsiveBreakpoint;
+        var maximumWidth = _maximumWidth.Text ?? "";
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, _stop.Token);
         await _operations.WaitAsync(linked.Token);
         List<Exception> terminal = [];
@@ -228,16 +242,24 @@ public sealed class SitesNativeAuthoringSurface : UserControl, IAsyncDisposable,
                     .Select(property => property.Name + ": " + property.Value + (property.IsExplicitOverride
                         ? " (override)" : property.InheritedFromBreakpoint is { } inherited
                             ? " (inherited from " + inherited + ")" : " (base)"));
+                _responsiveBreakpoint = breakpoint;
+                _maximumWidth.Text = observed.Properties.TryGetValue("max-width", out var width) && width.IsExplicitOverride
+                    ? width.Value.ToString() : "";
                 _responsiveEvidence = $"Saved revision {observed.ProjectRevision} · {viewport} • " +
                     (observed.Properties.Count == 0 ? "No authored layout properties." : string.Join(" • ", values));
                 return;
             }
             var operation = action switch { "9to1.Sites.CreateProject" => "create", "9to1.Sites.CreatePage" => "page",
-                "9to1.Sites.AddHeading" => "heading", "9to1.Sites.AddText" => "text", "9to1.Sites.SaveText" => "save-text", _ => null };
+                "9to1.Sites.AddHeading" => "heading", "9to1.Sites.AddText" => "text", "9to1.Sites.SaveText" => "save-text",
+                "9to1.Sites.SetMaximumWidth" => "responsive-width", "9to1.Sites.ResetMaximumWidth" => "responsive-width-reset", _ => null };
             if (operation is not null)
             {
+                var isResponsive = operation is "responsive-width" or "responsive-width-reset";
+                if (isResponsive && (responsiveBreakpoint is null || responsiveBreakpoint != _responsiveBreakpoint))
+                    throw new InvalidOperationException("Select the same responsive breakpoint before reviewing.");
                 _pending = await _session.PrepareAsync(originalPage!, project, selectedPage, component, _actor,
-                    operation, name, path, text, Alive, _reviewSession, linked.Token);
+                    operation, isResponsive ? responsiveBreakpoint! : name, path,
+                    isResponsive ? maximumWidth : text, Alive, _reviewSession, linked.Token);
                 Retained(); _status = _pending.Approval.IsAllowed ? "Ready to apply this edit."
                     : _pending.Approval.State == HomePermissionRequestState.PendingApproval
                         ? "Review this edit in Home, then choose Apply." : _pending.Approval.Message;
@@ -294,12 +316,14 @@ public sealed class SitesNativeAuthoringSurface : UserControl, IAsyncDisposable,
             original.SetException(error); throw;
         }
     }
-    private void ClearPreview() { _preview.Children.Clear(); _html.Text = ""; _responsiveEvidence = null; }
+    private void ClearPreview() { _preview.Children.Clear(); _html.Text = ""; ClearResponsive(); }
+    private void ClearResponsive() { _responsiveEvidence = null; _responsiveBreakpoint = null; _maximumWidth.Text = ""; }
     private void Changed()
     {
         var editing = Editing;
         _projects.IsEnabled = editing; _pages.IsEnabled = editing; _components.IsEnabled = editing;
         _name.IsEnabled = editing; _path.IsEnabled = editing; _text.IsEnabled = editing;
+        _maximumWidth.IsEnabled = CanEditResponsiveWidth;
         CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { PropertyChanged?.Invoke(this, new(null)); return true; });
     }
     private bool Alive() { lock (_tasksGate) return !_closing && !_stop.IsCancellationRequested && !_hostLifetime.IsCancellationRequested; }

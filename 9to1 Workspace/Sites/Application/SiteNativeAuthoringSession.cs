@@ -123,6 +123,10 @@ public sealed class SiteNativeAuthoringSession(ISiteNativeWorkspaceAuthority wor
         if (operation == "save-text" && (component is null || !project!.Components.Any(item => ReferenceEquals(item, component))
             || component.ComponentType is not ("heading" or "text")))
             throw new UnauthorizedAccessException("Select an original heading or text component.");
+        var responsive = operation is "responsive-width" or "responsive-width-reset";
+        if (responsive && (selectedPage is null || !project!.Pages.Any(item => ReferenceEquals(item, selectedPage)) ||
+            component is null || !project!.Components.Any(item => ReferenceEquals(item, component))))
+            throw new UnauthorizedAccessException("Retain the original page and component to review responsive sizing.");
         var properties = new Dictionary<string, JsonElement>(StringComparer.Ordinal) { ["text"] = JsonSerializer.SerializeToElement(text) };
         if (operation == "heading") properties["level"] = JsonSerializer.SerializeToElement(2);
         SiteNativeWriteIntent intent = operation switch
@@ -135,10 +139,17 @@ public sealed class SiteNativeAuthoringSession(ISiteNativeWorkspaceAuthority wor
                 component!.ComponentId, component.Properties.ToDictionary(pair => pair.Key,
                     pair => pair.Key == "text" ? JsonSerializer.SerializeToElement(text) : pair.Value.Clone(), StringComparer.Ordinal)
                     .AppendIfMissingText(text)),
+            "responsive-width" or "responsive-width-reset" => SiteNativeWriteIntent.SetResponsiveOverride(
+                source.Binding, project!.SiteId, project.Revision, component!.ComponentId, name,
+                SiteResponsiveLayout.PrepareMaximumWidth(project, selectedPage!, component, name,
+                    operation == "responsive-width-reset" ? null : text)),
             _ => throw new ArgumentException("Choose an implemented Sites edit.")
         };
         var description = operation switch { "create" => "Create project: " + name, "page" => "Create page: " + name,
-            "save-text" => "Save selected text", _ => "Add " + operation };
+            "save-text" => "Save selected text",
+            "responsive-width" => "Set " + name + " maximum width to " + text.Trim(),
+            "responsive-width-reset" => "Reset " + name + " maximum width to its inherited value",
+            _ => "Add " + operation };
         var approval = await ObserveAsync(broker.AuthorizeForActorAsync(actor, "sites", intent.ActionId,
             intent.Scopes, intent.Arguments, description, null, sessionId, token)).ConfigureAwait(false);
         await RevalidateCoreAsync(page, actor, token).ConfigureAwait(false);

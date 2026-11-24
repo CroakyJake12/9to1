@@ -35,6 +35,11 @@
           <Button content="Tablet layout" action="9to1.Sites.InspectTablet" accessible-name="Inspect saved tablet layout" Interactive="{Binding CanInspectTablet}" />
           <Button content="Mobile layout" action="9to1.Sites.InspectMobile" accessible-name="Inspect saved mobile layout" Interactive="{Binding CanInspectMobile}" />
         </Container>
+        <Container Type="Wrap" CellGap="8" accessible-name="Edit maximum width at selected Tablet or Mobile breakpoint">
+          <Input accessible-name="Explicit maximum width" Type="Text" id="sites-maximum-width" />
+          <Button content="Review maximum width" action="9to1.Sites.SetMaximumWidth" accessible-name="Review setting explicit maximum width in Home" Interactive="{Binding CanSetMaximumWidth}" />
+          <Button content="Review reset to inherited" action="9to1.Sites.ResetMaximumWidth" accessible-name="Review removing explicit maximum width in Home" Interactive="{Binding CanResetMaximumWidth}" />
+        </Container>
         <Text text="{Binding ResponsiveLayout}" text-wrapping="Wrap" accessible-name="Effective values and inherited responsive origins for the selected component" />
         <Container accessible-name="Saved page heading and text preview" Type="Vertical Stack" id="sites-preview" />
         <Input accessible-name="Generated HTML preview" Type="Text" id="sites-html-preview" />

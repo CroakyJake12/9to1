@@ -29,6 +29,30 @@ public static class SiteResponsiveLayout
         return properties;
     }
 
+    internal static IReadOnlyDictionary<string, JsonElement>? PrepareMaximumWidth(
+        SiteProject project, SitePage page, SiteComponent component, string breakpoint, string? value)
+    {
+        const string property = "max-width";
+        _ = Inspect(project, page.PageId, component.ComponentId, breakpoint);
+        var patch = component.Layout.BreakpointOverrides.TryGetValue(breakpoint, out var existing)
+            ? existing.ChangedProperties.ToDictionary(pair => pair.Key, pair => pair.Value.Clone(), StringComparer.Ordinal)
+            : new Dictionary<string, JsonElement>(StringComparer.Ordinal);
+        if (value is null)
+        {
+            if (!patch.Remove(property)) throw new ArgumentException("There is no explicit maximum width to reset.");
+        }
+        else
+        {
+            var normalized = value.Trim();
+            if (!System.Text.RegularExpressions.Regex.IsMatch(normalized,
+                @"\A(?:none|(?:0|[0-9]{1,5}(?:\.[0-9]{1,3})?(?:px|em|rem|%|vw)))\z",
+                System.Text.RegularExpressions.RegexOptions.CultureInvariant))
+                throw new ArgumentException("Use none, 0 or a non-negative number with px, em, rem, %, or vw.");
+            patch[property] = JsonSerializer.SerializeToElement(normalized);
+        }
+        return patch.Count == 0 ? null : new ReadOnlyDictionary<string, JsonElement>(patch);
+    }
+
     public static SiteResponsiveLayoutObservation Inspect(SiteProject project, Guid pageId, Guid componentId, string? breakpoint)
     {
         var page = project.Pages.Single(page => page.PageId == pageId);
