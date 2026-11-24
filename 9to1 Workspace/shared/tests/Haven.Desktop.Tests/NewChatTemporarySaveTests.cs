@@ -241,6 +241,100 @@ public sealed partial class ChatCloudPermissionCallerTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Native_mode_restore_uses_the_selected_Space_and_never_falls_back_to_global_history()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig(temporary: false);
+        var directory = Path.Combine(Path.GetTempPath(), "native-scoped-restore-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var page = CreateNativeComposerPage(rig, directory, new NativeComposerDraftStore(),
+            enableFreshChatTemporaryLifecycle: true);
+        try
+        {
+            await page.OriginalInitialization.WaitAsync(TimeSpan.FromSeconds(15), token);
+            var paths = NativeComposerProxy<IAppPaths>((name, _) => name == "get_DataDirectory" ? directory : Path.Combine(directory, name));
+            var spaces = new SpaceRegistry(new VersionedAtomicSettingsStore(paths));
+            var space = await spaces.CreateAsync("Current Space", cancellationToken: token);
+            var other = await spaces.CreateAsync("Unrelated Space", cancellationToken: token);
+            await spaces.SetCurrentSpaceIdAsync(space.Id, token);
+            var containers = NativeComposerProxy<IContainerRepository>((name, _) => name == "GetByModeAsync"
+                ? Task.FromResult<IReadOnlyList<ContainerDefinition>>([])
+                : throw new InvalidOperationException("Unexpected container operation: " + name));
+            using var sidebar = new NativeChatSidebar(rig.Conversations, containers, _ => Task.CompletedTask,
+                (_, _) => Task.CompletedTask, _ => Task.CompletedTask, spaces: spaces);
+            await sidebar.ReloadSpaceScopeAsync();
+            sidebar.SetMode(HavenMode.Tasks);
+            sidebar.SetMode(HavenMode.Chat);
+            Assert.Equal(space.Id, sidebar.CurrentSpaceId);
+
+            var now = DateTimeOffset.UtcNow;
+            var allowed = page.CurrentConversation with { Id = Guid.NewGuid(), SpaceId = space.Id, UpdatedAt = now };
+            var global = allowed with { Id = Guid.NewGuid(), SpaceId = null, UpdatedAt = now.AddMinutes(4) };
+            var foreign = allowed with { Id = Guid.NewGuid(), SpaceId = other.Id, UpdatedAt = now.AddMinutes(3) };
+            var temporary = allowed with { Id = Guid.NewGuid(), IsTemporary = true, UpdatedAt = now.AddMinutes(2) };
+            var archived = allowed with { Id = Guid.NewGuid(), IsArchived = true, UpdatedAt = now.AddMinutes(1) };
+            var wrongMode = allowed with { Id = Guid.NewGuid(), Mode = HavenMode.Tasks, Kind = ConversationKind.Task };
+            IReadOnlyList<Conversation> scopedRows = [global, foreign, temporary, archived, wrongMode, allowed];
+            var current = allowed;
+            var globalReads = 0;
+            var scopedReads = 0;
+            var stable = true;
+            var repository = NativeComposerProxy<IConversationRepository>((name, arguments) =>
+            {
+                switch (name)
+                {
+                    case "GetBySpaceAsync":
+                        Assert.Equal(space.Id, Assert.IsType<Guid>(arguments![0]));
+                        scopedReads++;
+                        return Task.FromResult(scopedRows);
+                    case "GetAsync":
+                        Assert.Equal(allowed.Id, Assert.IsType<Guid>(arguments![0]));
+                        return Task.FromResult<Conversation?>(current);
+                    case "GetRecentAsync":
+                        globalReads++;
+                        return Task.FromResult<IReadOnlyList<Conversation>>([global]);
+                    default: throw new InvalidOperationException("Unexpected restore operation: " + name);
+                }
+            });
+            bool IsCurrent() => stable && sidebar.CurrentMode == HavenMode.Chat && sidebar.CurrentSpaceId == space.Id;
+            var originalWrites = rig.Conversations.Writes;
+
+            Assert.True(await MainView.RestoreNativeModeConversationAsync(page, repository, spaces,
+                HavenMode.Chat, sidebar.CurrentSpaceId, IsCurrent));
+            Assert.Equal(allowed.Id, page.ConversationId);
+            Assert.Equal(0, globalReads);
+
+            // The exact row was moved after the selected Space's recent list was read.
+            current = allowed with { SpaceId = other.Id };
+            Assert.True(await MainView.RestoreNativeModeConversationAsync(page, repository, spaces,
+                HavenMode.Chat, sidebar.CurrentSpaceId, IsCurrent));
+            var fresh = page.ConversationId;
+            Assert.NotEqual(allowed.Id, fresh);
+            Assert.Equal(space.Id, page.CurrentConversation.SpaceId);
+            Assert.Equal(originalWrites, rig.Conversations.Writes);
+            Assert.Equal(0, globalReads);
+            Assert.Equal(2, scopedReads);
+
+            stable = false;
+            Assert.False(await MainView.RestoreNativeModeConversationAsync(page, repository, spaces,
+                HavenMode.Chat, sidebar.CurrentSpaceId, IsCurrent));
+            Assert.Equal(fresh, page.ConversationId);
+            Assert.Equal(2, scopedReads);
+
+            Assert.True(await MainView.RestoreNativeModeConversationAsync(page, repository, spaces,
+                HavenMode.Chat, null, () => true));
+            Assert.Equal(global.Id, page.ConversationId);
+            Assert.Equal(1, globalReads);
+        }
+        finally
+        {
+            page.RequestRetirement();
+            await page.CloseAndDrainAsync();
+            Directory.Delete(directory, true);
+        }
+    }
+
     private static Task WaitForStatus(NewChatPage page, string prefix)
     {
         var result = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
