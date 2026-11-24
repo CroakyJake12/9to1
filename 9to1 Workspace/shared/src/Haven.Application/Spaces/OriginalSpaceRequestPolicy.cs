@@ -1,5 +1,6 @@
 using System.Collections.Frozen;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Haven.Core;
@@ -66,6 +67,7 @@ public sealed record OriginalSpaceContextItem(Guid ContextId, OriginalSpaceConte
 
 public sealed class OriginalSpaceCapturedContext
 {
+    private static readonly UTF8Encoding StrictUtf8 = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
     // Retain the original CLR constructor and its explicit source-count summary.
     public OriginalSpaceCapturedContext(Guid spaceId, string configuration,
         IReadOnlyList<OriginalSpaceContextItem> items, int omittedSourceCount = 0)
@@ -83,7 +85,7 @@ public sealed class OriginalSpaceCapturedContext
     {
         ArgumentNullException.ThrowIfNull(configuration); ArgumentNullException.ThrowIfNull(items);
         ArgumentNullException.ThrowIfNull(budget); ArgumentNullException.ThrowIfNull(omissions);
-        if (spaceId == Guid.Empty || configuration.Length > 65_536 || items.Count > budget.MaximumItems || omittedSourceCount < 0 ||
+        if (spaceId == Guid.Empty || configuration.Length > 65_536 || !IsWellFormed(configuration) || items.Count > budget.MaximumItems || omittedSourceCount < 0 ||
             items.Any(row => !IsValidItem(row)) ||
             items.Select(row => row.ContextId).Distinct().Count() != items.Count ||
             omissions.Count > budget.MaximumItems || omissions.Count > omittedSourceCount ||
@@ -156,7 +158,16 @@ public sealed class OriginalSpaceCapturedContext
         !string.IsNullOrWhiteSpace(row.OwnerAppId) && row.OwnerAppId.Length <= 128 &&
         !string.IsNullOrWhiteSpace(row.CanonicalEntityId) && row.CanonicalEntityId.Length <= 2_048 &&
         !string.IsNullOrWhiteSpace(row.Revision) && row.Revision.Length <= 256 && row.Label is not null && row.Label.Length <= 512 &&
-        row.Text is not null && row.Text.Length <= 65_536;
+        row.Text is not null && row.Text.Length <= 65_536 &&
+        IsWellFormed(row.OwnerAppId) && IsWellFormed(row.CanonicalEntityId) &&
+        IsWellFormed(row.Revision) && IsWellFormed(row.Label) && IsWellFormed(row.Text);
+    private static bool IsWellFormed(string value)
+    {
+        // Check before JsonSerializer can replace an invalid surrogate. A
+        // provenance hash must describe the exact observed source, not a lossy alias.
+        try { _ = StrictUtf8.GetByteCount(value); return true; }
+        catch (EncoderFallbackException) { return false; }
+    }
     public void ValidateRequestBudget(OriginalSpaceContextBudget requested)
     {
         ArgumentNullException.ThrowIfNull(requested);
