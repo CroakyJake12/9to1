@@ -35,3 +35,5 @@ Folder creation checks the requested name in the actual destination with the bou
 This protects same-name folder creation through this Files worker. It does not create provider-wide name uniqueness against concurrent actions from other Google Drive clients, add copy/replace support, or claim that a timeout can be treated as a rejected write.
 
 Restoring from Trash also checks the original live folder for the exact name before asking the provider to untrash. A conflict leaves both originals untouched and the trashed item recoverable; no replacement is implied.
+
+Metadata edits also use one durable admission per submitted operation ID. Another request for that same intent cannot dispatch a duplicate conditional provider write while the first is pending. After an uncertain reply, retry the original operation ID to reconcile the receipt. Reusing an ID for different input is still refused.

@@ -531,3 +531,59 @@ test('restore into an occupied original folder preserves both identities and the
   assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 1);
   assert.equal(f.store.changes(0).items.length, 1);
 });
+
+test('two handles admitting the same metadata edit issue only one conditional provider write', async t => {
+  const f = fixture(t);
+  const original = file('shared-edit', { name: 'Before' });
+  f.remote.set(original.id, original);
+  const request = operation('Rename', f.store.mapFile(original), { name: 'After' });
+  // Both handles observe the same prepared intent and strong ETag. A provider
+  // 412 alone is not enough: the losing call must not reject the shared journal.
+  const results = await Promise.all([f.provider.mutate(request), f.reopen().provider.mutate(request)]);
+  assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 1);
+  assert.ok(results.some(result => result.value?.state === 'Committed'));
+  for (const result of results.filter(result => result.error)) {
+    assert.notEqual(result.error.details?.notStarted, 'true');
+    assert.notEqual(result.error.code, 'RevisionConflict');
+  }
+  const receipt = await f.reopen().provider.mutate(request);
+  assert.equal(receipt.value.state, 'Committed');
+  assert.deepEqual(receipt.value.itemId, request.operation.itemId);
+  assert.equal(original.name, 'After');
+  assert.equal(f.store.changes(0).items.length, 1);
+});
+
+test('competing handles cannot reject a shared edit when its successful provider reply was lost', async t => {
+  const f = fixture(t);
+  const original = file('lost-shared-edit', { name: 'Still recoverable', trashed: true, explicitlyTrashed: true });
+  f.remote.set(original.id, original);
+  const request = operation('Restore', f.store.mapFile(original));
+  f.model.lost = true;
+
+  const results = await Promise.all([f.provider.mutate(request), f.reopen().provider.mutate(request)]);
+  assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 1);
+  assert.ok(results.every(result => result.error?.details?.notStarted !== 'true'));
+  assert.equal(f.store.operation(request.operation.id).stage, 'issuing');
+  assert.equal(original.trashed, false);
+  const receipt = await f.reopen().provider.mutate(request);
+  assert.equal(receipt.value.state, 'Committed');
+  assert.deepEqual(receipt.value.itemId, request.operation.itemId);
+  assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 1);
+  assert.equal(f.store.changes(0).items.length, 1);
+});
+
+test('a different metadata edit cannot reuse a previously committed operation ID', async t => {
+  const f = fixture(t);
+  const original = file('reused-edit', { name: 'Before' });
+  f.remote.set(original.id, original);
+  const request = operation('Rename', f.store.mapFile(original), { name: 'After' });
+  const receipt = await f.provider.mutate(request);
+  assert.equal(receipt.value.state, 'Committed');
+  const altered = { ...request, newName: 'Different', operation: { ...request.operation, payload: { newName: 'Different' } } };
+  const conflict = await f.reopen().provider.mutate(altered);
+  assert.equal(conflict.error.code, 'InvalidState');
+  assert.match(conflict.error.message, /belongs to a different change/);
+  assert.equal(conflict.error.details?.notStarted, 'true');
+  assert.deepEqual(await f.reopen().provider.mutate(request), receipt);
+  assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 1);
+});

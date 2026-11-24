@@ -289,8 +289,10 @@ export class DriveProvider {
       return resultError(error, 'Mutate', null, this.#now(), true);
     }
     let writeMayHaveRun = false;
+    let claimed = false;
     try {
       const row = this.#store.claimOperation(intent.id, intent);
+      claimed = true;
       if (row.stage === 'committed') {
         writeMayHaveRun = true;
         await this.#store.storage.sync();
@@ -306,17 +308,19 @@ export class DriveProvider {
         ? await this.#createPlan(intent, row.provider_id, token, signal)
         : await this.#updatePlan(intent, token, signal);
       signal?.throwIfAborted();
-      if (intent.operation === 'CreateFolder') {
-        this.#store.storage.transactionSync(() => {
-          const fresh = this.#store.operation(intent.id);
-          if (fresh?.stage !== 'prepared' || fresh.provider_id !== plan.googleId) throw uncertain();
+      this.#store.storage.transactionSync(() => {
+        const fresh = this.#store.operation(intent.id);
+        const createsFolder = intent.operation === 'CreateFolder';
+        const preparedProviderId = createsFolder ? plan.googleId : row.provider_id;
+        if (fresh?.stage !== 'prepared' || fresh.provider_id !== preparedProviderId) throw uncertain();
+        if (createsFolder) {
           const prior = this.#store.previousFolderCreate(intent, 'committed');
           if (this.#store.previousFolderCreate(intent, 'issuing') || (prior?.id ?? null) !== plan.priorCreateId) {
             throw failure(409, 'NameConflict', 'Another Files operation changed this folder name. Check its status before trying again.');
           }
-          this.#store.stageOperation(intent.id, 'issuing', plan.googleId);
-        });
-      } else this.#store.stageOperation(intent.id, 'issuing', plan.googleId);
+        }
+        this.#store.stageOperation(intent.id, 'issuing', plan.googleId);
+      });
       await this.#store.storage.sync();
       writeMayHaveRun = true;
       let result;
@@ -347,7 +351,7 @@ export class DriveProvider {
     } catch (error) {
       // Another handle may already have admitted this very intent. A stale
       // plan cannot claim the operation was unissued even if this call did no I/O.
-      if (!writeMayHaveRun && intent.operation === 'CreateFolder') {
+      if (!writeMayHaveRun && claimed) {
         try {
           writeMayHaveRun = ['issuing', 'committed'].includes(this.#store.operation(intent.id)?.stage);
         } catch { writeMayHaveRun = true; }
