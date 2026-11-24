@@ -7,8 +7,8 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
-from custody.artifacts import CustodyError
-from custody.v8_lora_reference import _GIB, _PAGED_SHA, _capture, _headroom, _model_unchanged, _pinned_small, _verify_model
+from custody.artifacts import CustodyError, _open_regular
+from custody.v8_lora_reference import _GIB, _PAGED_SHA, _capture, _headroom, _model_unchanged, _pin_installed_peft_source, _pinned_small, _verify_model, main
 from custody.v8_sampler import V8_SOURCE_SHA256
 
 
@@ -87,6 +87,44 @@ class NativeReferenceBoundaryTests(unittest.TestCase):
         with patch.dict(os.environ, {"CUDA_VISIBLE_DEVICES": "0"}):
             with self.assertRaisesRegex(CustodyError, "CUDA_VISIBLE_DEVICES=-1"):
                 _capture(SimpleNamespace(), b"", {})
+
+    def test_peft_exact_runtime_hardlink_is_admitted_but_generic_storage_stays_strict(self):
+        with TemporaryDirectory() as tmp:
+            purelib = Path(tmp)
+            package = purelib / "peft/tuners/lora"
+            package.mkdir(parents=True)
+            original, target = purelib / "cached-source", package / "layer.py"
+            content = b"# exact synthetic known PEFT source"
+            original.write_bytes(content)
+            original.chmod(0o644)
+            target.hardlink_to(original)
+            with patch("custody.v8_lora_reference._PEFT_LAYER_SHA", digest(content)):
+                self.assertEqual(_pin_installed_peft_source(purelib, "layer.py", digest(content)), target)
+                with self.assertRaisesRegex(CustodyError, "without aliases"):
+                    _open_regular(target)
+                with self.assertRaisesRegex(CustodyError, "allowlisted"):
+                    _pin_installed_peft_source(purelib, "other.py", digest(content))
+                original.write_bytes(b"changed")
+                with self.assertRaisesRegex(CustodyError, "failed verification"):
+                    _pin_installed_peft_source(purelib, "layer.py", digest(content))
+                target.unlink()
+                target.symlink_to(original)
+                with self.assertRaisesRegex(CustodyError, "owner-owned and regular"):
+                    _pin_installed_peft_source(purelib, "layer.py", digest(content))
+
+    def test_native_runtime_failure_occurs_before_full_model_integrity_io(self):
+        with TemporaryDirectory() as tmp, patch.dict(os.environ, {"CUDA_VISIBLE_DEVICES": "-1"}):
+            path = Path(tmp)
+            opts = ["--source-root", tmp, "--model-root", str(path / "model"), "--model-pins", str(path / "pins"),
+                    "--model-pins-sha256", "0" * 64, "--torch-version", "test", "--seed", "41",
+                    "--min-headroom-gib", "70", "--grad-checkpointing", "--output", str(path / "out")]
+            with (patch("custody.v8_lora_reference._headroom"),
+                  patch("custody.v8_lora_reference._pinned_small"),
+                  patch("custody.v8_lora_reference._admit_runtime", side_effect=CustodyError("runtime refused")),
+                  patch("custody.v8_lora_reference._verify_model") as expensive):
+                with self.assertRaisesRegex(CustodyError, "runtime refused"):
+                    main(opts)
+                expensive.assert_not_called()
 
     @unittest.skipUnless(os.getenv("DULCHE_V8_SOURCE_FOR_PARITY"), "requires exact audited private v8 source")
     def test_both_reviewed_sources_are_hash_qualified(self):

@@ -3,10 +3,14 @@
 import argparse
 from dataclasses import asdict
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
 import re
+import stat
+import sys
+import sysconfig
 
 from .artifacts import CustodyError, _open_regular, checked_path, relative_parts
 from .v8_lora_init import _PEFT, _PEFT_LAYER_SHA, _PEFT_MODEL_SHA, _TARGETS, _raw, _receipt, V8LoraTarget
@@ -108,27 +112,74 @@ def _headroom(min_gib, *, proc=Path("/proc"), cgroup=Path("/sys/fs/cgroup")):
     return {"min_headroom_bytes": required, "memory_max_bytes": int(raw_max)}
 
 
-def _capture(opts, paged_source, model_identity):
-    # Standalone process. Prevent network fallback and fail if CUDA is touched.
+def _pin_installed_peft_source(purelib, filename, sha):
+    """Accept aliases only for these two fixed, owner-owned installed sources."""
+    if (filename, sha) not in (("layer.py", _PEFT_LAYER_SHA), ("model.py", _PEFT_MODEL_SHA)):
+        raise CustodyError("The installed-runtime source is not an allowlisted PEFT module.")
+    path = purelib / "peft" / "tuners" / "lora" / filename
+    checked_path(path.parent, directory=True)
+
+    def trusted(info):
+        return (stat.S_ISREG(info.st_mode) and info.st_uid == os.geteuid()
+                and info.st_nlink >= 1 and not info.st_mode & 0o022
+                and 0 < info.st_size <= 1024 * 1024)
+
+    inspected = path.lstat()
+    if not trusted(inspected):
+        raise CustodyError("The pinned installed PEFT source must be owner-owned and regular.")
+    fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0))
+    with os.fdopen(fd, "rb") as source:
+        opened = os.fstat(source.fileno())
+        if not trusted(opened) or _identity(inspected) != _identity(opened):
+            raise CustodyError("The pinned installed PEFT source changed while opening.")
+        data = source.read(1024 * 1024 + 1)
+        if (len(data) != opened.st_size or hashlib.sha256(data).hexdigest() != sha
+                or _identity(os.fstat(source.fileno())) != _identity(opened)
+                or _identity(path.lstat()) != _identity(opened)):
+            raise CustodyError("The pinned installed PEFT source changed or failed verification.")
+    return path
+
+
+def _admit_runtime(opts):
     if os.environ.get("CUDA_VISIBLE_DEVICES") != "-1":
         raise CustodyError("Reference capture requires CUDA_VISIBLE_DEVICES=-1 before imports.")
     os.environ["HF_HUB_OFFLINE"] = os.environ["TRANSFORMERS_OFFLINE"] = "1"
+    # Avoid reading a pre-existing source-side .pyc. No cache is written.
+    cache = opts.output.parent / ".reference-empty-pycache"
+    if cache.exists() or cache.is_symlink():
+        raise CustodyError("The isolated reference bytecode cache path must be unused.")
+    sys.pycache_prefix, sys.dont_write_bytecode = str(cache), True
+    purelib = Path(sysconfig.get_path("purelib"))
+    source_entries = (("layer.py", _PEFT_LAYER_SHA), ("model.py", _PEFT_MODEL_SHA))
+    expected = tuple(_pin_installed_peft_source(purelib, name, sha) for name, sha in source_entries)
+    peft_spec = importlib.util.find_spec("peft")
+    if ("peft" in sys.modules or peft_spec is None
+            or peft_spec.origin != str(purelib / "peft" / "__init__.py")):
+        raise CustodyError("PEFT does not resolve to the exact installed native environment.")
     import torch
 
     attempted_cuda = []
+
     def refuse_cuda():
         attempted_cuda.append(True)
         raise CustodyError("The CPU reference must never initialize CUDA.")
+
     torch._C._cuda_init = refuse_cuda
     import peft
     import transformers
     from peft.tuners.lora import layer, model
-    if (torch.cuda.is_initialized() or str(torch.__version__) != opts.torch_version
-            or transformers.__version__ != "5.20.1" or peft.__version__ != _PEFT):
-        raise CustodyError("Reference runtime differs from the reviewed CPU-only v8 runtime.")
-    for module, pin in ((layer, _PEFT_LAYER_SHA), (model, _PEFT_MODEL_SHA)):
-        _pinned_small(Path(module.__file__), pin)
 
+    if (torch.cuda.is_initialized() or attempted_cuda or str(torch.__version__) != opts.torch_version
+            or transformers.__version__ != "5.20.1" or peft.__version__ != _PEFT
+            or tuple(Path(mod.__file__) for mod in (layer, model)) != expected):
+        raise CustodyError("Reference runtime differs from the reviewed CPU-only v8 runtime.")
+    for name, sha in source_entries:
+        _pin_installed_peft_source(purelib, name, sha)
+    return torch, transformers, peft, layer, attempted_cuda
+
+
+def _capture(opts, paged_source, model_identity, runtime=None):
+    torch, transformers, peft, layer, attempted_cuda = runtime or _admit_runtime(opts)
     torch.manual_seed(opts.seed)
     tokenizer = transformers.AutoTokenizer.from_pretrained(opts.model_root, local_files_only=True, trust_remote_code=False)
     if tokenizer.pad_token is None:
@@ -206,9 +257,10 @@ def main(argv=None):
     admission = _headroom(opts.min_headroom_gib)
     _pinned_small(opts.source_root / "train.py", V8_SOURCE_SHA256)
     pager = _pinned_small(opts.source_root / "paged_training.py", _PAGED_SHA)
+    runtime = _admit_runtime(opts)  # critical prerequisite before any full-shard I/O
     original = _verify_model(opts.model_root, opts.model_pins, opts.model_pins_sha256)
     _headroom(opts.min_headroom_gib)
-    receipt = _capture(opts, pager, original)
+    receipt = _capture(opts, pager, original, runtime)
     receipt["headroom"] = admission
     fd = os.open(opts.output, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0), 0o600)
     with os.fdopen(fd, "w", encoding="ascii") as out:
