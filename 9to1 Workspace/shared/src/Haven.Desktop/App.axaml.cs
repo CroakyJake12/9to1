@@ -182,6 +182,7 @@ public sealed partial class App : Avalonia.Application
                 ConfigureOriginalUnifiedNativeRoutes(window, workspace);
                 ConfigureOriginalDesktopShutdown(desktop, window, null);
                 window.Opened += (_, _) => { _ = InitialiseUnifiedHavenSafely(); };
+                WorkspaceWindowService.FitInitialWindowToPrimaryScreen(window);
                 desktop.MainWindow = window;
             }
             else
@@ -194,6 +195,7 @@ public sealed partial class App : Avalonia.Application
                 ConfigureOriginalAutomationLibraryShell(window, mainView);
                 ConfigureOriginalDesktopShutdown(desktop, window, mainView);
                 window.Opened += (_, _) => { _ = InitialiseHaven(mainView); };
+                WorkspaceWindowService.FitInitialWindowToPrimaryScreen(window);
                 desktop.MainWindow = window;
             }
         }

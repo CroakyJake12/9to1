@@ -8,6 +8,39 @@ namespace Haven.Desktop.Tests;
 public sealed class WorkspaceWindowPersistenceTests
 {
     [AvaloniaFact]
+    public void Initial_window_fits_a_smaller_screen_without_preventing_saved_bounds()
+    {
+        var window = new Window { Width = 1440, Height = 920, MinWidth = 720, MinHeight = 520 };
+        var area = new PixelRect(0, 0, 1364, 1024);
+
+        WorkspaceWindowService.FitInitialWindowToWorkingArea(window, area, 1);
+
+        Assert.True(window.Width < area.Width);
+        Assert.Equal(920, window.Height);
+        WorkspaceWindowService.ApplyWindowBounds(window, """{"X":20,"Y":30,"Width":1000,"Height":700}""", area);
+        Assert.Equal(1000, window.Width);
+        Assert.Equal(700, window.Height);
+        Assert.Equal(new PixelPoint(20, 30), window.Position);
+    }
+
+    [AvaloniaFact]
+    public void Initial_window_uses_screen_scaling_and_preserves_defaults_that_fit()
+    {
+        var window = new Window { Width = 1440, Height = 920, MinWidth = 720, MinHeight = 520 };
+        WorkspaceWindowService.FitInitialWindowToWorkingArea(window, new PixelRect(0, 0, 1920, 1080), 1);
+        Assert.Equal(1440, window.Width);
+        Assert.Equal(920, window.Height);
+
+        WorkspaceWindowService.FitInitialWindowToWorkingArea(window, new PixelRect(0, 0, 1920, 1080), 1.5);
+        Assert.InRange(window.Width, 720, 1279);
+        Assert.InRange(window.Height, 520, 719);
+
+        WorkspaceWindowService.FitInitialWindowToWorkingArea(window, new PixelRect(0, 0, 640, 400), 1);
+        Assert.Equal(720, window.Width);
+        Assert.Equal(520, window.Height);
+    }
+
+    [AvaloniaFact]
     public void ApplyWindowBounds_restores_valid_geometry_and_clamps_to_window_minimums()
     {
         var window = new Window { MinWidth = 420, MinHeight = 320, Width = 640, Height = 480 };

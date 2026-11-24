@@ -216,6 +216,28 @@ public sealed partial class WorkspaceWindowService(
         window.Show();
     }
 
+    /// <summary>Fit the default client size before the first Show. Session restore can still
+    /// apply saved geometry later, and subsequent monitor changes or resizes are untouched.</summary>
+    internal static void FitInitialWindowToPrimaryScreen(Window window)
+    {
+        var screen = window.Screens?.Primary;
+        if (screen is not null)
+            FitInitialWindowToWorkingArea(window, screen.WorkingArea, screen.Scaling);
+    }
+
+    internal static void FitInitialWindowToWorkingArea(Window window, PixelRect workingArea, double scale)
+    {
+        if (!double.IsFinite(scale) || scale <= 0 || workingArea.Width <= 0 || workingArea.Height <= 0)
+            return;
+
+        // WorkingArea is in physical pixels. Leave room for the OS frame in client DIPs.
+        const double frameAllowance = 48;
+        var availableWidth = Math.Max(window.MinWidth, Math.Floor(workingArea.Width / scale - frameAllowance));
+        var availableHeight = Math.Max(window.MinHeight, Math.Floor(workingArea.Height / scale - frameAllowance));
+        if (window.Width > availableWidth) window.Width = availableWidth;
+        if (window.Height > availableHeight) window.Height = availableHeight;
+    }
+
     internal static void ApplyWindowBounds(Window window, string? json) =>
         ApplyWindowBounds(window, json, CurrentScreenWorkingArea(window));
 
