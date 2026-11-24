@@ -115,8 +115,12 @@ export class DriveStore {
   }
   changes(after, limit = 100) {
     if (!Number.isSafeInteger(after) || after < 0 || !Number.isInteger(limit) || limit < 1 || limit > 500) throw new FilesHttpError(400, 'InvalidCursor', 'The change cursor is invalid.', { notStarted: true });
-    const rows = this.query('SELECT sequence,event FROM files_changes WHERE sequence>? ORDER BY sequence LIMIT ?', after, limit);
-    return { items: rows.map(row => ({ ...JSON.parse(row.event), cursor: { revision: row.sequence } })), nextPageToken: rows.length === limit ? String(rows.at(-1).sequence) : null };
+    // Read one lookahead row in the same SQLite snapshot, but never expose it or
+    // advance the continuation past the last event already delivered.
+    const rows = this.query('SELECT sequence,event FROM files_changes WHERE sequence>? ORDER BY sequence LIMIT ?', after, limit + 1);
+    const hasMore = rows.length > limit;
+    if (hasMore) rows.pop();
+    return { items: rows.map(row => ({ ...JSON.parse(row.event), cursor: { revision: row.sequence } })), nextPageToken: hasMore ? String(rows.at(-1).sequence) : null };
   }
   transfer(id) { const row = this.query('SELECT * FROM files_transfers WHERE id = ?', guid(id))[0]; return row ? JSON.parse(row.record) : null; }
   findTransfer(operationId) { const row = this.query('SELECT record FROM files_transfers WHERE operation_id = ?', guid(operationId))[0]; return row ? JSON.parse(row.record) : null; }

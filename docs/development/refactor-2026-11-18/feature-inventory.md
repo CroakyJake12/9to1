@@ -44,6 +44,12 @@ Layout now opens the dedicated Accessibility page. The shared shell, Home, New T
 
 The three Haven keyboard routes show the current commands for moving focus, dismissing a popover and activating a control. Searching for each category and pressing Enter opens its map. The two tested window sizes were 1440 × 900 and 720 × 520. The current host has no shortcut reassignment store. [Keyboard comparisons and native receipts](../evidence/atlas-20261123-accessibility/README.md)
 
+## 24 November · Files change-feed continuation
+
+| Surface | Classification | Acceptance and evidence |
+| --- | --- | --- |
+| Files API → connected Drive → resume changes | Conflict corrected (Files requirement: resumable typed change feed with stable event IDs/cursors) | The existing `GET /api/files/v1/changes` checks for one more SQLite row before returning a continuation, without dropping that row. Resume from the last delivered event and omit the continuation on a full but terminal page. Malformed or repeated query values get a typed pre-operation error instead of a coerced cursor. Authenticated route and SQLite regression tests verified this with a fake provider. No production deployment or live Google Drive test. This does not add Drive live subscriptions. |
+
 ## Actual implementation map (code-observed 18 Nov)
 
 | Area | Real location | Notes |

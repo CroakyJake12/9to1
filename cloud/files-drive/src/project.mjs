@@ -15,6 +15,15 @@ async function sessionDigest(request) {
 const redirect = location => new Response(null, { status: 303, headers: { location, 'cache-control': 'no-store', 'referrer-policy': 'no-referrer' } });
 const GOOGLE_REVOKE = 'https://oauth2.googleapis.com/revoke';
 const disconnected = () => new FilesHttpError(409, 'DriveReconnectRequired', 'Connect Google Drive again in Files.', { notStarted: true });
+function changePageParameter(params, name, fallback) {
+  const values = params.getAll(name);
+  if (values.length === 0) return fallback;
+  const [value] = values;
+  if (values.length !== 1 || value.length < 1 || value.length > 16 || /[^0-9]/.test(value)) {
+    throw new FilesHttpError(400, 'InvalidCursor', 'The change cursor is invalid.', { notStarted: true });
+  }
+  return Number(value);
+}
 const validationPath = API_PREFIX + '/validation';
 const validationPage = '<!doctype html><html lang="en"><meta charset="utf-8"><title>Files provider check</title>' +
   '<main><h1>Check Google Drive editing</h1><p>This will create two empty test folders in your Google Drive to check rename, move, Trash and restore. No files will be permanently deleted.</p>' +
@@ -157,7 +166,7 @@ export class FilesProject {
         if (item && request.method === 'GET') return json(await services.provider.get(item[1], signal));
         if (route === '/operations' && request.method === 'POST') return json(await services.provider.mutate(await readJsonBody(request, 65536, signal), signal));
         if (route === '/changes' && request.method === 'GET') return json(this.#store.changes(
-          Number(url.searchParams.get('after') ?? 0), Number(url.searchParams.get('limit') ?? 100)));
+          changePageParameter(url.searchParams, 'after', 0), changePageParameter(url.searchParams, 'limit', 100)));
         if (route === '/uploads' && request.method === 'POST') return json(await services.transfers.beginUpload(await readJsonBody(request, 65536, signal), signal));
         if (route === '/uploads' && request.method === 'GET') return json(await services.transfers.findUpload(url.searchParams.get('operationId'), signal));
         const upload = /^\/uploads\/([0-9a-f-]+)(\/content|\/cancel)?$/.exec(route);
