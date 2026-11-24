@@ -86,8 +86,7 @@ public sealed partial class MainView
         }
         else
         {
-            await _newChatPage.StartFreshConversationAsync(HavenMode.Chat, null);
-            await _newChatPage.AssignSpaceAsync(space.Id);
+            await StartNewChatWithScopeAsync(_newChatPage, HavenMode.Chat, null, null, space.Id);
             _newChatPage.ConfigureRegisteredContext(plan.RegisteredContext, plan.EffortOverride);
             if (plan.Files.Count > 0)
                 await _newChatPage.AddFilesAsync(plan.Files.Select(file => file.Path));

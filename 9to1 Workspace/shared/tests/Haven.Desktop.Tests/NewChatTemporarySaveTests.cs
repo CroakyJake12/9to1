@@ -4,6 +4,8 @@ using Avalonia.Headless.XUnit;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Views.Pages.Chat;
+using Haven.Desktop.Views.Shell;
+using Haven.Desktop.Views.Shell.NativePresentation;
 using Haven.UI;
 using Xunit;
 using HavenButton = Haven.UI.Components.Button;
@@ -154,6 +156,82 @@ public sealed partial class ChatCloudPermissionCallerTests
             Assert.NotNull(drafts.Last);
             Assert.Equal(outgoing, drafts.Last.ConversationId);
             Assert.Equal("Latest ordinary draft", drafts.Last.Content);
+        }
+        finally
+        {
+            page.RequestRetirement();
+            await page.CloseAndDrainAsync();
+            Directory.Delete(directory, true);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Native_sidebar_New_Chat_preserves_the_selected_Space_without_saving_before_the_first_send()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var timeout = TimeSpan.FromSeconds(15);
+        await using var rig = new Rig(temporary: false);
+        var directory = Path.Combine(Path.GetTempPath(), "native-scoped-new-chat-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var drafts = new NativeComposerDraftStore();
+        var page = CreateNativeComposerPage(rig, directory, drafts, enableFreshChatTemporaryLifecycle: true);
+        try
+        {
+            await page.OriginalInitialization.WaitAsync(timeout, token);
+            var paths = NativeComposerProxy<IAppPaths>((name, _) => name == "get_DataDirectory" ? directory : Path.Combine(directory, name));
+            var spaces = new SpaceRegistry(new VersionedAtomicSettingsStore(paths));
+            var space = await spaces.CreateAsync("Genuine sidebar Space", cancellationToken: token);
+            await spaces.SetCurrentSpaceIdAsync(space.Id, token);
+            var containers = NativeComposerProxy<IContainerRepository>((name, _) => name == "GetByModeAsync"
+                ? Task.FromResult<IReadOnlyList<ContainerDefinition>>([])
+                : throw new InvalidOperationException("Unexpected container operation: " + name));
+
+            var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            NativeChatSidebar? sidebar = null;
+            using var actualSidebar = new NativeChatSidebar(rig.Conversations, containers,
+                _ => throw new InvalidOperationException("New Chat must not load saved conversation history."),
+                async (mode, group) =>
+                {
+                    try
+                    {
+                        await MainView.StartNewChatWithScopeAsync(page, mode, group, null, sidebar!.CurrentSpaceId);
+                        started.TrySetResult();
+                    }
+                    catch (Exception cause) { started.TrySetException(cause); }
+                }, _ => Task.CompletedTask, spaces: spaces);
+            sidebar = actualSidebar;
+            await sidebar.ReloadSpaceScopeAsync();
+            Assert.Equal(space.Id, sidebar.CurrentSpaceId);
+            var previous = page.ConversationId;
+            var writes = rig.Conversations.Writes;
+
+            InvokeButton(sidebar.Scene.NewChat);
+            await started.Task.WaitAsync(timeout, token);
+            var fresh = page.ConversationId;
+            Assert.NotEqual(previous, fresh);
+            Assert.Equal(space.Id, page.CurrentConversation.SpaceId);
+            Assert.Equal(writes, rig.Conversations.Writes);
+            Assert.Null(await rig.Conversations.GetAsync(fresh, token));
+
+            page.ComposerInput.Text = "Unsent scoped draft";
+            await page.SetTemporaryAsync(true);
+            Assert.True(page.IsTemporary);
+            Assert.Equal(fresh, page.ConversationId);
+            Assert.Equal(space.Id, page.CurrentConversation.SpaceId);
+            Assert.Equal("Unsent scoped draft", page.ComposerInput.Text);
+            Assert.Equal(writes, rig.Conversations.Writes);
+            await page.SetTemporaryAsync(false);
+            Assert.False(page.IsTemporary);
+
+            await MainView.StartNewChatWithScopeAsync(page, HavenMode.Chat, null, null, space.Id);
+            Assert.NotEqual(fresh, page.ConversationId);
+            Assert.Null(await rig.Conversations.GetAsync(page.ConversationId, token));
+            var stored = await rig.Conversations.GetAsync(fresh, token);
+            Assert.NotNull(stored);
+            Assert.Equal(space.Id, stored.SpaceId);
+            Assert.NotNull(drafts.Last);
+            Assert.Equal(fresh, drafts.Last.ConversationId);
+            Assert.Equal("Unsent scoped draft", drafts.Last.Content);
         }
         finally
         {
