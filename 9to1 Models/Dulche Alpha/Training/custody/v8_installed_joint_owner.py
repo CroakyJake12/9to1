@@ -137,6 +137,7 @@ class BoundRankWorker:
     grant: LocalRankGrant
     attest_process: object
     publish_completion: object
+    startup_streams: tuple
 
     def verify_owner(self, admission):
         return (self.admission is admission and self.attest_process(self.receipt) is True
@@ -160,12 +161,15 @@ def run_owned_binding(binding):
     carried by RegisteredRankRun. Applies the authenticated same-machine
     grant client to every rank gate, then calls the rank application.
     """
+    from .v8_guest_main_channel import FrozenGuestMainChannel
+    from .v8_joint_jobs import identify_owned_worker
     from .v8_registered_rank import RegisteredRankRun, main
 
     if (type(binding) is not BoundRankWorker or type(binding.registration) is not JointRegistration
             or type(binding.receipt) is not RankProcessReceipt or type(binding.admission) is not RegisteredRankRun
             or type(binding.grant) is not LocalRankGrant or not callable(binding.attest_process)
-            or not callable(binding.publish_completion)):
+            or not callable(binding.publish_completion) or type(binding.startup_streams) is not tuple
+            or len(binding.startup_streams) != 2):
         raise CustodyError("No supervised joint rank binding.")
     admission, receipt = binding.admission, binding.receipt
     rank = 0 if admission.role == "early" else 1
@@ -176,6 +180,13 @@ def run_owned_binding(binding):
             or receipt.cuda_capability != ((7, 0), (12, 0))[rank] or receipt.visible_cuda_count != 1
             or receipt.attempt_id != admission.attempt_id or binding.grant.rank != rank):
         raise CustodyError("The process grant does not own the admitted rank or GPU.")
+    channel = admission.main_channel
+    if (type(channel) is not FrozenGuestMainChannel
+            or channel._in is not binding.startup_streams[0]
+            or channel._out is not binding.startup_streams[1]
+            or binding.attest_process(receipt) is not True):
+        raise CustodyError("The startup and data pipe must be the same originally owned process channel.")
+    identify_owned_worker(receipt, *binding.startup_streams)
     ports = replace(admission.ports, check_admission=binding.grant.check_admission,
                     mentor_quiesced=binding.grant.mentor_quiesced)
     admission = replace(admission, ports=ports, local_control=binding.grant)

@@ -67,7 +67,9 @@ class InstalledOwnerTests(unittest.TestCase):
         self.assertEqual(events, [(identity, attempt, 0, 1), (identity, attempt, 0, 2)])
 
     def test_bound_registered_worker_invokes_actual_application_entry_through_server(self):
+        from io import BytesIO
         from unittest.mock import Mock, patch
+        from .v8_guest_main_channel import FrozenGuestMainChannel
         from .v8_installed_joint_owner import BoundRankWorker, run_owned_binding
         from .v8_joint_registration import JointRegistration, RankProcessReceipt, _GPU_ROWS
         from .v8_joint_step import JointV8Ports
@@ -102,9 +104,14 @@ class InstalledOwnerTests(unittest.TestCase):
             grant = LocalRankGrant(right, attempt=attempt, rank=0, expected_authority=process)
             try:
                 ports = JointV8Ports(Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
+                start = (BytesIO(b"G"), BytesIO())
+                channel = FrozenGuestMainChannel(rank=0, attempt_id=attempt, step=19, owner="owner",
+                                                 grad_accum=8, seq_cap=2048, vocab_size=256,
+                                                 inbound=start[0], outbound=start[1])
                 admission = RegisteredRankRun(attempt, 19, "owner", "early", _V100,
-                                              None, ports, None, 256, None)
-                worker = BoundRankWorker(registry, receipt, admission, grant, lambda r: r == receipt, report)
+                                              None, ports, None, 256, channel)
+                worker = BoundRankWorker(registry, receipt, admission, grant,
+                                         lambda r: r == receipt, report, start)
 
                 def use_bound_runtime(authorized, *, verify_owner):
                     self.assertTrue(verify_owner(authorized))
@@ -115,6 +122,7 @@ class InstalledOwnerTests(unittest.TestCase):
 
                 with patch("custody.v8_registered_rank.execute_owned_rank", side_effect=use_bound_runtime):
                     self.assertEqual(run_owned_binding(worker), 0)
+                self.assertIn(attempt.encode(), start[1].getvalue())
             finally:
                 grant.close()
         finally:
