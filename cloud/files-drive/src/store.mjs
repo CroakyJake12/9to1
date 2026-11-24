@@ -56,28 +56,29 @@ export class DriveStore {
   }
   setRoot(file) { const metadata = this.mapFile(file); this.set('googleRoot', file.id); return metadata; }
   mapFile(file, requestedId = null) {
+    return this.storage.transactionSync(() => this.mapFileInTransaction(file, requestedId));
+  }
+  mapFileInTransaction(file, requestedId = null) {
     if (!file || typeof file.id !== 'string' || typeof file.name !== 'string' || file.name.length > 32768 ||
         typeof file.mimeType !== 'string' || !/^\d{1,24}$/.test(String(file.version)) ||
         !Number.isFinite(Date.parse(file.createdTime)) || !Number.isFinite(Date.parse(file.modifiedTime))) throw badProvider();
     const size = file.size === undefined ? null : Number(file.size);
     if (size !== null && (!Number.isSafeInteger(size) || size < 0)) throw badProvider();
-    return this.storage.transactionSync(() => {
-      const id = this.ensureIdInTransaction(file.id, requestedId), row = this.byId(id);
-      if (row.google_version && BigInt(row.google_version) > BigInt(file.version)) return JSON.parse(row.metadata);
-      const revision = row.google_version === String(file.version) ? row.revision_id : crypto.randomUUID();
-      const parentGoogle = file.parents?.[0] ?? null;
-      const parentId = parentGoogle && parentGoogle !== this.get('googleRoot') ? this.ensureIdInTransaction(parentGoogle) : null;
-      const owner = file.ownedByMe ? this.ownerId : file.owners?.[0]?.permissionId ? 'google:' + file.owners[0].permissionId : 'google:external';
-      const metadata = { id: wrap(id), locationId: wrap(this.get('locationId')), parentId: wrap(parentId), name: file.name,
-        kind: file.mimeType === folderMime ? 'Folder' : file.mimeType === 'application/vnd.google-apps.shortcut' ? 'Reference' : 'File',
-        contentType: file.mimeType, ownerPrincipalId: owner, scope: 'connected-provider', sizeBytes: size,
-        createdAt: file.createdTime, modifiedAt: file.modifiedTime, currentRevisionId: wrap(revision), availability: 'CloudOnly',
-        isShared: file.shared === true, contentHash: file.sha256Checksum ? 'sha256:' + file.sha256Checksum : file.md5Checksum ? 'md5:' + file.md5Checksum : null,
-        metadataSchemaVersion: 1 };
-      this.query('UPDATE files_items SET google_version=?,revision_id=?,metadata=?,provider_metadata=?,observed_at=? WHERE id=?',
-        String(file.version), revision, JSON.stringify(metadata), JSON.stringify(file), this.now(), id);
-      return metadata;
-    });
+    const id = this.ensureIdInTransaction(file.id, requestedId), row = this.byId(id);
+    if (row.google_version && BigInt(row.google_version) > BigInt(file.version)) return JSON.parse(row.metadata);
+    const revision = row.google_version === String(file.version) ? row.revision_id : crypto.randomUUID();
+    const parentGoogle = file.parents?.[0] ?? null;
+    const parentId = parentGoogle && parentGoogle !== this.get('googleRoot') ? this.ensureIdInTransaction(parentGoogle) : null;
+    const owner = file.ownedByMe ? this.ownerId : file.owners?.[0]?.permissionId ? 'google:' + file.owners[0].permissionId : 'google:external';
+    const metadata = { id: wrap(id), locationId: wrap(this.get('locationId')), parentId: wrap(parentId), name: file.name,
+      kind: file.mimeType === folderMime ? 'Folder' : file.mimeType === 'application/vnd.google-apps.shortcut' ? 'Reference' : 'File',
+      contentType: file.mimeType, ownerPrincipalId: owner, scope: 'connected-provider', sizeBytes: size,
+      createdAt: file.createdTime, modifiedAt: file.modifiedTime, currentRevisionId: wrap(revision), availability: 'CloudOnly',
+      isShared: file.shared === true, contentHash: file.sha256Checksum ? 'sha256:' + file.sha256Checksum : file.md5Checksum ? 'md5:' + file.md5Checksum : null,
+      metadataSchemaVersion: 1 };
+    this.query('UPDATE files_items SET google_version=?,revision_id=?,metadata=?,provider_metadata=?,observed_at=? WHERE id=?',
+      String(file.version), revision, JSON.stringify(metadata), JSON.stringify(file), this.now(), id);
+    return metadata;
   }
   newPage(context, providerToken) {
     if (typeof providerToken !== 'string' || providerToken.length > 16384) throw badProvider();

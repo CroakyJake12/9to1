@@ -49,6 +49,7 @@ The three Haven keyboard routes show the current commands for moving focus, dism
 | Surface | Classification | Acceptance and evidence |
 | --- | --- | --- |
 | Files API → connected Drive → resume changes | Conflict corrected (Files requirement: resumable typed change feed with stable event IDs/cursors) | The existing `GET /api/files/v1/changes` checks for one more SQLite row before returning a continuation, without dropping that row. Resume from the last delivered event and omit the continuation on a full but terminal page. Malformed or repeated query values get a typed pre-operation error instead of a coerced cursor. Authenticated route and SQLite regression tests verified this with a fake provider. No production deployment or live Google Drive test. This does not add Drive live subscriptions. |
+| Files API → connected Drive → upload and resume changes | Implemented backend slice (APP-FILES-001, IX-FILES-003) | Verified Drive upload receipt commits canonical metadata, the completed transfer and one `FileContentCommitted` event atomically. A failed local journal recovers by checking the same upload without a second media PUT. Workerd exercised owner-only HTTP, upload, change read and reopen against a controlled provider; live Google and browser rollout remain untested. |
 
 ## Actual implementation map (code-observed 18 Nov)
 

@@ -25,6 +25,8 @@ const GOOGLE_SCOPE = 'openid email https://www.googleapis.com/auth/drive';
 const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
 const CERTS_ENDPOINT = 'https://www.googleapis.com/oauth2/v3/certs';
 const DRIVE_FILE_ID = 'fixture-document-01';
+const ROOT_FOLDER_ID = 'google-root-drive-fixture-id';
+const UPLOADED_FILE_ID = 'fixture-upload-01';
 const FILE_BYTES = new TextEncoder().encode('fixture Drive content\n');
 
 assert.equal(miniflareVersion, '5.20261113.0-beta');
@@ -126,15 +128,29 @@ test('production Worker uses Workerd SQLite and cross-worker session RPC without
     if (url.href === CERTS_ENDPOINT && request.method === 'GET') {
       return Response.json({ keys: [publicJwk] }, { headers: { 'cache-control': 'public, max-age=600' } });
     }
-    if (url.origin === 'https://www.googleapis.com' && url.pathname === '/drive/v3/files/root' && request.method === 'GET') {
+    if (url.origin === 'https://www.googleapis.com' && (url.pathname === '/drive/v3/files/root' || url.pathname === '/drive/v3/files/' + ROOT_FOLDER_ID) && request.method === 'GET') {
       const now = new Date().toISOString();
       return Response.json({
-        id: 'google-root-drive-fixture-id', name: 'My Drive', mimeType: 'application/vnd.google-apps.folder', version: '1',
+        id: ROOT_FOLDER_ID, name: 'My Drive', mimeType: 'application/vnd.google-apps.folder', version: '1',
         createdTime: now, modifiedTime: now, parents: [], driveId: null, trashed: false,
         ownedByMe: true, capabilities: { canAddChildren: true }, owners: [], appProperties: {},
       });
     }
+    if (url.origin === 'https://www.googleapis.com' && url.pathname === '/drive/v3/files/generateIds' && request.method === 'GET') {
+      return Response.json({ ids: [UPLOADED_FILE_ID] });
+    }
+    if (url.origin === 'https://www.googleapis.com' && url.pathname === '/upload/drive/v3/files' && request.method === 'POST') {
+      assert.equal(url.searchParams.get('uploadType'), 'multipart');
+      const encoded = await request.text();
+      const metadata = JSON.parse(encoded.split('\r\n\r\n')[1].split('\r\n')[0]);
+      assert.equal(metadata.id, UPLOADED_FILE_ID);
+      assert.deepEqual(metadata.parents, [ROOT_FOLDER_ID]);
+      const now = new Date().toISOString();
+      return Response.json({ ...metadata, size: '0', version: '1', createdTime: now, modifiedTime: now,
+        ownedByMe: true, trashed: false, shared: false, capabilities: { canDownload: true } });
+    }
     if (url.origin === 'https://www.googleapis.com' && url.pathname === '/drive/v3/files' && request.method === 'GET') {
+      if (url.searchParams.get('q')?.includes('name = ')) return Response.json({ files: [] });
       const now = new Date().toISOString();
       return Response.json({ files: [{
         id: DRIVE_FILE_ID, name: 'Fixture document.txt', mimeType: 'text/plain', version: '1',
@@ -318,6 +334,24 @@ test('production Worker uses Workerd SQLite and cross-worker session RPC without
     assert.equal(download.headers.get('content-length'), String(FILE_BYTES.byteLength));
     assert.deepEqual(new Uint8Array(await download.arrayBuffer()), FILE_BYTES);
 
+    const operationId = { value: 'c180113b-1cc3-47ab-a2bf-21e6c048ebc1' };
+    const upload = await jsonResponse(await request(mf, '/uploads', {
+      method: 'POST', body: JSON.stringify({ operationId, parentId: null, name: 'Empty notes.txt',
+        sizeBytes: 0, contentType: 'text/plain' }), origin: FILES_ORIGIN,
+    }));
+    assert.equal(upload.status, 200, JSON.stringify(upload.body));
+    assert.equal(upload.body.state, 'Completed');
+    const changePage = await jsonResponse(await request(mf, '/changes?limit=1'));
+    assert.equal(changePage.status, 200);
+    assert.equal(changePage.body.nextPageToken, null);
+    const [uploadEvent] = changePage.body.items;
+    assert.deepEqual(uploadEvent.operationId, operationId);
+    assert.deepEqual(uploadEvent.itemId, upload.body.itemId);
+    assert.equal(uploadEvent.kind, 'FileContentCommitted');
+    assert.equal(uploadEvent.metadata.name, 'Empty notes.txt');
+    const deniedChanges = await jsonResponse(await request(mf, '/changes', { sid: sessionId('W') }));
+    assert.equal(deniedChanges.status, 403);
+
     const callsBeforeRestart = [...googleCalls];
     assert.deepEqual(callsBeforeRestart.slice(0, 4).map(call => [call.host, call.path, call.method]), [
       ['oauth2.googleapis.com', '/token', 'POST'],
@@ -355,6 +389,11 @@ test('production Worker uses Workerd SQLite and cross-worker session RPC without
     assert.equal(reopened.body.location.capabilities, connected.body.location.capabilities);
     assert.equal(reopened.body.usage.unitsPerDay.used, usageBeforeRestart.unitsPerDay.used);
     assert.equal(reopened.body.usage.downloadBytesPerDay.used, usageBeforeRestart.downloadBytesPerDay.used);
+    const recovered = await jsonResponse(await request(mf, '/uploads?operationId=' + operationId.value));
+    assert.deepEqual(recovered, upload);
+    assert.deepEqual(await jsonResponse(await request(mf, '/changes?limit=1')), changePage);
+    const resumed = await jsonResponse(await request(mf, '/changes?limit=1&after=' + uploadEvent.cursor.revision));
+    assert.deepEqual(resumed, { status: 200, body: { items: [], nextPageToken: null } });
     assert.deepEqual(googleCalls, callsBeforeRestart, 'SQLite-backed context and quota read must not make new provider calls');
   } finally {
     try { if (mf) await mf.dispose(); }

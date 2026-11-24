@@ -424,13 +424,38 @@ export class DriveTransfers {
 
   async #complete(entry, file) {
     if (!receiptMatches(file, entry)) throw unknown();
-    this.#store.mapFile(file, entry.itemId);
-    entry.uploadedBytes = entry.totalBytes;
-    entry.phase = 'complete';
-    entry.state = 'Completed';
-    delete entry.session;
-    delete entry.pendingEnd;
-    return this.#persist(entry);
+    let completed;
+    try {
+      completed = this.#store.storage.transactionSync(() => {
+        // A verified provider write only becomes an observable local completion
+        // when metadata, the resumable change and the transfer receipt agree.
+        const current = this.#upload(entry.transferId);
+        if (current.state === 'Completed') return current;
+        if (current.state !== 'Running' || !['creating', 'sending'].includes(current.phase) ||
+            !receiptMatches(file, current)) throw unknown();
+
+        const metadata = this.#store.mapFileInTransaction(file, current.itemId);
+        const mapped = this.#store.byId(current.itemId);
+        if (!metadata.currentRevisionId || mapped?.google_version !== String(file.version)) throw unknown();
+        this.#store.change({
+          eventId: current.operationId, operationId: wrap(current.operationId), itemId: wrap(current.itemId),
+          actorId: this.#store.ownerId, kind: 'FileContentCommitted', baseRevisionId: null,
+          resultRevisionId: metadata.currentRevisionId, occurredAt: new Date(this.#now()).toISOString(), metadata,
+        });
+
+        const done = { ...current, uploadedBytes: current.totalBytes, phase: 'complete', state: 'Completed' };
+        delete done.session;
+        delete done.pendingEnd;
+        this.#store.putTransfer(done, 'upload');
+        return done;
+      });
+      await this.#store.storage.sync();
+    } catch {
+      // The provider can already hold the full file. A retry must read status
+      // for the same upload instead of treating a local failure as unissued.
+      throw unknown();
+    }
+    return completed;
   }
 
   async findUpload(operationId) {
