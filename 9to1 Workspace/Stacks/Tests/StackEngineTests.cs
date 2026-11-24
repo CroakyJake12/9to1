@@ -191,6 +191,84 @@ public sealed class StackEngineTests
     }
 
     [Fact]
+    public async Task ExpiredFreezeDefersExactUpstreamChangesUntilExplicitReviewAndProtectsRenameDestination()
+    {
+        string directory = NewDirectory();
+        var clock = new MutableClock(DateTimeOffset.UtcNow);
+        var store = new JsonFileStackProjectStore(directory);
+        var engine = new StackEngine(store, clock);
+        Guid main = (await engine.CreateProjectAsync(new StackProjectConfiguration("Freeze journey", StackStorageMode.Files, directory), Admin)).Id;
+        await engine.ApplyChangeAsync(main, Upsert("module/file.cs", "base"), Admin);
+        await engine.ApplyChangeAsync(main, Upsert("elsewhere.cs", "rename source"), Admin);
+        await engine.CreateCommitAsync(main, "Seed", Admin);
+        var project = await engine.GetProjectSummaryAsync(Admin);
+        var branch = await engine.CreateBranchAsync(project.ProjectId, "Owner", Admin);
+        var twig = await engine.CreateTwigAsync(branch.Id, "Frozen", Admin);
+        var frozen = await engine.CreateFreezeAsync(branch.Id, "module", [twig.Id], "Hold release", clock.Now.AddSeconds(1), null, Admin);
+        Assert.Equal(branch.HeadRevisionId ?? branch.BaseRevisionId, frozen.CreatedAtRevisionId);
+
+        await engine.ApplyChangeAsync(branch.Id, Upsert("module/file.cs", "incoming one"), Admin);
+        await engine.CreateCommitAsync(branch.Id, "First upstream", Admin);
+        await engine.ApplyChangeAsync(branch.Id, Upsert("module/file.cs", "incoming two"), Admin);
+        await engine.CreateCommitAsync(branch.Id, "Latest upstream", Admin);
+        clock.Now += TimeSpan.FromSeconds(2);
+
+        var held = await engine.GetEffectiveTreeAsync(twig.Id, Admin);
+        Assert.Equal("base", Text(held.Files["module/file.cs"]));
+        Assert.Empty(await engine.GetConflictsAsync(twig.Id, Admin));
+        var rename = new StackMutation(StackMutationKind.Rename, "elsewhere.cs", RenameTo: "module/import.cs");
+        Assert.Equal(StackFailureCode.FreezeActive, (await Assert.ThrowsAsync<StackFailureException>(
+            () => engine.ApplyChangeAsync(twig.Id, rename, Admin))).Code);
+        Assert.Equal(StackFailureCode.FreezeActive, (await Assert.ThrowsAsync<StackFailureException>(
+            () => engine.ThawFreezeAsync(frozen.Id, early: false, hasInProgressOperations: true, Admin))).Code);
+
+        // Reopen actual Files-backed storage: neither time nor a different owner
+        // can silently consume held changes, and the creation revision survives.
+        engine = new StackEngine(store, clock);
+        await engine.OpenProjectAsync();
+        Assert.Equal(frozen.CreatedAtRevisionId, (await store.LoadAsync()).Freezes.Single().CreatedAtRevisionId);
+        await engine.ThawFreezeAsync(frozen.Id, early: false, hasInProgressOperations: false, Admin);
+        var conflict = Assert.Single(await engine.GetConflictsAsync(twig.Id, Admin), row => !row.IsResolved);
+        Assert.Equal("base", Text(conflict.Base!));
+        Assert.Equal("base", Text(conflict.Local!));
+        Assert.Equal("incoming two", Text(conflict.Incoming!));
+        Assert.Equal("base", Text((await engine.GetEffectiveTreeAsync(twig.Id, Admin)).Files["module/file.cs"]));
+        await engine.ResolveConflictAsync(conflict.Id, StackConflictResolutionAction.TakeIncoming,
+            null, completeMerge: true, actor: Admin);
+        Assert.Equal("incoming two", Text((await engine.GetEffectiveTreeAsync(twig.Id, Admin)).Files["module/file.cs"]));
+    }
+
+    [Fact]
+    public async Task ExistingConflictAndAcceptedProposalCannotWriteThroughActiveFreeze()
+    {
+        var engine = await CreateProjectAsync(NewDirectory());
+        var (main, branch) = await CreateConflictedBranchAsync(engine, "conflict.txt");
+        var conflict = Assert.Single(await engine.GetConflictsAsync(branch.Id, Admin));
+        var proposal = await engine.ProposeConflictResolutionAsync(conflict.Id, "A proposed answer",
+            Resource("proposed"), "trusted tool", Admin);
+        var freeze = await engine.CreateFreezeAsync(main, "conflict.txt", [branch.Id], "Review hold", null, null, Admin);
+        foreach (bool merge in new[] { false, true })
+        {
+            Assert.Equal(StackFailureCode.FreezeActive, (await Assert.ThrowsAsync<StackFailureException>(
+                () => engine.ResolveConflictAsync(conflict.Id, StackConflictResolutionAction.TakeIncoming,
+                    null, completeMerge: merge, Admin))).Code);
+            Assert.Equal(StackFailureCode.FreezeActive, (await Assert.ThrowsAsync<StackFailureException>(
+                () => engine.ReviewConflictProposalAsync(proposal.Id, accept: true, merge, Admin))).Code);
+        }
+        Assert.False(Assert.Single(await engine.GetConflictsAsync(branch.Id, Admin)).IsResolved);
+        await engine.ThawFreezeAsync(freeze.Id, early: true, hasInProgressOperations: false, Admin);
+        Assert.Equal(conflict.Id, Assert.Single(await engine.GetConflictsAsync(branch.Id, Admin)).Id);
+        await engine.ReviewConflictProposalAsync(proposal.Id, accept: true, merge: true, Admin);
+        Assert.Equal("proposed", Text((await engine.GetEffectiveTreeAsync(branch.Id, Admin)).Files["conflict.txt"]));
+    }
+
+    private sealed class MutableClock(DateTimeOffset now) : TimeProvider
+    {
+        public DateTimeOffset Now { get; set; } = now;
+        public override DateTimeOffset GetUtcNow() => Now;
+    }
+
+    [Fact]
     public async Task SubrootPreventsOverlappingClaimsAndCompletesOnlyAfterChecksAndApprovals()
     {
         var engine = await CreateProjectAsync(NewDirectory());

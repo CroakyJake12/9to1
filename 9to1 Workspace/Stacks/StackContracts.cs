@@ -231,7 +231,8 @@ public sealed record StackFreeze(
     string Reason,
     DateTimeOffset? ExpiresAt,
     string? ExpiryCondition,
-    StackFreezeState State);
+    StackFreezeState State,
+    Guid? CreatedAtRevisionId = null);
 
 public sealed record StackAuditEntry(
     Guid Id,
