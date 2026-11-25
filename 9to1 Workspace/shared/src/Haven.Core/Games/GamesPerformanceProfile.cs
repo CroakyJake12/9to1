@@ -39,10 +39,10 @@ public sealed record GamesPerformanceProfile(string ProfileID, string Name, doub
 
     /// <summary>A conservative low-power preset that reduces resolution/detail/cache but keeps full project semantics.</summary>
     public static GamesPerformanceProfile LowPower(string profileID = "low-power") =>
-        new(profileID, "Low Power", 0.5, 32, 2, 128, AllowBackgroundRendering: false, RemoteExecutorMode.RemoteIfAvailable).Capture();
+        new GamesPerformanceProfile(profileID, "Low Power", 0.5, 32, 2, 128, AllowBackgroundRendering: false, GamesRemoteExecutorMode.RemoteIfAvailable).Capture();
 
     public static GamesPerformanceProfile FullQuality(string profileID = "full-quality") =>
-        new(profileID, "Full Quality", 1.0, 4096, 16, 4096, AllowBackgroundRendering: true, RemoteExecutorMode.LocalOnly).Capture();
+        new GamesPerformanceProfile(profileID, "Full Quality", 1.0, 4096, 16, 4096, AllowBackgroundRendering: true, GamesRemoteExecutorMode.LocalOnly).Capture();
 }
 
 /// <summary>The availability of a single local capability. Unavailable capabilities are reported explicitly (with an optional reason)
@@ -77,7 +77,7 @@ public sealed record GamesPerformanceDocument(int Revision, string SelectedProfi
         if (executors.Select(e => e.ExecutorID).Distinct(StringComparer.Ordinal).Count() != executors.Length) throw new InvalidDataException("Games remote executors contain duplicate identities.");
         var capabilities = Capabilities.Select(c => c?.Capture() ?? throw new InvalidDataException("Games capability is missing.")).ToArray();
         if (capabilities.Select(c => c.CapabilityID).Distinct(StringComparer.Ordinal).Count() != capabilities.Length) throw new InvalidDataException("Games capabilities contain duplicate identities.");
-        return this with { Profiles = profiles, RemoteExecutors = executors, Capabilities = capabilities };
+        return (this with { Profiles = profiles, RemoteExecutors = executors, Capabilities = capabilities }).Capture();
     }
 
     public static GamesPerformanceDocument Create(IEnumerable<GamesPerformanceProfile> profiles, string selectedProfileID)
