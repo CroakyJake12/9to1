@@ -51,10 +51,10 @@
             </Button>
             <Button id="files-open" Content="Open" Action="9to1.Files.Open" Interactive="{Binding CanOpen}" />
             <Button id="files-preview" Content="Preview" Action="PreviewSelectedText" Interactive="{Binding CanPreviewText}" AccessibleName="Read-only preview of selected text file" />
+            <Input id="files-name-input" AccessibleName="Folder or item name" PlaceholderText="Folder or item name" Type="Text" IsEnabled="{Binding CanEditItemName}" />
+            <Button id="files-create-folder" content="New folder" action="9to1.Files.CreateFolder" accessible-name="Review creating a folder in Home" Interactive="{Binding CanCreateFolder}" />
+            <Button id="files-rename" content="Rename" action="9to1.Files.Rename" accessible-name="Review renaming the selected item in Home" Interactive="{Binding CanRename}" />
             <Button Content="New / edit" Type="Menu Item" AccessibleName="Folder and item changes">
-        <Input id="files-name-input" accessible-name="Folder or item name" Type="Text" />
-        <Button id="files-create-folder" content="New folder" action="9to1.Files.CreateFolder" accessible-name="Review creating a folder in Home" Interactive="{Binding CanCreateFolder}" />
-        <Button id="files-rename" content="Rename" action="9to1.Files.Rename" accessible-name="Review renaming the selected item in Home" Interactive="{Binding CanRename}" />
         <Button id="files-delete" content="Move to Trash" action="9to1.Files.Delete" accessible-name="Review moving the selected item to recoverable Trash in Home" Interactive="{Binding CanDelete}" />
         <Button id="files-restore" content="Restore" action="9to1.Files.Restore" accessible-name="Review restoring the selected deleted item to its original folder in Home" Interactive="{Binding CanRestore}" />
         <Button id="files-choose-move" content="Cut" action="9to1.Files.ChooseMove" accessible-name="Cut the selected item without moving it yet" Interactive="{Binding CanChooseMove}" />

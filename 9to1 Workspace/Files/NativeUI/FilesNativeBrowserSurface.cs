@@ -31,13 +31,49 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     private readonly ListBox _items = new();
     private long _selectionEpoch;
     private readonly TextBox _search = new() { PlaceholderText = "Search this folder", Width = 280, MaxLength = 256 };
-    private readonly TextBox _editName = new() { PlaceholderText = "Folder or item name", Width = 280, MaxLength = 255 };
+    private readonly TextBox _editName = new() { PlaceholderText = "Folder or item name", Width = 210, MaxLength = 255 };
     private readonly string _mutationSession = Guid.NewGuid().ToString("N");
     private FilesNativeBrowserService.PreparedMutation? _pendingMutation;
     private static readonly TimeSpan CutLifetime = TimeSpan.FromMinutes(15);
     private readonly DispatcherTimer _cutExpiry = new() { Interval = CutLifetime };
     private sealed record MoveSource(FilesNativeBrowserPage Page, HostedItemMetadata Item, DateTimeOffset ExpiresAt);
     private MoveSource? _moveSource;
+    private sealed record LocalRenameDraft(FilesNativeBrowserPage Page, HostedItemMetadata Item);
+    private LocalRenameDraft? _localRenameDraft;
+
+    private bool IsCurrentRenameDraft(LocalRenameDraft draft) =>
+        ReferenceEquals(_page, draft.Page) && ReferenceEquals(_items.SelectedItem, draft.Item);
+
+    private bool CanBeginLocalRename() => Available && _pendingMutation is null && !InDrive &&
+        _page is { } page && _items.SelectedItem is HostedItemMetadata row &&
+        _browser.CanRenameNativeSelection(page, row) &&
+        (string.IsNullOrWhiteSpace(_editName.Text) ||
+            _localRenameDraft is { } draft && IsCurrentRenameDraft(draft));
+
+    private void BeginLocalRename()
+    {
+        if (!CanBeginLocalRename()) return;
+        RunOriginalNativeMutation(() =>
+        {
+            if (_localRenameDraft is not { } draft || !IsCurrentRenameDraft(draft))
+            {
+                _localRenameDraft = new(_page!, (HostedItemMetadata)_items.SelectedItem!);
+                _editName.Text = _localRenameDraft.Item.Name;
+            }
+            if (_localRenameDraft is not { } original || !IsCurrentRenameDraft(original)) return;
+            _editName.SelectAll();
+            _status = "Enter a new name, then choose Rename to request Home review.";
+            Changed();
+            // A popup returns keyboard focus on close; transfer it only once closed and
+            // only to the same live Files draft, never to a newly selected row.
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (OriginalAlive() && Available && _pendingMutation is null &&
+                    ReferenceEquals(_localRenameDraft, original) && IsCurrentRenameDraft(original))
+                    RunOriginalNativeMutation(() => _editName.Focus());
+            }, DispatcherPriority.Input);
+        });
+    }
 
     private void SetCutSource(MoveSource? source)
     {
@@ -128,7 +164,31 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         _search.KeyDown += async (_, args) =>
         { if (args.Key == Key.Enter) { args.Handled = true; await InvokeFromNativeEventAsync("9to1.Files.Search"); } };
         _search.TextChanged += (_, _) => { if (OriginalAlive()) RunOriginalNativeMutation(Changed); };
-        _editName.TextChanged += (_, _) => { if (OriginalAlive()) RunOriginalNativeMutation(Changed); };
+        _editName.TextChanged += (_, _) =>
+        {
+            if (OriginalAlive()) RunOriginalNativeMutation(() =>
+            {
+                if (string.IsNullOrWhiteSpace(_editName.Text)) _localRenameDraft = null;
+                Changed();
+            });
+        };
+        _editName.KeyDown += (_, args) =>
+        {
+            if (args.Key != Key.Escape || args.KeyModifiers != KeyModifiers.None ||
+                !Available || _pendingMutation is not null || _localRenameDraft is null) return;
+            args.Handled = true;
+            RunOriginalNativeMutation(() =>
+            {
+                _localRenameDraft = null;
+                _editName.Text = "";
+                _status = "Rename discarded. No file was changed.";
+                if (_items.SelectedItem is { } selected && _items.ContainerFromItem(selected) is Control row)
+                    row.Focus();
+                else
+                    _items.Focus();
+                Changed();
+            });
+        };
         _cutExpiry.Tick += (_, _) =>
         {
             _cutExpiry.Stop();
@@ -139,6 +199,9 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
             if (args.Handled || !Available) return;
             if (GetOwnedFolderTabShortcut(args) is { } tabCommand)
             { args.Handled = true; await InvokeFolderTabFromNativeEventAsync(tabCommand); return; }
+            if (args.Key == Key.F2 && args.KeyModifiers == KeyModifiers.None &&
+                _items.IsKeyboardFocusWithin && CanBeginLocalRename())
+            { args.Handled = true; BeginLocalRename(); return; }
             if (args.Key == Key.F && args.KeyModifiers == KeyModifiers.Control)
             { args.Handled = true; _search.Focus(); return; }
             var command = args.Key switch
@@ -264,13 +327,18 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
             "SidebarFolders" => _page is { IsTrash: false } sidebarPage ? sidebarPage.Items.Where(item => item.Kind == HostedItemKind.Folder).ToArray() : Array.Empty<HostedItemMetadata>(),
             "FolderTitle" => _page?.FolderTitle ?? "Files",
             "SelectedDetails" => SelectedDetails,
-            "Status" => _status,
+            "Status" => _localRenameDraft is { } draft && !IsCurrentRenameDraft(draft)
+                ? ReferenceEquals(_page, draft.Page)
+                    ? $"Draft for ‘{draft.Item.Name}’ retained. Reselect it or clear the name to start again."
+                    : "The displayed folder changed. Clear the retained name before starting another change."
+                : _status,
             "CanNavigate" => IsActionAvailable("9to1.Files.Refresh"),
             "CanUp" => IsActionAvailable("9to1.Files.Up"),
             "CanBack" => IsActionAvailable("9to1.Files.Back"),
             "CanForward" => IsActionAvailable("9to1.Files.Forward"),
             "CanMore" => IsActionAvailable("9to1.Files.More"),
             "CanOpen" => IsActionAvailable("9to1.Files.Open"),
+            "CanEditItemName" => Available && _pendingMutation is null,
             "CanCreateFolder" => IsActionAvailable("9to1.Files.CreateFolder"),
             "CanRename" => IsActionAvailable("9to1.Files.Rename"),
             "CanDelete" => IsActionAvailable("9to1.Files.Delete"),
@@ -288,7 +356,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
             _ => null
         };
         return path is "NavigationColumns" or "SearchRow" or "SearchColumn" or "SearchColumnSpan" or "CompactLayout" or "SidebarVisible" or "BodyColumns" or "BodyRows" or "MainColumn" or "DetailsColumn" or "DetailsRow" or "DetailsWidth" or "DetailsMaxHeight" or "HasSelection" or "WideColumns" or "ItemColumns" or "SidebarHeading" or "SidebarFolders" or "SelectedDetails" or "FolderTitle" or "Status" or "CanNavigate" or "CanUp" or "CanBack" or "CanForward" or "CanMore" or "CanOpen"
-            or "CanCreateFolder" or "CanRename" or "CanDelete" or "CanRestore" or "CanApply" or "CanCancelReview" or "CanRetryAudit" or "PendingChange"
+            or "CanEditItemName" or "CanCreateFolder" or "CanRename" or "CanDelete" or "CanRestore" or "CanApply" or "CanCancelReview" or "CanRetryAudit" or "PendingChange"
             or "CanChooseMove" or "CanMove" or "CanCancelMove" or "MoveSelection" or "CanShowDetails" or "TechnicalDetailsLabel";
     }
     private string SelectedDetails
@@ -325,9 +393,11 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         "9to1.Files.Preview" => Available && _pendingMutation is null && CanPreviewTextSelection,
         "9to1.Files.Preview.Close" => Available && _textPreview is not null,
         "9to1.Files.CreateFolder" => Available && _pendingMutation is null && _browser.HasNativeMutationOwner
-            && _page?.ParentID is not null && !string.IsNullOrWhiteSpace(_editName.Text),
+            && _localRenameDraft is null && _page?.ParentID is not null && !string.IsNullOrWhiteSpace(_editName.Text),
         "9to1.Files.Rename" => Available && _pendingMutation is null && !string.IsNullOrWhiteSpace(_editName.Text)
-            && _page is { } page && _items.SelectedItem is HostedItemMetadata row && _browser.CanRenameNativeSelection(page, row),
+            && _page is { } page && _items.SelectedItem is HostedItemMetadata row && _browser.CanRenameNativeSelection(page, row)
+            && (_localRenameDraft is not { } rename || IsCurrentRenameDraft(rename)
+                && !string.Equals(_editName.Text!.Trim(), row.Name, StringComparison.Ordinal)),
         "9to1.Files.Delete" => Available && _pendingMutation is null && _page is { } deletePage
             && _items.SelectedItem is HostedItemMetadata deleteRow && _browser.CanDeleteNativeSelection(deletePage, deleteRow),
         "9to1.Files.Restore" => Available && _pendingMutation is null && _page is { } restorePage
@@ -394,6 +464,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         var originalHistoryIndex = _historyIndex;
         var originalSearch = _search.Text ?? "";
         var originalName = _editName.Text ?? "";
+        var originalRename = _localRenameDraft;
         var originalMove = _moveSource;
         string? completedMessage = null;
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, _lifetime.Token);
@@ -471,7 +542,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
                     SetCutSource(null);
                 if (outcome.AuditRecorded) _pendingMutation = null;
                 completedMessage = outcome.Message;
-                _editName.Text = "";
+                _localRenameDraft = null; _editName.Text = "";
             }
             var index = _historyIndex; var destination = _history[index];
             FilesNativeBrowserCursor? cursor = null;
@@ -581,6 +652,9 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
                 (command is "9to1.Files.Open" or "9to1.Files.Preview" or "9to1.Files.Rename" or "9to1.Files.Delete" or "9to1.Files.Restore" or "9to1.Files.ChooseMove" or "9to1.Files.TechnicalDetails")
                     && _items.SelectedItem as HostedItemMetadata != originalSelection)
                 throw new InvalidOperationException("The original Files selection changed before navigation.");
+            if (command == "9to1.Files.Rename" && (!ReferenceEquals(_localRenameDraft, originalRename) ||
+                !string.Equals(_editName.Text, originalName, StringComparison.Ordinal)))
+                throw new InvalidOperationException("The original Files rename draft changed before review.");
             if (command == "9to1.Files.Move" && (!ReferenceEquals(_moveSource, originalMove) ||
                 originalMove is null || originalMove.ExpiresAt <= DateTimeOffset.UtcNow))
                 throw new InvalidOperationException("The original Files cut item changed or expired.");
@@ -641,7 +715,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         WithdrawFolderTabsOnRetirement();
         _page = null; _originalPageCurrent = null; _items.SelectedItem = null; _items.ItemsSource = null;
         RetireUnrepresentedDetailsRows();
-        _query = ""; _search.Text = ""; _editName.Text = "";
+        _query = ""; _search.Text = ""; _localRenameDraft = null; _editName.Text = "";
         if (!preserveCut) SetCutSource(null);
         _showTechnicalDetails = false;
         if (_closing || _disposed || _lifetime.IsCancellationRequested)
@@ -691,7 +765,6 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         _sort.IsEnabled = Available && _page is not null && !IsPendingShareReview;
         _items.IsEnabled = !_busy && !IsPendingShareReview && OriginalAlive();
         _search.IsEnabled = Available && _pendingMutation is null;
-        _editName.IsEnabled = Available && _pendingMutation is null;
         if (publishing) RequireOriginalAlive(CancellationToken.None);
         PropertyChanged?.Invoke(this, new(null));
         if (publishing) RequireOriginalAlive(CancellationToken.None);
@@ -861,10 +934,11 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
                 if (captured is not { } target || !context.IsOpen || !OriginalAlive() ||
                     target.SelectionEpoch != _selectionEpoch || !ReferenceEquals(_page, target.Page) ||
                     !ReferenceEquals(_items.ItemFromContainer(container), target.Row) ||
-                    !ReferenceEquals(_items.SelectedItem, target.Row) || IsActionAvailable(command) != true)
+                    !ReferenceEquals(_items.SelectedItem, target.Row) || !CanInvokeRowMenu(command))
                     return;
                 captured = null; // A menu invocation may address its original row only once.
-                await InvokeFromNativeEventAsync(command);
+                if (command == "9to1.Files.Rename" && !InDrive) BeginLocalRename();
+                else await InvokeFromNativeEventAsync(command);
             };
             context.Items.Add(menuItem);
         }
@@ -877,10 +951,14 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
             RunOriginalNativeMutation(() => _items.SelectedItem = row);
             captured = (page, row, _selectionEpoch);
             foreach (var (menuItem, pair) in context.Items.OfType<MenuItem>().Zip(RowContextMenuCommands))
-                menuItem.IsEnabled = IsActionAvailable(pair[1]) == true;
+                menuItem.IsEnabled = CanInvokeRowMenu(pair[1]);
         };
         return context;
     }
+
+    private bool CanInvokeRowMenu(string command) => command == "9to1.Files.Rename" && !InDrive
+        ? CanBeginLocalRename() : IsActionAvailable(command) == true;
+
     private Control BuildDetailsRow(HostedItemMetadata? item)
     {
         if (item is null) return new TextBlock();

@@ -325,7 +325,7 @@ public sealed class FilesNativeBrowserMutationTests
             await view.InitializeAsync(token); window.UpdateLayout();
             var list = Assert.Single(view.GetVisualDescendants().OfType<ListBox>());
             list.SelectedItem = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == h.Parent);
-            var name = view.GetVisualDescendants().OfType<TextBox>().Single(input => input.PlaceholderText == "Folder or item name");
+            var name = view.GetVisualDescendants().OfType<TextBox>().Single(input => AutomationProperties.GetName(input) == "Folder or item name");
             name.Text = "Protected root";
             Assert.False(view.IsActionAvailable("9to1.Files.Rename"));
             await view.DispatchAsync("9to1.Files.Open", null, token);
@@ -446,6 +446,85 @@ public sealed class FilesNativeBrowserMutationTests
     }
 
     [AvaloniaFact]
+    public async Task Row_Rename_edits_only_its_original_item_and_requires_Home_review()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var first = await CreateReviewedFolder(h, h.Parent.Value, "First", token);
+        var second = await CreateReviewedFolder(h, h.Parent.Value, "Second", token);
+        await using var view = new FilesNativeBrowserSurface(h.Browser, null, h.Workspace.Actor,
+            new Readiness(), CancellationToken.None);
+        var window = new Window { Width = 900, Height = 700 };
+        window.Template = new Avalonia.Controls.Templates.FuncControlTemplate<Window>((_, names) =>
+        {
+            var layers = new Avalonia.Controls.Primitives.VisualLayerManager { Child = view };
+            names.Register("PART_VisualLayerManager", layers);
+            return layers;
+        });
+        window.Show();
+        try
+        {
+            await view.InitializeAsync(token);
+            await view.OpenOriginalLocationAsync(h.Workspace.Configuration.StoreId, h.Parent.Value, token);
+            window.UpdateLayout();
+            var list = Assert.Single(view.GetVisualDescendants().OfType<ListBox>());
+            var firstRow = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == first);
+            var secondRow = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == second);
+            list.SelectedItem = firstRow;
+            var container = Assert.IsType<ListBoxItem>(list.ContainerFromItem(secondRow));
+            var menu = Assert.IsType<ContextMenu>(container.ContextMenu);
+            var rename = Assert.Single(menu.Items.OfType<MenuItem>(), item => Equals(item.Header, "Rename"));
+            container.RaiseEvent(new ContextRequestedEventArgs());
+            Assert.True(menu.IsOpen);
+            Assert.True(rename.IsEnabled);
+            var name = Assert.Single(view.GetVisualDescendants().OfType<TextBox>(), box => AutomationProperties.GetName(box) == "Folder or item name");
+            Assert.True(name.IsEffectivelyVisible);
+            rename.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            menu.Close();
+            Assert.Equal("Second", name.Text);
+            Assert.Equal("Second", name.SelectedText);
+            Dispatcher.UIThread.RunJobs();
+            Assert.True(name.IsKeyboardFocusWithin);
+            Assert.False(view.IsActionAvailable("9to1.Files.Rename")); // unchanged
+            Assert.Empty((await h.Permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
+
+            name.Text = "Renamed Second";
+            list.SelectedItem = firstRow;
+            Assert.False(view.IsActionAvailable("9to1.Files.Rename"));
+            Assert.False(view.IsActionAvailable("9to1.Files.CreateFolder"));
+            await view.DispatchAsync("9to1.Files.Rename", null, token);
+            Assert.Empty((await h.Permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
+            Assert.Equal("Renamed Second", name.Text); // retain the user's unsaved input
+
+            list.SelectedItem = secondRow;
+            Assert.True(view.IsActionAvailable("9to1.Files.Rename"));
+            await view.DispatchAsync("9to1.Files.Rename", null, token);
+            var review = Assert.Single((await h.Permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
+            Assert.Equal("9to1.Files.Rename", review.Scope.ActionName);
+            Assert.Equal("Second", (await h.Workspace.Provider.GetAsync(second, token)).Value!.Name);
+            Assert.True((await h.Permissions.DecideAsync(review.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+            await view.DispatchAsync("9to1.Files.Apply", null, token);
+            Assert.Equal("Renamed Second", (await h.Workspace.Provider.GetAsync(second, token)).Value!.Name);
+            Assert.Equal("First", (await h.Workspace.Provider.GetAsync(first, token)).Value!.Name);
+            Assert.True(string.IsNullOrEmpty(name.Text));
+
+            // A real keyboard event opens the same editor. Escape discards only the draft.
+            list.SelectedItem = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == first);
+            window.UpdateLayout();
+            var firstContainer = Assert.IsType<ListBoxItem>(list.ContainerFromItem(list.SelectedItem));
+            Assert.True(firstContainer.Focus());
+            window.KeyPressQwerty(PhysicalKey.F2, RawInputModifiers.None);
+            await AwaitNativeRoleStateAsync(window, () => name.IsKeyboardFocusWithin && name.Text == "First", token);
+            name.Text = "Do not rename";
+            window.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
+            await AwaitNativeRoleStateAsync(window, () => list.IsKeyboardFocusWithin && string.IsNullOrEmpty(name.Text), token);
+            Assert.Empty((await h.Permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
+            Assert.Equal("First", (await h.Workspace.Provider.GetAsync(first, token)).Value!.Name);
+        }
+        finally { await view.CloseAndDrainAsync(); window.Close(); }
+    }
+
+    [AvaloniaFact]
     public async Task Failed_Paste_keeps_the_original_Cut_until_its_reviewed_move_commits()
     {
         var token = TestContext.Current.CancellationToken;
@@ -546,7 +625,7 @@ public sealed class FilesNativeBrowserMutationTests
             await view.InitializeAsync(token);
             await view.OpenOriginalLocationAsync(h.Workspace.Configuration.StoreId, h.Parent.Value, token);
             window.UpdateLayout();
-            var name = view.GetVisualDescendants().OfType<TextBox>().Single(input => input.PlaceholderText == "Folder or item name");
+            var name = view.GetVisualDescendants().OfType<TextBox>().Single(input => AutomationProperties.GetName(input) == "Folder or item name");
             var originalContent = view.Content;
             name.Text = "Unsubmitted folder";
             Assert.False(view.CanPrepareOriginalClose()); Assert.Equal("Unsubmitted folder", name.Text);
