@@ -153,7 +153,7 @@ def validate_request(request):
         value = settings[name]
         if type(value) not in (float, int) or not math.isfinite(value) or value <= 0:
             raise ValueError("Optimizer and adapter settings must be finite and positive")
-    if settings["loss_token_rows"] * settings["chunk_rows"] * 4 > 16 * 1024 * 1024:
+    if settings["loss_token_rows"] * settings["chunk_rows"] * 8 > 16 * 1024 * 1024:
         raise ValueError("The bounded loss score tile would exceed 16 MiB")
     limits = result["limits"]
     if type(limits) is not dict or set(limits) != _LIMITS:

@@ -25,9 +25,9 @@ class _StreamingCrossEntropy(torch.autograd.Function):
         device, count = hidden.device, hidden.shape[0]
         check_compute(device=device)
         maxima = torch.full((count,), -torch.inf, dtype=torch.float32, device=device)
-        # Only per-token statistics use FP64. Wide vocabularies can otherwise
-        # lose small masses repeatedly added after an early dominant logit.
-        # The large score/exp tiles remain FP32 and retain their existing bound.
+        # Wide vocabularies can lose small masses repeatedly added after an
+        # early dominant logit. FP64 reduction also may allocate an FP64 tile;
+        # the public tile limit explicitly budgets eight bytes per element.
         totals = torch.zeros_like(maxima, dtype=torch.float64)
         selected = torch.empty_like(maxima)
         for ref in refs:
@@ -107,7 +107,7 @@ def streaming_cross_entropy(hidden, head, targets, *, token_rows=128):
         raise ValueError("Streaming loss requires matching hidden/target tensors and a frozen paged head")
     if type(token_rows) is not int or not 1 <= token_rows <= 4096:
         raise ValueError("Loss token rows must be a bounded positive integer")
-    if head.chunk_rows * token_rows * max(4, hidden.element_size()) > 16 * 1024 * 1024:
+    if head.chunk_rows * token_rows * max(8, hidden.element_size()) > 16 * 1024 * 1024:
         raise ValueError("The output-head score tile exceeds its 16 MiB bound")
     check_compute(device=hidden.device)
     flat_targets = targets.reshape(-1)

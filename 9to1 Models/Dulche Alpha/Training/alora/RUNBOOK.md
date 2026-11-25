@@ -332,7 +332,7 @@ Key supported bounds are:
 | `chunk_rows` | 1–65,536. |
 | `max_read_bytes`, `max_decoded_bytes` | Positive, at most 1 GiB each and within the declared process RAM limit. |
 | `max_fingerprints` | 1–1,048,576; 262,144 is the store default. |
-| `loss_token_rows` | 1–4,096, default 128; FP32 token/vocabulary score tile at most 16 MiB. |
+| `loss_token_rows` | 1–4,096, default 128; each compute/reduction tile at most 16 MiB, budgeting eight bytes per element. |
 | `dataset.max_tokens` | 2–32,768 and no greater than the pinned model's context bound. |
 | `alpha`, `learning_rate`, `max_grad_norm` | Finite positive numbers. |
 | All listed limits | Explicit positive integers except `vram_mib`, which must be integer zero. Startup and checkpoint grace cannot exceed wall time. |

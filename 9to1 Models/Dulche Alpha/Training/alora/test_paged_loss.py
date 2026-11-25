@@ -117,6 +117,10 @@ class PagedLossTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "tile"):
             streaming_cross_entropy(hidden, large_head, torch.tensor([0, 1]), token_rows=4096)
         self.assertEqual(store.reads, [])
+        # Torch's dtype-changing reduction can materialize an FP64 tile,
+        # including when the model's input and logits are FP32.
+        with self.assertRaisesRegex(ValueError, "tile"):
+            streaming_cross_entropy(hidden, large_head, torch.tensor([0, 1]), token_rows=1024)
         self.assertEqual(large_store.reads, [])
         double_head, double_store = self.head(torch.randn(2, 8), rows=4096, dtype=torch.float64)
         with self.assertRaisesRegex(ValueError, "tile"):

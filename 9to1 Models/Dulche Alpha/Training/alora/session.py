@@ -159,7 +159,7 @@ class TrainingSession:
         if loader_identity is not None:
             self.identity["loader"] = copy.deepcopy(loader_identity)
             if (model.lm_head.chunk_rows * loss_token_rows
-                    * max(4, next(iter(self.parameters.values())).element_size()) > 16 * 1024 * 1024):
+                    * max(8, next(iter(self.parameters.values())).element_size()) > 16 * 1024 * 1024):
                 raise ValueError("The streaming loss score tile exceeds its memory bound")
             self.identity["loss"] = {"kind": "streaming-causal-ce-v1", "token_rows": loss_token_rows}
         self.updates, self.cursor, self.failed = 0, 0, False

@@ -117,10 +117,13 @@ selects this boundary for a mapped native graph. Direct calls to the native
 causal-LM forward retain that model's normal logits-returning behavior.
 
 `loss_token_rows` defaults to 128; `chunk_rows` bounds vocabulary rows.
-Their score tile is limited to 16 MiB, accounting for the compute element size.
+Each compute/reduction tile is limited to 16 MiB, budgeting at least eight bytes
+per element for Torch's FP64 reduction temporary. This is a per-buffer limit,
+not a bound on all simultaneously live buffers.
 Projection scores follow the native loss's FP32 upcast. Per-token normalization
 sums use FP64 to preserve small probability masses across a wide vocabulary;
-large score tiles remain FP32, and the returned loss is FP32. Qualification uses
+projection scores remain FP32, a reduction tile may be FP64, and the returned
+loss is FP32. Qualification uses
 FP64 CE on the same FP32 scores, since a native FP32 whole-vocabulary reduction
 can itself lose precision. Higher-order derivatives are explicitly refused.
 
