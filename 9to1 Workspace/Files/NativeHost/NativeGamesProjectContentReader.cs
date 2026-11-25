@@ -4,6 +4,8 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Haven.Application.Games;
+using Haven.Application.Files;
+using Haven.Application.Projects;
 
 namespace Haven.Desktop.NativeHost;
 public sealed class NativeGamesProjectContentReader : ICanonicalGamesProjectStore
@@ -39,7 +41,7 @@ public sealed class NativeGamesProjectContentReader : ICanonicalGamesProjectStor
         return CanonicalGamesProjectReadResult.Success(stored, bytes);
     }
 
-    public Task<CanonicalGamesProjectOpenResult> OpenAsync(Guid projectId, CancellationToken cancellationToken)
+    public Task<GamesStoredProject> OpenAsync(Guid projectId, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
