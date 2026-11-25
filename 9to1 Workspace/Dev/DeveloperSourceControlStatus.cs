@@ -40,7 +40,7 @@ public sealed record DeveloperSourceControlStatus(string BindingId, string Canon
     }
 
     public static DeveloperSourceControlStatus From(string bindingId, string canonicalRepositoryId, IEnumerable<DeveloperSourceControlEntry> entries)
-        => new(bindingId, canonicalRepositoryId, (entries ?? []).ToArray()).Capture();
+        => new DeveloperSourceControlStatus(bindingId, canonicalRepositoryId, (entries ?? []).ToArray()).Capture();
 
     /// <summary>Resolve one document's status. A path with no observed entry is NotInRepository — never guessed.</summary>
     public DeveloperFileSourceStatus StatusFor(Guid documentId, string relativePath)
