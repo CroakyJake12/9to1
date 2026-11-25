@@ -49,7 +49,7 @@ public sealed record DeveloperProcessSession(Guid SessionId, string RunConfigura
     }
 
     public static DeveloperProcessSession Start(Guid sessionId, string runConfigurationId, int rootPid, string label)
-        => new(sessionId, runConfigurationId, rootPid, [new DeveloperProcessHandle(rootPid, null, label, DeveloperProcessState.Running)]).Capture();
+        => new DeveloperProcessSession(sessionId, runConfigurationId, rootPid, [new DeveloperProcessHandle(rootPid, null, label, DeveloperProcessState.Running)]).Capture();
 
     /// <summary>Attach a child process spawned within this session. The parent must already belong to the tree so an unrelated PID cannot be adopted.</summary>
     public DeveloperProcessSession RegisterChild(int pid, int parentPid, string label)
@@ -59,7 +59,7 @@ public sealed record DeveloperProcessSession(Guid SessionId, string RunConfigura
         if (captured.Processes.Any(h => h.Pid == pid)) throw new InvalidOperationException("That PID is already owned by this session.");
         if (!captured.Processes.Any(h => h.Pid == parentPid && h.State == DeveloperProcessState.Running)) throw new InvalidOperationException("A child may only attach to a running process in this session.");
         var newProcesses = new List<DeveloperProcessHandle>(captured.Processes) { new DeveloperProcessHandle(pid, parentPid, label, DeveloperProcessState.Running) };
-        return (captured with { Processes = newProcesses.AsReadOnly() }).Capture();
+        return captured.Capture().with(Processes: newProcesses.AsReadOnly()).Capture();
     }
 
     /// <summary>Terminate exactly this session's owned subtree. Returns the PIDs stopped and the real per-process result; other sessions are untouched.</summary>
