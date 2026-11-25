@@ -162,6 +162,46 @@ public static class DeveloperCuiDraftPreviewCompiler
         if (!supported) throw new NotSupportedException("Unsupported static preview value for '" + name + "'.");
     }
 
+    /// <summary>The currency of a retained preview relative to the current draft.</summary>
+    public enum DeveloperCuiPreviewCurrency { Current, Stale }
+
+    /// <summary>Retains the last successfully compiled preview for one source identity. A newer compile attempt that fails or targets different
+    /// text marks the retained preview Stale (displayed as 'Last valid') while preserving its document; a matching fresh compile restores Current.
+    /// ApplyToTask refuses to write a stale preview or one whose SourceSha256 no longer matches the live draft, so unknown authored source is untouched.</summary>
+    public sealed record DeveloperCuiLastValidPreview(string RelativePath, string SourceSha256,
+        CuiDocument Document, DeveloperCuiPreviewCurrency Currency)
+    {
+        public bool IsCurrent => Currency == DeveloperCuiPreviewCurrency.Current;
+    }
+
+    /// <summary>Outcome of attempting to apply a retained preview to the live task.</summary>
+    public sealed record DeveloperCuiApplyResult(bool Applied, string? Reason)
+    {
+        public static DeveloperCuiApplyResult Success() => new(true, null);
+        public static DeveloperCuiApplyResult Refused(string reason) => new(false, reason);
+    }
+
+    /// <summary>Record a compile attempt against the previously retained preview. A successful compile of the current draft becomes Current;
+    /// any other outcome retains the prior successful preview but marks it Stale so the editor can show 'Last valid' with an explanation.</summary>
+    public static DeveloperCuiLastValidPreview? Observe(DeveloperCuiLastValidPreview? previous, DeveloperCuiDraftPreview attempt)
+    {
+        ArgumentNullException.ThrowIfNull(attempt);
+        if (attempt.Succeeded && attempt.Document is not null)
+            return new DeveloperCuiLastValidPreview(attempt.RelativePath, attempt.SourceSha256, attempt.Document, DeveloperCuiPreviewCurrency.Current);
+        // A failed or non-matching compile never discards the last good rendering; it only marks it stale.
+        return previous is null ? null : previous with { Currency = DeveloperCuiPreviewCurrency.Stale };
+    }
+
+    /// <summary>Apply a retained preview to the live task. Refused when the preview is stale or its source identity no longer matches the current
+    /// draft, so a broken binding cannot push an obsolete rendering into the live Task and unknown authored source is preserved.</summary>
+    public static DeveloperCuiApplyResult ApplyToTask(DeveloperCuiLastValidPreview? retained, string currentDraftSha256)
+    {
+        if (retained is null) return DeveloperCuiApplyResult.Refused("No valid preview has been produced for this draft yet.");
+        if (!retained.IsCurrent) return DeveloperCuiApplyResult.Refused("The preview is stale; the current draft failed to compile. Last valid rendering cannot be applied to the live task.");
+        if (!StringComparer.Ordinal.Equals(retained.SourceSha256, currentDraftSha256)) return DeveloperCuiApplyResult.Refused("The retained preview does not identify the current draft; it was not applied.");
+        return DeveloperCuiApplyResult.Success();
+    }
+
     private static void DemandStaticSemantics(CuiDocument document)
     {
         if (document.Resources.Count != 0 || document.Styles.Count != 0 || document.Actions.Count != 0 || document.Templates.Count != 0 ||
