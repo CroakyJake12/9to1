@@ -73,6 +73,6 @@ public static class GamesRuntimeApplyBack
     {
         var diff = Review(scene, change);
         if (diff.Outcome != GamesApplyBackOutcome.Applied) throw new InvalidOperationException(diff.Reason ?? "GamesApplyBackRejected");
-        return scene.WithValue(change.NodeID, change.PropertyName, change.RuntimeValue) with { Revision = checked(scene.Revision + 1) };
+        return (scene.WithValue(change.NodeID, change.PropertyName, change.RuntimeValue)) with { Revision = checked(scene.Revision + 1) };
     }
 }
