@@ -57,6 +57,28 @@ def _digest(parameters):
     return digest.hexdigest()
 
 
+def _loader_identity(model):
+    report = getattr(model, "alora_loader_report", None)
+    if report is None:
+        return None
+    keys = ("source_identity", "config_sha256", "execution_config_sha256",
+            "native_modeling_sha256", "native_configuration_sha256",
+            "native_class", "transformers_version", "device", "dtype", "chunk_rows")
+    if type(report) is not dict or any(key not in report for key in keys):
+        raise ValueError("The paged loader identity is incomplete")
+    for key in keys[:5]:
+        if type(report[key]) is not str or not _SHA.fullmatch(report[key]):
+            raise ValueError("Paged loader source/configuration digests are invalid")
+    config = getattr(model, "config", None)
+    if config is None or not callable(getattr(config, "to_dict", None)):
+        raise ValueError("A paged native model must retain its execution configuration")
+    actual = hashlib.sha256(json.dumps(config.to_dict(), sort_keys=True,
+                                      separators=(",", ":"), allow_nan=False).encode()).hexdigest()
+    if actual != report["execution_config_sha256"]:
+        raise ValueError("Paged model execution configuration changed after loading")
+    return copy.deepcopy({key: report[key] for key in keys})
+
+
 class TrainingSession:
     def __init__(self, model, *, identity, purpose, learning_rate=1e-4, max_grad_norm=1.0,
                  profile=None, expert_budget_per_layer=None):
@@ -84,6 +106,16 @@ class TrainingSession:
             actual = {n: tuple(m.expert_ids) for n, m in model.named_modules() if isinstance(m, SelectedExperts)}
             if any(tuple(sorted(expected[n])) != actual.get(n) for n in expected) or set(actual) != set(expected):
                 raise ValueError("Installed adapters differ from the observed expert selection")
+        from .paged_experts import PagedExperts
+        for module in model.modules():
+            if isinstance(module, PagedExperts) and (
+                    module.source_identity != identity["base_model_sha256"]
+                    or module.store.source_identity != module.source_identity):
+                raise ValueError("Paged model source differs from the admitted base identity")
+        loader_identity = _loader_identity(model)
+        if loader_identity is not None and loader_identity["source_identity"] != identity["base_model_sha256"]:
+            raise ValueError("Paged loader differs from the admitted base identity")
+        self._loader_identity = loader_identity
         self.model = model
         self.parameters = trainable_adapters(model)
         devices = {p.device for p in model.parameters()}
@@ -103,6 +135,8 @@ class TrainingSession:
             "torch_version": str(torch.__version__),
             "device": str(self.device),
         }
+        if loader_identity is not None:
+            self.identity["loader"] = copy.deepcopy(loader_identity)
         self.updates, self.cursor, self.failed = 0, 0, False
         self._lock = threading.Lock()
         self.last_record = None
@@ -182,7 +216,7 @@ class TrainingSession:
             raise ValueError("The training dataset differs from the pinned session identity")
         self._check_publisher(publisher)
         embedding = self.model.get_input_embeddings()
-        if dataset.vocab_size != embedding.weight.shape[0]:
+        if dataset.vocab_size != embedding.num_embeddings:
             raise ValueError("The dataset vocabulary bound differs from the admitted model")
         checked = dataset.snapshot(row)
         # Device allocation happens only after the admitted compute permit.
@@ -211,6 +245,8 @@ class TrainingSession:
         optimizer_started = False
         rng_before = None
         try:
+            if _loader_identity(self.model) != self._loader_identity:
+                raise ValueError("The paged loader identity changed after session admission")
             actual = trainable_adapters(self.model)
             if list(actual) != list(self.parameters) or any(actual[n] is not p for n, p in self.parameters.items()):
                 raise ValueError("The model's trainable parameter identities changed")
@@ -296,6 +332,8 @@ class TrainingSession:
             raise RuntimeError("Cannot restore while an update is active")
         self._owning_thread = threading.get_ident()
         try:
+            if _loader_identity(self.model) != self._loader_identity:
+                raise ValueError("The paged loader identity changed before restoration")
             if (type(snapshot) is not dict or type(snapshot.get("schema")) is not int or snapshot["schema"] != 1
                     or snapshot.get("kind") != "alora-training" or snapshot.get("purpose") != self.purpose
                     or snapshot.get("identity") != self.identity or snapshot.get("failed") is not False

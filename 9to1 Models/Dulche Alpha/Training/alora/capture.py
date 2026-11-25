@@ -14,6 +14,8 @@ import torch
 
 from .data import TrainingDataset
 from .profile import ActivationProfiler
+from .paged_experts import PagedExperts
+from .paging import PagedEmbedding
 
 
 def _input_device(model):
@@ -23,8 +25,10 @@ def _input_device(model):
         weight = getattr(embedding, "weight", None)
         if isinstance(weight, torch.Tensor):
             device = weight.device
+        elif type(embedding) is PagedEmbedding:
+            device = embedding.device
         else:
-            raise ValueError("The model has no concrete input-embedding weight.")
+            raise ValueError("The model has no materialized or explicitly paged input embedding.")
     else:
         devices = {parameter.device for parameter in model.parameters()}
         if len(devices) != 1:
@@ -70,14 +74,21 @@ def profile_row(model, dataset, row, profiler, *, before_compute=None) -> Activa
     targets = {}
     for path, expert_count in profiler.topology.items():
         module = modules.get(path)
-        if type(module) is not Qwen4ExpTextExperts:
-            raise ValueError(f"{path} is not an unmodified native Qwen4-Exp expert layer.")
-        if (module.num_experts != expert_count
-                or tuple(module.gate_up_proj.shape) != (
-                    expert_count, 2 * module.intermediate_dim, module.hidden_dim)
-                or tuple(module.down_proj.shape) != (
-                    expert_count, module.hidden_dim, module.intermediate_dim)):
-            raise ValueError(f"{path} does not match the declared expert topology.")
+        if type(module) is PagedExperts:
+            if module.expert_ids or len(module.adapters):
+                raise ValueError("Paged calibration requires the unchanged frozen base.")
+            if (module.num_experts != expert_count or profiler.base_model_sha256 is None
+                    or profiler.base_model_sha256 != module.source_identity):
+                raise ValueError("Paged profiling must bind the exact admitted GGUF source and topology.")
+        elif type(module) is Qwen4ExpTextExperts:
+            if (module.num_experts != expert_count
+                    or tuple(module.gate_up_proj.shape) != (
+                        expert_count, 2 * module.intermediate_dim, module.hidden_dim)
+                    or tuple(module.down_proj.shape) != (
+                        expert_count, module.hidden_dim, module.intermediate_dim)):
+                raise ValueError(f"{path} does not match the declared expert topology.")
+        else:
+            raise ValueError(f"{path} is not a supported frozen Qwen4-Exp expert layer.")
         targets[path] = module
     if len({id(module) for module in targets.values()}) != len(targets):
         raise ValueError("Profiling paths must not alias the same expert layer.")

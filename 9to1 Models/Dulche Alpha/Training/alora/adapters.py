@@ -119,6 +119,10 @@ class SelectedExperts(nn.Module):
             final.index_add_(0, token_idx, result.to(final.dtype))
         return final
 
+    def plan_record(self):
+        return {"experts": list(self.expert_ids), "rank": self.rank, "alpha": self.alpha,
+                "packed_shapes": [list(self.base.gate_up_proj.shape), list(self.base.down_proj.shape)]}
+
     @torch.no_grad()
     def merged_slices(self):
         """Yield selected CPU weight slices for a separate immutable export.
@@ -205,8 +209,4 @@ def trainable_adapters(model: nn.Module) -> dict[str, nn.Parameter]:
 
 
 def adapter_plan(wrappers: Mapping[str, SelectedExperts]) -> dict:
-    return {
-        path: {"experts": list(w.expert_ids), "rank": w.rank, "alpha": w.alpha,
-               "packed_shapes": [list(w.base.gate_up_proj.shape), list(w.base.down_proj.shape)]}
-        for path, w in sorted(wrappers.items())
-    }
+    return {path: wrapper.plan_record() for path, wrapper in sorted(wrappers.items())}

@@ -1,9 +1,11 @@
 # ALORA: activation-profiled, selected-expert LoRA
 
-This package implements the first training stage discussed on 25 November 2026:
-profile which routed experts the software-development curriculum uses, allocate
-LoRA parameters only for selected experts, keep the base/router/shared experts
-frozen, and retain actual optimizer and checkpoint evidence.
+This package implements the selected-expert training mechanism discussed on
+25 November 2026: profile which routed experts the software-development curriculum
+uses, allocate LoRA parameters only for selected experts, keep the
+base/router/shared experts frozen, and retain actual optimizer and checkpoint
+evidence. ALORA02 adds an explicit native text-model loader and differentiable
+GGUF weight paging to the original in-memory backend.
 
 ALORA here is the project's selected-expert mechanism. It is distinct from PEFT
 **activated LoRA (aLoRA)**, which is controlled by an invocation token sequence.
@@ -14,8 +16,8 @@ ALORA here is the project's selected-expert mechanism. It is distinct from PEFT
    byte validators. It verifies actual sample hashes and separation across train,
    validation and final-held-out files, then exposes only train rows.
 2. **Measure dispatch.** `capture.profile_row` hooks the installed
-   `Qwen4ExpTextExperts` forward arguments during a real native-model forward.
-   Padding and the masked expert sentinel cannot influence selection. A failed
+   `Qwen4ExpTextExperts` or source-bound frozen `PagedExperts` forward arguments
+   during a real native-model forward. Padding and the masked expert sentinel cannot influence selection. A failed
    forward leaves the previous profile unchanged and removes its hooks.
 3. **Select experts.** `ActivationProfiler` normalizes routing mass per token,
    sample and curriculum category. Deterministic ranking follows the agreed
@@ -40,16 +42,89 @@ ALORA here is the project's selected-expert mechanism. It is distinct from PEFT
    merged weight slices for a separate immutable export. It never writes into
    the active base model or changes the serving model.
 
-The initial backend is the installed Transformers eager packed-expert interface:
+Both backends preserve the installed Transformers eager expert dispatch interface.
+The in-memory implementation uses:
 
 - `gate_up_proj[expert, 2 * intermediate, hidden]`
 - `down_proj[expert, hidden, intermediate]`
 - `forward(hidden_states, top_k_index, top_k_weights)`
 
-Unknown expert classes, quantized packed weights, meta tensors, inference
-dispatch/offload hooks, aliased expert weights and repeated attachment refuse.
-The session supports a single already-materialized device. It does not claim a
-qualified low-memory Flash loader or a training-safe CPU/SSD offload engine.
+The in-memory attachment rejects unknown expert classes, quantized packed weights,
+meta tensors, inference offload hooks, aliased weights and repeated attachment.
+The GGUF backend below maps quantized sources explicitly instead of passing them
+to that in-memory attachment. Sessions use one independently admitted execution
+device; the initial whole-graph GGUF loader accepts CPU float32/float64 only.
+
+## Native GGUF text backend
+
+`GGUFWeightStore` owns read-only descriptors and memory maps for the exact shard
+set. It checks file sizes, descriptor/path identity and structural metadata, then
+pins a SHA-256 of each actual encoded slice. Existing whole-file hashes are
+explicitly labelled **external attestations, not freshly rehashed files**.
+The filename does not determine tensor quantization: the store reads each
+tensor's actual F32/F16/BF16/IQ3_S/IQ4_XS/IQ4_NL/Q8_0/Q6_K type.
+
+Reads enforce separate encoded and float32 decode byte limits before allocation.
+Embedding lookups gather only requested rows, preserving order and duplicates.
+A fingerprint-entry limit defaults to 262,144; exhaustion refuses new slices
+while retaining old pins. Gathering preflights its new entries before partial
+reads. No entry is silently evicted during a forward/backward pair.
+
+`frozen_linear` retains only its immutable reference and input device/dtype in
+autograd. Backward reloads the same checked frozen matrix to compute the input
+gradient. `PagedLinear` streams output row ranges, and `PagedExperts` loads only
+actually routed expert slices. Frozen weights are not optimizer Parameters.
+Native routing weights remain differentiable, including through later experts
+that have no adapters.
+
+`load_text_model` constructs the installed `Qwen4ExpForCausalLM` under meta and
+maps every expected native parameter/buffer and GGUF tensor before returning.
+It implements the converter's inverse DeltaNet head permutations, SSM logarithm,
+zero-centred norms, QSA projection split, depthwise convolution shapes and exact
+int64 PLE constants. Native decoder, attention, router and shared-expert logic
+are retained. Routers, norms, convolution weights and SSM vectors remain small
+frozen resident parameters; large projections and embeddings use paging.
+
+The loader refuses unknown tensor families, unexplained meta state, incompatible
+configuration, mutable caches, embedding reversal, non-CPU devices and full
+base `state_dict` export. The first graph is text only: vision and MTP are
+excluded. Construction reports leave execution verification false; retained
+qualification receipts provide the separate evidence of actual execution.
+
+```python
+from alora.gguf_store import GGUFWeightStore
+from alora.gguf_model import load_text_model
+from alora.paged_experts import attach_paged_experts
+
+# shard_paths and shard_pins come from the owner's admitted source receipt.
+# Each pin has exactly size_bytes and sha256. Retain the raw config-file hash
+# separately from the loader's canonical JSON configuration hash.
+with GGUFWeightStore(
+    shard_paths, expected_shards=shard_pins,
+    max_read_bytes=16 * 1024 * 1024,
+    max_decoded_bytes=16 * 1024 * 1024,
+    max_fingerprints=262144,
+) as weights:
+    model = load_text_model(weights, pinned_config, rank=rank, alpha=alpha)
+    base_sha256 = weights.source_identity
+    # Profile admitted train rows through profile_row using this exact identity.
+    # All layers are frozen until the complete observed selection is staged.
+    attach_paged_experts(model, selected, rank=rank, alpha=alpha)
+    # Construct TrainingSession and use the existing admitted worker/publisher.
+    # Keep weights open until all forward/backward and checkpoint work finishes.
+```
+
+The native loader report binds canonical source and execution configuration,
+installed native source hashes, runtime version, device/dtype and row-chunk size
+into session/checkpoint identity. A different loader identity cannot resume the
+checkpoint, and changed execution configuration is refused before an update.
+
+Byte limits bound requested buffers, not total RAM. Temporary decoder arrays,
+resident parameters, activations, output logits, optimizer state and mapped
+pages also consume memory. In particular, streaming output-head weights still
+produces the complete logits tensor; long-context training needs a separately
+admitted activation/loss budget. Higher-order derivatives, GPU placement,
+multi-device training and dynamic adapter reselection remain unqualified.
 
 ## Curriculum and evaluation
 
@@ -189,12 +264,18 @@ Use the existing SDK lock and guarded runner, with a fresh evidence directory.
 CPU tests require `CUDA_VISIBLE_DEVICES=-1` and the existing
 `hf_backend.cpu_guard` before Transformers imports. No CUDA initialization is
 permitted in their entry/exit checks. The actual command, counts, source revision
-and guard receipts are recorded in the ALORA01 validation handoff.
+and guard receipts are recorded in the ALORA01/ALORA02 validation handoffs.
+ALORA02 adds mixed-quantization store checks, rematerialized backward tests,
+native whole-graph fixture conversion/equivalence, exact PLE/EOS checks and
+loader-bound checkpoint/configuration refusal tests.
 
-Validated numerical CPU behavior is separate from GPU/backward support for the
-complete Flash network, practical memory capacity, multimodal training, a real
-dataset optimizer run, actual computer-use evaluation, model export/quantization
-and inference acceptance. This change starts none of those operations.
+The retained ALORA02 real-weight qualification uses numeric software inputs,
+not a training corpus or quality benchmark. Its receipts distinguish tensor-slice
+equivalence, whole-graph construction and any successfully completed full
+forward/backward/checkpoint proof. Those receipts do not establish GPU readiness,
+long-context throughput, multimodal training, a real curriculum run, computer-use
+quality, full model export/quantization or inference acceptance. None of those
+operations is started by this package.
 
 ## Source references
 
