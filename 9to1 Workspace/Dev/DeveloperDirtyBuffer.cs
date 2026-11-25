@@ -35,7 +35,7 @@ public sealed record DeveloperDirtyBuffer(Guid DocumentId, long SavedDiskRevisio
 
     /// <summary>Open a buffer from saved disk content. It starts clean (draft equals the saved snapshot).</summary>
     public static DeveloperDirtyBuffer Open(Guid documentId, long savedDiskRevision, string text, string encodingId, DeveloperLineEnding lineEnding)
-        => new(documentId, savedDiskRevision, text, text, encodingId, lineEnding, new DeveloperBufferSelection(0, 0)).Capture();
+        => new DeveloperDirtyBuffer(documentId, savedDiskRevision, text, text, encodingId, lineEnding, new DeveloperBufferSelection(0, 0)).Capture();
 
     /// <summary>Whether the draft differs from the last-saved snapshot. This is independent of the saved disk revision.</summary>
     public bool IsDirty => !StringComparer.Ordinal.Equals(DraftText, SavedSnapshotText);
