@@ -199,6 +199,11 @@ public sealed record StackConflictProposal(
     DateTimeOffset CreatedAt,
     string ProposedBy);
 
+public sealed record StackConflictProposalReview(
+    StackConflict Conflict, StackConflictProposal Proposal, Guid? DomainHeadRevisionId, string? AcceptanceBlocker);
+
+public sealed record StackConflictProposalReviewOutcome(StackConflictProposalState? State, string? Refusal);
+
 public sealed record StackRoot(
     Guid Id,
     Guid OwnerDomainId,

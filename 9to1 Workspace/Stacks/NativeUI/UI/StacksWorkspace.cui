@@ -4,6 +4,10 @@
     <Action name="OpenTab" command="9to1.Stacks.OpenProject" parameter="{Binding tab.Target}" />
     <Action name="SelectDomain" command="9to1.Stacks.SelectDomain" parameter="{Binding domain.Target}" />
     <Action name="SelectFile" command="9to1.Stacks.SelectFile" parameter="{Binding file.Target}" />
+    <Action name="ShowConflict" command="9to1.Stacks.ConflictShow" parameter="{Binding proposal.Target}" />
+    <Action name="RejectConflict" command="9to1.Stacks.ConflictReject" parameter="{Binding ConflictReviewTarget}" />
+    <Action name="AcceptConflict" command="9to1.Stacks.ConflictAccept" parameter="{Binding ConflictReviewTarget}" />
+    <Action name="MergeConflict" command="9to1.Stacks.ConflictMerge" parameter="{Binding ConflictReviewTarget}" />
   </Actions>
   <Page>
     <Container margin="12" Type="Grid" RowSizes="Auto Auto 1fr Auto">
@@ -44,11 +48,44 @@
             <Button name="StacksSetActive" action="9to1.Stacks.SetActive" content="Set selected domain active" />
             <Text text="{Binding Counts}" text-wrapping="Wrap" />
             <Text text="{Binding Conflicts}" />
+            <Container Type="Vertical Stack" CellGap="8" Active="{Binding HasConflictProposals}">
+              <Text text="Conflict proposals" FontSize="17" FontWeight="SemiBold" />
+              <Text text="{Binding ConflictReviewPageLabel}" />
+              <Repeat source="{Binding ConflictProposals}" as="proposal" key="{Binding proposal.Key}">
+                <Button action="ShowConflict" Text="{Binding proposal.Label}" Interactive="{Binding CanReviewConflicts}" />
+              </Repeat>
+              <Container Type="Wrap" CellGap="6">
+                <Button action="9to1.Stacks.ConflictPrevious" content="Previous proposals" />
+                <Button action="9to1.Stacks.ConflictNext" content="Next proposals" />
+              </Container>
+              <Container Type="Vertical Stack" CellGap="8" Active="{Binding HasConflictReview}" AccessibleName="Conflict review">
+                <Text Text="{Binding ConflictReviewPath}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" />
+                <Text Text="{Binding ConflictReviewRevisions}" TextWrapping="Wrap" />
+                <Text Text="{Binding ConflictReviewDescription}" TextWrapping="Wrap" />
+                <Text Text="{Binding ConflictReviewRestriction}" TextWrapping="Wrap" />
+                <Container Type="Vertical Stack" MaxHeight="330" VerticalScrolling="True" CellGap="6">
+                  <Text Text="Base" FontWeight="SemiBold" />
+                  <Text Text="{Binding ConflictReviewBase}" TextWrapping="Wrap" />
+                  <Text Text="Local" FontWeight="SemiBold" />
+                  <Text Text="{Binding ConflictReviewLocal}" TextWrapping="Wrap" />
+                  <Text Text="Incoming" FontWeight="SemiBold" />
+                  <Text Text="{Binding ConflictReviewIncoming}" TextWrapping="Wrap" />
+                  <Text Text="Proposed resolution" FontWeight="SemiBold" />
+                  <Text Text="{Binding ConflictReviewProposed}" TextWrapping="Wrap" />
+                </Container>
+                <Container Type="Wrap" CellGap="8">
+                  <Button name="StacksRejectConflict" action="RejectConflict" content="Reject" Interactive="{Binding CanRejectConflictProposal}" />
+                  <Button name="StacksAcceptConflict" action="AcceptConflict" content="Accept without Merging" Interactive="{Binding CanAcceptConflictProposal}" />
+                  <Button name="StacksMergeConflict" action="MergeConflict" content="Accept and Merge" Interactive="{Binding CanAcceptConflictProposal}" />
+                  <Button name="StacksCloseConflict" action="9to1.Stacks.ConflictClose" content="Close review" />
+                </Container>
+              </Container>
+            </Container>
             <Text text="{Binding DomainPageLabel}" />
             <Container max-height="140" Type="Overlay" VerticalScrolling="True" HorizontalScrolling="False">
               <Container Type="Vertical Stack" CellGap="4">
                 <Repeat source="{Binding Domains}" as="domain" key="{Binding domain.Key}">
-                  <Button action="SelectDomain" content="{Binding domain.Label}" accessible-name="{Binding domain.Label}" />
+                  <Button action="SelectDomain" content="{Binding domain.Label}" accessible-name="{Binding domain.Label}" Margin="{Binding domain.HierarchyMargin}" />
                 </Repeat>
               </Container>
             </Container>

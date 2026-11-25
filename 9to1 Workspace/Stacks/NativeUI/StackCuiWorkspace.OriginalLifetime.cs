@@ -66,6 +66,9 @@ public sealed partial class StackCuiWorkspace
             if (command == "9to1.Stacks.OpenProject") _ = DemandRow<ProjectTarget>(parameter);
             else if (command == "9to1.Stacks.SelectDomain") _ = DemandRow<DomainTarget>(parameter);
             else if (command == "9to1.Stacks.SelectFile") _ = DemandRow<FileTarget>(parameter);
+            else if (command == "9to1.Stacks.ConflictShow") _ = DemandRow<ConflictProposalTarget>(parameter);
+            else if (command is "9to1.Stacks.ConflictReject" or "9to1.Stacks.ConflictAccept" or "9to1.Stacks.ConflictMerge")
+                _ = DemandActiveConflictReview(parameter);
             else if (parameter is not null) return Task.FromException(new InvalidOperationException("This Stacks action does not accept a row target."));
             CheckSourceCapacity();
             var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

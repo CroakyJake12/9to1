@@ -481,6 +481,7 @@ public sealed class StackEngine
             }
 
             StackDomainRecord domain = FindDomain(state, conflict.DomainId);
+            EnsureRootEditable(state, domain, conflict.Path);
             EnsureNotFrozen(state, domain, conflict.Path);
             StackResource? chosen = action switch
             {
@@ -552,26 +553,75 @@ public sealed class StackEngine
         }
     }
 
+    public async Task<StackConflictProposalReview?> ReadConflictProposalReviewAsync(Guid domainId, Guid proposalId,
+        StackActor actor, CancellationToken cancellationToken = default)
+    {
+        Demand(actor, StackCapability.ViewSource, domainId.ToString("D"));
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var state = await GetStateAsync(cancellationToken).ConfigureAwait(false);
+            var proposal = state.ConflictProposals.SingleOrDefault(item => item.Id == proposalId && item.State == StackConflictProposalState.PendingReview);
+            var conflict = proposal is null ? null : state.Conflicts.SingleOrDefault(item =>
+                item.Id == proposal.ConflictId && item.DomainId == domainId && !item.IsResolved);
+            if (proposal is null || conflict is null) return null;
+            var domain = FindDomain(state, domainId);
+            return new(conflict, proposal, domain.HeadRevisionId, ConflictProposalAcceptanceBlocker(state, domain, conflict));
+        }
+        finally { _gate.Release(); }
+    }
+
     public async Task ReviewConflictProposalAsync(Guid proposalId, bool accept, bool merge, StackActor actor, CancellationToken cancellationToken = default)
+    {
+        await ReviewConflictProposalCoreAsync(proposalId, accept, merge, actor, null, cancellationToken).ConfigureAwait(false);
+    }
+
+    public Task<StackConflictProposalReviewOutcome> ReviewObservedConflictProposalAsync(StackConflictProposalReview observed,
+        bool accept, bool merge, StackActor actor, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(observed);
+        if (merge && !accept) throw new ArgumentException("Rejecting a proposal cannot also merge it.");
+        return ReviewConflictProposalCoreAsync(observed.Proposal.Id, accept, merge, actor, observed, cancellationToken);
+    }
+
+    private async Task<StackConflictProposalReviewOutcome> ReviewConflictProposalCoreAsync(Guid proposalId, bool accept, bool merge,
+        StackActor actor, StackConflictProposalReview? observed, CancellationToken cancellationToken)
     {
         Demand(actor, StackCapability.Contribute, proposalId.ToString("D"));
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             StackManifest state = await GetStateAsync(cancellationToken).ConfigureAwait(false);
-            StackConflictProposal proposal = state.ConflictProposals.FirstOrDefault(item => item.Id == proposalId)
-                ?? throw Failure(StackFailureCode.DomainNotFound, "The conflict proposal was not found.", proposalId);
-            if (proposal.State != StackConflictProposalState.PendingReview)
+            var currentProposal = state.ConflictProposals.FirstOrDefault(item => item.Id == proposalId);
+            if (observed is not null)
             {
-                throw Failure(StackFailureCode.RevisionConflict, "The conflict proposal has already been reviewed.", proposalId);
+                var currentConflict = currentProposal is null ? null : state.Conflicts.SingleOrDefault(item => item.Id == currentProposal.ConflictId);
+                if (currentProposal is null || currentProposal.State != StackConflictProposalState.PendingReview ||
+                    currentConflict is null || currentConflict.IsResolved || currentConflict.Id != observed.Conflict.Id ||
+                    currentConflict.ProjectId != observed.Conflict.ProjectId || currentConflict.DomainId != observed.Conflict.DomainId ||
+                    !StringComparer.Ordinal.Equals(currentConflict.Path, observed.Conflict.Path) ||
+                    currentConflict.BaseRevisionId != observed.Conflict.BaseRevisionId || currentConflict.IncomingRevisionId != observed.Conflict.IncomingRevisionId ||
+                    !Equivalent(currentConflict.Base, observed.Conflict.Base) || !Equivalent(currentConflict.Local, observed.Conflict.Local) ||
+                    !Equivalent(currentConflict.Incoming, observed.Conflict.Incoming) ||
+                    !Equivalent(currentProposal.ProposedResource, observed.Proposal.ProposedResource))
+                    return new(null, "This exact conflict proposal is no longer pending. Refresh and review the current record.");
+
+                var reviewedDomain = FindDomain(state, currentConflict.DomainId);
+                if (reviewedDomain.IsDeleted || reviewedDomain.HeadRevisionId != observed.DomainHeadRevisionId)
+                    return new(null, "The domain revision changed. Refresh and review the proposal again.");
+                if (accept && ConflictProposalAcceptanceBlocker(state, reviewedDomain, currentConflict) is { } blocker)
+                    return new(null, blocker);
             }
+            var proposal = currentProposal ?? throw Failure(StackFailureCode.DomainNotFound, "The conflict proposal was not found.", proposalId);
+            if (proposal.State != StackConflictProposalState.PendingReview)
+                throw Failure(StackFailureCode.RevisionConflict, "The conflict proposal has already been reviewed.", proposalId);
 
             if (!accept)
             {
                 Replace(state.ConflictProposals, proposal with { State = StackConflictProposalState.Rejected });
                 AddAudit(state, actor, "ConflictProposalRejected", state.ProjectId, proposalId, null, null, "Rejected");
                 await SaveAsync(state, cancellationToken).ConfigureAwait(false);
-                return;
+                return new(StackConflictProposalState.Rejected, null);
             }
 
             StackConflict conflict = FindConflict(state, proposal.ConflictId);
@@ -581,6 +631,7 @@ public sealed class StackEngine
             }
 
             StackDomainRecord domain = FindDomain(state, conflict.DomainId);
+            EnsureRootEditable(state, domain, conflict.Path);
             EnsureNotFrozen(state, domain, conflict.Path);
             domain.BaseTree[conflict.Path] = conflict.Incoming?.Copy();
             domain.WorkingChanges[conflict.Path] = proposal.ProposedResource is null
@@ -605,11 +656,25 @@ public sealed class StackEngine
             }
 
             await SaveAsync(state, cancellationToken).ConfigureAwait(false);
+            return new(merge ? StackConflictProposalState.AcceptedAndMerged : StackConflictProposalState.AcceptedWithoutMerge, null);
         }
         finally
         {
             _gate.Release();
         }
+    }
+
+    private static string? ConflictProposalAcceptanceBlocker(StackManifest state, StackDomainRecord domain, StackConflict conflict)
+    {
+        if (ActiveFreeze(state, domain, conflict.Path) is not null)
+            return "An active Freeze blocks this path. Rejecting the proposal does not edit source.";
+        if (domain.IsDeleted) return "The reviewed domain is deleted.";
+        try { EnsureRootEditable(state, domain, conflict.Path); }
+        catch (StackFailureException failure) when (failure.Code == StackFailureCode.RootLocked) { return failure.Message; }
+        if (!Equivalent(BuildEffectiveTree(state, domain.Id, includeUnresolvedConflicts: false).GetValueOrDefault(conflict.Path), conflict.Local) ||
+            domain.ParentId is { } parent && !Equivalent(BuildEffectiveTree(state, parent).GetValueOrDefault(conflict.Path), conflict.Incoming))
+            return "Local or incoming content has changed since this conflict was captured. This proposal cannot overwrite those changes.";
+        return null;
     }
 
     public async Task<StackRoot> CreateRootAsync(Guid ownerDomainId, IEnumerable<string> paths, StackActor actor, CancellationToken cancellationToken = default)
@@ -1231,7 +1296,7 @@ public sealed class StackEngine
         }
     }
 
-    private static Dictionary<string, StackResource> BuildEffectiveTree(StackManifest state, Guid domainId)
+    private static Dictionary<string, StackResource> BuildEffectiveTree(StackManifest state, Guid domainId, bool includeUnresolvedConflicts = true)
     {
         StackDomainRecord domain = FindDomain(state, domainId);
         var tree = new Dictionary<string, StackResource>(StringComparer.OrdinalIgnoreCase);
@@ -1245,6 +1310,7 @@ public sealed class StackEngine
             ApplyToTree(tree, mutation);
         }
 
+        if (!includeUnresolvedConflicts) return tree;
         foreach (StackConflict conflict in state.Conflicts.Where(conflict => conflict.DomainId == domainId && !conflict.IsResolved))
         {
             if (conflict.Local is null) tree.Remove(conflict.Path);

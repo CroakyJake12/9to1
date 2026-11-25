@@ -25,7 +25,11 @@ public sealed partial class StackNativeWorkspaceTests
                 await ClickAsync(loader, workspace, FindRow(root, Assert.Single(Rows(workspace, "Projects"))));
                 Assert.Equal(main.Id, workspace.DomainId); Assert.Equal(main.Id, workspace.ActiveDomainId);
                 var selected = Assert.Single(Rows(workspace, "Domains"), row => row.Key == branch.Id.ToString("D"));
-                await ClickAsync(loader, workspace, FindRow(root, selected));
+                // The inactive project tree joins the visual tree on the next layout pass.
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, Avalonia.Threading.DispatcherPriority.Background);
+                var branchButton = FindRow(root, selected);
+                Assert.Equal(12, branchButton.Margin.Left);
+                await ClickAsync(loader, workspace, branchButton);
                 Assert.Equal(branch.Id, workspace.DomainId); Assert.Equal(main.Id, workspace.ActiveDomainId);
                 Assert.Contains("Main · main", Assert.IsType<string>(Value(workspace, "ActiveDomainLabel")));
                 await ClickAsync(loader, workspace, NamedButton(root, "StacksBack"));

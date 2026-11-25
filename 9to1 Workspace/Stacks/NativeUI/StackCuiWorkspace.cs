@@ -21,6 +21,8 @@ public sealed partial class StackCuiWorkspace : ICuiWritableBindingContext, ICui
         internal StackEffectiveTreeSnapshot? Tree;
         internal StackDomainChanges? Changes;
         internal IReadOnlyList<StackConflict> Conflicts = [];
+        internal IReadOnlyList<StackConflictProposal> PendingProposals = [];
+        internal int ProposalPage;
         internal readonly List<Guid> Navigation = [];
         internal int NavigationIndex = -1;
         internal string? SelectedPath;
@@ -104,6 +106,7 @@ public sealed partial class StackCuiWorkspace : ICuiWritableBindingContext, ICui
 
     public bool TryGetValue(string path, out object? value)
     {
+        if (TryGetConflictValue(path, out value)) return true;
         if (_fields.TryGetValue(path, out var field)) { value = field; return true; }
         value = path switch
         {
@@ -147,6 +150,7 @@ public sealed partial class StackCuiWorkspace : ICuiWritableBindingContext, ICui
     public bool? IsActionAvailable(string command)
     {
         if (!_initialized || _retiring || _busy || _failed) return false;
+        if (command.StartsWith("9to1.Stacks.Conflict", StringComparison.Ordinal)) return CanUseConflictCommand(command);
         var navigating = command is "9to1.Stacks.Home" or "9to1.Stacks.OpenProject" or "9to1.Stacks.SelectDomain"
             or "9to1.Stacks.Back" or "9to1.Stacks.Forward" or "9to1.Stacks.SelectFile" or "9to1.Stacks.Refresh";
         if (navigating && HasDraft) return false;
@@ -190,6 +194,12 @@ public sealed partial class StackCuiWorkspace : ICuiWritableBindingContext, ICui
         => new(AdmitOriginalCommand(command, parameter, cancellationToken));
     private async Task RunCommandAsync(string command, object? parameter, CancellationToken token)
     {
+        if (command.StartsWith("9to1.Stacks.Conflict", StringComparison.Ordinal))
+        {
+            await RunConflictCommandAsync(command, parameter, token);
+            return;
+        }
+        ClearConflictReview();
         switch (command)
         {
             case "9to1.Stacks.Home": _tab = null; _homePage = "Projects"; ClearSource(); break;
@@ -280,9 +290,15 @@ public sealed partial class StackCuiWorkspace : ICuiWritableBindingContext, ICui
         var domains = await SourceAsync(() => tab.Source.Engine.GetLineageAsync(token));
         var domain = domains.Single(d => d.Id == tree.DomainId);
         var conflicts = await SourceAsync(() => tab.Source.Engine.GetConflictsAsync(domain.Id, tab.Source.Actor, token));
+        var unresolved = conflicts.Where(conflict => !conflict.IsResolved).Select(conflict => conflict.Id).ToHashSet();
+        IReadOnlyList<StackConflictProposal> proposals = unresolved.Count == 0 ? [] :
+            await SourceAsync(() => tab.Source.Engine.GetConflictProposalsAsync(tab.Source.Actor, token));
         DemandView(tab.Source);
         if (_retiring) return;
         _promotion = null;
+        ClearConflictReview();
+        tab.PendingProposals = proposals.Where(proposal => unresolved.Contains(proposal.ConflictId) &&
+            proposal.State == StackConflictProposalState.PendingReview).OrderBy(proposal => proposal.CreatedAt).ThenBy(proposal => proposal.Id).ToArray();
         tab.Tree = tree; tab.Changes = changes; tab.Domains = domains; tab.Domain = domain; tab.Conflicts = conflicts;
         _snapshot = new();
         if (tab.NavigationIndex < 0) { tab.Navigation.Add(domain.Id); tab.NavigationIndex = 0; }
