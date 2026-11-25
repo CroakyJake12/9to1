@@ -31,10 +31,10 @@ public sealed record PlayToolProfile(string ProfileID, string Name, bool NoTools
     }
 
     public static PlayToolProfile CreateNoTools(string profileID, string name) =>
-        new(profileID, name, NoTools: true, Array.Empty<string>()).Capture();
+        (new PlayToolProfile(profileID, name, NoTools: true, Array.Empty<string>())).Capture();
 
     public static PlayToolProfile WithTools(string profileID, string name, IEnumerable<string> permittedToolIDs) =>
-        new(profileID, name, NoTools: false, (permittedToolIDs ?? []).ToArray()).Capture();
+        (new PlayToolProfile(profileID, name, NoTools: false, (permittedToolIDs ?? []).ToArray())).Capture();
 
     /// <summary>Authorize a tool call. A no-tools match denies everything; otherwise only declared tools are allowed. Never throws for an unknown tool — it returns an explicit denial.</summary>
     public PlayToolAuthorization Authorize(string toolID)
