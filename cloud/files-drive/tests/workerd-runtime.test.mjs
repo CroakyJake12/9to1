@@ -362,8 +362,12 @@ test('production Worker uses Workerd SQLite and cross-worker session RPC without
     }));
     assert.equal(downloadTicket.status, 200);
     const downloadId = downloadTicket.body.transferId.value;
-    const download = await request(mf, `/downloads/${downloadId}/content`);
-    assert.equal(download.status, 200);
+    const downloadRoute = `/downloads/${downloadId}/content`;
+    const admissions = await Promise.all([request(mf, downloadRoute), request(mf, downloadRoute)]);
+    assert.deepEqual(admissions.map(response => response.status).sort(), [200, 404]);
+    const refusal = admissions.find(response => response.status === 404);
+    assert.match(await refusal.text(), /This transfer is not available\./);
+    const download = admissions.find(response => response.status === 200);
     assert.equal(download.headers.get('content-length'), String(FILE_BYTES.byteLength));
     assert.deepEqual(new Uint8Array(await download.arrayBuffer()), FILE_BYTES);
 
@@ -443,7 +447,10 @@ test('production Worker uses Workerd SQLite and cross-worker session RPC without
     const resumed = await jsonResponse(await request(mf, '/changes?limit=1&after=' + uploadEvent.cursor.revision));
     assert.deepEqual(resumed, { status: 200, body: { items: [], nextPageToken: null } });
 
-    assert.deepEqual(googleCalls, callsBeforeRestart, 'SQLite-backed context and quota read must not make new provider calls');
+    const consumedTicket = await request(mf, downloadRoute);
+    assert.equal(consumedTicket.status, 404);
+    assert.match(await consumedTicket.text(), /This transfer is not available\./);
+    assert.deepEqual(googleCalls, callsBeforeRestart, 'SQLite-backed context, quota and consumed ticket reads must not make new provider calls');
 
     const folderRequest = (name, id, itemId) => request(mf, '/operations', {
       method: 'POST', origin: FILES_ORIGIN, body: JSON.stringify({ newName: name,

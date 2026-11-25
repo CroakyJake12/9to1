@@ -558,7 +558,7 @@ export class DriveTransfers {
         entry = await this.#checkUpload(entry, signal, { restartCreation: false });
         if (entry.phase === 'sending' || entry.phase === 'creating') throw unknown();
       }
-      if (entry.state === 'Completed' || entry.state === 'Cancelled') return progress(entry);
+      if (entry.state !== 'Running') return progress(entry);
       entry.phase = 'cancelled'; entry.state = 'Cancelled';
       delete entry.session; delete entry.pendingEnd;
       return progress(await this.#persist(entry));
@@ -609,14 +609,21 @@ export class DriveTransfers {
 
   async downloadContent(id, sessionDigest, { confirmSession, signal, registerChildSignal } = {}) {
     id = guid(id);
-    const entry = this.#store.transfer(id);
-    if (entry?.direction !== 'download' || entry.sessionDigest !== sessionDigest ||
-        entry.expires <= this.#now() || entry.state !== 'Queued' || this.#downloads.has(id)) throw missing();
-    if (typeof confirmSession !== 'function') throw invalid();
-    if (this.#downloads.size >= 2) throw failure(429, 'FilesBusy', 'Two downloads are already running. Try again shortly.');
+    // The single-use owner is the durable ticket, not this adapter's in-memory
+    // set. Claim the exact session/ticket before allowing any async admission.
+    const entry = this.#store.storage.transactionSync(() => {
+      const current = this.#store.transfer(id);
+      if (current?.direction !== 'download' || current.sessionDigest !== sessionDigest ||
+          current.expires <= this.#now() || current.state !== 'Queued' || this.#downloads.has(id)) throw missing();
+      if (typeof confirmSession !== 'function') throw invalid();
+      if (this.#downloads.size >= 2) throw failure(429, 'FilesBusy', 'Two downloads are already running. Try again shortly.');
+      signal?.throwIfAborted();
+      current.state = 'Running';
+      this.#store.putTransfer(current, 'download');
+      return current;
+    });
     const owner = new AbortController();
     const current = owner.signal;
-    registerChildSignal?.(current);
     this.#downloads.add(id);
     const hash = entry.hash ? createHash(entry.hash.name) : null;
     let finished = false;
@@ -690,12 +697,13 @@ export class DriveTransfers {
     };
     let first;
     try {
+      registerChildSignal?.(current);
       if (signal?.aborted) cancel();
+      current.throwIfAborted();
+      await this.#store.storage.sync();
       current.throwIfAborted();
       await this.#checkBudget(entry.size);
       current.throwIfAborted();
-      entry.state = 'Running';
-      await this.#persist(entry);
       first = await fetchChunk(0);
     } catch (error) { close('Failed'); throw error; }
     const headers = new Headers({ 'Content-Disposition': disposition(entry.name), 'Cache-Control': 'private, no-store',

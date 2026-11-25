@@ -193,6 +193,20 @@ test('only Google range acknowledgement advances partial bytes, and local cancel
   assert.equal(f.store.transfer(first.transferId).session, undefined);
 });
 
+test('cancelling a failed upload preserves its durable refusal', async t => {
+  const f = fixture(t);
+  const input = intent();
+  f.behavior.nameCollision = true;
+  await assert.rejects(f.transfer.beginUpload(input), { code: 'NameConflict' });
+  const failed = await f.transfer.findUpload(input.operationId);
+  assert.equal(failed.state, 'Failed');
+  const before = f.store.transfer(failed.transferId);
+  const providerCalls = f.calls.length;
+  assert.deepEqual(await f.reopen().cancelUpload(failed.transferId), failed);
+  assert.deepEqual(f.store.transfer(failed.transferId), before);
+  assert.equal(f.calls.length, providerCalls);
+});
+
 test('new uploads above the app file limit never dispatch and the exact size limit can start', async t => {
   const defaults = fixture(t);
   const large = intent(100_000_000_001);
@@ -390,6 +404,47 @@ test('download ticket checks owner session, version and checksum for each range 
   assert.equal(checks, 4);
   assert.equal(f.store.transfer(ticket.transferId).state, 'Completed');
   await assert.rejects(f.reopen().downloadContent(ticket.transferId, sessionDigest, { confirmSession() {} }), { code: 'ItemNotFound' });
+});
+
+test('download admission consumes a ticket across concurrent adapters before provider work', async t => {
+  const f = fixture(t);
+  const bytes = new Uint8Array([1, 2, 3]);
+  const itemId = rangedFile(f, bytes);
+  f.behavior.respond = rangeResponder(bytes);
+  const ticket = await f.transfer.prepareDownload({ itemId }, sessionDigest);
+  let sessionChecks = 0;
+  const options = { async confirmSession() { sessionChecks++; } };
+  const admissions = await Promise.allSettled([
+    f.transfer.downloadContent(ticket.transferId, sessionDigest, options),
+    f.reopen().downloadContent(ticket.transferId, sessionDigest, options),
+  ]);
+  const accepted = admissions.filter(result => result.status === 'fulfilled');
+  const refused = admissions.filter(result => result.status === 'rejected');
+  assert.equal(accepted.length, 1);
+  assert.equal(refused.length, 1);
+  assert.equal(refused[0].reason.code, 'ItemNotFound');
+  assert.deepEqual(new Uint8Array(await accepted[0].value.arrayBuffer()), bytes);
+  assert.equal(f.calls.filter(call => call.searchParams.get('alt') === 'media').length, 1);
+  assert.equal(sessionChecks, 2);
+  assert.equal(f.store.transfer(ticket.transferId).state, 'Completed');
+});
+
+test('an already-aborted claim does not consume an unstarted download ticket', async t => {
+  const f = fixture(t);
+  const bytes = new Uint8Array([1, 2, 3]);
+  const itemId = rangedFile(f, bytes);
+  f.behavior.respond = rangeResponder(bytes);
+  const ticket = await f.transfer.prepareDownload({ itemId }, sessionDigest);
+  const cancelled = new AbortController();
+  cancelled.abort();
+  const providerCalls = f.calls.length;
+  await assert.rejects(f.transfer.downloadContent(ticket.transferId, sessionDigest, {
+    signal: cancelled.signal, confirmSession() { assert.fail('Do not start an aborted request'); },
+  }), { name: 'AbortError' });
+  assert.equal(f.store.transfer(ticket.transferId).state, 'Queued');
+  assert.equal(f.calls.length, providerCalls);
+  const live = await f.reopen().downloadContent(ticket.transferId, sessionDigest, { confirmSession() {} });
+  assert.deepEqual(new Uint8Array(await live.arrayBuffer()), bytes);
 });
 
 test('a two-range download waits through the app minute cap before sending its next range', async t => {
