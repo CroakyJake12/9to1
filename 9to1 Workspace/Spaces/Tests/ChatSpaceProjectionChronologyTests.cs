@@ -66,6 +66,28 @@ public sealed class ChatSpaceProjectionChronologyTests
         Assert.Equal([ids[1], ids[2], ids[0]], result.Messages.Select(message => message.Id));
     }
 
+    [Fact]
+    public void Malformed_citation_numbers_fall_back_without_losing_messages_or_valid_citations()
+    {
+        const string metadata = """
+            {"citations":[{"number":"legacy","title":"Legacy"},
+                          {"number":null,"title":"Null"},
+                          {"number":2147483648,"title":"Out of range"},
+                          {"number":9,"title":"Valid","sourceType":"Web","uri":"https://example.com/"}]}
+            """;
+        var earlier = Message(MessageRole.User, "request", At(0));
+        var answer = Message(MessageRole.Assistant, "answer", At(1)) with { MetadataJson = metadata };
+        var result = ChatSpaceProjection.Project(Conversation(answer, earlier));
+
+        Assert.Equal([earlier.Id, answer.Id], result.Messages.Select(message => message.Id));
+        Assert.Equal("answer", result.Messages[1].Content);
+        var citations = result.Messages[1].Citations;
+        Assert.Equal([1, 2, 3, 9], citations.Select(citation => citation.Number));
+        Assert.Equal(["Legacy", "Null", "Out of range", "Valid"], citations.Select(citation => citation.Title));
+        Assert.Equal("Web", citations[3].Source);
+        Assert.Equal("https://example.com/", citations[3].Uri);
+    }
+
     private static readonly Guid ConversationId = Guid.Parse("b1000000-0000-0000-0000-000000000005");
     private static readonly DateTimeOffset T0 = new(2026, 10, 14, 9, 0, 0, TimeSpan.Zero);
 

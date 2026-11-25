@@ -126,7 +126,7 @@ public static class ChatSpaceProjection
             : null;
 
     private static int? ReadInt(JsonElement element, string name) =>
-        element.TryGetProperty(name, out var value) && value.TryGetInt32(out var number)
+        element.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.Number && value.TryGetInt32(out var number)
             ? number
             : null;
 }
