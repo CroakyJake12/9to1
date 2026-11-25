@@ -38,7 +38,7 @@ public sealed record GamesInputMap(int Revision, IReadOnlyList<GamesInputBinding
     {
         if (Revision < 1) throw new InvalidDataException("Games input map revision must be positive.");
         if (Bindings is null) throw new InvalidDataException("Games input map bindings are missing.");
-        var snapshot = Bindings.Select(binding => binding?.Capture() ?? throw new InvalidDataException("Games input map contains a missing binding.")).ToArray();
+        var snapshot = Bindings.Select(binding => (binding?.Capture() ?? throw new InvalidDataException("Games input map contains a missing binding."))).ToArray();
         if (snapshot.Length > GamesInputBinding.MaximumBindings) throw new InvalidDataException("Games input map exceeds the configured binding limit.");
         if (snapshot.Select(b => b.BindingID).Distinct().Count() != snapshot.Length) throw new InvalidDataException("Games input map contains duplicate binding identities.");
         for (var i = 0; i < snapshot.Length; i++)
