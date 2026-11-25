@@ -1,5 +1,6 @@
 using Haven.Application;
 using Haven.Core;
+using Haven.NativeHost;
 using Haven.UI;
 using Haven.UI.Components;
 using HavenButton = Haven.UI.Components.Button;
