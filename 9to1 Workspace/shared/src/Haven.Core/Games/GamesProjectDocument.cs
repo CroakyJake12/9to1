@@ -8,7 +8,8 @@ public enum GamesWorkspaceMode { Development, CreationRendering }
 /// <summary>One canonical project and scene/resource identities serve both editor workspaces.
 /// Files owns artifact bytes, revisions, grants and durable publication.</summary>
 public sealed record GamesProjectDocument(int SchemaVersion, Guid ProjectID, long Revision,
-    GamesWorkspaceMode Workspace, Guid ActiveSceneID, IReadOnlyList<GamesSceneSnapshot> Scenes)
+    GamesWorkspaceMode Workspace, Guid ActiveSceneID, IReadOnlyList<GamesSceneSnapshot> Scenes,
+    GamesWidgetDocument? Widgets = null)
 {
     public const int CurrentSchemaVersion = 1;
     public GamesProjectDocument Capture()
@@ -53,6 +54,35 @@ public static class GamesProjectEdits
         return (snapshot with { Revision = checked(snapshot.Revision + 1),
             Scenes = snapshot.Scenes.Select(candidate => candidate.SceneID == scene.SceneID ? scene : candidate).ToArray() }).Capture();
     }
+
+    public static GamesProjectDocument SetWidgets(GamesProjectDocument project, long expectedProjectRevision,
+        int? expectedWidgetRevision, GamesWidgetDocument editedWidgets)
+    {
+        var snapshot = project.Capture();
+        if (snapshot.Revision != expectedProjectRevision) throw new InvalidOperationException("GamesProjectRevisionConflict");
+        ArgumentNullException.ThrowIfNull(editedWidgets);
+        // SetWidgets updates an existing slot only; absent widgets must be created via AddWidgets.
+        var current = snapshot.Widgets ?? throw new InvalidOperationException("GamesWidgetsAbsent");
+        if (current.Revision != expectedWidgetRevision)
+            throw new InvalidOperationException("GamesWidgetRevisionConflict");
+        // The widget slot is bound to one screen identity; an unrelated screen cannot be committed here.
+        if (!string.Equals(current.ScreenId, editedWidgets.ScreenId, StringComparison.Ordinal))
+            throw new InvalidOperationException("GamesWidgetScreenMismatch");
+        // An edit must advance the widget revision by exactly one (stale or skipped edits are refused).
+        if (editedWidgets.Revision != checked(current.Revision + 1))
+            throw new InvalidOperationException("GamesWidgetRevisionConflict");
+        return snapshot with { Widgets = editedWidgets, Revision = checked(snapshot.Revision + 1) };
+    }
+
+    public static GamesProjectDocument AddWidgets(GamesProjectDocument project, long expectedProjectRevision,
+        GamesWidgetDocument initialWidgets)
+    {
+        var snapshot = project.Capture();
+        if (snapshot.Revision != expectedProjectRevision) throw new InvalidOperationException("GamesProjectRevisionConflict");
+        ArgumentNullException.ThrowIfNull(initialWidgets);
+        if (snapshot.Widgets is not null) throw new InvalidOperationException("GamesWidgetsAlreadyPresent");
+        return snapshot with { Widgets = initialWidgets, Revision = checked(snapshot.Revision + 1) };
+    }
 }
 
 public static class GamesProjectCodec
@@ -75,8 +105,10 @@ public static class GamesProjectCodec
         if (bytes.Length is < 2 or > MaximumDocumentBytes) throw new InvalidDataException("Games project bytes are missing or exceed the document limit.");
         try
         {
-            return (JsonSerializer.Deserialize<GamesProjectDocument>(bytes, Options)
-                ?? throw new InvalidDataException("Games project content is empty.")).Capture();
+            var decoded = JsonSerializer.Deserialize<GamesProjectDocument>(bytes, Options)
+                ?? throw new InvalidDataException("Games project content is empty.");
+            // Schema 1 documents predate the optional Widgets member; treat a missing payload as null so prior files reopen unchanged.
+            return (decoded with { Widgets = decoded.Widgets }).Capture();
         }
         catch (JsonException error) { throw new InvalidDataException("Games project format is malformed or contains unsupported fields.", error); }
     }

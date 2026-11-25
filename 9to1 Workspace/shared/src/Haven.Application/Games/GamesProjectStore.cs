@@ -11,6 +11,15 @@ public interface ICanonicalGamesProjectStore
         GamesProjectDocument project, CancellationToken cancellationToken = default);
 }
 
+/// <summary>Typed widget authoring operations share the same captured canonical project and Files compare/exchange.</summary>
+public interface IGamesWidgetAuthoringService
+{
+    Task<GamesStoredProject> AddWidgetsAsync(Guid fileID, Guid structuralRevision, long projectRevision,
+        GamesWidgetDocument initialWidgets, CancellationToken token = default);
+    Task<GamesStoredProject> SetWidgetsAsync(Guid fileID, Guid structuralRevision, long projectRevision,
+        int? expectedWidgetRevision, GamesWidgetDocument editedWidgets, CancellationToken token = default);
+}
+
 /// <summary>Owning Home operation carries the already claimed actor to the final canonical write.
 /// This actor is an expected identity, not an independent permission grant.</summary>
 public interface IActorBoundGamesProjectStore : ICanonicalGamesProjectStore
@@ -21,7 +30,7 @@ public interface IActorBoundGamesProjectStore : ICanonicalGamesProjectStore
 }
 
 /// <summary>Editor and typed API operations use the same captured canonical project and Files compare/exchange.</summary>
-public sealed class GamesProjectEditorService(ICanonicalGamesProjectStore store)
+public sealed class GamesProjectEditorService(ICanonicalGamesProjectStore store) : IGamesWidgetAuthoringService
 {
     public Task<GamesStoredProject> OpenAsync(Guid fileID, CancellationToken token = default) => store.OpenAsync(fileID, token);
     public async Task<GamesStoredProject> ChangeWorkspaceAsync(Guid fileID, Guid structuralRevision, long projectRevision,
@@ -41,6 +50,24 @@ public sealed class GamesProjectEditorService(ICanonicalGamesProjectStore store)
         var opened = await store.OpenAsync(fileID, token).ConfigureAwait(false);
         if (opened.StructuralRevisionID != structuralRevision) throw new InvalidOperationException("GamesProjectRevisionConflict");
         var changed = GamesProjectEdits.SetScene(opened.Project, projectRevision, sceneRevision, captured);
+        return await store.SaveAsync(fileID, structuralRevision, projectRevision, changed, token).ConfigureAwait(false);
+    }
+
+    public async Task<GamesStoredProject> AddWidgetsAsync(Guid fileID, Guid structuralRevision, long projectRevision,
+        GamesWidgetDocument initialWidgets, CancellationToken token = default)
+    {
+        var opened = await store.OpenAsync(fileID, token).ConfigureAwait(false);
+        if (opened.StructuralRevisionID != structuralRevision) throw new InvalidOperationException("GamesProjectRevisionConflict");
+        var changed = GamesProjectEdits.AddWidgets(opened.Project, projectRevision, initialWidgets);
+        return await store.SaveAsync(fileID, structuralRevision, projectRevision, changed, token).ConfigureAwait(false);
+    }
+
+    public async Task<GamesStoredProject> SetWidgetsAsync(Guid fileID, Guid structuralRevision, long projectRevision,
+        int? expectedWidgetRevision, GamesWidgetDocument editedWidgets, CancellationToken token = default)
+    {
+        var opened = await store.OpenAsync(fileID, token).ConfigureAwait(false);
+        if (opened.StructuralRevisionID != structuralRevision) throw new InvalidOperationException("GamesProjectRevisionConflict");
+        var changed = GamesProjectEdits.SetWidgets(opened.Project, projectRevision, expectedWidgetRevision, editedWidgets);
         return await store.SaveAsync(fileID, structuralRevision, projectRevision, changed, token).ConfigureAwait(false);
     }
 }
