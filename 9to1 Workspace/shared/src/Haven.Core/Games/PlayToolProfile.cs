@@ -30,7 +30,7 @@ public sealed record PlayToolProfile(string ProfileID, string Name, bool NoTools
         return this with { PermittedToolIDs = permitted };
     }
 
-    public static PlayToolProfile NoTools(string profileID, string name) =>
+    public static PlayToolProfile CreateNoTools(string profileID, string name) =>
         new(profileID, name, NoTools: true, Array.Empty<string>()).Capture();
 
     public static PlayToolProfile WithTools(string profileID, string name, IEnumerable<string> permittedToolIDs) =>
