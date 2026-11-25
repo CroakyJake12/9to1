@@ -297,6 +297,8 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
         "assistants.conversation.archive.toggle" => _route == "work" && _snapshot.SelectedAssistant is { } activeAssistant &&
             _openAssistantWorkspaces.Contains(activeAssistant.Identity) && !Busy && !_streaming && HasSecondaryConversationArchiveOwner,
         "assistants.workspace.close" => VisibleWorkspaceIdentity is not null,
+        "assistants.navigation.open" => _compactWork && WorkRouteIdentity is not null && !IsAssistantNavigationOpen,
+        "assistants.navigation.close" => IsAssistantNavigationOpen,
         "assistants.workspace.toggle" => _route == "work" && _snapshot.SelectedAssistant is not null,
         "assistants.project.newtask" => CanNewConversation && !_projectBusy,
         "assistants.development.open" => _hasDevelopmentRoute && _snapshot.ConversationBinding is not null && _snapshot.Work?.Controls?.CanonicalTaskContext is not null && !Busy && !_projectBusy,
@@ -360,17 +362,37 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
         if (!IsCurrentOriginalRepeatAction(command, parameter)) return ValueTask.CompletedTask;
         if (IsActionAvailable(command) != true)
             return ValueTask.FromException(new InvalidOperationException("This Assistant action is unavailable."));
-        if (command is "assistants.workspace.toggle" or "assistants.workspace.close")
+        if (command is "assistants.workspace.toggle" or "assistants.workspace.close"
+            or "assistants.navigation.open" or "assistants.navigation.close")
         {
-            if (parameter is AssistantIdentity identity && identity == _snapshot.SelectedAssistant?.Identity)
+            if (parameter is AssistantIdentity identity && identity == WorkRouteIdentity)
                 _publish(() =>
                 {
                     if (cancellationToken.IsCancellationRequested ||
-                        IsActionAvailable(command) != true || _snapshot.SelectedAssistant?.Identity != identity) return;
-                    var open = command == "assistants.workspace.toggle" && _openAssistantWorkspaces.Add(identity);
-                    if (!open) _openAssistantWorkspaces.Remove(identity);
+                        IsActionAvailable(command) != true || WorkRouteIdentity != identity) return;
+                    var focus = AssistantWorkFocus.WorkspaceToggle;
+                    switch (command)
+                    {
+                        case "assistants.workspace.toggle":
+                            _compactNavigationIdentity = null;
+                            if (_openAssistantWorkspaces.Add(identity)) focus = AssistantWorkFocus.WorkspaceClose;
+                            else _openAssistantWorkspaces.Remove(identity);
+                            break;
+                        case "assistants.workspace.close":
+                            _openAssistantWorkspaces.Remove(identity);
+                            break;
+                        case "assistants.navigation.open":
+                            _openAssistantWorkspaces.Remove(identity);
+                            _compactNavigationIdentity = identity;
+                            focus = AssistantWorkFocus.NavigationClose;
+                            break;
+                        case "assistants.navigation.close":
+                            _compactNavigationIdentity = null;
+                            focus = AssistantWorkFocus.NavigationToggle;
+                            break;
+                    }
                     PublishAssistantWorkspace();
-                    WorkspaceDisclosureChanged?.Invoke(identity, open);
+                    WorkDisclosureChanged?.Invoke(identity, focus);
                 });
             return ValueTask.CompletedTask;
         }
@@ -399,20 +421,53 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
 
     internal bool HasSecondaryConversationArchiveOwner { get; set; }
 
-    internal event Action<AssistantIdentity, bool>? WorkspaceDisclosureChanged;
-    internal AssistantIdentity? VisibleWorkspaceIdentity => _route == "work" && Current && !_unavailable && !_snapshot.IsRetiring &&
-        _snapshot.SelectedAssistant?.Identity is { } identity && _openAssistantWorkspaces.Contains(identity) ? identity : null;
+    internal enum AssistantWorkFocus { WorkspaceToggle, WorkspaceClose, NavigationToggle, NavigationClose, Home }
+    private bool _compactWork;
+    private AssistantIdentity? _compactNavigationIdentity;
+    internal event Action<AssistantIdentity, AssistantWorkFocus>? WorkDisclosureChanged;
+
+    internal bool IsAssistantNavigationOpen => _compactWork && WorkRouteIdentity is { } identity &&
+        _compactNavigationIdentity == identity;
+    internal AssistantIdentity? VisibleWorkspaceIdentity => WorkRouteIdentity is { } identity &&
+        _openAssistantWorkspaces.Contains(identity) ? identity : null;
     internal AssistantIdentity? WorkRouteIdentity => _route == "work" && Current && !_unavailable && !_snapshot.IsRetiring
         ? _snapshot.SelectedAssistant?.Identity : null;
 
+    internal void SetAssistantWorkCompact(bool compact)
+    {
+        if (_compactWork == compact) return;
+        var closing = IsAssistantNavigationOpen && !compact ? WorkRouteIdentity : null;
+        _compactWork = compact;
+        if (!compact) _compactNavigationIdentity = null;
+        PublishAssistantWorkspace();
+        if (closing is not null) WorkDisclosureChanged?.Invoke(closing, AssistantWorkFocus.Home);
+    }
+
+    internal void DismissAssistantNavigationAfterOpen()
+    {
+        if (_compactNavigationIdentity is null) return;
+        _compactNavigationIdentity = null;
+        PublishAssistantWorkspace();
+    }
+
     private void PublishAssistantWorkspace()
     {
-        var identity = _snapshot.SelectedAssistant?.Identity;
+        if (_compactNavigationIdentity != WorkRouteIdentity) _compactNavigationIdentity = null;
+        var identity = WorkRouteIdentity;
         var canToggle = IsActionAvailable("assistants.workspace.toggle") == true;
-        var open = canToggle && identity is not null && _openAssistantWorkspaces.Contains(identity);
+        var open = VisibleWorkspaceIdentity is not null;
+        var navigation = IsAssistantNavigationOpen;
         Set("WorkspaceAssistantIdentity", identity);
         Set("CanToggleAssistantWorkspace", canToggle);
-        Set("ShowAssistantWorkspace", open);
+        Set("CanOpenAssistantNavigation", IsActionAvailable("assistants.navigation.open") == true);
+        Set("CanOpenAssistantHome", IsActionAvailable("assistants.home") == true);
+        Set("ShowAssistantNavigationToggle", _compactWork && canToggle);
+        Set("ShowAssistantHomeShortcut", !_compactWork);
+        // Publish the old panel inactive before publishing the replacement active.
+        if (navigation) Set("ShowAssistantWorkspace", false);
+        Set("ShowAssistantNavigation", navigation);
+        if (!navigation) Set("ShowAssistantWorkspace", open);
+        Set("ShowAssistantWorkPane", open || navigation);
         Set("AssistantWorkspaceToggleLabel", open ? "Close workspace" : "Workspace");
     }
 

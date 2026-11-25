@@ -374,7 +374,11 @@ public sealed partial class AssistantsNativeCuiSurface : UserControl, IDisposabl
             case "assistants.open" when parameter is AssistantsCuiBindings.AssistantRow assistant:
                 if (!await PrepareNavigationAsync(token)) return;
                 await SourceAsync(() => _controller.OpenAssistantAsync(assistant.Identity, token));
-                PublishSynchronous(Bindings.ShowWork);
+                PublishSynchronous(() =>
+                {
+                    Bindings.DismissAssistantNavigationAfterOpen();
+                    Bindings.ShowWork();
+                });
                 if (_controller.Snapshot.ConversationBinding is not null) await RefreshOriginalConversationModelsAsync(token);
                 break;
             case "assistants.conversation.archive.toggle" when parameter is AssistantsCuiBindings.ConversationRow

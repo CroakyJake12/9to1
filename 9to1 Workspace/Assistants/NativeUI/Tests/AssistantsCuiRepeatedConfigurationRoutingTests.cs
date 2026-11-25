@@ -60,7 +60,7 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
                 var unrelated = new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Escape };
                 composer.RaiseEvent(unrelated);
                 Assert.Equal(assistant.Identity, bindings.VisibleWorkspaceIdentity);
-                var pane = Assert.Single(root.GetVisualDescendants().OfType<CuiContainerControl>(), c => c.Name == "assistant-workspace");
+                var pane = Assert.Single(root.GetVisualDescendants().OfType<CuiContainerControl>(), c => c.Name == "assistant-work-pane");
                 var primary = Assert.Single(root.GetVisualDescendants().OfType<CuiContainerControl>(), c => c.Name == "assistant-work-main");
                 Assert.Equal(1, Grid.GetColumn(pane));
                 Assert.True(primary.IsEffectivelyEnabled);
@@ -124,6 +124,103 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
                 Assert.Equal(1, Grid.GetColumn(pane));
                 Assert.True(primary.IsEffectivelyEnabled);
                 Assert.Equal("Unsent draft", composer.Text);
+            }
+            finally { loader.Dispose(); await loader.WhenActionsIdleAsync(); window.Close(); }
+            return true;
+        }, lifetime.Token));
+    }
+
+    [Fact]
+    public async Task Compact_navigation_and_workspace_exchange_one_pane_and_use_the_original_assistant_row()
+    {
+        using var lifetime = new CancellationTokenSource();
+        await using var native = HeadlessUnitTestSession.StartNew(typeof(AssistantsTestApplication));
+        Assert.True(await native.Dispatch<bool>(async () =>
+        {
+            var calls = new List<(string Command, object? Parameter)>();
+            var bindings = Bindings(calls);
+            var assistant = Definition();
+            var other = assistant with
+            {
+                Identity = new("fixture-den", "personal", "second-assistant"),
+                Configuration = assistant.Configuration with { Name = "Second Assistant" }
+            };
+            var snapshot = AssistantsWorkspaceSnapshot.Empty with
+            { Revision = 1, SelectedAssistant = assistant, Assistants = [assistant, other] };
+            bindings.ShowWork(); bindings.ApplySnapshot(snapshot);
+            var composer = new TextBox { Text = "Retain this conversation draft" };
+            var registry = AssistantsNativeCuiSurface.CreateAvatarRegistry();
+            registry.RegisterObjectRenderer("AssistantConversation", _ => composer);
+            using var loader = new CuiControlLoader(registry);
+            loader.SetBindingContext(bindings); loader.SetActionDispatcher(bindings);
+            var window = new Window { Width = 500, Height = 650 };
+            try
+            {
+                var (tree, diagnostics) = loader.LoadMarkup(AssistantsCuiScenes.ReadSource(AssistantsCuiScene.Work));
+                Assert.Empty(diagnostics);
+                var root = Assert.IsAssignableFrom<Control>(tree);
+                loader.WireBindings(root);
+                using var keyboard = new AssistantWorkspaceKeyboard(root, bindings);
+                window.Content = root; window.Show();
+                Button? Visible(string name) => root.GetVisualDescendants().OfType<Button>()
+                    .SingleOrDefault(b => b.Name == name && b.IsEffectivelyVisible);
+                async Task Layout()
+                {
+                    await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+                    await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+                }
+                async Task Click(string id)
+                {
+                    Assert.IsType<Button>(Visible(id)).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    await loader.WhenActionsIdleAsync();
+                    await Layout();
+                }
+
+                await Layout();
+                await Click("assistant-workspace-toggle");
+                Assert.True(Visible("assistant-workspace-close")!.IsFocused);
+                Assert.Null(Visible("assistant-navigation-close"));
+                await Click("assistant-workspace-to-navigation");
+                Assert.True(Visible("assistant-navigation-close")!.IsFocused);
+                Assert.Null(Visible("assistant-workspace-close"));
+                Assert.Null(bindings.VisibleWorkspaceIdentity);
+                Assert.True(bindings.IsAssistantNavigationOpen);
+                Assert.Same(window, TopLevel.GetTopLevel(composer));
+                Assert.False(composer.IsEffectivelyEnabled);
+
+                await Click("assistant-navigation-to-workspace");
+                Assert.True(Visible("assistant-workspace-close")!.IsFocused);
+                Assert.Null(Visible("assistant-navigation-close"));
+                Assert.False(bindings.IsAssistantNavigationOpen);
+                await Click("assistant-workspace-to-navigation");
+                var close = Assert.IsType<Button>(Visible("assistant-navigation-close"));
+                var escape = new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Escape };
+                close.RaiseEvent(escape);
+                await Layout();
+                Assert.True(escape.Handled);
+                Assert.True(Visible("assistant-navigation-toggle")!.IsFocused);
+                Assert.Empty(calls);
+                Assert.True(composer.IsEffectivelyEnabled);
+
+                await Click("assistant-navigation-toggle");
+                var row = Assert.Single(root.GetVisualDescendants().OfType<Button>(), b =>
+                    b.IsEffectivelyVisible && b.Tag as string == "OpenAssistant" && Equals(b.Content, "Second Assistant"));
+                row.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await loader.WhenActionsIdleAsync();
+                var invoked = Assert.Single(calls);
+                Assert.Equal("assistants.open", invoked.Command);
+                Assert.Equal(other.Identity, Assert.IsType<AssistantsCuiBindings.AssistantRow>(invoked.Parameter).Identity);
+                bindings.ApplySnapshot(snapshot with { Revision = 2, Assistants = [assistant] });
+                await bindings.DispatchAsync(invoked.Command, invoked.Parameter, lifetime.Token);
+                Assert.Single(calls);
+
+                window.Width = 940;
+                await Layout();
+                Assert.False(bindings.IsAssistantNavigationOpen);
+                Assert.Null(Visible("assistant-navigation-toggle"));
+                Assert.True(Visible("work-home")!.IsFocused);
+                Assert.Same(window, TopLevel.GetTopLevel(composer));
+                Assert.Equal("Retain this conversation draft", composer.Text);
             }
             finally { loader.Dispose(); await loader.WhenActionsIdleAsync(); window.Close(); }
             return true;

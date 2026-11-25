@@ -2,6 +2,9 @@
   <Actions>
     <Action name="CloseAssistantWorkspace" command="assistants.workspace.close" parameter="{Binding WorkspaceAssistantIdentity}" />
     <Action name="ToggleAssistantWorkspace" command="assistants.workspace.toggle" parameter="{Binding WorkspaceAssistantIdentity}" />
+    <Action name="OpenAssistantNavigation" command="assistants.navigation.open" parameter="{Binding WorkspaceAssistantIdentity}" />
+    <Action name="CloseAssistantNavigation" command="assistants.navigation.close" parameter="{Binding WorkspaceAssistantIdentity}" />
+    <Action name="OpenAssistant" command="assistants.open" parameter="{Binding assistant}" />
     <Action name="ToggleConversationArchive" command="assistants.conversation.archive.toggle" parameter="{Binding conversation}" />
     <Action name="OpenConversation" command="assistants.conversation.open" parameter="{Binding conversation}" />
     <Action name="ChooseOriginalProject" command="assistants.project.choose" parameter="{Binding project}" />
@@ -13,7 +16,8 @@
       <Container id="assistant-work-main" Type="Vertical Stack" VerticalScrolling="True" Margin="20" CellGap="12">
         <Container Type="Vertical Stack" CellGap="12">
           <Container Orientation="Horizontal" AccessibleName="Assistant actions" Type="Wrap">
-            <Button id="work-home" action="assistants.home" Margin="0,0,8,8">Assistants</Button>
+            <Button id="work-home" action="assistants.home" Active="{Binding ShowAssistantHomeShortcut}" Interactive="{Binding CanOpenAssistantHome}" Margin="0,0,8,8">Assistants</Button>
+            <Button id="assistant-navigation-toggle" action="OpenAssistantNavigation" Active="{Binding ShowAssistantNavigationToggle}" Interactive="{Binding CanOpenAssistantNavigation}" Margin="0,0,8,8">Show assistants</Button>
             <Button id="assistant-edit" action="assistants.configuration.open" Margin="0,0,8,8" Interactive="{Binding CanConfigure}">Configure</Button>
             <Button id="new-conversation" action="assistants.conversation.new" Margin="0,0,8,8" Interactive="{Binding CanNewConversation}">New conversation</Button>
             <Button id="assistant-workspace-toggle" action="ToggleAssistantWorkspace" Margin="0,0,8,8" Interactive="{Binding CanToggleAssistantWorkspace}" Text="{Binding AssistantWorkspaceToggleLabel}" />
@@ -138,23 +142,37 @@
         <Text Text="{Binding Error}" TextWrapping="Wrap" AccessibleName="Assistant work error" Active="{Binding HasError}" />
       </Container>
       <Container id="assistant-workspace-backdrop" Type="Vertical Stack" Active="False" Background="#80000000" />
-      <Container id="assistant-workspace" Type="Vertical Stack" VerticalScrolling="True" Padding="20" Background="{Resource CuiPanelBrush}" AccessibleName="Assistant workspace" CellGap="12" Active="{Binding ShowAssistantWorkspace}">
-        <Container Type="Wrap" CellGap="8">
-          <Text FontSize="18" FontWeight="SemiBold">Workspace</Text>
-          <Button id="assistant-workspace-close" action="CloseAssistantWorkspace">Close workspace</Button>
+      <Container id="assistant-work-pane" Type="Vertical Stack" VerticalScrolling="True" Padding="20" Background="{Resource CuiPanelBrush}" AccessibleName="Assistant side pane" CellGap="12" Active="{Binding ShowAssistantWorkPane}">
+        <Container id="assistant-workspace" Type="Vertical Stack" AccessibleName="Assistant workspace" CellGap="12" Active="{Binding ShowAssistantWorkspace}">
+          <Container Type="Wrap" CellGap="8">
+            <Text FontSize="18" FontWeight="SemiBold">Workspace</Text>
+            <Button id="assistant-workspace-close" action="CloseAssistantWorkspace">Close workspace</Button>
+            <Button id="assistant-workspace-to-navigation" action="OpenAssistantNavigation" Active="{Binding ShowAssistantNavigationToggle}" Interactive="{Binding CanOpenAssistantNavigation}">Show assistants</Button>
+          </Container>
+          <Container Orientation="Horizontal" Type="Wrap" AccessibleName="Assistant sources and memory">
+            <Button action="assistants.memory.open" Margin="0,0,8,8" Interactive="{Binding CanInspectMemory}">Assistant memory</Button>
+            <Button action="assistants.resources.open" Margin="0,0,8,8" Interactive="{Binding CanInspectResources}">Resources</Button>
+          </Container>
+          <Container Type="Vertical Stack" CellGap="8" Active="{Binding HasSelectedConversations}">
+            <Text FontSize="18" FontWeight="SemiBold">Conversations</Text>
+            <Repeat Source="{Binding SelectedConversations}" As="conversation" Key="{Binding conversation.Id}">
+              <Container Type="Wrap" CellGap="8">
+                <Button action="OpenConversation" Text="{Binding conversation.Title}" Margin="0,0,0,6" Interactive="{Binding conversation.CanOpen}" />
+                <Button action="ToggleConversationArchive" Text="{Binding conversation.ArchiveLabel}" Active="{Binding conversation.CanToggleArchive}" Interactive="{Binding conversation.CanToggleArchive}" />
+              </Container>
+            </Repeat>
+          </Container>
         </Container>
-        <Container Orientation="Horizontal" Type="Wrap" AccessibleName="Assistant sources and memory">
-          <Button action="assistants.memory.open" Margin="0,0,8,8" Interactive="{Binding CanInspectMemory}">Assistant memory</Button>
-          <Button action="assistants.resources.open" Margin="0,0,8,8" Interactive="{Binding CanInspectResources}">Resources</Button>
-        </Container>
-        <Container Type="Vertical Stack" CellGap="8" Active="{Binding HasSelectedConversations}">
-          <Text FontSize="18" FontWeight="SemiBold">Conversations</Text>
-          <Repeat Source="{Binding SelectedConversations}" As="conversation" Key="{Binding conversation.Id}">
-            <Container Type="Wrap" CellGap="8">
-              <Button action="OpenConversation" Text="{Binding conversation.Title}" Margin="0,0,0,6" Interactive="{Binding conversation.CanOpen}" />
-              <Button action="ToggleConversationArchive" Text="{Binding conversation.ArchiveLabel}" Active="{Binding conversation.CanToggleArchive}" Interactive="{Binding conversation.CanToggleArchive}" />
-            </Container>
+        <Container id="assistant-navigation" Type="Vertical Stack" AccessibleName="Assistant navigation" CellGap="12" Active="{Binding ShowAssistantNavigation}">
+          <Container Type="Wrap" CellGap="8">
+            <Text FontSize="18" FontWeight="SemiBold">Assistants</Text>
+            <Button id="assistant-navigation-close" action="CloseAssistantNavigation">Close assistants</Button>
+            <Button id="assistant-navigation-to-workspace" action="ToggleAssistantWorkspace" Interactive="{Binding CanToggleAssistantWorkspace}">Show workspace</Button>
+          </Container>
+          <Repeat Source="{Binding Assistants}" As="assistant" Key="{Binding assistant.Id}">
+            <Button action="OpenAssistant" Text="{Binding assistant.Name}" AccessibleName="{Binding assistant.Name}" Interactive="{Binding assistant.CanOpen}" />
           </Repeat>
+          <Button id="assistant-navigation-home" action="assistants.home" Interactive="{Binding CanOpenAssistantHome}">All assistants</Button>
         </Container>
       </Container>
     </Container>
