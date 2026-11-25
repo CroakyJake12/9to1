@@ -63,6 +63,8 @@ public static class TasksSpaceStateMachine
         DateTimeOffset now)
     {
         ArgumentNullException.ThrowIfNull(outcome);
+        if (outcome.Decision is not (TasksApprovalDecision.Approve or TasksApprovalDecision.Deny))
+            throw new ArgumentOutOfRangeException(nameof(outcome), "An approval outcome must be Approve or Deny.");
         RequireState(job, TasksAgentJobState.WaitingForApproval, "resolve approval for");
         var approval = job.Approvals.FirstOrDefault(item => item.Id == outcome.ApprovalId)
             ?? throw new KeyNotFoundException("Approval was not found on this job.");
