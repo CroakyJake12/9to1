@@ -43,7 +43,7 @@ public sealed record DeveloperRefactorPreview(Guid RefactorId, string Descriptio
     }
 
     public static DeveloperRefactorPreview Prepare(Guid refactorId, string description, IEnumerable<DeveloperRefactorEdit> edits)
-        => new(refactorId, description, (edits ?? []).ToArray()).Capture();
+        => new DeveloperRefactorPreview(refactorId, description, (edits ?? []).ToArray()).Capture();
 
     /// <summary>The set of affected relative paths for the preview UI, including files that are not currently open.</summary>
     public IReadOnlyList<string> AffectedPaths() => Capture().Edits.Select(e => e.RelativePath).ToArray();
