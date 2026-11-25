@@ -30,13 +30,13 @@ public sealed record DeveloperTestRunSummary(IReadOnlyList<DeveloperTestOutcome>
 
     public DeveloperTestRunSummary Capture()
     {
-        var outcomes = (Outcomes ?? []).Select(o => o?.Capture() ?? throw new InvalidDataException("A test outcome is missing.")).ToArray();
+        var outcomes = (Outcomes ?? Array.Empty<DeveloperTestOutcome>()).Select(o => o?.Capture() ?? throw new InvalidDataException("A test outcome is missing.")).ToArray();
         if (outcomes.Length > MaximumOutcomes) throw new InvalidDataException("The test run exceeds the configured outcome limit.");
         if (outcomes.Select(o => o.TestId).Distinct().Count() != outcomes.Length) throw new InvalidOperationException("Duplicate test identity in a run summary.");
         return this with { Outcomes = Array.AsReadOnly(outcomes) };
     }
 
-    public static DeveloperTestRunSummary From(IEnumerable<DeveloperTestOutcome> outcomes) => new((outcomes ?? []).ToArray()).Capture();
+    public static DeveloperTestRunSummary From(IEnumerable<DeveloperTestOutcome> outcomes) => new((outcomes ?? Array.Empty<DeveloperTestOutcome>()).ToArray()).Capture();
 
     private int Count(DeveloperTestOutcomeState state) => Capture().Outcomes.Count(o => o.State == state);
     public int PassedCount => Count(DeveloperTestOutcomeState.Passed);
