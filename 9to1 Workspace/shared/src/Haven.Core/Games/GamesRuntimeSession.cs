@@ -35,7 +35,7 @@ public sealed record GamesRuntimeSession(Guid SessionID, Guid SceneID, long Auth
         if (snapshot.Revision != AuthoredBaseRevision) throw new InvalidOperationException("GamesRuntimeSessionBaseMismatch");
         var layer = (RuntimeLayer ?? Array.Empty<GamesRuntimeTransform>()).Select(t => t?.Capture() ?? throw new InvalidDataException("A games runtime transform is missing.")).ToArray();
         if (layer.Select(t => (t.NodeID, t.PropertyName)).Distinct().Count() != layer.Length) throw new InvalidOperationException("GamesRuntimeDuplicateTransform");
-        return this with { AuthoredSnapshot = snapshot, RuntimeLayer = layer };
+        return (this with { AuthoredSnapshot = snapshot, RuntimeLayer = layer });
     }
 
     /// <summary>Start a session by snapshotting the authored scene at its current revision. The snapshot is immutable for the session's life.</summary>
@@ -53,14 +53,14 @@ public sealed record GamesRuntimeSession(Guid SessionID, Guid SceneID, long Auth
         // Only nodes that exist in the authored snapshot may be moved at runtime.
         if (!AuthoredSnapshot.Values.Any(v => v.NodeID == nodeID && v.PropertyName == propertyName)) throw new InvalidOperationException("GamesRuntimeTargetNotInScene");
         var layer = RuntimeLayer.Where(t => !(t.NodeID == nodeID && t.PropertyName == propertyName)).Append(transform).ToArray();
-        return this with { RuntimeLayer = layer }.Capture();
+        return (this with { RuntimeLayer = layer }).Capture();
     }
 
-    public GamesRuntimeSession Pause() => Phase == GamesRuntimeSessionPhase.Running ? this with { Phase = GamesRuntimeSessionPhase.Paused } : throw new InvalidOperationException("GamesRuntimeSessionNotRunning");
-    public GamesRuntimeSession Resume() => Phase == GamesRuntimeSessionPhase.Paused ? this with { Phase = GamesRuntimeSessionPhase.Running } : throw new InvalidOperationException("GamesRuntimeSessionNotPaused");
+    public GamesRuntimeSession Pause() => Phase == GamesRuntimeSessionPhase.Running ? (this with { Phase = GamesRuntimeSessionPhase.Paused }) : throw new InvalidOperationException("GamesRuntimeSessionNotRunning");
+    public GamesRuntimeSession Resume() => Phase == GamesRuntimeSessionPhase.Paused ? (this with { Phase = GamesRuntimeSessionPhase.Running }) : throw new InvalidOperationException("GamesRuntimeSessionNotPaused");
 
     /// <summary>Stop ends the session and returns to authoring state. Unapplied runtime changes are discarded; the authored snapshot is unchanged.</summary>
-    public GamesRuntimeSession Stop() => this with { Phase = GamesRuntimeSessionPhase.Stopped, RuntimeLayer = Array.Empty<GamesRuntimeTransform>() }.Capture();
+    public GamesRuntimeSession Stop() => (this with { Phase = GamesRuntimeSessionPhase.Stopped, RuntimeLayer = Array.Empty<GamesRuntimeTransform>() }).Capture();
 
     /// <summary>The effective value for a node/property: the runtime override when present, otherwise the authored value. Read-only view.</summary>
     public double EffectiveValue(Guid nodeID, string propertyName)
