@@ -14,7 +14,7 @@ public sealed record DeveloperRecordedTest(Guid TestId, Guid ExecutionId, string
     string Message, string StackTrace, string StandardOutput, string StandardError, bool DetailTruncated)
 {
     public bool IsFailure => Outcome is DeveloperRecordedTestOutcome.Failed or DeveloperRecordedTestOutcome.Error or
-        DeveloperRecordedTestOutcome.Timeout or DeveloperRecordedTestOutcome.Aborted or DeveloperRecordedTestOutcome.NotRunnable or DeveloperRecordedTestOutcome.Disconnected;
+        DeveloperRecordedTestOutcome.Timeout or DeveloperRecordedTestOutcome.Aborted or DeveloperRecordedTestOutcome.NotRunnable or DeveloperRecordedTestOutcome.Disconnected or DeveloperRecordedTestOutcome.PassedButRunAborted;
 }
 public sealed record DeveloperTrxTestReport(Guid RunId, string Name, string ReportedRunOutcome,
     DateTimeOffset? StartedAt, DateTimeOffset? FinishedAt, IReadOnlyList<DeveloperRecordedTest> Tests);
