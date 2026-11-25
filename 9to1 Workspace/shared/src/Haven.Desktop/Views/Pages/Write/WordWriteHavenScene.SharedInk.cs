@@ -11,10 +11,10 @@ internal sealed partial class WordWriteHavenScene
     internal event EventHandler? DrawingRequested;
     internal event EventHandler? PresentationChanged;
     private bool _sharedInkConfigured;
-    internal NativeHost DrawingToolsHost { get; } = CreateDrawingToolsHost();
-    private static NativeHost CreateDrawingToolsHost()
+    internal Container DrawingToolsHost { get; } = CreateDrawingToolsHost();
+    private static Container CreateDrawingToolsHost()
     {
-        var host = new NativeHost { Name = "Write.Drawing.Tools" };
+        var host = new Container { Name = "Write.Drawing.Tools" };
         host.Accessibility.AccessibleName = "Shared drawing tools";
         host.SetValue(HavenProperties.Width, HavenLength.Px(800));
         host.SetValue(HavenProperties.Height, HavenLength.Px(104));
