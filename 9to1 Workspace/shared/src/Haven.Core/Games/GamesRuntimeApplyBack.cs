@@ -22,7 +22,7 @@ public sealed record GamesAuthoredScene(long Revision, IReadOnlyList<GamesAuthor
     }
 
     public GamesAuthoredScene WithValue(Guid nodeID, string propertyName, double value) =>
-        new(Revision, Values.Where(v => !(v.NodeID == nodeID && v.PropertyName == propertyName)).Append(new GamesAuthoredValue(nodeID, propertyName, value)).ToArray()).Capture();
+        (new GamesAuthoredScene(Revision, Values.Where(v => !(v.NodeID == nodeID && v.PropertyName == propertyName)).Append(new GamesAuthoredValue(nodeID, propertyName, value)).ToArray())).Capture();
 }
 
 /// <summary>A runtime change captured during Play/Test. It pins the exact target identity (node + property), the authored base revision it was
