@@ -16,7 +16,7 @@ public sealed record PlayAnswerDraft(Guid MatchID, int Round, Guid ContestantID,
         if (Revision < 1) throw new InvalidDataException("Play answer revision must be positive.");
         if (!Enum.IsDefined(State)) throw new InvalidDataException("Play answer state is unsupported.");
         // A submitted/accepted/rejected answer must carry a committed value and a submission reference.
-        if (State != PlayAnswerState.Draft && string.IsNullOrWhiteSpace(SelectedOption)) throw new InvalidOperationException("PlayAnswerSubmittedWithoutValue");
+        if (State != PlayAnswerState.Draft && string.IsNullOrWhiteSpace(SelectedOption)) { throw new InvalidOperationException("PlayAnswerSubmittedWithoutValue"); }
         return this;
     }
 
@@ -27,33 +27,33 @@ public sealed record PlayAnswerDraft(Guid MatchID, int Round, Guid ContestantID,
     public PlayAnswerDraft Select(string option, int expectedRevision)
     {
         if (string.IsNullOrWhiteSpace(option)) throw new InvalidDataException("An answer option is required.");
-        if (State != PlayAnswerState.Draft) throw new InvalidOperationException("PlayAnswerLockedAfterSubmit");
-        if (Revision != expectedRevision) throw new InvalidOperationException("PlayAnswerRevisionConflict");
+        if (State != PlayAnswerState.Draft) { throw new InvalidOperationException("PlayAnswerLockedAfterSubmit"); }
+        if (Revision != expectedRevision) { throw new InvalidOperationException("PlayAnswerRevisionConflict"); }
         return this with { SelectedOption = option, Revision = checked(Revision + 1) }.Capture();
     }
 
     /// <summary>Submit the current draft as the single committed answer. Repeated submission reuses the same SubmissionRef (idempotent).</summary>
     public PlayAnswerDraft Submit(int expectedRevision)
     {
-        if (State != PlayAnswerState.Draft) throw new InvalidOperationException("PlayAnswerAlreadySubmitted");
-        if (string.IsNullOrWhiteSpace(SelectedOption)) throw new InvalidOperationException("PlayAnswerUnselectedSubmitDisabled");
-        if (Revision != expectedRevision) throw new InvalidOperationException("PlayAnswerRevisionConflict");
+        if (State != PlayAnswerState.Draft) { throw new InvalidOperationException("PlayAnswerAlreadySubmitted"); }
+        if (string.IsNullOrWhiteSpace(SelectedOption)) { throw new InvalidOperationException("PlayAnswerUnselectedSubmitDisabled"); }
+        if (Revision != expectedRevision) { throw new InvalidOperationException("PlayAnswerRevisionConflict"); }
         return this with { State = PlayAnswerState.Submitted, Revision = checked(Revision + 1) }.Capture();
     }
 
     /// <summary>Accept the submitted answer so it counts exactly once. A late/closed round rejects with canonical state.</summary>
     public PlayAnswerDraft Accept(int expectedRevision)
     {
-        if (State != PlayAnswerState.Submitted) throw new InvalidOperationException("PlayAnswerNotSubmitted");
-        if (Revision != expectedRevision) throw new InvalidOperationException("PlayAnswerRevisionConflict");
+        if (State != PlayAnswerState.Submitted) { throw new InvalidOperationException("PlayAnswerNotSubmitted"); }
+        if (Revision != expectedRevision) { throw new InvalidOperationException("PlayAnswerRevisionConflict"); }
         return this with { State = PlayAnswerState.Accepted, Revision = checked(Revision + 1) }.Capture();
     }
 
     /// <summary>An uncertain timeout retains the original candidate and submission reference rather than sending a new answer.</summary>
     public PlayAnswerDraft ReconcileFailure(int expectedRevision)
     {
-        if (State != PlayAnswerState.Submitted) throw new InvalidOperationException("PlayAnswerNotSubmitted");
-        if (Revision != expectedRevision) throw new InvalidOperationException("PlayAnswerRevisionConflict");
+        if (State != PlayAnswerState.Submitted) { throw new InvalidOperationException("PlayAnswerNotSubmitted"); }
+        if (Revision != expectedRevision) { throw new InvalidOperationException("PlayAnswerRevisionConflict"); }
         // Keep the same SelectedOption and SubmissionRef; only the state reflects the unresolved attempt.
         return this with { State = PlayAnswerState.Rejected, Revision = checked(Revision + 1) }.Capture();
     }
