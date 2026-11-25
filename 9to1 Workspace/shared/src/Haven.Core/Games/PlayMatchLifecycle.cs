@@ -48,7 +48,7 @@ public sealed record PlayMatch(Guid MatchID, Guid DefinitionID, int DefinitionRe
         if (DefinitionID == Guid.Empty || DefinitionRevision < 1) throw new InvalidDataException("Play match must pin a valid definition revision.");
         if (Revision < 1) throw new InvalidDataException("Play match revision must be positive.");
         if (!Enum.IsDefined(Phase)) throw new InvalidDataException("Play match phase is unsupported.");
-        var rounds = (Rounds ?? []).Select(r => r?.Capture() ?? throw new InvalidDataException("A play match round is missing.")).ToArray();
+        var rounds = (Rounds ?? Array.Empty<PlayMatchRound>()).Select(r => r?.Capture() ?? throw new InvalidDataException("A play match round is missing.")).ToArray();
         if (rounds.Select(r => r.Round).Distinct().Count() != rounds.Length) throw new InvalidOperationException("PlayDuplicateRound");
         return this with { Rounds = rounds };
     }
