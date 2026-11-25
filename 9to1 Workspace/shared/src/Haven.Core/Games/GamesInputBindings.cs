@@ -81,7 +81,7 @@ public sealed record GamesInputMap(int Revision, IReadOnlyList<GamesInputBinding
 
 /// <summary>A personal override layered on top of the shared default map. It references bindings by identity and only stores the player's own physical-key changes.
 /// Applying an override never mutates the shared default; removing an override restores the inherited value.</summary>
-public sealed record GamesInputOverride(Guid PlayerID, int Revision, IReadOnlyDictionary<Guid, string> PhysicalKeyOverrides)
+public sealed record GamesInputOverride
 {
     public const int CurrentSchemaVersion = 1;
 
