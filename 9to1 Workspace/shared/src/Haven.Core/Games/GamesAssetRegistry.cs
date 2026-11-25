@@ -45,7 +45,7 @@ public sealed record GamesAssetRegistry(int Revision, IReadOnlyList<GamesAsset> 
         return this with { Assets = snapshot };
     }
 
-    public static GamesAssetRegistry Create(IEnumerable<GamesAsset> assets) => new(1, assets.ToArray()).Capture();
+    public static GamesAssetRegistry Create(IEnumerable<GamesAsset> assets) => new GamesAssetRegistry(1, assets.ToArray()).Capture();
 
     private GamesAssetRegistry Next(int expectedRevision, IReadOnlyList<GamesAsset> assets)
     {
