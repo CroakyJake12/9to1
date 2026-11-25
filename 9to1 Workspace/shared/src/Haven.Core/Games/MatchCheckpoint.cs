@@ -33,7 +33,7 @@ public sealed record MatchCheckpoint(Guid CheckpointID, Guid LineageID, int Sequ
     }
 
     public static MatchCheckpoint Commit(Guid checkpointID, Guid lineageID, int sequence, MatchState state, PlayClock clockPolicy, IEnumerable<PlayEffectReceipt> effectReceipts)
-        => new(checkpointID, lineageID, sequence, state, clockPolicy, (effectReceipts ?? []).ToArray()).Capture();
+        => new MatchCheckpoint(checkpointID, lineageID, sequence, state, clockPolicy, (effectReceipts ?? []).ToArray()).Capture();
 
     /// <summary>Reconstruct the committed match state on reconnect. Returns the exact pinned state; it never re-runs external effects.</summary>
     public MatchState Reconstruct() => State.Capture();
