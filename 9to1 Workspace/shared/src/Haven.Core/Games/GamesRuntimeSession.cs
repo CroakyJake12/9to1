@@ -33,7 +33,7 @@ public sealed record GamesRuntimeSession(Guid SessionID, Guid SceneID, long Auth
         if (!Enum.IsDefined(Phase)) throw new InvalidDataException("Games runtime session phase is unsupported.");
         var snapshot = AuthoredSnapshot.Capture();
         if (snapshot.Revision != AuthoredBaseRevision) throw new InvalidOperationException("GamesRuntimeSessionBaseMismatch");
-        var layer = (RuntimeLayer ?? []).Select(t => t?.Capture() ?? throw new InvalidDataException("A games runtime transform is missing.")).ToArray();
+        var layer = (RuntimeLayer ?? Array.Empty<GamesRuntimeTransform>()).Select(t => t?.Capture() ?? throw new InvalidDataException("A games runtime transform is missing.")).ToArray();
         if (layer.Select(t => (t.NodeID, t.PropertyName)).Distinct().Count() != layer.Length) throw new InvalidOperationException("GamesRuntimeDuplicateTransform");
         return this with { AuthoredSnapshot = snapshot, RuntimeLayer = layer };
     }
@@ -71,8 +71,8 @@ public sealed record GamesRuntimeSession(Guid SessionID, Guid SceneID, long Auth
     public GamesRuntimeChange ToApplyBackCandidate(Guid changeID, Guid nodeID, string propertyName)
         => new(changeID, nodeID, propertyName, AuthoredBaseRevision, RuntimeLayer.Single(t => t.NodeID == nodeID && t.PropertyName == propertyName).RuntimeValue);
 
-    /// <summary>Apply a reviewed runtime transform to the current authored scene. Delegates to GamesRuntimeApplyBack so a concurrent authoring edit
-/// (scene advanced past the base revision) yields conflict resolution instead of overwriting.</summary>
+        /// <summary>Apply a reviewed runtime transform to the current authored scene. Delegates to GamesRuntimeApplyBack so a concurrent authoring edit
+    /// (scene advanced past the base revision) yields conflict resolution instead of overwriting.</summary>
     public GamesAuthoredScene ApplyBack(GamesAuthoredScene currentAuthored, Guid nodeID, string propertyName)
     {
         var candidate = ToApplyBackCandidate(Guid.NewGuid(), nodeID, propertyName);
