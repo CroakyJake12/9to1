@@ -7,7 +7,7 @@ using System.Text.Json.Nodes;
 namespace Haven.Desktop.Services;
 
 /// <summary>Device-local IPC to the independently supervised Dulche process.</summary>
-public sealed class DulcheLocalClient
+public sealed partial class DulcheLocalClient
 {
     private readonly HttpClient _http;
     private readonly Guid _session = Guid.NewGuid();

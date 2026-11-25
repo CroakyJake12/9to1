@@ -100,7 +100,11 @@ public sealed class DeveloperWorkbenchCompiledTransportTests
             "dev.redo-source-edit", "dev.analyze-cui-draft", "dev.preview-cui-draft", "dev.go-to-cui-problem", "dev.go-to-cui-element", "dev.select-cui-property", "dev.change-cui-property", "dev.add-cui-text-child", "dev.move-cui-text-up", "dev.move-cui-text-down", "dev.remove-cui-text", "dev.check-line-endings", "dev.use-lf-endings", "dev.use-crlf-endings", "dev.preview-edit",
             "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.select-run-target", "dev.new-run-target", "dev.edit-run-target", "dev.review-run-target", "dev.save-run-target", "dev.run-selected-target", "dev.stop-manual-run", "dev.run-command",
             "dev.run-tests", "dev.select-build-stage", "dev.new-compile-stage", "dev.new-test-stage", "dev.edit-build-stage", "dev.review-build-stage", "dev.save-build-stage", "dev.run-stage", "dev.open-build-problem", "dev.inspect-saved-test-report", "dev.create-branch",
-            "dev.switch-branch"];
+            "dev.switch-branch",
+            "dev.mission-refresh-models", "dev.mission-load-programme", "dev.mission-start", "dev.mission-step",
+            "dev.mission-pause", "dev.mission-resume", "dev.mission-stop", "dev.mission-checkpoint",
+            "dev.mission-compact", "dev.mission-select-task", "dev.mission-open-changed-file", "dev.mission-delegate",
+            "dev.mission-approve-integration", "dev.mission-reject-integration"];
         Assert.Equal(expected.OrderBy(value => value), commands.OrderBy(value => value));
 
         // Genuinely stateless: no document-root local variables.
@@ -126,7 +130,11 @@ public sealed class DeveloperWorkbenchCompiledTransportTests
             "dev.redo-source-edit", "dev.analyze-cui-draft", "dev.preview-cui-draft", "dev.go-to-cui-problem", "dev.go-to-cui-element", "dev.select-cui-property", "dev.change-cui-property", "dev.add-cui-text-child", "dev.move-cui-text-up", "dev.move-cui-text-down", "dev.remove-cui-text", "dev.check-line-endings", "dev.use-lf-endings", "dev.use-crlf-endings", "dev.preview-edit",
             "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.select-run-target", "dev.new-run-target", "dev.edit-run-target", "dev.review-run-target", "dev.save-run-target", "dev.run-selected-target", "dev.stop-manual-run", "dev.run-command",
             "dev.run-tests", "dev.select-build-stage", "dev.new-compile-stage", "dev.new-test-stage", "dev.edit-build-stage", "dev.review-build-stage", "dev.save-build-stage", "dev.run-stage", "dev.open-build-problem", "dev.inspect-saved-test-report", "dev.create-branch",
-            "dev.switch-branch"];
+            "dev.switch-branch",
+            "dev.mission-refresh-models", "dev.mission-load-programme", "dev.mission-start", "dev.mission-step",
+            "dev.mission-pause", "dev.mission-resume", "dev.mission-stop", "dev.mission-checkpoint",
+            "dev.mission-compact", "dev.mission-select-task", "dev.mission-open-changed-file", "dev.mission-delegate",
+            "dev.mission-approve-integration", "dev.mission-reject-integration"];
         Assert.Equal(expected.OrderBy(value => value), commands.OrderBy(value => value));
     }
 

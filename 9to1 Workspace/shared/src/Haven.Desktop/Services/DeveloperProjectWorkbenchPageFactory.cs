@@ -44,7 +44,8 @@ public sealed class DeveloperProjectWorkbenchPageFactory(
             }, sourceExplorerReader: services.GetService<DeveloperManualSourceReadOwner>(),
             editorSessionStore: services.GetService<FileDeveloperWorkspaceStore>(),
             editorSessionExecution: services.GetService<FilesDeveloperOriginalCurrentProjectExecutionBridge>(),
-            taskRecoveryOwner: CreateTaskRecoveryOwner(actualTask));
+            taskRecoveryOwner: CreateTaskRecoveryOwner(actualTask),
+            autonomousModelGateway: services.GetService<DulcheLocalClient>()?.AsAutonomousGateway());
     }
     /// <summary>Creates the SAME compiled-CUI workbench in manual (no-AI) mode for a resolved saved
     /// project. No Task/Run/context/model or generation is involved: the real saved project identity
@@ -74,7 +75,8 @@ public sealed class DeveloperProjectWorkbenchPageFactory(
             createOriginalReadinessChild, manualRead, manualEdit, services.GetService<FileDeveloperWorkspaceStore>(),
             services.GetService<FilesDeveloperOriginalCurrentProjectExecutionBridge>(),
             services.GetService<IProviderSecretStore>(), services.GetService<IAppPaths>(),
-            services.GetService<DeveloperManualProjectProcessOwner>());
+            services.GetService<DeveloperManualProjectProcessOwner>(),
+            services.GetService<DulcheLocalClient>()?.AsAutonomousGateway());
     }
 
     /// <summary>Creates a genuine presentation child bound to this exact Dev host, independent
@@ -100,7 +102,8 @@ public sealed class DeveloperProjectWorkbenchPageFactory(
             sourceExplorerReader: services.GetService<DeveloperManualSourceReadOwner>(),
             editorSessionStore: services.GetService<FileDeveloperWorkspaceStore>(),
             editorSessionExecution: services.GetService<FilesDeveloperOriginalCurrentProjectExecutionBridge>(),
-            taskRecoveryOwner: CreateTaskRecoveryOwner(actualTask));
+            taskRecoveryOwner: CreateTaskRecoveryOwner(actualTask),
+            autonomousModelGateway: services.GetService<DulcheLocalClient>()?.AsAutonomousGateway());
     }
 
     private DeveloperTaskDraftRecoveryOwner? CreateTaskRecoveryOwner(TaskExecutionSnapshot actualTask)

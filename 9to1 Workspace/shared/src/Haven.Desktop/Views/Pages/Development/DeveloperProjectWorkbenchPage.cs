@@ -9,6 +9,7 @@ using Haven.Core;
 using Haven.Desktop.Services;
 using Haven.Desktop.ViewModels;
 using HavenOS.Apps.Dev;
+using HavenOS.Apps.Dev.Autonomous;
 using HavenOS.Files.NativeHost;
 
 namespace Haven.Desktop.Views.Pages.Development;
@@ -143,10 +144,11 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         DeveloperManualSourceReadOwner? sourceExplorerReader = null,
         FileDeveloperWorkspaceStore? editorSessionStore = null,
         FilesDeveloperOriginalCurrentProjectExecutionBridge? editorSessionExecution = null,
-        DeveloperTaskDraftRecoveryOwner? taskRecoveryOwner = null)
+        DeveloperTaskDraftRecoveryOwner? taskRecoveryOwner = null,
+        IDeveloperModelGateway? autonomousModelGateway = null)
         : this(development, canonical, actualProject, actualTaskId, actualExecutionId, actualContextId, readiness,
             resolveOriginalDocument, demandOriginalDocumentSourceExternalJoin, explicitBusinessCancellationToken,
-            retainOriginalAcquisition, null, sourceExplorerReader, editorSessionStore, editorSessionExecution, taskRecoveryOwner) { }
+            retainOriginalAcquisition, null, sourceExplorerReader, editorSessionStore, editorSessionExecution, taskRecoveryOwner, autonomousModelGateway) { }
 
     internal DeveloperProjectWorkbenchPage(DeveloperTaskWorkspaceService development, TaskExecutionCoordinator canonical,
         DeveloperResolvedProject actualProject, Guid actualTaskId, Guid actualExecutionId, Guid actualContextId,
@@ -158,7 +160,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         DeveloperManualSourceReadOwner? sourceExplorerReader = null,
         FileDeveloperWorkspaceStore? editorSessionStore = null,
         FilesDeveloperOriginalCurrentProjectExecutionBridge? editorSessionExecution = null,
-        DeveloperTaskDraftRecoveryOwner? taskRecoveryOwner = null)
+        DeveloperTaskDraftRecoveryOwner? taskRecoveryOwner = null,
+        IDeveloperModelGateway? autonomousModelGateway = null)
     {
         _development = development ?? throw new ArgumentNullException(nameof(development));
         _canonical = canonical ?? throw new ArgumentNullException(nameof(canonical));
@@ -167,6 +170,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         _editorSessionStore = editorSessionStore;
         _editorSessionExecution = editorSessionExecution;
         _taskRecoveryOwner = taskRecoveryOwner;
+        _injectedAutonomousGateway = autonomousModelGateway;
         if (actualTaskId == Guid.Empty || actualExecutionId == Guid.Empty || actualContextId == Guid.Empty)
             throw new ArgumentException("The existing canonical Task/Run/context must be supplied together.");
         _taskId = actualTaskId; _runId = actualExecutionId; _contextId = actualContextId;
@@ -228,7 +232,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         FilesDeveloperOriginalCurrentProjectExecutionBridge? editorSessionExecution = null,
         IProviderSecretStore? originalRecoveryKeys = null,
         IAppPaths? originalRecoveryPaths = null,
-        DeveloperManualProjectProcessOwner? manualProcessOwner = null)
+        DeveloperManualProjectProcessOwner? manualProcessOwner = null,
+        IDeveloperModelGateway? autonomousModelGateway = null)
     {
         _development = development ?? throw new ArgumentNullException(nameof(development));
         _canonical = canonical ?? throw new ArgumentNullException(nameof(canonical));
@@ -249,6 +254,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         _manualRecoveryPaths = originalRecoveryPaths;
         _editorSessionStore = editorSessionStore;
         _editorSessionExecution = editorSessionExecution;
+        _injectedAutonomousGateway = autonomousModelGateway;
         _review = null; // No AI Task-backed review session; manual edits route through the genuine edit admission + kernel.
         Document = DeveloperWorkbenchCuiDocument.Load();
         _controls = new();
@@ -291,7 +297,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
     /// so a tab owner can veto retirement instead of silently discarding it. A manual (no-AI)
     /// draft vetoes close until applied, reverted, or its exact latest complete protected
     /// recovery is acknowledged. An older acknowledged snapshot never clears a newer draft.</summary>
-    internal bool HasUnsavedWork { get { lock (_gate) return _pending || HasUnadoptedRecoveryMerge() ||
+    internal bool HasUnsavedWork { get { lock (_gate) return _pending || IsAutonomousMissionActive || HasUnadoptedRecoveryMerge() ||
         (_sourceTabs.Any(IsTabDirty) || _editor is { IsDirty: true } ||
             (_manual && !StringComparer.Ordinal.Equals(_manualDraftText, _manualDraftBaseline))) &&
         !HasExactProtectedManualRecovery() && !HasExactProtectedTaskRecovery(); } }
@@ -372,6 +378,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (TryGetFileNavigationValue(path, out value)) return true;
             if (TryGetBuildProblemsValue(path, out value)) return true;
             if (TryGetSavedTestReportValue(path, out value)) return true;
+            if (TryGetAutonomousValue(path, out value)) return true;
             value = path switch
             {
                 "ProjectTitle" => _project.Project.Name,
@@ -448,6 +455,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
     }
     public bool TrySetValue(string path, object? value)
     {
+        if (TrySetAutonomousValue(path, value)) return true;
         if (path is "StageEditTaskId" or "StageEditStageId" or "StageEditCommand" or "StageEditTimeout") return SetBuildStageEditValue(path, value);
         if (path is "RunEditId" or "RunEditCommand" or "RunEditTimeout") return SetRunEditValue(path, value);
         if (path == "NewFileCuiTemplate") return SetNewFileTemplate(value);
@@ -524,6 +532,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         lock (_gate)
         {
             if (!_active || _work.IsRetiring) return false;
+            if (IsAutonomousCommand(command)) return IsAutonomousActionAvailable(command);
             if (command == "dev.stop-manual-run") return _manualRunStop is not null && !_manualRunStop.IsCancellationRequested;
             if (_pending) return false;
             if (_manual && command is ("dev.git-status" or "dev.git-diff" or "dev.git-branches")) return CanInspectManualGit();
@@ -611,6 +620,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (IsAutonomousCommand(command)) return DispatchAutonomousAsync(command, parameter, cancellationToken);
         if (command is "dev.new-compile-stage" or "dev.new-test-stage" or "dev.edit-build-stage" or "dev.review-build-stage") return ConfigureBuildStage(command);
         if (command == "dev.save-build-stage") return SaveBuildStageAsync(cancellationToken);
         if (command is "dev.new-run-target" or "dev.edit-run-target" or "dev.review-run-target") return ConfigureRunTarget(command);
@@ -1449,6 +1459,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
     private async Task DetachOriginalPresentationAsync()
     {
         var errors = new List<Exception>();
+        try { await CloseAutonomousEngineAsync().ConfigureAwait(false); } catch (Exception error) { errors.Add(error); }
         try { await CloseCuiPreviewScenesAsync().ConfigureAwait(false); } catch (Exception error) { errors.Add(error); }
         // Acquired business originals settled before this cleanup callback. Join the SAME
         // readiness and review children independently BEFORE the host/dispatcher resources.

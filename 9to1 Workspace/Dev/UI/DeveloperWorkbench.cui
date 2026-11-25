@@ -9,6 +9,8 @@
     <Action name="dev.go-to-cui-element" command="dev.go-to-cui-element" parameter="{Binding element.SelectionKey}" />
     <Action name="dev.select-cui-property" command="dev.select-cui-property" parameter="{Binding property.SelectionKey}" />
     <Action name="dev.select-run-target" command="dev.select-run-target" parameter="{Binding target.SelectionKey}" />
+    <Action name="dev.mission-select-task" command="dev.mission-select-task" parameter="{Binding missionTask.SelectionKey}" />
+    <Action name="dev.mission-open-changed-file" command="dev.mission-open-changed-file" parameter="{Binding changedFile.SelectionKey}" />
   </Actions>
   <Page>
     <Container id="dev-workbench" margin="16" accessible-name="Development project workspace" Type="Vertical Stack" CellGap="12" VerticalScrolling="True" HorizontalScrolling="False">
@@ -264,6 +266,63 @@
       <Text text="{Binding SavedTestReportStatus}" text-wrapping="Wrap" accessible-name="Saved test report provenance and outcomes" />
       <Object type="ReadOnlyText" id="dev-saved-test-report-details" text="{Binding SavedTestReportDetails}" font-family="monospace" max-height="240" accessible-name="Individual recorded test outcomes" />
       <Object type="ReadOnlyText" id="dev-terminal-output" text="{Binding ProcessOutput}" font-family="monospace" min-height="180" accessible-name="Actual standard output and error" />
+      <Text text="Autonomous development" font-size="20" />
+      <Text id="dev-mission-status" text="{Binding MissionStatusSummary}" text-wrapping="Wrap" accessible-name="Autonomous mission state, branch, revision and progress" />
+      <Text id="dev-mission-models" text="{Binding MissionModelsSummary}" text-wrapping="Wrap" accessible-name="Connected Dulche models and hardware telemetry" />
+      <Text id="dev-mission-context" text="{Binding MissionContextSummary}" text-wrapping="Wrap" accessible-name="Context window usage, compaction epoch and durable checkpoint count" />
+      <Input id="dev-mission-objective" Type="Text" Value="{Binding MissionObjective}" placeholdertext="Persistent mission objective" accessible-name="Autonomous mission objective" />
+      <Input id="dev-mission-programme-path" Type="Text" Value="{Binding MissionProgrammePath}" placeholdertext="Programme manifest or docs/specification path" accessible-name="Specification implementation programme path" />
+      <Container Type="Wrap" CellGap="8">
+        <Input id="dev-mission-worker-model" Type="Text" Value="{Binding MissionWorkerModel}" placeholdertext="Primary worker model ID" accessible-name="Primary Dulche worker model" />
+        <Input id="dev-mission-supervisor-model" Type="Text" Value="{Binding MissionSupervisorModel}" placeholdertext="Supervisor / reviewer model ID" accessible-name="Independent Dulche supervisor model" />
+      </Container>
+      <Container Type="Wrap" CellGap="8">
+        <Input id="dev-mission-auto-advance" Type="Checkbox" content="Auto-advance requirements" Checked="{Binding MissionAutoAdvance, mode=TwoWay}" accessible-name="Automatically progress to subsequent specification requirements" />
+        <Input id="dev-mission-guarded-integration" Type="Checkbox" content="Guarded auto-integration" Checked="{Binding MissionGuardedIntegration, mode=TwoWay}" accessible-name="Commit verified and reviewed changes to isolated mission branch" />
+        <Input id="dev-mission-enable-reasoning" Type="Checkbox" content="Stream reasoning" Checked="{Binding MissionEnableReasoning, mode=TwoWay}" accessible-name="Stream live model reasoning output where available" />
+      </Container>
+      <Container Type="Wrap" CellGap="6">
+        <Button id="dev-mission-refresh-models" action="dev.mission-refresh-models" content="Refresh Dulche models" Interactive="{Binding CanRefreshMissionModels}" />
+        <Button id="dev-mission-load-programme" action="dev.mission-load-programme" content="Load programme" Interactive="{Binding CanLoadMissionProgramme}" />
+        <Button id="dev-mission-start" action="dev.mission-start" content="Start autonomous mission" Interactive="{Binding CanStartMission}" />
+        <Button id="dev-mission-step" action="dev.mission-step" content="Run next step" Interactive="{Binding CanStepMission}" />
+        <Button id="dev-mission-pause" action="dev.mission-pause" content="Pause mission" Interactive="{Binding CanPauseMission}" />
+        <Button id="dev-mission-resume" action="dev.mission-resume" content="Resume mission" Interactive="{Binding CanResumeMission}" />
+        <Button id="dev-mission-stop" action="dev.mission-stop" content="Stop active run" Interactive="{Binding CanStopMission}" />
+        <Button id="dev-mission-checkpoint" action="dev.mission-checkpoint" content="Save checkpoint" Interactive="{Binding CanCheckpointMission}" />
+        <Button id="dev-mission-compact" action="dev.mission-compact" content="Compact context" Interactive="{Binding CanCompactMission}" />
+      </Container>
+      <Text text="Specification tasks" font-size="18" />
+      <Text id="dev-mission-active-task" text="{Binding MissionActiveTaskSummary}" text-wrapping="Wrap" accessible-name="Active requirement specification, acceptance criteria and verification state" />
+      <Container Type="Vertical Stack" CellGap="4" max-height="200" VerticalScrolling="True" accessible-name="Autonomous mission task ledger">
+        <Repeat id="dev-mission-tasks" Source="{Binding MissionTasks}" As="missionTask" Key="{Binding missionTask.SelectionKey}">
+          <Button id="dev-mission-select-task" action="dev.mission-select-task" content="{Binding missionTask.Label}" accessible-name="{Binding missionTask.AccessibleName}" Interactive="{Binding missionTask.CanSelect}" horizontal-content-alignment="Left" />
+        </Repeat>
+      </Container>
+      <Text text="Live model reasoning" font-size="18" />
+      <Object type="ReadOnlyText" id="dev-mission-live-reasoning" text="{Binding MissionLiveReasoning}" font-family="monospace" min-height="120" max-height="260" accessible-name="Live streaming model reasoning output" />
+      <Text text="Live model output" font-size="18" />
+      <Object type="ReadOnlyText" id="dev-mission-live-output" text="{Binding MissionLiveOutput}" font-family="monospace" min-height="120" max-height="260" accessible-name="Live streaming model generation output" />
+      <Text text="Autonomous diff review" font-size="18" />
+      <Container Type="Wrap" CellGap="6">
+        <Repeat id="dev-mission-changed-files" Source="{Binding MissionChangedFiles}" As="changedFile" Key="{Binding changedFile.SelectionKey}">
+          <Button id="dev-mission-open-changed-file" action="dev.mission-open-changed-file" content="{Binding changedFile.Label}" accessible-name="{Binding changedFile.AccessibleName}" Interactive="{Binding changedFile.CanOpen}" />
+        </Repeat>
+      </Container>
+      <Object type="ReadOnlyText" id="dev-mission-diff-review" text="{Binding MissionDiffReview}" font-family="monospace" min-height="140" max-height="320" accessible-name="Live unified diff for active autonomous task" />
+      <Text text="Guarded build and test log" font-size="18" />
+      <Object type="ReadOnlyText" id="dev-mission-terminal-log" text="{Binding MissionBuildOutput}" font-family="monospace" min-height="140" max-height="280" accessible-name="Live guarded compilation and test output" />
+      <Text text="Agent delegation and supervision" font-size="18" />
+      <Input id="dev-mission-delegate-prompt" Type="Text" Value="{Binding MissionDelegatePrompt}" placeholdertext="Delegate a question or review objective to the supervisor model" accessible-name="Supervisor delegation prompt" />
+      <Container Type="Wrap" CellGap="6">
+        <Button id="dev-mission-delegate" action="dev.mission-delegate" content="Delegate to supervisor" Interactive="{Binding CanDelegateMission}" />
+        <Button id="dev-mission-approve-integration" action="dev.mission-approve-integration" content="Approve and integrate" Interactive="{Binding CanApproveMissionIntegration}" />
+        <Button id="dev-mission-reject-integration" action="dev.mission-reject-integration" content="Request rework" Interactive="{Binding CanRejectMissionIntegration}" />
+      </Container>
+      <Object type="ReadOnlyText" id="dev-mission-delegation-log" text="{Binding MissionDelegationLog}" font-family="monospace" min-height="120" max-height="240" accessible-name="Supervisor reviews and delegated subagent runs" />
+      <Text text="Checkpoints and activity" font-size="18" />
+      <Object type="ReadOnlyText" id="dev-mission-checkpoints" text="{Binding MissionCheckpointsSummary}" font-family="monospace" min-height="100" max-height="200" accessible-name="Durable mission checkpoints and integration receipts" />
+      <Object type="ReadOnlyText" id="dev-mission-events" text="{Binding MissionEventLog}" font-family="monospace" min-height="100" max-height="200" accessible-name="Autonomous mission activity log" />
       <Text text="{Binding Status}" text-wrapping="Wrap" accessible-name="Development operation status" />
     </Container>
   </Page>

@@ -148,7 +148,11 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
             "dev.redo-source-edit", "dev.analyze-cui-draft", "dev.preview-cui-draft", "dev.go-to-cui-problem", "dev.go-to-cui-element", "dev.select-cui-property", "dev.change-cui-property", "dev.add-cui-text-child", "dev.move-cui-text-up", "dev.move-cui-text-down", "dev.remove-cui-text", "dev.check-line-endings", "dev.use-lf-endings", "dev.use-crlf-endings", "dev.preview-edit",
             "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.select-run-target", "dev.new-run-target", "dev.edit-run-target", "dev.review-run-target", "dev.save-run-target", "dev.run-selected-target", "dev.stop-manual-run", "dev.run-command",
             "dev.run-tests", "dev.select-build-stage", "dev.new-compile-stage", "dev.new-test-stage", "dev.edit-build-stage", "dev.review-build-stage", "dev.save-build-stage", "dev.run-stage", "dev.open-build-problem", "dev.inspect-saved-test-report", "dev.create-branch",
-            "dev.switch-branch"];
+            "dev.switch-branch",
+            "dev.mission-refresh-models", "dev.mission-load-programme", "dev.mission-start", "dev.mission-step",
+            "dev.mission-pause", "dev.mission-resume", "dev.mission-stop", "dev.mission-checkpoint",
+            "dev.mission-compact", "dev.mission-select-task", "dev.mission-open-changed-file", "dev.mission-delegate",
+            "dev.mission-approve-integration", "dev.mission-reject-integration"];
         Assert.Equal(expected.OrderBy(value => value), commands.OrderBy(value => value));
         Assert.Equal(nodes.Length, nodes.Select(value => value.StableId).Distinct().Count());
     }
@@ -346,6 +350,43 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
         var review = Assert.Single(nodes, node => node.Name == "dev-run-edit-review");
         Assert.Equal("Object", review.Type); Assert.True(review.TryGetLiteralAttribute("type", out var renderer)); Assert.Equal("ReadOnlyText", renderer);
         Assert.DoesNotContain(review.Properties.Keys, key => key.Equals("Value", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Autonomous_development_controls_expose_live_reasoning_output_diff_review_delegation_and_checkpoints()
+    {
+        var document = DeveloperWorkbenchCuiDocument.Load();
+        var nodes = Descendants(document.Components).ToArray();
+        foreach (var (id, binding) in new[]
+        {
+            ("dev-mission-live-reasoning", "MissionLiveReasoning"),
+            ("dev-mission-live-output", "MissionLiveOutput"),
+            ("dev-mission-diff-review", "MissionDiffReview"),
+            ("dev-mission-terminal-log", "MissionBuildOutput"),
+            ("dev-mission-delegation-log", "MissionDelegationLog"),
+            ("dev-mission-checkpoints", "MissionCheckpointsSummary"),
+            ("dev-mission-events", "MissionEventLog")
+        })
+        {
+            var node = Assert.Single(nodes, value => value.Name == id);
+            Assert.Equal("Object", node.Type);
+            Assert.True(node.TryGetLiteralAttribute("type", out var renderer));
+            Assert.Equal("ReadOnlyText", renderer);
+            Assert.DoesNotContain(node.Properties.Keys, key => key.Equals("Value", StringComparison.OrdinalIgnoreCase));
+            Assert.Contains(node.Properties, pair => pair.Value is CuiBindingValue bound && bound.Path == binding);
+        }
+
+        foreach (var (id, command, parameter) in new[]
+        {
+            ("dev-mission-select-task", "dev.mission-select-task", "missionTask.SelectionKey"),
+            ("dev-mission-open-changed-file", "dev.mission-open-changed-file", "changedFile.SelectionKey")
+        })
+        {
+            var button = Assert.Single(nodes, node => node.Name == id);
+            var action = Assert.Single(button.Actions.Values, a => a.Name == command);
+            Assert.True(document.Actions.TryGetValue(action.Name, out var def));
+            Assert.Equal(parameter, Assert.IsType<CuiBindingValue>(def!.Parameter).Path);
+        }
     }
 
     private static IEnumerable<CuiComponent> Descendants(IEnumerable<CuiComponent> nodes)
