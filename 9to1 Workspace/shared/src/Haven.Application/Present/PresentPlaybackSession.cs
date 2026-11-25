@@ -74,6 +74,13 @@ public sealed class PresentPlaybackSession
         return true;
     }
 
+    public bool GoToSlide(Guid slideId)
+    {
+        for (var index = 0; index < _slides.Count; index++)
+            if (_slides[index].Id == slideId) return GoTo(index);
+        return false;
+    }
+
     public bool Advance()
     {
         if (_animationStep < CurrentSlide.Animations.Count)

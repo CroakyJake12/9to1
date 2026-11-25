@@ -6,6 +6,26 @@ namespace Haven.Core.Tests;
 public sealed class PresentStructuredObjectTests
 {
     [Fact]
+    public void Playback_selects_visible_slide_by_identity_and_ignores_hidden_or_missing_targets()
+    {
+        var document = PresentDocument.Create("Playback deck");
+        var hidden = document.Slides[0];
+        hidden.Hidden = true;
+        var first = PresentSlide.Create(1);
+        var second = PresentSlide.Create(2);
+        document.Slides.AddRange([first, second]);
+        var playback = new PresentPlaybackSession(document);
+
+        Assert.True(playback.GoToSlide(second.Id));
+        Assert.Equal(second.Id, playback.CurrentSlide.Id);
+        Assert.False(playback.GoToSlide(hidden.Id));
+        Assert.False(playback.GoToSlide(Guid.NewGuid()));
+        Assert.Equal(second.Id, playback.CurrentSlide.Id);
+        Assert.True(playback.GoToSlide(first.Id));
+        Assert.Equal(first.Id, playback.CurrentSlide.Id);
+    }
+
+    [Fact]
     public void Table_has_exact_dimensions_and_structural_edits_are_undoable()
     {
         var document = PresentDocument.Create("Structured deck");
