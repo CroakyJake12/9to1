@@ -107,6 +107,124 @@ public static class GamesSceneEdits
         return snapshot with { Revision = checked(snapshot.Revision + 1), Nodes = snapshot.Nodes.Select(node => node.NodeID == nodeID
             ? node with { Spatial = node.Spatial with { Position = position } } : node).ToArray() };
     }
+
+    public static GamesSceneSnapshot DuplicateSubtree(GamesSceneSnapshot scene, long expectedRevision, Guid sourceNodeID)
+    {
+        var snapshot = scene.Capture();
+        if (snapshot.Revision != expectedRevision) throw new InvalidOperationException("GamesSceneRevisionConflict");
+
+        var sourceNode = snapshot.Nodes.FirstOrDefault(n => n.NodeID == sourceNodeID);
+        if (sourceNode is null) throw new KeyNotFoundException("GamesNodeNotFound");
+        if (sourceNode.ParentNodeID is null) throw new InvalidOperationException("GamesRootCannotBeDuplicated");
+
+        // Collect subtree nodes to duplicate
+        var subtreeNodes = new List<GamesSceneNode>();
+        var queue = new Queue<Guid>();
+        queue.Enqueue(sourceNodeID);
+        var visited = new HashSet<Guid>();
+
+        while (queue.Count > 0)
+        {
+            var currentID = queue.Dequeue();
+            if (!visited.Add(currentID)) continue;
+
+            var node = snapshot.Nodes.FirstOrDefault(n => n.NodeID == currentID);
+            if (node is null) throw new InvalidOperationException("GamesHierarchyIntegrityError");
+            subtreeNodes.Add(node);
+
+            foreach (var child in snapshot.Nodes.Where(n => n.ParentNodeID == currentID))
+                queue.Enqueue(child.NodeID);
+        }
+
+        // Check limits: total nodes after duplication must not exceed 256
+        if (snapshot.Nodes.Count + subtreeNodes.Count > 256)
+            throw new InvalidOperationException("GamesSceneNodeLimitExceeded");
+
+        // Generate fresh IDs for the duplicate subtree
+        var idMap = new Dictionary<Guid, Guid>();
+        foreach (var node in subtreeNodes)
+            idMap[node.NodeID] = Guid.NewGuid();
+
+        var duplicatedNodes = new List<GamesSceneNode>(subtreeNodes.Count);
+        foreach (var node in subtreeNodes)
+        {
+            var newNodeID = idMap[node.NodeID];
+            var newEntityID = Guid.NewGuid();
+            var newComponentID = Guid.NewGuid();
+
+            // Determine new parent ID: if it's the root of the duplicated subtree, it attaches to sourceNode.ParentNodeID
+            // Otherwise, it maps via idMap
+            Guid? newParentID;
+            if (node.NodeID == sourceNodeID)
+                newParentID = sourceNode.ParentNodeID;
+            else if (node.ParentNodeID is { } pid && idMap.TryGetValue(pid, out var mappedPid))
+                newParentID = mappedPid;
+            else
+                throw new InvalidOperationException("GamesHierarchyIntegrityError");
+
+            // Preserve MeshResourceID (shared asset identity)
+            duplicatedNodes.Add(node with {
+                NodeID = newNodeID,
+                EntityID = newEntityID,
+                ParentNodeID = newParentID,
+                Spatial = node.Spatial with { ComponentID = newComponentID }
+            });
+        }
+
+        var allNodes = snapshot.Nodes.Concat(duplicatedNodes).ToArray();
+        var edited = snapshot with {
+            Revision = checked(snapshot.Revision + 1),
+            Nodes = allNodes
+        };
+
+        edited.Validate();
+        return edited;
+    }
+
+    public static GamesSceneSnapshot ReparentNode(GamesSceneSnapshot scene, long expectedRevision, Guid nodeID, Guid? newParentNodeID)
+    {
+        var snapshot = scene.Capture();
+        if (snapshot.Revision != expectedRevision) throw new InvalidOperationException("GamesSceneRevisionConflict");
+
+        var nodeToMove = snapshot.Nodes.FirstOrDefault(n => n.NodeID == nodeID);
+        if (nodeToMove is null) throw new KeyNotFoundException("GamesNodeNotFound");
+
+        // Cannot reparent root
+        if (nodeToMove.ParentNodeID is null) throw new InvalidOperationException("GamesRootCannotBeReparented");
+
+        // Reject null destination for non-root explicitly to preserve one-root invariant
+        if (newParentNodeID is null) throw new InvalidOperationException("GamesInvalidDestination");
+
+        // If new parent is specified, validate it exists and isn't a descendant of the node being moved
+        if (newParentNodeID is { } parentID)
+        {
+            if (parentID == nodeID) throw new InvalidOperationException("GamesCyclicHierarchyDetected");
+
+            var potentialParent = snapshot.Nodes.FirstOrDefault(n => n.NodeID == parentID);
+            if (potentialParent is null) throw new KeyNotFoundException("GamesNodeNotFound");
+
+            // Check for cycles: walk up from newParent to ensure we don't hit nodeID
+            var current = potentialParent;
+            while (current.ParentNodeID is { } pid)
+            {
+                if (pid == nodeID) throw new InvalidOperationException("GamesCyclicHierarchyDetected");
+                current = snapshot.Nodes.FirstOrDefault(n => n.NodeID == pid);
+                if (current is null) throw new InvalidOperationException("GamesHierarchyIntegrityError");
+            }
+        }
+
+        var editedNodes = snapshot.Nodes.Select(n => n.NodeID == nodeID
+            ? n with { ParentNodeID = newParentNodeID }
+            : n).ToArray();
+
+        var edited = snapshot with {
+            Revision = checked(snapshot.Revision + 1),
+            Nodes = editedNodes
+        };
+
+        edited.Validate();
+        return edited;
+    }
 }
 
 public sealed record GamesNativeNodeObservation(Guid NodeID, Guid EntityID, Guid ComponentID,
