@@ -213,7 +213,7 @@ internal sealed partial class PresentHavenScene : IDisposable
         BuildPresenterControls();
         BuildWorkspaceControls();
         // Trusted platform slot only: its child is the actual Home-emitted object CUI, never authored native controls.
-        SharedInkPreviewHost = new Haven.UI.NativeHost { Name = "Present.SharedInk.Preview" };
+        SharedInkPreviewHost = new NativeHost { Name = "Present.SharedInk.Preview" };
         SharedInkPreviewHost.SetValue(HavenProperties.Width, HavenLength.Percent(100));
         SharedInkPreviewHost.SetValue(HavenProperties.Height, HavenLength.Px(220));
         SharedInkPreviewHost.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
@@ -231,7 +231,7 @@ internal sealed partial class PresentHavenScene : IDisposable
     public Container SaveStatePill { get; private set; } = null!; public Container SaveStateDot { get; private set; } = null!; public HavenText SaveStateText { get; private set; } = null!;
     public Container DeckToolbar { get; } public Container SlideToolbar { get; } public Container Workspace { get; } public Container SlidePane { get; } public Container EditorHost { get; } public Container NotesHost { get; } public Container InspectorPane { get; }
     internal PresentSlideCanvas SlideCanvas { get; }
-    internal Haven.UI.NativeHost SharedInkPreviewHost { get; }
+    internal NativeHost SharedInkPreviewHost { get; }
     public HavenButton PreviousDeckButton { get; } public HavenButton NextDeckButton { get; } public HavenButton NewDeckButton { get; } public HavenButton SaveButton { get; } public HavenButton ExportButton { get; }
     public HavenButton PreviousSlideButton { get; } public HavenButton NextSlideButton { get; } public HavenButton AddSlideButton { get; } public HavenButton DeleteSlideButton { get; }
     public HavenText SlideLabel { get; } public Input SlideTitleInput { get; } public HavenText BodyLabel { get; } public Input BodyInput { get; } public HavenText NotesLabel { get; } public Input NotesInput { get; } public HavenText RichContentText { get; } public HavenText StatusText { get; }
