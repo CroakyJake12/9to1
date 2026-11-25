@@ -21,7 +21,7 @@ public sealed record PlayAnswerDraft(Guid MatchID, int Round, Guid ContestantID,
     }
 
     public static PlayAnswerDraft Begin(Guid matchID, int round, Guid contestantID)
-        => new(matchID, round, contestantID, 1, null, PlayAnswerState.Draft, Guid.NewGuid()).Capture();
+        => (new PlayAnswerDraft(matchID, round, contestantID, 1, null, PlayAnswerState.Draft, Guid.NewGuid())).Capture();
 
     /// <summary>Select or replace the local candidate. Only legal while Draft; a submitted answer is locked until acceptance/reconciled failure.</summary>
     public PlayAnswerDraft Select(string option, int expectedRevision)
@@ -29,7 +29,7 @@ public sealed record PlayAnswerDraft(Guid MatchID, int Round, Guid ContestantID,
         if (string.IsNullOrWhiteSpace(option)) throw new InvalidDataException("An answer option is required.");
         if (State != PlayAnswerState.Draft) { throw new InvalidOperationException("PlayAnswerLockedAfterSubmit"); }
         if (Revision != expectedRevision) { throw new InvalidOperationException("PlayAnswerRevisionConflict"); }
-        return this with { SelectedOption = option, Revision = checked(Revision + 1) }.Capture();
+        return (this with { SelectedOption = option, Revision = checked(Revision + 1) }).Capture();
     }
 
     /// <summary>Submit the current draft as the single committed answer. Repeated submission reuses the same SubmissionRef (idempotent).</summary>
@@ -38,7 +38,7 @@ public sealed record PlayAnswerDraft(Guid MatchID, int Round, Guid ContestantID,
         if (State != PlayAnswerState.Draft) { throw new InvalidOperationException("PlayAnswerAlreadySubmitted"); }
         if (string.IsNullOrWhiteSpace(SelectedOption)) { throw new InvalidOperationException("PlayAnswerUnselectedSubmitDisabled"); }
         if (Revision != expectedRevision) { throw new InvalidOperationException("PlayAnswerRevisionConflict"); }
-        return this with { State = PlayAnswerState.Submitted, Revision = checked(Revision + 1) }.Capture();
+        return (this with { State = PlayAnswerState.Submitted, Revision = checked(Revision + 1) }).Capture();
     }
 
     /// <summary>Accept the submitted answer so it counts exactly once. A late/closed round rejects with canonical state.</summary>
@@ -46,7 +46,7 @@ public sealed record PlayAnswerDraft(Guid MatchID, int Round, Guid ContestantID,
     {
         if (State != PlayAnswerState.Submitted) { throw new InvalidOperationException("PlayAnswerNotSubmitted"); }
         if (Revision != expectedRevision) { throw new InvalidOperationException("PlayAnswerRevisionConflict"); }
-        return this with { State = PlayAnswerState.Accepted, Revision = checked(Revision + 1) }.Capture();
+        return (this with { State = PlayAnswerState.Accepted, Revision = checked(Revision + 1) }).Capture();
     }
 
     /// <summary>An uncertain timeout retains the original candidate and submission reference rather than sending a new answer.</summary>
@@ -55,7 +55,7 @@ public sealed record PlayAnswerDraft(Guid MatchID, int Round, Guid ContestantID,
         if (State != PlayAnswerState.Submitted) { throw new InvalidOperationException("PlayAnswerNotSubmitted"); }
         if (Revision != expectedRevision) { throw new InvalidOperationException("PlayAnswerRevisionConflict"); }
         // Keep the same SelectedOption and SubmissionRef; only the state reflects the unresolved attempt.
-        return this with { State = PlayAnswerState.Rejected, Revision = checked(Revision + 1) }.Capture();
+        return (this with { State = PlayAnswerState.Rejected, Revision = checked(Revision + 1) }).Capture();
     }
 
     /// <summary>Whether this answer contributes to score: only an Accepted answer counts, and never twice.</summary>
