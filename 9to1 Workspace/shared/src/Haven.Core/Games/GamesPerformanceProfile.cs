@@ -81,7 +81,7 @@ public sealed record GamesPerformanceDocument(int Revision, string SelectedProfi
     }
 
     public static GamesPerformanceDocument Create(IEnumerable<GamesPerformanceProfile> profiles, string selectedProfileID)
-        => new(1, selectedProfileID, profiles.ToArray(), Array.Empty<GamesRemoteExecutor>(), Array.Empty<GamesCapability>()).Capture();
+        => new GamesPerformanceDocument(1, selectedProfileID, profiles.ToArray(), Array.Empty<GamesRemoteExecutor>(), Array.Empty<GamesCapability>()).Capture();
 
     private GamesPerformanceDocument Next(int expectedRevision, string selectedProfileID, IReadOnlyList<GamesPerformanceProfile> profiles,
         IReadOnlyList<GamesRemoteExecutor> executors, IReadOnlyList<GamesCapability> capabilities)
