@@ -1,137 +1,195 @@
 # ALORA: activation-profiled, selected-expert LoRA
 
-This package implements the selected-expert training mechanism discussed on
-25 November 2026: profile which routed experts the software-development curriculum
-uses, allocate LoRA parameters only for selected experts, keep the
-base/router/shared experts frozen, and retain actual optimizer and checkpoint
-evidence. ALORA02 adds an explicit native text-model loader and differentiable
-GGUF weight paging to the original in-memory backend.
+ALORA profiles actual routed-expert use, allocates LoRA parameters to the selected
+experts, and trains those adapters while keeping the base, router and shared
+experts frozen. The package retains source-bound profiles, measured optimizer
+changes and recoverable checkpoints. ALORA here is the project's selected-expert
+mechanism; PEFT's invocation-token **activated LoRA (aLoRA)** is a separate feature.
 
-ALORA here is the project's selected-expert mechanism. It is distinct from PEFT
-**activated LoRA (aLoRA)**, which is controlled by an invocation token sequence.
+The [operator runbook](RUNBOOK.md) covers exact request schemas, guarded CPU
+calibration, partial-profile continuation, workflow preparation and the existing
+Dulche supervisor commands.
 
-## Implemented flow
+## Execution scope and evidence
 
-1. **Admit inputs.** `TrainingDataset` reuses the existing custody manifest and
-   byte validators. It verifies actual sample hashes and separation across train,
-   validation and final-held-out files, then exposes only train rows.
-2. **Measure dispatch.** `capture.profile_row` hooks the installed
-   `Qwen4ExpTextExperts` or source-bound frozen `PagedExperts` forward arguments
-   during a real native-model forward. Padding and the masked expert sentinel cannot influence selection. A failed
-   forward leaves the previous profile unchanged and removes its hooks.
-3. **Select experts.** `ActivationProfiler` normalizes routing mass per token,
-   sample and curriculum category. Deterministic ranking follows the agreed
-   category weights; large samples cannot silently dominate small ones.
-   Profiles bind the base-model fingerprint, dataset identity and execution
-   purpose and can be retained and restored as checked JSON.
-4. **Attach sparse adapters.** `attach_selected_experts` inserts low-rank updates
-   separately into gate/up and down projections, preserving the intervening
-   activation and the original routing weights. Only the selected expert IDs
-   allocate trainable parameters or optimizer slots. Other experts remain
-   differentiable with respect to their inputs.
-5. **Train and checkpoint.** `TrainingSession.step_row` verifies the selected
-   train row again, executes forward/backward/AdamW, measures actual parameter
-   changes, and publishes immutable adapter/optimizer/RNG/cursor state with
-   bound evidence. Cancellation before the optimizer restores RNG and clears
-   gradients. An uncertain optimizer or publication failure stops the session.
-6. **Cooperate with the existing supervisor.** `worker.run_training` uses an
-   injected Dulche `TrainingControl`. It honours expiring permits, reports
-   completed updates only after durable evidence, and publishes a single-file
-   checkpoint before normal completion or a cooperative pause.
-7. **Prepare merge output.** `SelectedExperts.merged_slices` yields the selected
-   merged weight slices for a separate immutable export. It never writes into
-   the active base model or changes the serving model.
+| Path | Implemented scope | Qualification boundary |
+|---|---|---|
+| Native CPU library | In-memory experts and the mapped Qwen4Exp GGUF text graph; float32/float64 frozen paging; selected adapters; streamed causal loss; retained calibration and checkpoint continuation. | CPU numerical, native-fixture and real-GGUF proof receipts identify the exact source and executed path. |
+| Guarded CPU calibration | A pinned child under the existing SDK lock and memory guard, with a retained profile or explicit partial result. | Calibration observes training rows and makes no optimizer update. |
+| Prepared CPU training workflow | A pinned executable for the existing isolated Dulche worker, its real control client and verified service checkpoint import. | Real execution also requires an independently admitted corpus, profile and supervisor job. |
+| CUDA library candidate | Logical `cuda:0`, FP32, verified current Dulche worker/device/permit state and pinned native reference-kernel policy. | No CUDA arithmetic qualification or production GPU launcher is claimed. |
+| Export and serving | Selected merged weight slices can be produced for a separate immutable export. | Full-model export, quantization, serving activation and quality promotion are separate work. |
 
-Both backends preserve the installed Transformers eager expert dispatch interface.
-The in-memory implementation uses:
+Exact test totals, revisions, guard results and measured resource use belong in
+the retained validation handoff. A proof from one source revision does not
+establish execution of a later revision. The package has no demonstrated real
+curriculum training result or computer-use quality gain.
+
+## Implemented training flow
+
+1. **Admit inputs.** `TrainingDataset` reuses the existing custody validators.
+   It verifies actual sample and file hashes, provenance declarations and
+   separation of train, validation and final-held-out files. Its public row
+   iterator and snapshot method expose only training rows.
+2. **Retain a calibration.** `calibration.calibrate` accepts an already admitted,
+   entirely frozen native or paged model. It selects deterministic training rows
+   from every category, runs actual dispatch capture and publishes the profile
+   with an independent receipt. The default is four samples per category:
+   20 total. The guarded CPU CLI supplies the model and real memory/time guard.
+3. **Select experts.** `ActivationProfiler` normalizes positive real routing mass
+   per token, sample and category. Padding and the masked expert sentinel do not
+   influence ranking. Category weighting prevents long samples or heavily
+   represented categories from silently dominating selection. Ties are
+   deterministic; unused experts do not fill spare budget.
+4. **Attach adapters.** The in-memory and paged attachment paths stage
+   gate/up and down adapters for the selected expert IDs, preserving the
+   intervening activation and original routing weights. Only those adapters
+   allocate trainable parameters and optimizer slots.
+5. **Train and checkpoint.** `TrainingSession.step_row` revalidates the row,
+   computes causal loss, performs backward/AdamW, measures actual adapter changes
+   and publishes adapter, optimizer, RNG and cursor state with bound evidence.
+6. **Cooperate with Dulche.** `worker.run_training` owns the single readiness
+   handshake, honours compute permits and reports completed optimizer updates
+   after durable evidence. A clean pause delivers the most recent completed
+   checkpoint through the existing single-file checkpoint contract.
+
+Both expert backends preserve the installed native eager dispatch interface:
 
 - `gate_up_proj[expert, 2 * intermediate, hidden]`
 - `down_proj[expert, hidden, intermediate]`
 - `forward(hidden_states, top_k_index, top_k_weights)`
 
-The in-memory attachment rejects unknown expert classes, quantized packed weights,
-meta tensors, inference offload hooks, aliased weights and repeated attachment.
-The GGUF backend below maps quantized sources explicitly instead of passing them
-to that in-memory attachment. Sessions use one independently admitted execution
-device; the initial whole-graph GGUF loader accepts CPU float32/float64 only.
+The in-memory attachment validates native expert classes, materialized floating
+weights, unique ownership and absence of inference offload hooks. Quantized
+packed weights use the explicit GGUF mapping below.
 
 ## Native GGUF text backend
 
 `GGUFWeightStore` owns read-only descriptors and memory maps for the exact shard
-set. It checks file sizes, descriptor/path identity and structural metadata, then
-pins a SHA-256 of each actual encoded slice. Existing whole-file hashes are
-explicitly labelled **external attestations, not freshly rehashed files**.
-The filename does not determine tensor quantization: the store reads each
-tensor's actual F32/F16/BF16/IQ3_S/IQ4_XS/IQ4_NL/Q8_0/Q6_K type.
+set. It verifies sizes, path/descriptor identity and structural metadata, then
+pins a SHA-256 of each actual encoded slice. Whole-file shard hashes are
+**external attestations**; the store does not claim to have freshly rehashed
+every full model file. Quantization comes from each tensor's actual GGUF type:
+F32, F16, BF16, IQ3_S, IQ4_XS, IQ4_NL, Q8_0 or Q6_K.
 
-Reads enforce separate encoded and float32 decode byte limits before allocation.
-Embedding lookups gather only requested rows, preserving order and duplicates.
-A fingerprint-entry limit defaults to 262,144; exhaustion refuses new slices
-while retaining old pins. Gathering preflights its new entries before partial
-reads. No entry is silently evicted during a forward/backward pair.
+Encoded-read and float32-decode limits apply before slice allocation. Embedding
+lookups gather requested rows and preserve duplicates and order. The fingerprint
+table defaults to 262,144 entries, with an explicit bounded configuration.
+Gathering preflights new entries before partial reads. Capacity exhaustion raises
+`FingerprintCapacityExceeded` and retains existing pins.
 
-`frozen_linear` retains only its immutable reference and input device/dtype in
-autograd. Backward reloads the same checked frozen matrix to compute the input
-gradient. `PagedLinear` streams output row ranges, and `PagedExperts` loads only
-actually routed expert slices. Frozen weights are not optimizer Parameters.
-Native routing weights remain differentiable, including through later experts
-that have no adapters.
+`frozen_linear` keeps the immutable store/reference, input device/dtype and
+compute callback needed for backward. It retains neither a frozen weight tensor
+nor an input activation solely for that linear operation. Backward rereads and
+verifies the same frozen matrix to compute the input gradient.
+`PagedLinear` streams output-row ranges; `PagedExperts` materializes only
+actually routed expert slices. Gradients remain connected through frozen
+experts and native routing weights.
 
-`load_text_model` constructs the installed `Qwen4ExpForCausalLM` under meta and
-maps every expected native parameter/buffer and GGUF tensor before returning.
-It implements the converter's inverse DeltaNet head permutations, SSM logarithm,
-zero-centred norms, QSA projection split, depthwise convolution shapes and exact
-int64 PLE constants. Native decoder, attention, router and shared-expert logic
-are retained. Routers, norms, convolution weights and SSM vectors remain small
-frozen resident parameters; large projections and embeddings use paging.
+`load_text_model` constructs the installed `Qwen4ExpForCausalLM` under meta
+and maps every expected parameter, buffer and GGUF tensor. Mapping covers
+DeltaNet head permutations, SSM logarithms, zero-centred norms, QSA projection
+splits, depthwise convolution shapes and exact int64 PLE constants. Native
+decoder, attention, router and shared-expert logic remain in use. Small frozen
+routers, norms, convolution weights and SSM vectors stay resident; large
+projections and embeddings use paging.
 
-The loader refuses unknown tensor families, unexplained meta state, incompatible
-configuration, mutable caches, embedding reversal, non-CPU devices and full
-base `state_dict` export. The first graph is text only: vision and MTP are
-excluded. Construction reports leave execution verification false; retained
-qualification receipts provide the separate evidence of actual execution.
+The supported graph is text only. Unknown tensor families, unexplained meta
+state, incompatible configuration, mutable caches, embedding reversal and full
+base `state_dict` export are refused. CPU accepts float32/float64. The explicit
+CUDA candidate accepts FP32 only after current supervised admission and native
+reference-kernel validation. The CPU calibration and training launchers do not
+expose a GPU execution mode.
 
-```python
-from alora.gguf_store import GGUFWeightStore
-from alora.gguf_model import load_text_model
-from alora.paged_experts import attach_paged_experts
+### Streamed supervised loss
 
-# shard_paths and shard_pins come from the owner's admitted source receipt.
-# Each pin has exactly size_bytes and sha256. Retain the raw config-file hash
-# separately from the loader's canonical JSON configuration hash.
-with GGUFWeightStore(
-    shard_paths, expected_shards=shard_pins,
-    max_read_bytes=16 * 1024 * 1024,
-    max_decoded_bytes=16 * 1024 * 1024,
-    max_fingerprints=262144,
-) as weights:
-    model = load_text_model(weights, pinned_config, rank=rank, alpha=alpha)
-    base_sha256 = weights.source_identity
-    # Profile admitted train rows through profile_row using this exact identity.
-    # All layers are frozen until the complete observed selection is staged.
-    attach_paged_experts(model, selected, rank=rank, alpha=alpha)
-    # Construct TrainingSession and use the existing admitted worker/publisher.
-    # Keep weights open until all forward/backward and checkpoint work finishes.
-```
+`paged_loss.native_causal_loss` runs the native decoder and computes full-
+vocabulary cross-entropy in token and vocabulary tiles over the frozen paged
+head. It applies the causal shift, ignores `-100` targets and preserves the
+native optional router auxiliary loss. The normalization is over the complete
+vocabulary; no sampled-softmax approximation is introduced.
 
-The native loader report binds canonical source and execution configuration,
-installed native source hashes, runtime version, device/dtype and row-chunk size
-into session/checkpoint identity. A canonical backend manifest also binds every
-production ALORA Python module, the GGUF reader/dequantizer/constants and their
-runtime versions, so a mapping or decoding change cannot silently resume an
-older GGUF checkpoint. A different loader identity cannot resume the
-checkpoint, and changed execution configuration is refused before an update.
+The implementation retains supervised hidden states, target IDs and per-token
+normalization statistics. Backward rematerializes the same checked head slices
+and propagates the input gradient. It does not retain or return a complete
+`[tokens, vocabulary]` training-logits tensor. `TrainingSession.step_row`
+selects this boundary for a mapped native graph. Direct calls to the native
+causal-LM forward retain that model's normal logits-returning behavior.
 
-Byte limits bound requested buffers, not total RAM. Temporary decoder arrays,
-resident parameters, activations, output logits, optimizer state and mapped
-pages also consume memory. In particular, streaming output-head weights still
-produces the complete logits tensor; long-context training needs a separately
-admitted activation/loss budget. Higher-order derivatives, GPU placement,
-multi-device training and dynamic adapter reselection remain unqualified.
+`loss_token_rows` defaults to 128; `chunk_rows` bounds vocabulary rows.
+Their score tile is limited to 16 MiB, accounting for the compute element size.
+FP32/FP64 computation follows the native loss's FP32 logit upcast. Higher-order
+derivatives are explicitly refused.
 
-## Curriculum and evaluation
+Slice and score-tile bounds do not bound total process RAM. Decoder activations,
+attention state, retained hidden states, small resident parameters, optimizer
+state, temporary arrays and mapped pages still need an admitted memory/context
+budget.
 
-The requested corpus contains **5,000–10,000 independently sourced examples**:
+## Permits, pauses and exact continuation
+
+`compute_scope` propagates the existing permit callback through paging,
+expert dispatch and loss operations. Backward functions capture and re-enter
+that callback rather than assuming Python context variables propagate to
+autograd threads. Checks occur before bounded reads, transfers and arithmetic,
+including loss tiles and the optimizer boundary.
+
+A cooperative interruption before optimizer mutation restores the previous RNG
+state and clears partial gradients without advancing the cursor. Fingerprint
+capacity exhaustion follows the same clean-pause path. The worker seals the
+completed state; a new supervised attempt opens a fresh store and resumes the
+same next row. Existing pins are never silently cleared during a live
+forward/backward operation. If a single row cannot fit its admitted pin budget,
+restarting with the same bounds cannot make that row fit.
+
+An interruption after optimizer mutation, uncertain optimizer state or failed
+publication is a failure requiring verified recovery. It is not reported as a
+clean pause and the same session is not retried.
+
+Session identity binds the base, dataset and retained profile, exact adapter
+plan, optimizer settings and execution device. The native loader report also
+binds canonical input/execution configuration, installed native source hashes,
+runtime versions and paging settings. Its backend manifest pins production
+ALORA Python modules, GGUF reader/dequantizer/constants and relevant versions.
+A different loader identity or changed execution configuration cannot silently
+continue an existing checkpoint.
+
+The prepared CPU executable verifies the real worker PID/cgroup, isolated
+output, workflow digest, exact launch, GPU-disabled environment and pinned
+virtual environment before loading the model. It uses the existing
+`TrainingControl` client. Service resume bytes are verified against their
+content-addressed path, digest, size and completed-step receipt, imported into
+the new custody attempt without pickle, then passed through strict session
+restore. The original service checkpoint remains unchanged.
+
+## Calibration publication and resume
+
+`calibrate` requires every category budget before the first forward. It rejects
+trainable parameters, already-adapted graphs and aliased expert paths.
+`capture.profile_row` hooks actual native dispatch, uses evaluation/no-grad
+mode, restores every module's original training flag and removes its hooks on
+all exits. A failed in-progress row contributes no observations.
+
+A complete run publishes the exact profile JSON at the requested path. An
+interrupted run publishes `<path>.partial.json`. Each gets a separate
+`<actual-profile-path>.receipt.json` containing raw-file and canonical-profile
+digests, source identities, deterministic selected rows and completed category
+counts. Publication uses exclusive sibling staging, fsync and non-replacing
+hard-link publication.
+
+Resume pins both original files. It validates the receipt, canonical profile,
+base/dataset/loader/topology, selected source records and the completed whole-row
+prefix before compute. A fresh output directory receives the continuation.
+Original partial-profile and receipt paths are preserved because the receipt
+binds those locators. Calibration samples are never reported as optimizer
+updates or `TrainingControl.progress`.
+
+## Curriculum, input format and evaluation
+
+The requested training curriculum contains **5,000–10,000 independently sourced
+training examples**. The current real-request validators enforce the training
+split's total and exact category quotas; validation and final-held-out files
+are separate required splits.
 
 | Category | Share | At 5,000 | At 10,000 |
 |---|---:|---:|---:|
@@ -141,152 +199,72 @@ The requested corpus contains **5,000–10,000 independently sourced examples**:
 | Proactive reasoning | 15% | 750 | 1,500 |
 | Coding | 20% | 1,000 | 2,000 |
 
-The existing lineage rules apply to examples, labels, rewards, corrections and
-filtering signals. Numeric software fixtures in the test modules are
-`software_test_only`; they are not a training curriculum or a quality benchmark.
-The package generates no training examples or rewards.
+Each pretokenized JSONL row contains exactly `id`, `category`, `input_ids`,
+`attention_mask` and `labels`. Arrays contain ordinary integers, matching
+lengths and explicit padding masks; labels may use `-100`. Padding cannot
+supervise loss and at least one shifted next-token target is required.
+The sample hash covers compact, key-sorted ASCII JSON of the three token arrays.
+File hashes additionally bind IDs and categories. Declare the actual model
+vocabulary and admitted context bound.
 
-Preserve the requested **54-case computer-use evaluation** as independent
-evaluation. Its actual pinned artifact was not located in the bounded audit.
-The older local training owner directory has a 2,000-row corpus and a 105-case
-development benchmark; those are different inputs. Neither is silently
-substituted for the requested corpus/evaluation, and an evaluation already used
-for tuning cannot be relabelled as previously unseen.
+All splits require examples and labels lineage in the existing custody manifest.
+The same independent sourcing rules apply to rewards, corrections and filtering
+signals. Software fixtures are explicitly `software_test_only`; they are not a
+curriculum or a quality benchmark. This package generates no training examples
+or rewards. Validation of declarations does not itself establish source rights.
 
-Quality and promotion remain with `eng/dulche/service/training_cycle.py` and its
-independent review/final gates. Adapter-update tests do not establish improved
-coding, visual quality, recovery, tasks per minute or retained general capability.
-Preference optimization, visual RL, dynamic expert reselection and automatic rank
-allocation are later stages, not implemented training modes in this package.
+The bounded 25 November audit did not locate the requested admitted ALORA corpus
+or pinned **54-case computer-use evaluation**. The older owner's 2,000-item Atlas
+corpus and consumed 105-case development benchmark are different inputs.
+They are not silently substituted. A consumed evaluation is not newly held out.
 
-## Offline preparation commands
+Quality review and promotion remain with the existing training-cycle review
+and final gates. Numeric adapter updates do not demonstrate improved coding,
+visual quality, recovery, throughput or retained general capability. Preference
+optimization, visual RL, dynamic expert reselection and automatic rank allocation
+are not implemented training modes here.
 
-Run from the existing `9to1 Models/Dulche Alpha/Training` directory with the
-independently selected Python environment:
+## Operator entrypoints
 
-```sh
-python -B -m alora curriculum --examples 5000
+Run `python -B -m alora` from `9to1 Models/Dulche Alpha/Training` using the
+independently selected environment.
 
-python -B -m alora check-dataset \
-  --manifest /approved/dataset_manifest.json \
-  --manifest-sha256 EXACT_MANIFEST_FILE_SHA256 \
-  --root /approved/dataset \
-  --vocab-size EXACT_MODEL_VOCAB_SIZE --max-tokens ADMITTED_CONTEXT_BOUND
+| Command | Effect |
+|---|---|
+| `curriculum --examples 5000` | Reports category quotas; generates no examples. |
+| `check-dataset` | Verifies pinned local data; real mode also enforces the requested curriculum. |
+| `plan` | Writes a fresh expert plan from a retained canonical profile. |
+| `calibrate` | Validates the real request and runs a bounded CPU child under the actual SDK lock and memory guard. |
+| `prepare-workflow` | Writes a pinned deployment and supervisor manifest without registering or launching it. |
+| `run` | Restricted worker entrypoint inside the actual admitted CPU job and copied deployment. |
 
-python -B -m alora plan \
-  --profile /retained/profile.json \
-  --profile-sha256 CANONICAL_SHA256_FROM_PROFILE_RECORD \
-  --experts-per-layer 8 --rank 8 --alpha 16 \
-  --output /fresh/selected-experts.json
-```
+See [RUNBOOK.md](RUNBOOK.md) for complete arguments, request fields, continuation
+and evidence interpretation. The generated regular executable keeps the pinned
+virtual-environment interpreter in its shebang; its bootstrap verifies copied
+sources and environment before imports.
 
-These commands inspect local inputs or write a new plan. They do not obtain
-models, register workflows, acquire GPUs or start a service. Existing plan files
-are preserved. The profile digest is the canonical `sha256` field inside the
-profile; the dataset digest is the exact manifest file digest.
+## Verification contracts and sources
 
-## Input format
+The tests use tiny numeric instances of the actual installed Qwen4Exp classes.
+They cover native forward/input/routing gradients, frozen paging, mixed
+quantization, PLE behavior, streamed loss, sparse optimizer changes, exact
+continuation, provenance tampering, capacity pauses, permit boundaries,
+calibration publication and the existing file-based supervisor contract.
 
-Each JSONL row contains exactly:
+Retained real-GGUF proofs use numeric software inputs. Their receipts identify
+which tensor-slice, native graph, forward/backward or checkpoint operations
+actually ran. Source revision and evidence must travel together. Use the
+existing SDK lock, guarded runner and fresh evidence directory for qualification;
+CPU tests install `hf_backend.cpu_guard` before Transformers imports and check
+that CUDA remains uninitialized.
 
-```text
-id, category, input_ids, attention_mask, labels
-```
+Implementation references:
 
-Arrays contain ordinary integers; labels may use `-100` for ignored targets.
-Lengths must match, padding cannot supervise loss, and at least one shifted
-next-token target is required. The sample hash is SHA-256 of compact,
-key-sorted ASCII JSON containing only the three token arrays. The file hash
-binds IDs and categories. Declare the actual model vocabulary/context limits.
-
-Every file in all three splits requires examples and labels lineage in the
-existing custody manifest. Validation of declarations does not prove their
-honesty or licence rights; independent input admission remains necessary.
-
-## Library integration
-
-The runtime owner supplies the already admitted model, immutable input
-fingerprints, device/resource admission, custody attempt and control client.
-The package deliberately does not use inference `device_map="auto"` as a
-training loader.
-
-```python
-from alora.adapters import attach_selected_experts
-from alora.capture import profile_row
-from alora.profile import ActivationProfiler
-from alora.session import TrainingSession
-from alora.worker import run_training
-
-profile = ActivationProfiler(topology, base_model_sha256=base_sha256)
-for row in calibration_rows:  # Bound train rows from the admitted dataset.
-    profile = profile_row(model, dataset, row, profile,
-                          before_compute=check_admitted_profile_permit)
-
-selected = profile.select(experts_per_layer=budget)
-attach_selected_experts(model, selected, rank=rank, alpha=alpha)
-session = TrainingSession(
-    model,
-    identity={
-        "base_model_sha256": base_sha256,
-        "dataset_manifest_sha256": dataset.manifest_sha256,
-        "profile_sha256": profile.to_record()["sha256"],
-    },
-    purpose="real_training",
-    profile=profile,
-    expert_budget_per_layer=budget,
-)
-# publisher is an ALORA CheckpointPublisher on the admitted custody attempt.
-# TrainingControl / CheckpointRequired come from the existing service release.
-run_training(session, dataset, publisher, control,
-             target_updates=target_updates,
-             checkpoint_exception=CheckpointRequired)
-```
-
-Retain the calibration profile with `to_record()`. Load it in another process
-with `ActivationProfiler.from_record(record, expected_sha256=expected_digest)`.
-It preserves purpose and source binding. Reproduce the same selected plan and
-base in a fresh session, then call
-`session.restore(source_publisher.load(publication))` before handing it to a new
-control attempt. Restoration validates exact adapter IDs/shapes, optimizer
-settings and slot coverage, progress, and RNG. Source checkpoint custody remains
-read-only. The worker cursor is the number of completed rows in the fixed
-manifest order; epochs repeat that order, without an implicit shuffle.
-
-## Verification and scope
-
-The numerical tests use tiny random instances of the **actual installed**
-Qwen4Exp expert and sparse-MoE classes, not a replacement expert implementation.
-They test native forward/input-gradient/routing-gradient equivalence, sparse
-optimizer allocation, frozen-weight preservation, gradients through subsequent
-frozen blocks, nonzero merge equivalence, exact resumed updates, bad-state
-refusal, publication failure, permit interruption and the real file-based
-TrainingControl contract. Dataset and profiler tests cover provenance, split
-separation, category balance, padding and retained-profile identity.
-
-Use the existing SDK lock and guarded runner, with a fresh evidence directory.
-CPU tests require `CUDA_VISIBLE_DEVICES=-1` and the existing
-`hf_backend.cpu_guard` before Transformers imports. No CUDA initialization is
-permitted in their entry/exit checks. The actual command, counts, source revision
-and guard receipts are recorded in the ALORA01/ALORA02 validation handoffs.
-ALORA02 adds mixed-quantization store checks, rematerialized backward tests,
-native whole-graph fixture conversion/equivalence, exact PLE/EOS checks and
-loader-bound checkpoint/configuration refusal tests.
-
-The retained ALORA02 real-weight qualification uses numeric software inputs,
-not a training corpus or quality benchmark. Its receipts distinguish tensor-slice
-equivalence, whole-graph construction and any successfully completed full
-forward/backward/checkpoint proof. Those receipts do not establish GPU readiness,
-long-context throughput, multimodal training, a real curriculum run, computer-use
-quality, full model export/quantization or inference acceptance. None of those
-operations is started by this package.
-
-## Source references
-
-- [Installed interface upstream](https://github.com/huggingface/transformers/blob/main/src/transformers/models/qwen4_exp/modeling_qwen4_exp.py)
-- [Official Flash model and configuration](https://huggingface.co/Qwen/Qwen3.8-Flash-Next)
-- [PEFT LoRA and activated LoRA documentation](https://huggingface.co/docs/peft/main/package_reference/lora)
-- [PyTorch autograd mechanics](https://docs.pytorch.org/docs/stable/notes/autograd.html)
-- [Accelerate inference-only offloading scope](https://huggingface.co/docs/accelerate/en/concept_guides/big_model_inference)
-- [Axolotl Flash training guide](https://docs.axolotl.ai/docs/models/qwen3.8-flash-next.html)
+- [Calibration and resume](calibration.py), [guarded CPU calibration](calibration_cli.py)
+- [Source paging](gguf_store.py), [autograd paging](paging.py), [selected experts](paged_experts.py)
+- [Native mapping](gguf_model.py), [streamed causal loss](paged_loss.py), [compute admission](compute.py)
+- [Workflow preparation](workflow.py), [CPU runner](runner.py), [worker bridge](worker.py)
+- [Session state](session.py), [checkpoint custody](checkpoints.py), [input custody](data.py)
 - Existing repository contracts: `docs/dulche/independent-training.md`,
-  `Training/custody/`, `eng/dulche/service/training_worker_client.py`.
+  `docs/dulche/cyclic-resource-windows.md`, `Training/custody/` and
+  `eng/dulche/service/training_worker_client.py`.

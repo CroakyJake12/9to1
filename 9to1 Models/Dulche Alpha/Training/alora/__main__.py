@@ -1,4 +1,4 @@
-"""Offline ALORA preparation commands; no model loading or device/service changes."""
+"""ALORA preparation and explicitly admitted CPU execution commands."""
 from __future__ import annotations
 
 import argparse
@@ -47,6 +47,17 @@ def main(argv=None):
     plan.add_argument("--rank", type=int, default=8)
     plan.add_argument("--alpha", type=float, default=16.0)
     plan.add_argument("--output", type=Path, required=True)
+    prepare = sub.add_parser("prepare-workflow", help="Prepare a pinned CPU deployment without registering or launching")
+    prepare.add_argument("--request", type=Path, required=True)
+    prepare.add_argument("--request-sha256", required=True)
+    prepare.add_argument("--output", type=Path, required=True)
+    run = sub.add_parser("run", help="Execute only inside an existing admitted CPU training worker")
+    run.add_argument("--spec", type=Path, required=True)
+    run.add_argument("--spec-sha256", required=True)
+    calibrate = sub.add_parser("calibrate", help="Profile real training rows under the existing SDK lock and CPU memory guard")
+    calibrate.add_argument("--request", type=Path, required=True)
+    calibrate.add_argument("--request-sha256", required=True)
+    calibrate.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     if args.command == "curriculum":
         result = {"examples": args.examples, "category_counts": target_counts(args.examples),
@@ -61,6 +72,15 @@ def main(argv=None):
             validate_counts(counts)
         result = {**loaded.identity, "category_counts": counts,
                   "training_samples": sum(counts.values()), "validated": True}
+    elif args.command == "prepare-workflow":
+        from .workflow import prepare_workflow
+        result = prepare_workflow(args.request, request_sha256=args.request_sha256, output=args.output)
+    elif args.command == "calibrate":
+        from .calibration_cli import run_calibration
+        result = run_calibration(args.request, request_sha256=args.request_sha256, output=args.output)
+    elif args.command == "run":
+        from .runner import run_prepared
+        result = run_prepared(args.spec, spec_sha256=args.spec_sha256)
     else:
         if not 1 <= args.rank <= 1024 or not math.isfinite(args.alpha) or args.alpha <= 0:
             raise ValueError("Rank and alpha must be finite positive bounded settings")

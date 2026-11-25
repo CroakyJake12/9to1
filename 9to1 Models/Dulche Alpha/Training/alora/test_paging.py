@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import gc
 import math
 import unittest
+from unittest import mock
 import weakref
 import threading
 
@@ -387,6 +388,18 @@ class PagingTests(unittest.TestCase):
                 with self.subTest(constructor=constructor.__name__, dtype=dtype), \
                      self.assertRaisesRegex(ValueError, "FP32"):
                     constructor(self.store, name, device="cuda:0", dtype=dtype)
+        self.assertEqual(_GUARD.dulche_guard_calls, count)
+
+
+    def test_embedding_refuses_changed_cuda_dtype_before_input_or_store_access(self):
+        layer = PagedEmbedding(self.store, "embedding").half()
+        count = _GUARD.dulche_guard_calls
+        # Simulate the device property only; this test never allocates CUDA.
+        with mock.patch.object(PagedEmbedding, "device", new_callable=mock.PropertyMock,
+                               return_value=torch.device("cuda:0")):
+            with self.assertRaisesRegex(ValueError, "FP32"):
+                layer(torch.tensor([1], dtype=torch.int64))
+        self.assertEqual(self.store.gather_requests, [])
         self.assertEqual(_GUARD.dulche_guard_calls, count)
 
 

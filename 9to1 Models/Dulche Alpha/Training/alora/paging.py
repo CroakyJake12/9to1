@@ -200,6 +200,8 @@ class PagedEmbedding(nn.Module):
         return self._anchor.dtype
 
     def forward(self, indices):
+        if self.device.type == "cuda" and self.dtype != torch.float32:
+            raise ValueError("The supervised single-CUDA candidate supports only FP32.")
         if (not isinstance(indices, torch.Tensor) or indices.layout != torch.strided
                 or indices.device.type == "meta"
                 or indices.dtype not in (torch.int32, torch.int64)
