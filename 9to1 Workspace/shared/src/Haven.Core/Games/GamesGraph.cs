@@ -72,7 +72,7 @@ public sealed record GamesGraphDocument(Guid GraphID, GamesGraphKind Kind, int R
     }
 
     public static GamesGraphDocument Create(Guid graphID, GamesGraphKind kind, IEnumerable<GamesNodeType> registeredNodeTypes)
-        => new(graphID, kind, 1, registeredNodeTypes.ToArray(), Array.Empty<GamesGraphNode>(), Array.Empty<GamesGraphConnection>()).Capture();
+        => (new GamesGraphDocument(graphID, kind, 1, registeredNodeTypes.ToArray(), Array.Empty<GamesGraphNode>(), Array.Empty<GamesGraphConnection>())).Capture();
 
     private GamesGraphDocument Next(int expectedRevision, IReadOnlyList<GamesGraphNode> nodes, IReadOnlyList<GamesGraphConnection> connections)
     {
