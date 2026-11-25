@@ -23,6 +23,9 @@ public sealed class ChatSpaceControllerRoutingTests
 
         internal List<string> Calls { get; } = [];
         internal List<ChatSpaceTurnRequest> Sent { get; } = [];
+        internal bool HoldFirstSend { get; init; }
+        internal TaskCompletionSource FirstSendEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal TaskCompletionSource ReleaseFirstSend { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal Guid? CurrentBranch { get; private set; }
         internal ChatSpaceTurnRequest? LastRegenerate { get; private set; }
         internal Guid? CreatedBranchParent { get; private set; }
@@ -110,11 +113,15 @@ public sealed class ChatSpaceControllerRoutingTests
             return Task.CompletedTask;
         }
 
-        public Task SendAsync(ChatSpaceTurnRequest request, IProgress<ChatStreamEvent>? progress, CancellationToken cancellationToken)
+        public async Task SendAsync(ChatSpaceTurnRequest request, IProgress<ChatStreamEvent>? progress, CancellationToken cancellationToken)
         {
             Calls.Add(nameof(SendAsync));
             Sent.Add(request);
-            return Task.CompletedTask;
+            if (HoldFirstSend && Sent.Count == 1)
+            {
+                FirstSendEntered.TrySetResult();
+                await ReleaseFirstSend.Task.WaitAsync(cancellationToken);
+            }
         }
 
         public Task<ConversationSafetySnapshot> GetSafetySnapshotAsync(Guid conversationId, CancellationToken cancellationToken) =>
@@ -271,6 +278,55 @@ public sealed class ChatSpaceControllerRoutingTests
         Assert.Equal(SpaceRegistry.ChatSpaceId, sent.Conversation.SpaceId);
         // The composer must be released for the next turn, not left armed with a stale draft.
         Assert.Equal(string.Empty, controller.State.Composer.Draft);
+        Assert.False(controller.State.Composer.IsSending);
+    }
+
+    [Fact]
+    public async Task Full_send_queue_preserves_the_refused_draft_and_attachment_without_dispatching_them()
+    {
+        var backend = new RecordingBackend { HoldFirstSend = true };
+        var id = backend.Seed(Guid.NewGuid(), "Bounded queue").Id;
+        var controller = new ChatSpaceController(backend);
+        await controller.InitializeAsync(id);
+        controller.UpdateDraft("Active turn");
+        var sending = controller.SendAsync();
+        const string overflow = "Keep this newer unsent draft";
+        var attachment = Attachment(Guid.NewGuid(), id, "overflow.txt");
+        try
+        {
+            await backend.FirstSendEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            for (var index = 1; index <= 8; index++)
+            {
+                controller.UpdateDraft($"Queued turn {index}");
+                await controller.SendAsync().WaitAsync(TimeSpan.FromSeconds(5));
+            }
+            controller.UpdateDraft(overflow);
+            backend.NextAttachment = attachment;
+            await controller.AddAttachmentAsync("/tmp/overflow.txt");
+
+            await controller.SendAsync().WaitAsync(TimeSpan.FromSeconds(5));
+
+            Assert.Contains("Message queue is full (8)", controller.State.Status.Message, StringComparison.Ordinal);
+            Assert.Equal(overflow, controller.State.Composer.Draft);
+            Assert.Equal(attachment.Id, Assert.Single(controller.State.Composer.Attachments).Id);
+            Assert.Equal(overflow, backend.SavedDraftContent);
+            Assert.Equal(new[] { attachment.Id }, backend.SavedDraftAttachments);
+            Assert.Equal("Active turn", Assert.Single(backend.Sent).Prompt);
+        }
+        finally
+        {
+            backend.ReleaseFirstSend.TrySetResult();
+            await sending.WaitAsync(TimeSpan.FromSeconds(5));
+        }
+
+        Assert.Equal(9, backend.Sent.Count); // one active turn plus eight pending positions
+        Assert.Equal(new[] { "Active turn" }.Concat(Enumerable.Range(1, 8).Select(index => $"Queued turn {index}")),
+            backend.Sent.Select(request => request.Prompt));
+        Assert.DoesNotContain(backend.Sent, request => request.Prompt == overflow || request.AttachmentIds.Contains(attachment.Id));
+        Assert.Equal(overflow, controller.State.Composer.Draft);
+        Assert.Equal(attachment.Id, Assert.Single(controller.State.Composer.Attachments).Id);
+        Assert.Equal(overflow, backend.SavedDraftContent);
+        Assert.Equal(new[] { attachment.Id }, backend.SavedDraftAttachments);
         Assert.False(controller.State.Composer.IsSending);
     }
 

@@ -1,0 +1,22 @@
+{
+  "at": "2026-11-24T21:29:54.554088+00:00",
+  "tests": {
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "test_changed_invocation_refuses_further_actions (test_native_guard.ThermalTests.test_changed_invocation_refuses_further_actions) ... ok\ntest_failed_unit_query_is_not_reported_as_absent (test_native_guard.ThermalTests.test_failed_unit_query_is_not_reported_as_absent) ... ok\ntest_host_faults_trip_only_configured_device (test_native_guard.ThermalTests.test_host_faults_trip_only_configured_device) ... ok\ntest_missing_stale_and_unreadable_samples_trip (test_native_guard.ThermalTests.test_missing_stale_and_unreadable_samples_trip) ... ok\ntest_non_native_targets_are_refused (test_native_guard.ThermalTests.test_non_native_targets_are_refused) ... ok\ntest_rtx80_trips (test_native_guard.ThermalTests.test_rtx80_trips) ... ok\ntest_rtx_ramp_below80_does_not_trip (test_native_guard.ThermalTests.test_rtx_ramp_below80_does_not_trip) ... ok\ntest_stop_calls_only_owned_native_units (test_native_guard.ThermalTests.test_stop_calls_only_owned_native_units) ... ok\ntest_unreadable_cgroup_is_not_reported_as_empty (test_native_guard.ThermalTests.test_unreadable_cgroup_is_not_reported_as_empty) ... ok\ntest_v100_existing_jump_and_ceiling_preserved (test_native_guard.ThermalTests.test_v100_existing_jump_and_ceiling_preserved) ... ok\ntest_v100_healthy_admission_ignores_rtx_only_halt (test_native_guard.ThermalTests.test_v100_healthy_admission_ignores_rtx_only_halt) ... ok\ntest_actual_native_profile_and_identity (test_inkling_adapter.InklingAdapterTests.test_actual_native_profile_and_identity) ... ok\ntest_fixed_settings_and_separate_unit (test_inkling_adapter.InklingAdapterTests.test_fixed_settings_and_separate_unit) ... ok\ntest_native_tokenization_route_and_margin (test_inkling_adapter.InklingAdapterTests.test_native_tokenization_route_and_margin) ... ok\ntest_owned_profile_preserves_native_placement_and_auth (test_inkling_adapter.InklingAdapterTests.test_owned_profile_preserves_native_placement_and_auth) ... ok\ntest_source_symlink_is_refused (test_inkling_adapter.InklingAdapterTests.test_source_symlink_is_refused) ... ok\ntest_wrong_engine_and_arch_are_refused (test_inkling_adapter.InklingAdapterTests.test_wrong_engine_and_arch_are_refused) ... ok\ntest_wrong_gpu_and_backend_are_refused (test_inkling_adapter.InklingAdapterTests.test_wrong_gpu_and_backend_are_refused) ... ok\ntest_synthetic80_stops_owned_parent_and_child_only (test_native_guard_systemd.OwnedStopIntegrationTests.test_synthetic80_stops_owned_parent_and_child_only) ... ok\ntest_wrong_process_identity_is_not_killed (test_native_guard_systemd.OwnedStopIntegrationTests.test_wrong_process_identity_is_not_killed) ... ok\n\n----------------------------------------------------------------------\nRan 20 tests in 0.190s\n\nOK\n"
+  },
+  "real_sensors_check": {
+    "returncode": 0,
+    "stdout": "rtx5080: read=ok simulated=False temp=36 stop_c=80\nv100: read=ok simulated=False temp=57 stop_c=68.0\nCHECK_OK\n",
+    "stderr": ""
+  },
+  "source_sha256": {
+    "native_guard.py": "6e64d3998d8e4ccb44af4c2d333faa3aaf6c05f7ca6493f91b55be999838a969",
+    "thermal_guard.py": "2618f15995515f08ea1f3b5ab57345c0668d7ce324a3430d5c49e88be3e3c81f",
+    "engines.py": "e4eaaab06a1ac003bdec5ac83bc24dfc70ef6f566d491ae4dc208b0a562f4ca9",
+    "test_native_guard.py": "0b03999ed4cbcbad238d679a0912b00db5ae32c5785b0e056dbbf8fde9fd5fc6",
+    "test_native_guard_systemd.py": "1b86ce83b60db1cc1a44e82a83d667b93c85fad0bf3454f02b4c0e6f8939e01f"
+  },
+  "production_runtime_mutation": false,
+  "isolated_dummy_systemd_services_cleaned_up": true
+}

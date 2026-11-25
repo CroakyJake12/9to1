@@ -92,6 +92,88 @@ public sealed partial class AssistantsWorkspaceControllerTests
     }
 
     [Fact]
+    public async Task Renaming_the_open_assistant_preserves_existing_main_history_without_starting_a_task()
+    {
+        // Controller regression over injected source custody, not Home/native Main issuance acceptance.
+        var definition = Definition("maya", "Maya", 4);
+        var identity = definition.Identity;
+        var now = DateTimeOffset.UtcNow;
+        var main = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat,
+            "Maya Main", null, null, false, false, now, now);
+        var message = new ChatMessage(Guid.NewGuid(), main.Id, MessageRole.User,
+            "Retained Main history", null, null, null, now);
+        var data = new AssistantConversationData(main, [message], [], [], null, null);
+        var summary = new AssistantConversationSummary(main.Id, main.Title, now, false, null) { IsMain = true };
+        var opened = new List<Guid>();
+        var operation = Guid.NewGuid();
+        var updates = 0;
+        var bridge = new Bridge
+        {
+            List = () => Task.FromResult(new AssistantCatalogueObservation([definition], [])),
+            Get = requested => { Assert.Equal(identity, requested); return Task.FromResult(definition); },
+            Conversations = requested =>
+            {
+                Assert.Equal(identity, requested);
+                return Task.FromResult<IReadOnlyList<AssistantConversationSummary>>([summary]);
+            },
+            Update = (requested, revision, configuration, operationId) =>
+            {
+                Assert.Equal(identity, requested); Assert.Equal(4, revision); Assert.Equal(operation, operationId);
+                updates++;
+                definition = definition with { Revision = 5, Configuration = configuration };
+                return Task.FromResult(definition);
+            }
+        };
+        bridge.OpenBoundConversation = (requested, conversationId) =>
+        {
+            Assert.Equal(identity, requested); Assert.Equal(main.Id, conversationId);
+            opened.Add(conversationId);
+            return Task.FromResult(new AssistantConversationBinding(bridge, definition, "existing-main-membership", 1, main));
+        };
+        bridge.IsOwnedBinding = binding => ReferenceEquals(binding.Issuer, bridge);
+        bridge.ReadBoundConversation = binding =>
+        {
+            Assert.Equal(main.Id, binding.Conversation.Id);
+            return Task.FromResult(data);
+        };
+        bridge.ReadBoundWork = _ => Task.FromResult(new AssistantWorkObservation(null, null, []));
+        var controller = new AssistantsWorkspaceController(bridge);
+        try
+        {
+            await controller.InitializeAsync(TestContext.Current.CancellationToken);
+            await controller.OpenAssistantAsync(identity, TestContext.Current.CancellationToken);
+            Assert.True(Assert.Single(controller.Snapshot.Conversations).IsMain);
+            await controller.OpenConversationAsync(main.Id, TestContext.Current.CancellationToken);
+            var prior = controller.Snapshot;
+
+            await controller.ConfigureAsync(identity, 4, definition.Configuration with { Name = "Maya renamed" },
+                operation, TestContext.Current.CancellationToken);
+
+            var current = controller.Snapshot;
+            Assert.Equal(1, updates);
+            Assert.Equal(identity, Assert.Single(current.Assistants).Identity);
+            Assert.Equal(identity, current.SelectedAssistant!.Identity);
+            Assert.Equal("Maya renamed", current.SelectedAssistant.Configuration.Name);
+            Assert.Equal(5, current.SelectedAssistant.Revision);
+            Assert.Equal(identity, current.ConversationBinding!.Definition.Identity);
+            Assert.Equal(5, current.ConversationBinding.Definition.Revision);
+            Assert.Equal(main.Id, current.ConversationBinding.Conversation.Id);
+            Assert.NotSame(prior.ConversationBinding, current.ConversationBinding);
+            Assert.Same(prior.Conversation, current.Conversation);
+            Assert.Same(message, Assert.Single(current.Conversation!.Messages));
+            Assert.Equal(main.Id, Assert.Single(current.Conversations).ConversationId);
+            Assert.True(Assert.Single(current.Conversations).IsMain);
+            Assert.Equal(new[] { main.Id, main.Id }, opened);
+            Assert.Equal(0, bridge.StartTaskCalls);
+            Assert.Null(current.Work!.CanonicalTask);
+        }
+        finally
+        {
+            await controller.CloseAndDrainAsync();
+        }
+    }
+
+    [Fact]
     public async Task Rapid_navigation_does_not_publish_the_older_selected_identity()
     {
         var first = Definition("first", "First", 1); var second = Definition("second", "Second", 1);
@@ -236,6 +318,11 @@ public sealed partial class AssistantsWorkspaceControllerTests
         public Func<AssistantIdentity, Task<AssistantDefinitionSnapshot>> Get = _ => Task.FromException<AssistantDefinitionSnapshot>(new NotSupportedException());
         public Func<AssistantIdentity, long, AssistantConfiguration, Guid, Task<AssistantDefinitionSnapshot>> Update = (_, _, _, _) => Task.FromException<AssistantDefinitionSnapshot>(new NotSupportedException());
         public Func<AssistantIdentity, Task<IReadOnlyList<AssistantConversationSummary>>> Conversations = _ => Task.FromResult<IReadOnlyList<AssistantConversationSummary>>([]);
+        public Func<AssistantIdentity, Guid, Task<AssistantConversationBinding>> OpenBoundConversation = (_, _) => throw new NotSupportedException();
+        public Func<AssistantConversationBinding, bool> IsOwnedBinding = _ => false;
+        public Func<AssistantConversationBinding, Task<AssistantConversationData>> ReadBoundConversation = _ => throw new NotSupportedException();
+        public Func<AssistantConversationBinding, Task<AssistantWorkObservation>> ReadBoundWork = _ => throw new NotSupportedException();
+        public int StartTaskCalls;
         public int CloseCalls;
         public Task<AssistantCatalogueObservation> ListAsync(CancellationToken token = default) => List();
         public Task<AssistantDefinitionSnapshot> GetAsync(AssistantIdentity identity, CancellationToken token = default) => Get(identity);
@@ -248,9 +335,9 @@ public sealed partial class AssistantsWorkspaceControllerTests
         public Task<IReadOnlyList<AssistantLegacyMigrationCandidate>> ReadLegacyMigrationCandidatesAsync(CancellationToken token = default) => throw new NotSupportedException();
         public Task<AssistantDefinitionSnapshot> ResolveLegacyDefinitionAsync(AssistantIdentity legacyIdentity, long expectedRevision, ConfiguredIdentityKind confirmedKind, AssistantConfiguration configuration, Guid operationId, CancellationToken token = default) => throw new NotSupportedException();
         public Task<AssistantConversationBinding> CreateConversationAsync(AssistantIdentity identity, long expectedDefinitionRevision, Guid conversationId, string title, Guid operationId, CancellationToken token = default, AssistantConversationKind kind = AssistantConversationKind.Chat) => throw new NotSupportedException();
-        public Task<AssistantConversationBinding> OpenConversationAsync(AssistantIdentity identity, Guid conversationId, CancellationToken token = default) => throw new NotSupportedException();
-        public bool IsIssuedOriginalBinding(AssistantConversationBinding binding) => false;
-        public Task<AssistantConversationData> ReadConversationAsync(AssistantConversationBinding binding, CancellationToken token = default) => throw new NotSupportedException();
+        public Task<AssistantConversationBinding> OpenConversationAsync(AssistantIdentity identity, Guid conversationId, CancellationToken token = default) => OpenBoundConversation(identity, conversationId);
+        public bool IsIssuedOriginalBinding(AssistantConversationBinding binding) => IsOwnedBinding(binding);
+        public Task<AssistantConversationData> ReadConversationAsync(AssistantConversationBinding binding, CancellationToken token = default) => ReadBoundConversation(binding);
         public Task<IReadOnlyList<AssistantModelChoice>> ListAvailableModelsAsync(AssistantConversationBinding binding, CancellationToken token = default) => throw new NotSupportedException();
         public Task SaveConversationDraftAsync(AssistantConversationBinding binding, Guid? branchId, string content, IReadOnlyList<Guid> attachmentIds, CancellationToken token = default) => throw new NotSupportedException();
         public Task<MessageAttachment> ImportAttachmentOriginalAsync(AssistantConversationBinding binding, string selectedPath, Guid? branchId, CancellationToken token = default) => throw new NotSupportedException();
@@ -258,8 +345,9 @@ public sealed partial class AssistantsWorkspaceControllerTests
         public Task<ConversationBranch> CreateBranchAsync(AssistantConversationBinding binding, Guid messageId, string? name, CancellationToken token = default) => throw new NotSupportedException();
         public Task SwitchBranchAsync(AssistantConversationBinding binding, Guid branchId, CancellationToken token = default) => throw new NotSupportedException();
         public Task<AssistantOriginalConversationObservation> SendConversationOriginalAsync(AssistantConversationBinding binding, AssistantTaskInput input, CancellationToken token = default) => throw new NotSupportedException();
-        public Task<AssistantWorkObservation> ReadWorkAsync(AssistantConversationBinding binding, CancellationToken token = default) => throw new NotSupportedException();
-        public Task<AssistantOriginalSendObservation> StartOriginalTaskAsync(AssistantConversationBinding binding, AssistantTaskInput input, CancellationToken token = default) => throw new NotSupportedException();
+        public Task<AssistantWorkObservation> ReadWorkAsync(AssistantConversationBinding binding, CancellationToken token = default) => ReadBoundWork(binding);
+        public Task<AssistantOriginalSendObservation> StartOriginalTaskAsync(AssistantConversationBinding binding, AssistantTaskInput input, CancellationToken token = default)
+        { StartTaskCalls++; throw new NotSupportedException(); }
         public Task<FollowUpDecision> SubmitFollowUpAsync(AssistantConversationBinding binding, ProviderExecutionContext expectedTask, string instruction, TaskFollowUpMode mode, CancellationToken token = default) => throw new NotSupportedException();
         public Task<TaskRunOriginalRunControlResult> ControlOriginalRunAsync(AssistantConversationBinding binding, ProviderExecutionContext expectedTask, TaskRunOriginalRunControlKind kind, CancellationToken token = default) => throw new NotSupportedException();
         public Task<TaskRunOriginalResumeObservationLease> StartObservedOriginalResumeAsync(AssistantConversationBinding binding, ProviderExecutionContext expectedTask, CancellationToken token = default) => throw new NotSupportedException();

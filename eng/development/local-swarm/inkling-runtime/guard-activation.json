@@ -1,0 +1,8 @@
+{
+  "at": 1795555873.2306278,
+  "release": "/home/jacob/.local/share/9to1/dulche-service/releases/cb20257f08bb180b8427f15f6d491a251791522e236e55430447fd8f7b56af0e",
+  "bundle": "/home/jacob/9to1-swarm-harness-20261124/thermal-guard-2618f1599551",
+  "v100_policy_unchanged": true,
+  "guard_config_sha256": "f910d0f7e16ee1bbb981c41808b36fb3f317510b7ea5885127836cae2275ebbc",
+  "backup": "/home/jacob/9to1-swarm-harness-20261124/inkling-guard-backup"
+}

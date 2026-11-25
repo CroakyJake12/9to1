@@ -1,0 +1,19 @@
+{
+  "started": 1795554716.4087915,
+  "inference_started": false,
+  "control": "/home/jacob/.local/share/strata/components/control/0.1.68",
+  "model": {
+    "path": "/home/jacob/Models/Inkling-2-Mini/Inkling-2-Mini-UD-Q4_K_XL.gguf",
+    "bytes": 17629760736,
+    "sha256": "e64276656f072e9b2197a61723667cbdb71da66a716ffd966e572c21088f3cd3"
+  },
+  "drafter": {
+    "path": "/home/jacob/Models/Inkling-2-Mini/mtp.safetensors",
+    "bytes": 635801416,
+    "sha256": "7c3b651317f01f73bcf4e1dceba66ef8b7e1a1eac6bc171e882e690a4b10a1d2"
+  },
+  "installer_exit": 0,
+  "ok": true,
+  "profile": "/home/jacob/9to1-swarm-harness-20261124/inkling-native-install/profile/strata-inkling-2-mini-ud-q4_k_xl.json",
+  "completed": 1795554734.6065354
+}

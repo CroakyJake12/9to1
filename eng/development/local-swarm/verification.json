@@ -1,0 +1,1601 @@
+{
+  "at": 1795557231.5688522,
+  "checks": [
+    {
+      "suite": "test_harness.py",
+      "exit": 0,
+      "tests": 16,
+      "passed": true,
+      "output": "test_batch_limits_survive_normalization (__main__.Boundaries.test_batch_limits_survive_normalization) ... ok\ntest_candidate_diff_cannot_escape_owned_scope (__main__.Boundaries.test_candidate_diff_cannot_escape_owned_scope) ... ok\ntest_compacted_dependency_read_can_recover_without_erasing_history (__main__.Boundaries.test_compacted_dependency_read_can_recover_without_erasing_history) ... ok\ntest_directory_discovery_stays_in_tracked_source (__main__.Boundaries.test_directory_discovery_stays_in_tracked_source) ... ok\ntest_early_compiler_error_survives_long_build_tail (__main__.Boundaries.test_early_compiler_error_survives_long_build_tail) ... ok\ntest_formatting_failure_is_recoverable_feedback (__main__.Boundaries.test_formatting_failure_is_recoverable_feedback) ... ok\ntest_initial_source_bundle_keeps_all_lines (__main__.Boundaries.test_initial_source_bundle_keeps_all_lines) ... ok\ntest_native_usage_and_engine_fallback_only (__main__.Boundaries.test_native_usage_and_engine_fallback_only) ... ok\ntest_notes_cannot_defeat_repeat_detection (__main__.Boundaries.test_notes_cannot_defeat_repeat_detection) ... ok\ntest_observed_batch_envelopes_apply_owned_patch (__main__.Boundaries.test_observed_batch_envelopes_apply_owned_patch) ... ok\ntest_only_real_passed_test_runs_count (__main__.Boundaries.test_only_real_passed_test_runs_count) ... ok\ntest_owned_exact_edits_and_batch (__main__.Boundaries.test_owned_exact_edits_and_batch) ... ok\ntest_receipt_cache_bounds_and_file_revision_prevent_stale_replay (__main__.Boundaries.test_receipt_cache_bounds_and_file_revision_prevent_stale_replay) ... ok\ntest_symlinks_and_parent_paths_cannot_escape (__main__.Boundaries.test_symlinks_and_parent_paths_cannot_escape) ... ok\ntest_unowned_and_ambiguous_edits_are_rejected (__main__.Boundaries.test_unowned_and_ambiguous_edits_are_rejected) ... ok\ntest_v100_serializes_while_flash_is_independent (__main__.Boundaries.test_v100_serializes_while_flash_is_independent) ... ok\n\n----------------------------------------------------------------------\nRan 16 tests in 0.165s\n\nOK\n"
+    },
+    {
+      "suite": "test_priority_harness.py",
+      "exit": 0,
+      "tests": 10,
+      "passed": true,
+      "output": "test_actual_native_status_without_backend_admits_matching_completed_generation (__main__.PriorityContracts.test_actual_native_status_without_backend_admits_matching_completed_generation) ... ok\ntest_duplicate_write_ownership_is_refused_even_across_priority_groups (__main__.PriorityContracts.test_duplicate_write_ownership_is_refused_even_across_priority_groups) ... ok\ntest_escaping_task_path_is_refused (__main__.PriorityContracts.test_escaping_task_path_is_refused) ... ok\ntest_existing_candidate_is_never_requeued_and_pause_remains_resumable (__main__.PriorityContracts.test_existing_candidate_is_never_requeued_and_pause_remains_resumable) ... ok\ntest_failed_work_needs_an_explicit_repair_before_retry (__main__.PriorityContracts.test_failed_work_needs_an_explicit_repair_before_retry) ... ok\ntest_manifest_uses_only_allocated_requirement_ids (__main__.PriorityContracts.test_manifest_uses_only_allocated_requirement_ids) ... ok\ntest_mission_groups_sort_before_per_group_order (__main__.PriorityContracts.test_mission_groups_sort_before_per_group_order) ... ok\ntest_native_admission_rejects_wrong_engine_owner_or_model_identity (__main__.PriorityContracts.test_native_admission_rejects_wrong_engine_owner_or_model_identity) ... ok\ntest_native_admission_requires_passed_receipt_and_matching_completed_output (__main__.PriorityContracts.test_native_admission_requires_passed_receipt_and_matching_completed_output) ... ok\ntest_scoped_clone_preserves_canonical_acceptance (__main__.PriorityContracts.test_scoped_clone_preserves_canonical_acceptance) ... ok\n\n----------------------------------------------------------------------\nRan 10 tests in 0.002s\n\nOK\n"
+    }
+  ],
+  "harness_checks": 26,
+  "guard_checks": 20,
+  "qualification": {
+    "model": "inkling-2-mini-strata-ud-q4-k-xl",
+    "started": 1795555910.6152432,
+    "context_required": 32768,
+    "trials": [
+      {
+        "name": "json-code-smoke",
+        "run": "42ff385406a044208694caa916a5b608",
+        "model": "inkling-2-mini-strata-ud-q4-k-xl",
+        "input_tokens": 139,
+        "tokenization": {
+          "input_tokens": 139,
+          "method": "Strata rendered chat under count_tokens, 32-token cross-API margin",
+          "margin_tokens": 32
+        },
+        "tokens": 43,
+        "token_source": "usage.completion_tokens",
+        "wall_seconds": 1.6682837009429932,
+        "wall_tps": 25.77499257212329,
+        "elapsed_s": 1.6099694650038145,
+        "ttft_s": 0.5521555310042459,
+        "engine_tps": 40.6,
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 107,
+          "prompt_ms": 526.1,
+          "prompt_per_token_ms": 4.917,
+          "prompt_per_second": 203.4,
+          "predicted_n": 43,
+          "predicted_ms": 1059.7,
+          "predicted_per_token_ms": 24.644,
+          "predicted_per_second": 40.6,
+          "draft_n": 56,
+          "draft_n_accepted": 29
+        },
+        "usage": {
+          "prompt_tokens": 107,
+          "completion_tokens": 43,
+          "total_tokens": 150,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "finish_reason": "stop",
+        "content": "{\"language\":\"python\",\"code\":\"def clamp(value, low, high):\\n    return min(max(value, low), high)\"}",
+        "spec_acceptance_pct": 51.785714285714285,
+        "correctness": {
+          "passed": true,
+          "cases": 5,
+          "execution": "AST-whitelisted pure function; calls limited to min/max"
+        }
+      },
+      {
+        "name": "sustained-code",
+        "run": "33cc08cec0cf472ab9288b5aa298793e",
+        "model": "inkling-2-mini-strata-ud-q4-k-xl",
+        "input_tokens": 181,
+        "tokenization": {
+          "input_tokens": 181,
+          "method": "Strata rendered chat under count_tokens, 32-token cross-API margin",
+          "margin_tokens": 32
+        },
+        "tokens": 1024,
+        "token_source": "usage.completion_tokens",
+        "wall_seconds": 18.01717185974121,
+        "wall_tps": 56.83466905747261,
+        "elapsed_s": 17.992371006999747,
+        "ttft_s": 0.553307535003114,
+        "engine_tps": 58.7,
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 149,
+          "prompt_ms": 535.7,
+          "prompt_per_token_ms": 3.595,
+          "prompt_per_second": 278.1,
+          "predicted_n": 1024,
+          "predicted_ms": 17439.3,
+          "predicted_per_token_ms": 17.031,
+          "predicted_per_second": 58.7,
+          "draft_n": 1519,
+          "draft_n_accepted": 737
+        },
+        "usage": {
+          "prompt_tokens": 149,
+          "completion_tokens": 1024,
+          "total_tokens": 1173,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "finish_reason": "length",
+        "content": "using System;\nusing System.Collections.Generic;\nusing System.Linq;\nusing System.Threading;\nusing System.Threading.Tasks;\n\nnamespace DesktopTool.Scheduling\n{\n    /// <summary>\n    /// Stable identity for a scheduled job.\n    /// </summary>\n    public readonly struct JobId : IEquatable<JobId>\n    {\n        public Guid Value { get; }\n\n        public JobId(Guid value) => Value = value;\n\n        public static JobId New() => new JobId(Guid.NewGuid());\n\n        public bool Equals(JobId other) => Value == other.Value;\n        public override bool Equals(object obj) => obj is JobId other && Equals(other);\n        public override int GetHashCode() => Value.GetHashCode();\n        public override string ToString() => Value.ToString(\"N\");\n        public static bool operator ==(JobId left, JobId right) => left.Equals(right);\n        public static bool operator !=(JobId left, JobId right) => !left.Equals(right);\n    }\n\n    /// <summary>\n    /// Terminal or in-flight state of a job.\n    /// </summary>\n    public enum JobState\n    {\n        Queued,\n        Running,\n        Completed,\n        Failed,\n        Cancelled\n    }\n\n    /// <summary>\n    /// Result payload for a completed job.\n    /// </summary>\n    public sealed class JobResult\n    {\n        public JobId Id { get; }\n        public JobState State { get; }\n        public Exception? Error { get; }\n        public DateTimeOffset CompletedAt { get; }\n\n        internal JobResult(JobId id, JobState state, Exception? error, DateTimeOffset completedAt)\n        {\n            Id = id;\n            State = state;\n            Error = error;\n            CompletedAt = completedAt;\n        }\n    }\n\n    /// <summary>\n    /// A bounded asynchronous job scheduler.\n    /// </summary>\n    public sealed class BoundedJobScheduler : IDisposable\n    {\n        private readonly int _maxConcurrency;\n        private readonly object _gate = new object();\n        private readonly Queue<JobEntry> _queue = new Queue<JobEntry>();\n        private readonly Dictionary<JobId, JobEntry> _byId = new Dictionary<JobId, JobEntry>();\n        private readonly List<JobResult> _completed = new List<JobResult>();\n        private readonly List<Action<JobResult>> _completionHandlers = new List<Action<JobResult>>();\n        private int _running;\n        private bool _disposed;\n\n        public BoundedJobScheduler(int maxConcurrency)\n        {\n            if (maxConcurrency < 1) throw new ArgumentOutOfRangeException(nameof(maxConcurrency));\n            _maxConcurrency = maxConcurrency;\n        }\n\n        public int MaxConcurrency => _maxConcurrency;\n        public int QueuedCount\n        {\n            get { lock (_gate) return _queue.Count; }\n        }\n        public int RunningCount\n        {\n            get { lock (_gate) return _running; }\n        }\n\n        /// <summary>\n        /// Registers a completion handler invoked outside any lock.\n        /// </summary>\n        public void Subscribe(Action<JobResult> handler)\n        {\n            if (handler == null) throw new ArgumentNullException(nameof(handler));\n            lock (_gate) _completionHandlers.Add(handler);\n        }\n\n        /// <summary>\n        /// Enqueues a job. Returns a stable id.\n        /// </summary>\n        public JobId Enqueue(Func<CancellationToken, Task> work)\n        {\n            if (work == null) throw new ArgumentNullException(nameof(work));\n            lock (_gate)\n            {\n                if (_disposed) throw new ObjectDisposedException(nameof(BoundedJobScheduler));\n                var id = JobId.New();\n                var entry = new JobEntry(id, work);\n                _by",
+        "spec_acceptance_pct": 48.51876234364714
+      }
+    ],
+    "qualified": true,
+    "health_before": {
+      "models": {
+        "inkling-2-mini-strata-ud-q4-k-xl": {
+          "id": "inkling-2-mini-strata-ud-q4-k-xl",
+          "name": "Inkling-2-Mini UD-Q4_K_XL \u00b7 native Strata",
+          "engine": "Native Strata / Inkling-2-Mini",
+          "gpu": "RTX 5080",
+          "context": 32768,
+          "slots": 1,
+          "quantization": "UD-Q4_K_XL",
+          "source": "/home/jacob/9to1-swarm-harness-20261124/inkling-native-install/profile/strata-inkling-2-mini-ud-q4_k_xl.json",
+          "path": "/home/jacob/Models/Inkling-2-Mini/Inkling-2-Mini-UD-Q4_K_XL.gguf",
+          "port": 19042,
+          "state": "loaded",
+          "managed": true,
+          "unit": "dulche-inkling-2d9e3da745bf.service",
+          "capacity": 1,
+          "ownership": "dulche",
+          "pid": 293436,
+          "base_url": "http://127.0.0.1:19042/v1",
+          "profile": "verified",
+          "settings": {
+            "profile": "verified",
+            "gpu": "RTX 5080",
+            "context": 32768,
+            "quantization": "UD-Q4_K_XL",
+            "engine": "Native Strata / Inkling-2-Mini"
+          },
+          "placement_requested": {
+            "kind": "native_strata_expert_cache",
+            "evidence": "configured",
+            "gpu": "RTX 5080",
+            "source": "registered engine settings",
+            "sampled_at": null,
+            "artifact_bytes": 17629760736
+          },
+          "placement_observation": null,
+          "placement": {
+            "kind": "native_strata_expert_cache",
+            "evidence": "configured",
+            "gpu": "RTX 5080",
+            "source": "registered engine settings",
+            "sampled_at": null,
+            "artifact_bytes": 17629760736
+          },
+          "manual_suspended": false,
+          "profile_id": "current",
+          "pressure_suspended": false,
+          "last_operation": {
+            "action": "load",
+            "at": 1795555908.4502585,
+            "success": true
+          },
+          "active_profile_id": "current",
+          "swarm_residency": null
+        },
+        "qwen3.8-27b-v100": {
+          "id": "qwen3.8-27b-v100",
+          "name": "Qwen3.8-27B UD-IQ4_XS \u00b7 V100",
+          "engine": "Lightning / llama.cpp RPC",
+          "gpu": "Tesla V100",
+          "context": 32768,
+          "slots": 2,
+          "quantization": "UD-IQ4_XS",
+          "path": "/home/jacob/Documents/Default Project/models/Qwen3.8-27B-UD-IQ4_XS.gguf",
+          "port": 18642,
+          "state": "loaded",
+          "managed": true,
+          "unit": "astra-v100-inference.service",
+          "capacity": 2,
+          "ownership": "astra-v100-service",
+          "pid": 213467,
+          "base_url": "http://127.0.0.1:18642/v1",
+          "profile": "verified",
+          "settings": {
+            "profile": "verified",
+            "gpu": "Tesla V100",
+            "context": 32768,
+            "quantization": "UD-IQ4_XS",
+            "engine": "Lightning / llama.cpp RPC"
+          },
+          "placement_requested": {
+            "kind": "gpu_layer_offload",
+            "evidence": "configured",
+            "gpu": "Tesla V100",
+            "source": "registered engine settings",
+            "sampled_at": null,
+            "artifact_bytes": 14352911264
+          },
+          "placement_observation": {
+            "kind": "gpu_layer_offload",
+            "evidence": "observed",
+            "gpu": "Tesla V100",
+            "source": "active llama.cpp allocation log",
+            "sampled_at": 1795555909.741072,
+            "artifact_bytes": 14352911264,
+            "offloaded_layers": 66,
+            "total_offload_layers": 66,
+            "cpu_weight_buffer_mib": 521.0,
+            "cpu_compute_buffer_mib": 13.27,
+            "gpu_weight_buffer_mib": 12821.78,
+            "gpu_kv_buffer_mib": 1152.0,
+            "gpu_recurrent_buffer_mib": 299.25,
+            "gpu_compute_buffer_mib": 284.27,
+            "buffer_reported_at": 1795549209.47651,
+            "invocation_id": "334ea62847384aa8930cac3ab1e80b03"
+          },
+          "placement": {
+            "kind": "gpu_layer_offload",
+            "evidence": "observed",
+            "gpu": "Tesla V100",
+            "source": "active llama.cpp allocation log",
+            "sampled_at": 1795555909.741072,
+            "artifact_bytes": 14352911264,
+            "offloaded_layers": 66,
+            "total_offload_layers": 66,
+            "cpu_weight_buffer_mib": 521.0,
+            "cpu_compute_buffer_mib": 13.27,
+            "gpu_weight_buffer_mib": 12821.78,
+            "gpu_kv_buffer_mib": 1152.0,
+            "gpu_recurrent_buffer_mib": 299.25,
+            "gpu_compute_buffer_mib": 284.27,
+            "buffer_reported_at": 1795549209.47651,
+            "invocation_id": "334ea62847384aa8930cac3ab1e80b03"
+          },
+          "manual_suspended": false,
+          "profile_id": "current",
+          "pressure_suspended": false,
+          "last_operation": {
+            "action": "load",
+            "at": 1795549210.2937891,
+            "success": true
+          },
+          "active_profile_id": "current",
+          "swarm_residency": null
+        }
+      },
+      "resources": {
+        "host_available_mib": 59668,
+        "host_total_mib": 96244,
+        "swap_free_mib": 1555,
+        "swap_total_mib": 4111,
+        "gpus": [
+          {
+            "name": "NVIDIA GeForce RTX 5080",
+            "uuid": "GPU-6cc11d2c-f0b1-4c95-d8f6-bfc3832655c2",
+            "total_mib": 16303,
+            "used_mib": 15507,
+            "free_mib": 796,
+            "temperature_c": 38,
+            "utilization": 6
+          },
+          {
+            "name": "Tesla V100-PCIE-16GB",
+            "total_mib": 16384,
+            "used_mib": 15369,
+            "free_mib": 1015,
+            "temperature_c": 43,
+            "hbm_temperature_c": 42,
+            "utilization": 0
+          }
+        ],
+        "cpu_load_1m": 2.58544921875,
+        "available_ram_mib": 59668,
+        "total_ram_mib": 96244,
+        "swap_used_mib": 2556,
+        "disk_free_bytes": 220799995904,
+        "memory_stall_pct": 0.0,
+        "io_stall_pct": 0.05,
+        "cpu_stall_pct": 0.0,
+        "sample_at": 1795555909.7771676,
+        "cpu_busy_pct": 11.6,
+        "swap_mib_s": 0.0,
+        "desktop_roundtrip_ms": 1.29,
+        "ram_available_mib": 59668
+      },
+      "thermal_guard": {
+        "ts": 1795555910.3376584,
+        "devices": {
+          "rtx5080": {
+            "reading": {
+              "temp": 38,
+              "temp_mem": null,
+              "power": 59.943,
+              "util": 6,
+              "throttled": false,
+              "driver_ok": true
+            },
+            "reading_full": {
+              "temp": 38,
+              "temp_mem": null,
+              "power": 59.943,
+              "power_limit": 360.0,
+              "power_limit_active": 360.0,
+              "power_limit_range": [
+                250.0,
+                400.0
+              ],
+              "util": 6,
+              "mem_used": 16743071744,
+              "mem_total": 17094934528,
+              "throttled": false,
+              "throttle_reasons": [],
+              "driver_ok": true,
+              "name": "NVIDIA GeForce RTX 5080",
+              "pci": "0000:01:00.0",
+              "pstate": "P1"
+            },
+            "stopped": false,
+            "warned": false,
+            "telemetry_ok": true,
+            "last_telemetry_ts": 1795555910.3376584
+          },
+          "v100": {
+            "reading": {
+              "temp": 43,
+              "temp_mem": 42,
+              "power": 38.103,
+              "util": 0,
+              "throttled": false,
+              "driver_ok": true
+            },
+            "reading_full": {
+              "temp": 43,
+              "temp_mem": 42,
+              "power": 38.103,
+              "power_limit": null,
+              "power_limit_active": 165.0,
+              "power_limit_range": [
+                100.0,
+                250.0
+              ],
+              "util": 0,
+              "mem_used": 16116350976,
+              "mem_total": 17179869184,
+              "throttled": false,
+              "throttle_reasons": null,
+              "driver_ok": true,
+              "name": "Tesla V100-PCIE-16GB",
+              "pci": null,
+              "pstate": "P0"
+            },
+            "stopped": false,
+            "warned": false,
+            "telemetry_ok": true,
+            "last_telemetry_ts": 1795555910.3376584
+          }
+        },
+        "power_limits": {
+          "v100": {
+            "requested_w": 165.0,
+            "applied_w": 165.0,
+            "error": null
+          }
+        },
+        "halted": false
+      },
+      "at": 1795555910.6171873
+    },
+    "health_after": {
+      "models": {
+        "inkling-2-mini-strata-ud-q4-k-xl": {
+          "id": "inkling-2-mini-strata-ud-q4-k-xl",
+          "name": "Inkling-2-Mini UD-Q4_K_XL \u00b7 native Strata",
+          "engine": "Native Strata / Inkling-2-Mini",
+          "gpu": "RTX 5080",
+          "context": 32768,
+          "slots": 1,
+          "quantization": "UD-Q4_K_XL",
+          "source": "/home/jacob/9to1-swarm-harness-20261124/inkling-native-install/profile/strata-inkling-2-mini-ud-q4_k_xl.json",
+          "path": "/home/jacob/Models/Inkling-2-Mini/Inkling-2-Mini-UD-Q4_K_XL.gguf",
+          "port": 19042,
+          "state": "loaded",
+          "managed": true,
+          "unit": "dulche-inkling-2d9e3da745bf.service",
+          "capacity": 1,
+          "ownership": "dulche",
+          "pid": 293436,
+          "base_url": "http://127.0.0.1:19042/v1",
+          "profile": "verified",
+          "settings": {
+            "profile": "verified",
+            "gpu": "RTX 5080",
+            "context": 32768,
+            "quantization": "UD-Q4_K_XL",
+            "engine": "Native Strata / Inkling-2-Mini"
+          },
+          "placement_requested": {
+            "kind": "native_strata_expert_cache",
+            "evidence": "configured",
+            "gpu": "RTX 5080",
+            "source": "registered engine settings",
+            "sampled_at": null,
+            "artifact_bytes": 17629760736
+          },
+          "placement_observation": null,
+          "placement": {
+            "kind": "native_strata_expert_cache",
+            "evidence": "configured",
+            "gpu": "RTX 5080",
+            "source": "registered engine settings",
+            "sampled_at": null,
+            "artifact_bytes": 17629760736
+          },
+          "manual_suspended": false,
+          "profile_id": "current",
+          "pressure_suspended": false,
+          "last_operation": {
+            "action": "load",
+            "at": 1795555908.4502585,
+            "success": true
+          },
+          "active_profile_id": "current",
+          "swarm_residency": null
+        },
+        "qwen3.8-27b-v100": {
+          "id": "qwen3.8-27b-v100",
+          "name": "Qwen3.8-27B UD-IQ4_XS \u00b7 V100",
+          "engine": "Lightning / llama.cpp RPC",
+          "gpu": "Tesla V100",
+          "context": 32768,
+          "slots": 2,
+          "quantization": "UD-IQ4_XS",
+          "path": "/home/jacob/Documents/Default Project/models/Qwen3.8-27B-UD-IQ4_XS.gguf",
+          "port": 18642,
+          "state": "loaded",
+          "managed": true,
+          "unit": "astra-v100-inference.service",
+          "capacity": 2,
+          "ownership": "astra-v100-service",
+          "pid": 213467,
+          "base_url": "http://127.0.0.1:18642/v1",
+          "profile": "verified",
+          "settings": {
+            "profile": "verified",
+            "gpu": "Tesla V100",
+            "context": 32768,
+            "quantization": "UD-IQ4_XS",
+            "engine": "Lightning / llama.cpp RPC"
+          },
+          "placement_requested": {
+            "kind": "gpu_layer_offload",
+            "evidence": "configured",
+            "gpu": "Tesla V100",
+            "source": "registered engine settings",
+            "sampled_at": null,
+            "artifact_bytes": 14352911264
+          },
+          "placement_observation": {
+            "kind": "gpu_layer_offload",
+            "evidence": "observed",
+            "gpu": "Tesla V100",
+            "source": "active llama.cpp allocation log",
+            "sampled_at": 1795555926.2025452,
+            "artifact_bytes": 14352911264,
+            "offloaded_layers": 66,
+            "total_offload_layers": 66,
+            "cpu_weight_buffer_mib": 521.0,
+            "cpu_compute_buffer_mib": 13.27,
+            "gpu_weight_buffer_mib": 12821.78,
+            "gpu_kv_buffer_mib": 1152.0,
+            "gpu_recurrent_buffer_mib": 299.25,
+            "gpu_compute_buffer_mib": 284.27,
+            "buffer_reported_at": 1795549209.47651,
+            "invocation_id": "334ea62847384aa8930cac3ab1e80b03"
+          },
+          "placement": {
+            "kind": "gpu_layer_offload",
+            "evidence": "observed",
+            "gpu": "Tesla V100",
+            "source": "active llama.cpp allocation log",
+            "sampled_at": 1795555926.2025452,
+            "artifact_bytes": 14352911264,
+            "offloaded_layers": 66,
+            "total_offload_layers": 66,
+            "cpu_weight_buffer_mib": 521.0,
+            "cpu_compute_buffer_mib": 13.27,
+            "gpu_weight_buffer_mib": 12821.78,
+            "gpu_kv_buffer_mib": 1152.0,
+            "gpu_recurrent_buffer_mib": 299.25,
+            "gpu_compute_buffer_mib": 284.27,
+            "buffer_reported_at": 1795549209.47651,
+            "invocation_id": "334ea62847384aa8930cac3ab1e80b03"
+          },
+          "manual_suspended": false,
+          "profile_id": "current",
+          "pressure_suspended": false,
+          "last_operation": {
+            "action": "load",
+            "at": 1795549210.2937891,
+            "success": true
+          },
+          "active_profile_id": "current",
+          "swarm_residency": null
+        }
+      },
+      "resources": {
+        "host_available_mib": 59875,
+        "host_total_mib": 96244,
+        "swap_free_mib": 1555,
+        "swap_total_mib": 4111,
+        "gpus": [
+          {
+            "name": "NVIDIA GeForce RTX 5080",
+            "uuid": "GPU-6cc11d2c-f0b1-4c95-d8f6-bfc3832655c2",
+            "total_mib": 16303,
+            "used_mib": 15523,
+            "free_mib": 780,
+            "temperature_c": 46,
+            "utilization": 97
+          },
+          {
+            "name": "Tesla V100-PCIE-16GB",
+            "total_mib": 16384,
+            "used_mib": 15369,
+            "free_mib": 1015,
+            "temperature_c": 40,
+            "hbm_temperature_c": 40,
+            "utilization": 0
+          }
+        ],
+        "cpu_load_1m": 5.69873046875,
+        "available_ram_mib": 59875,
+        "total_ram_mib": 96244,
+        "swap_used_mib": 2556,
+        "disk_free_bytes": 220798136320,
+        "memory_stall_pct": 0.0,
+        "io_stall_pct": 0.0,
+        "cpu_stall_pct": 0.0,
+        "sample_at": 1795555926.2270827,
+        "cpu_busy_pct": 51.6,
+        "swap_mib_s": 0.01,
+        "desktop_roundtrip_ms": 1.44,
+        "ram_available_mib": 59875
+      },
+      "thermal_guard": {
+        "ts": 1795555929.3811383,
+        "devices": {
+          "rtx5080": {
+            "reading": {
+              "temp": 47,
+              "temp_mem": null,
+              "power": 158.855,
+              "util": 98,
+              "throttled": false,
+              "driver_ok": true
+            },
+            "reading_full": {
+              "temp": 47,
+              "temp_mem": null,
+              "power": 158.855,
+              "power_limit": 360.0,
+              "power_limit_active": 360.0,
+              "power_limit_range": [
+                250.0,
+                400.0
+              ],
+              "util": 98,
+              "mem_used": 16759783424,
+              "mem_total": 17094934528,
+              "throttled": false,
+              "throttle_reasons": [],
+              "driver_ok": true,
+              "name": "NVIDIA GeForce RTX 5080",
+              "pci": "0000:01:00.0",
+              "pstate": "P1"
+            },
+            "stopped": false,
+            "warned": false,
+            "telemetry_ok": true,
+            "last_telemetry_ts": 1795555929.3811383
+          },
+          "v100": {
+            "reading": {
+              "temp": 40,
+              "temp_mem": 39,
+              "power": 37.14,
+              "util": 0,
+              "throttled": false,
+              "driver_ok": true
+            },
+            "reading_full": {
+              "temp": 40,
+              "temp_mem": 39,
+              "power": 37.14,
+              "power_limit": null,
+              "power_limit_active": 165.0,
+              "power_limit_range": [
+                100.0,
+                250.0
+              ],
+              "util": 0,
+              "mem_used": 16116350976,
+              "mem_total": 17179869184,
+              "throttled": false,
+              "throttle_reasons": null,
+              "driver_ok": true,
+              "name": "Tesla V100-PCIE-16GB",
+              "pci": null,
+              "pstate": "P0"
+            },
+            "stopped": false,
+            "warned": false,
+            "telemetry_ok": true,
+            "last_telemetry_ts": 1795555929.3811383
+          }
+        },
+        "power_limits": {
+          "v100": {
+            "requested_w": 165.0,
+            "applied_w": 165.0,
+            "error": null
+          }
+        },
+        "halted": false
+      },
+      "at": 1795555930.3255453
+    },
+    "finished": 1795555930.3255463,
+    "passed": true,
+    "context_size": 32768,
+    "generation_run": "33cc08cec0cf472ab9288b5aa298793e",
+    "coexistence_v100": true,
+    "restored_after_fp8_ab": {
+      "at": 1795556542.6573017,
+      "reason": "FP8 did not improve fixed 1024-token trial; restored exact qualified FP16 profile",
+      "baseline_engine_tps": 58.7,
+      "candidate_engine_tps": 57.7,
+      "fresh_health": {
+        "models": {
+          "inkling-2-mini-strata-ud-q4-k-xl": {
+            "id": "inkling-2-mini-strata-ud-q4-k-xl",
+            "name": "Inkling-2-Mini UD-Q4_K_XL \u00b7 native Strata",
+            "engine": "Native Strata / Inkling-2-Mini",
+            "gpu": "RTX 5080",
+            "context": 32768,
+            "slots": 1,
+            "quantization": "UD-Q4_K_XL",
+            "source": "/home/jacob/9to1-swarm-harness-20261124/inkling-native-install/profile/strata-inkling-2-mini-ud-q4_k_xl.json",
+            "path": "/home/jacob/Models/Inkling-2-Mini/Inkling-2-Mini-UD-Q4_K_XL.gguf",
+            "port": 19042,
+            "state": "loaded",
+            "managed": true,
+            "unit": "dulche-inkling-2d9e3da745bf.service",
+            "capacity": 1,
+            "ownership": "dulche",
+            "pid": 298246,
+            "base_url": "http://127.0.0.1:19042/v1",
+            "profile": "verified",
+            "settings": {
+              "profile": "verified",
+              "gpu": "RTX 5080",
+              "context": 32768,
+              "quantization": "UD-Q4_K_XL",
+              "engine": "Native Strata / Inkling-2-Mini"
+            },
+            "placement_requested": {
+              "kind": "native_strata_expert_cache",
+              "evidence": "configured",
+              "gpu": "RTX 5080",
+              "source": "registered engine settings",
+              "sampled_at": null,
+              "artifact_bytes": 17629760736
+            },
+            "placement_observation": null,
+            "placement": {
+              "kind": "native_strata_expert_cache",
+              "evidence": "configured",
+              "gpu": "RTX 5080",
+              "source": "registered engine settings",
+              "sampled_at": null,
+              "artifact_bytes": 17629760736
+            },
+            "manual_suspended": false,
+            "profile_id": "current",
+            "pressure_suspended": false,
+            "last_operation": {
+              "action": "load",
+              "at": 1795556542.388389,
+              "success": true
+            },
+            "active_profile_id": "current",
+            "swarm_residency": null
+          },
+          "qwen3.8-27b-v100": {
+            "id": "qwen3.8-27b-v100",
+            "name": "Qwen3.8-27B UD-IQ4_XS \u00b7 V100",
+            "engine": "Lightning / llama.cpp RPC",
+            "gpu": "Tesla V100",
+            "context": 32768,
+            "slots": 2,
+            "quantization": "UD-IQ4_XS",
+            "path": "/home/jacob/Documents/Default Project/models/Qwen3.8-27B-UD-IQ4_XS.gguf",
+            "port": 18642,
+            "state": "loaded",
+            "managed": true,
+            "unit": "astra-v100-inference.service",
+            "capacity": 2,
+            "ownership": "astra-v100-service",
+            "pid": 213467,
+            "base_url": "http://127.0.0.1:18642/v1",
+            "profile": "verified",
+            "settings": {
+              "profile": "verified",
+              "gpu": "Tesla V100",
+              "context": 32768,
+              "quantization": "UD-IQ4_XS",
+              "engine": "Lightning / llama.cpp RPC"
+            },
+            "placement_requested": {
+              "kind": "gpu_layer_offload",
+              "evidence": "configured",
+              "gpu": "Tesla V100",
+              "source": "registered engine settings",
+              "sampled_at": null,
+              "artifact_bytes": 14352911264
+            },
+            "placement_observation": {
+              "kind": "gpu_layer_offload",
+              "evidence": "observed",
+              "gpu": "Tesla V100",
+              "source": "active llama.cpp allocation log",
+              "sampled_at": 1795556542.369535,
+              "artifact_bytes": 14352911264,
+              "offloaded_layers": 66,
+              "total_offload_layers": 66,
+              "cpu_weight_buffer_mib": 521.0,
+              "cpu_compute_buffer_mib": 13.27,
+              "gpu_weight_buffer_mib": 12821.78,
+              "gpu_kv_buffer_mib": 1152.0,
+              "gpu_recurrent_buffer_mib": 299.25,
+              "gpu_compute_buffer_mib": 284.27,
+              "buffer_reported_at": 1795549209.47651,
+              "invocation_id": "334ea62847384aa8930cac3ab1e80b03"
+            },
+            "placement": {
+              "kind": "gpu_layer_offload",
+              "evidence": "observed",
+              "gpu": "Tesla V100",
+              "source": "active llama.cpp allocation log",
+              "sampled_at": 1795556542.369535,
+              "artifact_bytes": 14352911264,
+              "offloaded_layers": 66,
+              "total_offload_layers": 66,
+              "cpu_weight_buffer_mib": 521.0,
+              "cpu_compute_buffer_mib": 13.27,
+              "gpu_weight_buffer_mib": 12821.78,
+              "gpu_kv_buffer_mib": 1152.0,
+              "gpu_recurrent_buffer_mib": 299.25,
+              "gpu_compute_buffer_mib": 284.27,
+              "buffer_reported_at": 1795549209.47651,
+              "invocation_id": "334ea62847384aa8930cac3ab1e80b03"
+            },
+            "manual_suspended": false,
+            "profile_id": "current",
+            "pressure_suspended": false,
+            "last_operation": {
+              "action": "load",
+              "at": 1795549210.2937891,
+              "success": true
+            },
+            "active_profile_id": "current",
+            "swarm_residency": null
+          }
+        },
+        "resources": {
+          "host_available_mib": 59861,
+          "host_total_mib": 96244,
+          "swap_free_mib": 1559,
+          "swap_total_mib": 4111,
+          "gpus": [
+            {
+              "name": "NVIDIA GeForce RTX 5080",
+              "uuid": "GPU-6cc11d2c-f0b1-4c95-d8f6-bfc3832655c2",
+              "total_mib": 16303,
+              "used_mib": 15538,
+              "free_mib": 765,
+              "temperature_c": 38,
+              "utilization": 8
+            },
+            {
+              "name": "Tesla V100-PCIE-16GB",
+              "total_mib": 16384,
+              "used_mib": 15369,
+              "free_mib": 1015,
+              "temperature_c": 32,
+              "hbm_temperature_c": 30,
+              "utilization": 0
+            }
+          ],
+          "cpu_load_1m": 1.14990234375,
+          "available_ram_mib": 59861,
+          "total_ram_mib": 96244,
+          "swap_used_mib": 2552,
+          "disk_free_bytes": 220792639488,
+          "memory_stall_pct": 0.0,
+          "io_stall_pct": 0.0,
+          "cpu_stall_pct": 0.0,
+          "sample_at": 1795556540.1728702,
+          "cpu_busy_pct": 8.6,
+          "swap_mib_s": 0.0,
+          "desktop_roundtrip_ms": 2.14,
+          "ram_available_mib": 59861
+        },
+        "thermal_guard": {
+          "ts": 1795556541.5852206,
+          "devices": {
+            "rtx5080": {
+              "reading": {
+                "temp": 41,
+                "temp_mem": null,
+                "power": 103.726,
+                "util": 100,
+                "throttled": false,
+                "driver_ok": true
+              },
+              "reading_full": {
+                "temp": 41,
+                "temp_mem": null,
+                "power": 103.726,
+                "power_limit": 360.0,
+                "power_limit_active": 360.0,
+                "power_limit_range": [
+                  250.0,
+                  400.0
+                ],
+                "util": 100,
+                "mem_used": 16775315456,
+                "mem_total": 17094934528,
+                "throttled": false,
+                "throttle_reasons": [],
+                "driver_ok": true,
+                "name": "NVIDIA GeForce RTX 5080",
+                "pci": "0000:01:00.0",
+                "pstate": "P1"
+              },
+              "stopped": false,
+              "warned": false,
+              "telemetry_ok": true,
+              "last_telemetry_ts": 1795556541.5852206
+            },
+            "v100": {
+              "reading": {
+                "temp": 32,
+                "temp_mem": 30,
+                "power": 35.133,
+                "util": 0,
+                "throttled": false,
+                "driver_ok": true
+              },
+              "reading_full": {
+                "temp": 32,
+                "temp_mem": 30,
+                "power": 35.133,
+                "power_limit": null,
+                "power_limit_active": 165.0,
+                "power_limit_range": [
+                  100.0,
+                  250.0
+                ],
+                "util": 0,
+                "mem_used": 16116350976,
+                "mem_total": 17179869184,
+                "throttled": false,
+                "throttle_reasons": null,
+                "driver_ok": true,
+                "name": "Tesla V100-PCIE-16GB",
+                "pci": null,
+                "pstate": "P0"
+              },
+              "stopped": false,
+              "warned": false,
+              "telemetry_ok": true,
+              "last_telemetry_ts": 1795556541.5852206
+            }
+          },
+          "power_limits": {
+            "v100": {
+              "requested_w": 165.0,
+              "applied_w": 165.0,
+              "error": null
+            }
+          },
+          "halted": false
+        },
+        "at": 1795556542.59066
+      }
+    },
+    "runtime_provenance": {
+      "source_profile": "/home/jacob/9to1-swarm-harness-20261124/inkling-native-install/profile/strata-inkling-2-mini-ud-q4_k_xl.json",
+      "source_sha256": "187a20515669e37f517cf07ce1acabae0b025f0593dd650d2498880cbe47ce74",
+      "engine_path": "/home/jacob/.local/share/strata/components/control/0.1.68/python/bin/python3.12",
+      "engine_sha256": "292e8c20acf161019a81655ad49b629e953618e9a3de01f0c10c7fcf1e1924ec",
+      "process_args_sha256": "692a1b48ac7c29da16eabffacc83506ec971d690b1beac8cecae660cd8649cd6",
+      "pid": 298246,
+      "kv_dtype": "fp16",
+      "drafting": "dspark",
+      "engine": {
+        "model": "Inkling-2-Mini-UD-Q4_K_XL.gguf",
+        "max_context": 32768,
+        "images": 0,
+        "gen": 1,
+        "version": "strata-inkling-0.1.67",
+        "engine": "strata-inkling-0.1.67",
+        "arch": "inkling2_loop",
+        "backend": "cuda",
+        "layers": 24,
+        "visits": 48,
+        "vocab": 200058,
+        "chunk": 512,
+        "batch_slots": 1,
+        "slot_read": 1,
+        "shared_prefix": 1,
+        "kv_dtype": "fp16",
+        "drafter": "dspark",
+        "drafting": "dspark",
+        "image_pad": 200054,
+        "parallel": 64,
+        "ckpt_key": 1,
+        "drafting_note": ""
+      },
+      "verified_at": 1795556542.6573255
+    }
+  },
+  "fp8_comparison": {
+    "model": "inkling-2-mini-strata-ud-q4-k-xl",
+    "started": 1795556379.3987727,
+    "context_required": 32768,
+    "trials": [
+      {
+        "name": "json-code-smoke",
+        "run": "ef345867a28e407990f8baa389612875",
+        "model": "inkling-2-mini-strata-ud-q4-k-xl",
+        "input_tokens": 139,
+        "tokenization": {
+          "input_tokens": 139,
+          "method": "Strata rendered chat under count_tokens, 32-token cross-API margin",
+          "margin_tokens": 32
+        },
+        "tokens": 43,
+        "token_source": "usage.completion_tokens",
+        "wall_seconds": 1.6673791408538818,
+        "wall_tps": 25.788975612336895,
+        "elapsed_s": 1.5767527680000057,
+        "ttft_s": 0.510912585996266,
+        "engine_tps": 40.3,
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 107,
+          "prompt_ms": 489.8,
+          "prompt_per_token_ms": 4.578,
+          "prompt_per_second": 218.5,
+          "predicted_n": 43,
+          "predicted_ms": 1066.7,
+          "predicted_per_token_ms": 24.807,
+          "predicted_per_second": 40.3,
+          "draft_n": 56,
+          "draft_n_accepted": 28
+        },
+        "usage": {
+          "prompt_tokens": 107,
+          "completion_tokens": 43,
+          "total_tokens": 150,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "finish_reason": "stop",
+        "content": "{\"language\":\"python\",\"code\":\"def clamp(value, low, high):\\n    return min(max(value, low), high)\"}",
+        "spec_acceptance_pct": 50.0,
+        "correctness": {
+          "passed": true,
+          "cases": 5,
+          "execution": "AST-whitelisted pure function; calls limited to min/max"
+        }
+      },
+      {
+        "name": "sustained-code",
+        "run": "18402919e13c49dda3d968b46f5c20e2",
+        "model": "inkling-2-mini-strata-ud-q4-k-xl",
+        "input_tokens": 181,
+        "tokenization": {
+          "input_tokens": 181,
+          "method": "Strata rendered chat under count_tokens, 32-token cross-API margin",
+          "margin_tokens": 32
+        },
+        "tokens": 1024,
+        "token_source": "usage.completion_tokens",
+        "wall_seconds": 18.292346239089966,
+        "wall_tps": 55.97969700637721,
+        "elapsed_s": 18.263445974997012,
+        "ttft_s": 0.5181414839971694,
+        "engine_tps": 57.7,
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 149,
+          "prompt_ms": 502.9,
+          "prompt_per_token_ms": 3.375,
+          "prompt_per_second": 296.3,
+          "predicted_n": 1024,
+          "predicted_ms": 17744.9,
+          "predicted_per_token_ms": 17.329,
+          "predicted_per_second": 57.7,
+          "draft_n": 1559,
+          "draft_n_accepted": 711
+        },
+        "usage": {
+          "prompt_tokens": 149,
+          "completion_tokens": 1024,
+          "total_tokens": 1173,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "finish_reason": "length",
+        "content": "Sure\u2014below is a complete, self-contained implementation plus xUnit regression tests. It uses a bounded queue, a fixed worker pool, stable job IDs, explicit states, cancellation, and disposal that awaits running work. Callbacks are invoked outside locks.\n\n```csharp\nusing System;\nusing System.Collections.Generic;\nusing System.Collections.Concurrent;\nusing System.Linq;\nusing System.Threading;\nusing System.Threading.Tasks;\n\nnamespace DesktopTool.Scheduling\n{\n    /// <summary>\n    /// Stable identity for a scheduled job.\n    /// </summary>\n    public readonly struct JobId : IEquatable<JobId>\n    {\n        public Guid Value { get; }\n\n        public JobId(Guid value)\n        {\n            Value = value;\n        }\n\n        public override bool Equals(object? obj) => obj is JobId other && Equals(other);\n        public override int GetHashCode() => Value.GetHashCode();\n        public bool Equals(JobId other) => Value.Equals(other);\n        public static bool operator ==(JobId left, JobId right) => left.Equals(right);\n        public static bool operator !=(JobId left, JobId right) => !left.Equals(right);\n        public override string ToString() => Value.ToString(\"N\");\n    }\n\n    /// <summary>\n    /// Explicit lifecycle states for a job.\n    /// </summary>\n    public enum JobState\n    {\n        Queued,\n        Running,\n        Completed,\n        Failed,\n        Cancelled\n    }\n\n    /// <summary>\n    /// Result metadata for a completed/failed/cancelled job.\n    /// </summary>\n    public sealed class JobResult\n    {\n        public JobId Id { get; init; }\n        public JobState State { get; init; }\n        public Exception? Error { get; init; }\n        public DateTimeOffset CompletedAt { get; init; }\n    }\n\n    /// <summary>\n    /// A unit of work submitted to the scheduler.\n    /// </summary>\n    public sealed class Job\n    {\n        public JobId Id { get; }\n        public Func<CancellationToken, Task> Work { get; }\n        public DateTimeOffset EnqueuedAt { get; }\n\n        public Job(JobId id, Func<CancellationToken, Task> work, DateTimeOffset enqueuedAt)\n        {\n            Id = id;\n            Work = work ?? throw new ArgumentNullException(nameof(work));\n            EnqueuedAt = enqueuedAt;\n        }\n    }\n\n    /// <summary>\n    /// Options for the scheduler.\n    /// </summary>\n    public sealed class SchedulerOptions\n    {\n        /// <summary>Maximum number of jobs running concurrently.</summary>\n        public int MaxConcurrency { get; init; } = 4;\n\n        /// <summary>Maximum number of queued jobs.</summary>\n        public int MaxQueueDepth { get; init; } = 100;\n\n        /// <summary>Optional callback invoked after a job reaches a terminal state.</summary>\n        public Action<JobResult>? OnJobCompleted { get; init; }\n    }\n\n    /// <summary>\n    /// Bounded asynchronous job scheduler.\n    /// </summary>\n    public sealed class BoundedJobScheduler : IAsyncDisposable\n    {\n        private readonly object _gate = new();\n        private readonly Queue<Job> _queue = new();\n        private readonly Dictionary<JobId, JobRecord> _records = new();\n        private readonly SemaphoreSlim _slots;\n        private readonly SchedulerOptions _options;\n        private readonly CancellationTokenSource _shutdown = new();\n        private readonly Task[] _workers;\n        private readonly ConcurrentDictionary<JobId, TaskCompletionSource<JobResult>> _completionSources = new();\n        private int _nextSequence;\n        private bool _disposed;\n\n        private sealed class JobRecord\n        {\n            public Job Job { get; init; } = null!;\n            public JobState State { get; set; } = JobState.Queued;\n            public CancellationTokenSource? Cts { get; set;",
+        "spec_acceptance_pct": 45.60615779345734
+      }
+    ],
+    "qualified": true,
+    "health_before": {
+      "models": {
+        "inkling-2-mini-strata-ud-q4-k-xl": {
+          "id": "inkling-2-mini-strata-ud-q4-k-xl",
+          "name": "Inkling-2-Mini UD-Q4_K_XL \u00b7 native Strata",
+          "engine": "Native Strata / Inkling-2-Mini",
+          "gpu": "RTX 5080",
+          "context": 32768,
+          "slots": 1,
+          "quantization": "UD-Q4_K_XL",
+          "source": "/home/jacob/9to1-swarm-harness-20261124/inkling-native-install/profile/strata-inkling-2-mini-ud-q4_k_xl.json",
+          "path": "/home/jacob/Models/Inkling-2-Mini/Inkling-2-Mini-UD-Q4_K_XL.gguf",
+          "port": 19042,
+          "state": "loaded",
+          "managed": true,
+          "unit": "dulche-inkling-2d9e3da745bf.service",
+          "capacity": 1,
+          "ownership": "dulche",
+          "pid": 296737,
+          "base_url": "http://127.0.0.1:19042/v1",
+          "profile": "verified",
+          "settings": {
+            "profile": "verified",
+            "gpu": "RTX 5080",
+            "context": 32768,
+            "quantization": "UD-Q4_K_XL",
+            "engine": "Native Strata / Inkling-2-Mini"
+          },
+          "placement_requested": {
+            "kind": "native_strata_expert_cache",
+            "evidence": "configured",
+            "gpu": "RTX 5080",
+            "source": "registered engine settings",
+            "sampled_at": null,
+            "artifact_bytes": 17629760736
+          },
+          "placement_observation": null,
+          "placement": {
+            "kind": "native_strata_expert_cache",
+            "evidence": "configured",
+            "gpu": "RTX 5080",
+            "source": "registered engine settings",
+            "sampled_at": null,
+            "artifact_bytes": 17629760736
+          },
+          "manual_suspended": false,
+          "profile_id": "current",
+          "pressure_suspended": false,
+          "last_operation": {
+            "action": "load",
+            "at": 1795556373.7380283,
+            "success": true
+          },
+          "active_profile_id": "current",
+          "swarm_residency": null
+        },
+        "qwen3.8-27b-v100": {
+          "id": "qwen3.8-27b-v100",
+          "name": "Qwen3.8-27B UD-IQ4_XS \u00b7 V100",
+          "engine": "Lightning / llama.cpp RPC",
+          "gpu": "Tesla V100",
+          "context": 32768,
+          "slots": 2,
+          "quantization": "UD-IQ4_XS",
+          "path": "/home/jacob/Documents/Default Project/models/Qwen3.8-27B-UD-IQ4_XS.gguf",
+          "port": 18642,
+          "state": "loaded",
+          "managed": true,
+          "unit": "astra-v100-inference.service",
+          "capacity": 2,
+          "ownership": "astra-v100-service",
+          "pid": 213467,
+          "base_url": "http://127.0.0.1:18642/v1",
+          "profile": "verified",
+          "settings": {
+            "profile": "verified",
+            "gpu": "Tesla V100",
+            "context": 32768,
+            "quantization": "UD-IQ4_XS",
+            "engine": "Lightning / llama.cpp RPC"
+          },
+          "placement_requested": {
+            "kind": "gpu_layer_offload",
+            "evidence": "configured",
+            "gpu": "Tesla V100",
+            "source": "registered engine settings",
+            "sampled_at": null,
+            "artifact_bytes": 14352911264
+          },
+          "placement_observation": {
+            "kind": "gpu_layer_offload",
+            "evidence": "observed",
+            "gpu": "Tesla V100",
+            "source": "active llama.cpp allocation log",
+            "sampled_at": 1795556376.5941498,
+            "artifact_bytes": 14352911264,
+            "offloaded_layers": 66,
+            "total_offload_layers": 66,
+            "cpu_weight_buffer_mib": 521.0,
+            "cpu_compute_buffer_mib": 13.27,
+            "gpu_weight_buffer_mib": 12821.78,
+            "gpu_kv_buffer_mib": 1152.0,
+            "gpu_recurrent_buffer_mib": 299.25,
+            "gpu_compute_buffer_mib": 284.27,
+            "buffer_reported_at": 1795549209.47651,
+            "invocation_id": "334ea62847384aa8930cac3ab1e80b03"
+          },
+          "placement": {
+            "kind": "gpu_layer_offload",
+            "evidence": "observed",
+            "gpu": "Tesla V100",
+            "source": "active llama.cpp allocation log",
+            "sampled_at": 1795556376.5941498,
+            "artifact_bytes": 14352911264,
+            "offloaded_layers": 66,
+            "total_offload_layers": 66,
+            "cpu_weight_buffer_mib": 521.0,
+            "cpu_compute_buffer_mib": 13.27,
+            "gpu_weight_buffer_mib": 12821.78,
+            "gpu_kv_buffer_mib": 1152.0,
+            "gpu_recurrent_buffer_mib": 299.25,
+            "gpu_compute_buffer_mib": 284.27,
+            "buffer_reported_at": 1795549209.47651,
+            "invocation_id": "334ea62847384aa8930cac3ab1e80b03"
+          },
+          "manual_suspended": false,
+          "profile_id": "current",
+          "pressure_suspended": false,
+          "last_operation": {
+            "action": "load",
+            "at": 1795549210.2937891,
+            "success": true
+          },
+          "active_profile_id": "current",
+          "swarm_residency": null
+        }
+      },
+      "resources": {
+        "host_available_mib": 60371,
+        "host_total_mib": 96244,
+        "swap_free_mib": 1559,
+        "swap_total_mib": 4111,
+        "gpus": [
+          {
+            "name": "NVIDIA GeForce RTX 5080",
+            "uuid": "GPU-6cc11d2c-f0b1-4c95-d8f6-bfc3832655c2",
+            "total_mib": 16303,
+            "used_mib": 15449,
+            "free_mib": 854,
+            "temperature_c": 38,
+            "utilization": 9
+          },
+          {
+            "name": "Tesla V100-PCIE-16GB",
+            "total_mib": 16384,
+            "used_mib": 15369,
+            "free_mib": 1015,
+            "temperature_c": 32,
+            "hbm_temperature_c": 30,
+            "utilization": 0
+          }
+        ],
+        "cpu_load_1m": 1.791015625,
+        "available_ram_mib": 60371,
+        "total_ram_mib": 96244,
+        "swap_used_mib": 2552,
+        "disk_free_bytes": 220795793408,
+        "memory_stall_pct": 0.0,
+        "io_stall_pct": 0.0,
+        "cpu_stall_pct": 0.0,
+        "sample_at": 1795556376.6128285,
+        "cpu_busy_pct": 2.1,
+        "swap_mib_s": 0.0,
+        "desktop_roundtrip_ms": 1.24,
+        "ram_available_mib": 60371
+      },
+      "thermal_guard": {
+        "ts": 1795556379.265714,
+        "devices": {
+          "rtx5080": {
+            "reading": {
+              "temp": 38,
+              "temp_mem": null,
+              "power": 56.794,
+              "util": 6,
+              "throttled": false,
+              "driver_ok": true
+            },
+            "reading_full": {
+              "temp": 38,
+              "temp_mem": null,
+              "power": 56.794,
+              "power_limit": 360.0,
+              "power_limit_active": 360.0,
+              "power_limit_range": [
+                250.0,
+                400.0
+              ],
+              "util": 6,
+              "mem_used": 16682844160,
+              "mem_total": 17094934528,
+              "throttled": false,
+              "throttle_reasons": [],
+              "driver_ok": true,
+              "name": "NVIDIA GeForce RTX 5080",
+              "pci": "0000:01:00.0",
+              "pstate": "P1"
+            },
+            "stopped": false,
+            "warned": false,
+            "telemetry_ok": true,
+            "last_telemetry_ts": 1795556379.265714
+          },
+          "v100": {
+            "reading": {
+              "temp": 32,
+              "temp_mem": 30,
+              "power": 35.361,
+              "util": 0,
+              "throttled": false,
+              "driver_ok": true
+            },
+            "reading_full": {
+              "temp": 32,
+              "temp_mem": 30,
+              "power": 35.361,
+              "power_limit": null,
+              "power_limit_active": 165.0,
+              "power_limit_range": [
+                100.0,
+                250.0
+              ],
+              "util": 0,
+              "mem_used": 16116350976,
+              "mem_total": 17179869184,
+              "throttled": false,
+              "throttle_reasons": null,
+              "driver_ok": true,
+              "name": "Tesla V100-PCIE-16GB",
+              "pci": null,
+              "pstate": "P0"
+            },
+            "stopped": false,
+            "warned": false,
+            "telemetry_ok": true,
+            "last_telemetry_ts": 1795556379.265714
+          }
+        },
+        "power_limits": {
+          "v100": {
+            "requested_w": 165.0,
+            "applied_w": 165.0,
+            "error": null
+          }
+        },
+        "halted": false
+      },
+      "at": 1795556379.4008112
+    },
+    "health_after": {
+      "models": {
+        "inkling-2-mini-strata-ud-q4-k-xl": {
+          "id": "inkling-2-mini-strata-ud-q4-k-xl",
+          "name": "Inkling-2-Mini UD-Q4_K_XL \u00b7 native Strata",
+          "engine": "Native Strata / Inkling-2-Mini",
+          "gpu": "RTX 5080",
+          "context": 32768,
+          "slots": 1,
+          "quantization": "UD-Q4_K_XL",
+          "source": "/home/jacob/9to1-swarm-harness-20261124/inkling-native-install/profile/strata-inkling-2-mini-ud-q4_k_xl.json",
+          "path": "/home/jacob/Models/Inkling-2-Mini/Inkling-2-Mini-UD-Q4_K_XL.gguf",
+          "port": 19042,
+          "state": "loaded",
+          "managed": true,
+          "unit": "dulche-inkling-2d9e3da745bf.service",
+          "capacity": 1,
+          "ownership": "dulche",
+          "pid": 296737,
+          "base_url": "http://127.0.0.1:19042/v1",
+          "profile": "verified",
+          "settings": {
+            "profile": "verified",
+            "gpu": "RTX 5080",
+            "context": 32768,
+            "quantization": "UD-Q4_K_XL",
+            "engine": "Native Strata / Inkling-2-Mini"
+          },
+          "placement_requested": {
+            "kind": "native_strata_expert_cache",
+            "evidence": "configured",
+            "gpu": "RTX 5080",
+            "source": "registered engine settings",
+            "sampled_at": null,
+            "artifact_bytes": 17629760736
+          },
+          "placement_observation": null,
+          "placement": {
+            "kind": "native_strata_expert_cache",
+            "evidence": "configured",
+            "gpu": "RTX 5080",
+            "source": "registered engine settings",
+            "sampled_at": null,
+            "artifact_bytes": 17629760736
+          },
+          "manual_suspended": false,
+          "profile_id": "current",
+          "pressure_suspended": false,
+          "last_operation": {
+            "action": "load",
+            "at": 1795556373.7380283,
+            "success": true
+          },
+          "active_profile_id": "current",
+          "swarm_residency": null
+        },
+        "qwen3.8-27b-v100": {
+          "id": "qwen3.8-27b-v100",
+          "name": "Qwen3.8-27B UD-IQ4_XS \u00b7 V100",
+          "engine": "Lightning / llama.cpp RPC",
+          "gpu": "Tesla V100",
+          "context": 32768,
+          "slots": 2,
+          "quantization": "UD-IQ4_XS",
+          "path": "/home/jacob/Documents/Default Project/models/Qwen3.8-27B-UD-IQ4_XS.gguf",
+          "port": 18642,
+          "state": "loaded",
+          "managed": true,
+          "unit": "astra-v100-inference.service",
+          "capacity": 2,
+          "ownership": "astra-v100-service",
+          "pid": 213467,
+          "base_url": "http://127.0.0.1:18642/v1",
+          "profile": "verified",
+          "settings": {
+            "profile": "verified",
+            "gpu": "Tesla V100",
+            "context": 32768,
+            "quantization": "UD-IQ4_XS",
+            "engine": "Lightning / llama.cpp RPC"
+          },
+          "placement_requested": {
+            "kind": "gpu_layer_offload",
+            "evidence": "configured",
+            "gpu": "Tesla V100",
+            "source": "registered engine settings",
+            "sampled_at": null,
+            "artifact_bytes": 14352911264
+          },
+          "placement_observation": {
+            "kind": "gpu_layer_offload",
+            "evidence": "observed",
+            "gpu": "Tesla V100",
+            "source": "active llama.cpp allocation log",
+            "sampled_at": 1795556397.1560824,
+            "artifact_bytes": 14352911264,
+            "offloaded_layers": 66,
+            "total_offload_layers": 66,
+            "cpu_weight_buffer_mib": 521.0,
+            "cpu_compute_buffer_mib": 13.27,
+            "gpu_weight_buffer_mib": 12821.78,
+            "gpu_kv_buffer_mib": 1152.0,
+            "gpu_recurrent_buffer_mib": 299.25,
+            "gpu_compute_buffer_mib": 284.27,
+            "buffer_reported_at": 1795549209.47651,
+            "invocation_id": "334ea62847384aa8930cac3ab1e80b03"
+          },
+          "placement": {
+            "kind": "gpu_layer_offload",
+            "evidence": "observed",
+            "gpu": "Tesla V100",
+            "source": "active llama.cpp allocation log",
+            "sampled_at": 1795556397.1560824,
+            "artifact_bytes": 14352911264,
+            "offloaded_layers": 66,
+            "total_offload_layers": 66,
+            "cpu_weight_buffer_mib": 521.0,
+            "cpu_compute_buffer_mib": 13.27,
+            "gpu_weight_buffer_mib": 12821.78,
+            "gpu_kv_buffer_mib": 1152.0,
+            "gpu_recurrent_buffer_mib": 299.25,
+            "gpu_compute_buffer_mib": 284.27,
+            "buffer_reported_at": 1795549209.47651,
+            "invocation_id": "334ea62847384aa8930cac3ab1e80b03"
+          },
+          "manual_suspended": false,
+          "profile_id": "current",
+          "pressure_suspended": false,
+          "last_operation": {
+            "action": "load",
+            "at": 1795549210.2937891,
+            "success": true
+          },
+          "active_profile_id": "current",
+          "swarm_residency": null
+        }
+      },
+      "resources": {
+        "host_available_mib": 60434,
+        "host_total_mib": 96244,
+        "swap_free_mib": 1559,
+        "swap_total_mib": 4111,
+        "gpus": [
+          {
+            "name": "NVIDIA GeForce RTX 5080",
+            "uuid": "GPU-6cc11d2c-f0b1-4c95-d8f6-bfc3832655c2",
+            "total_mib": 16303,
+            "used_mib": 15457,
+            "free_mib": 846,
+            "temperature_c": 48,
+            "utilization": 98
+          },
+          {
+            "name": "Tesla V100-PCIE-16GB",
+            "total_mib": 16384,
+            "used_mib": 15369,
+            "free_mib": 1015,
+            "temperature_c": 32,
+            "hbm_temperature_c": 30,
+            "utilization": 0
+          }
+        ],
+        "cpu_load_1m": 5.18505859375,
+        "available_ram_mib": 60434,
+        "total_ram_mib": 96244,
+        "swap_used_mib": 2552,
+        "disk_free_bytes": 220793569280,
+        "memory_stall_pct": 0.0,
+        "io_stall_pct": 0.0,
+        "cpu_stall_pct": 0.0,
+        "sample_at": 1795556397.1787431,
+        "cpu_busy_pct": 51.8,
+        "swap_mib_s": 0.0,
+        "desktop_roundtrip_ms": 1.19,
+        "ram_available_mib": 60434
+      },
+      "thermal_guard": {
+        "ts": 1795556399.3107984,
+        "devices": {
+          "rtx5080": {
+            "reading": {
+              "temp": 47,
+              "temp_mem": null,
+              "power": 171.634,
+              "util": 98,
+              "throttled": false,
+              "driver_ok": true
+            },
+            "reading_full": {
+              "temp": 47,
+              "temp_mem": null,
+              "power": 171.634,
+              "power_limit": 360.0,
+              "power_limit_active": 360.0,
+              "power_limit_range": [
+                250.0,
+                400.0
+              ],
+              "util": 98,
+              "mem_used": 16691232768,
+              "mem_total": 17094934528,
+              "throttled": false,
+              "throttle_reasons": [],
+              "driver_ok": true,
+              "name": "NVIDIA GeForce RTX 5080",
+              "pci": "0000:01:00.0",
+              "pstate": "P1"
+            },
+            "stopped": false,
+            "warned": false,
+            "telemetry_ok": true,
+            "last_telemetry_ts": 1795556399.3107984
+          },
+          "v100": {
+            "reading": {
+              "temp": 32,
+              "temp_mem": 30,
+              "power": 35.358,
+              "util": 0,
+              "throttled": false,
+              "driver_ok": true
+            },
+            "reading_full": {
+              "temp": 32,
+              "temp_mem": 30,
+              "power": 35.358,
+              "power_limit": null,
+              "power_limit_active": 165.0,
+              "power_limit_range": [
+                100.0,
+                250.0
+              ],
+              "util": 0,
+              "mem_used": 16116350976,
+              "mem_total": 17179869184,
+              "throttled": false,
+              "throttle_reasons": null,
+              "driver_ok": true,
+              "name": "Tesla V100-PCIE-16GB",
+              "pci": null,
+              "pstate": "P0"
+            },
+            "stopped": false,
+            "warned": false,
+            "telemetry_ok": true,
+            "last_telemetry_ts": 1795556399.3107984
+          }
+        },
+        "power_limits": {
+          "v100": {
+            "requested_w": 165.0,
+            "applied_w": 165.0,
+            "error": null
+          }
+        },
+        "halted": false
+      },
+      "at": 1795556399.383567
+    },
+    "passed": true,
+    "context_size": 32768,
+    "generation_run": "18402919e13c49dda3d968b46f5c20e2",
+    "coexistence_v100": true,
+    "finished": 1795556399.3835685,
+    "profile_sha256": "ff09fa9c4caf6e6d50a920d51682736c4a83d40bb6458ac6abf07fc042acfff4",
+    "kv_dtype": "fp8"
+  },
+  "source_review": "Root plus independent runtime review; all prior failed evidence retained.",
+  "native_product_acceptance": false,
+  "checkpoint_refresh": {
+    "at": 1795557231.5688522,
+    "previous_candidate": "2ef82ce900e2f98394d324cd14e4a31456561247",
+    "previous_receipt_at": 1795556798.207558,
+    "harness_sha256": "83a366bf7c515c69cfdd4cc32645041ca139a71bac0d6e47a1227f5729fcaf7f",
+    "scope": "Both offline harness suites rerun against the exact checkpoint source; 26 checks passed.",
+    "runtime_evidence": "Existing 20 runtime/guard checks and qualification receipts retained from their original runs; not rerun in this refresh.",
+    "native_product_acceptance": false
+  },
+  "canonical_status_fix": {
+    "at": 1795557705.9946444,
+    "tests": 28,
+    "suites": {
+      "test_harness.py": {
+        "exit": 0,
+        "output": "test_batch_limits_survive_normalization (__main__.Boundaries.test_batch_limits_survive_normalization) ... ok\ntest_candidate_diff_cannot_escape_owned_scope (__main__.Boundaries.test_candidate_diff_cannot_escape_owned_scope) ... ok\ntest_compacted_dependency_read_can_recover_without_erasing_history (__main__.Boundaries.test_compacted_dependency_read_can_recover_without_erasing_history) ... ok\ntest_directory_discovery_stays_in_tracked_source (__main__.Boundaries.test_directory_discovery_stays_in_tracked_source) ... ok\ntest_early_compiler_error_survives_long_build_tail (__main__.Boundaries.test_early_compiler_error_survives_long_build_tail) ... ok\ntest_formatting_failure_is_recoverable_feedback (__main__.Boundaries.test_formatting_failure_is_recoverable_feedback) ... ok\ntest_git_status_warnings_are_not_porcelain_and_failure_is_not_clean (__main__.Boundaries.test_git_status_warnings_are_not_porcelain_and_failure_is_not_clean) ... ok\ntest_initial_source_bundle_keeps_all_lines (__main__.Boundaries.test_initial_source_bundle_keeps_all_lines) ... ok\ntest_native_usage_and_engine_fallback_only (__main__.Boundaries.test_native_usage_and_engine_fallback_only) ... ok\ntest_new_candidate_directory_is_clean_but_real_scoped_edits_are_dirty (__main__.Boundaries.test_new_candidate_directory_is_clean_but_real_scoped_edits_are_dirty) ... ok\ntest_notes_cannot_defeat_repeat_detection (__main__.Boundaries.test_notes_cannot_defeat_repeat_detection) ... ok\ntest_observed_batch_envelopes_apply_owned_patch (__main__.Boundaries.test_observed_batch_envelopes_apply_owned_patch) ... ok\ntest_only_real_passed_test_runs_count (__main__.Boundaries.test_only_real_passed_test_runs_count) ... ok\ntest_owned_exact_edits_and_batch (__main__.Boundaries.test_owned_exact_edits_and_batch) ... ok\ntest_receipt_cache_bounds_and_file_revision_prevent_stale_replay (__main__.Boundaries.test_receipt_cache_bounds_and_file_revision_prevent_stale_replay) ... ok\ntest_symlinks_and_parent_paths_cannot_escape (__main__.Boundaries.test_symlinks_and_parent_paths_cannot_escape) ... ok\ntest_unowned_and_ambiguous_edits_are_rejected (__main__.Boundaries.test_unowned_and_ambiguous_edits_are_rejected) ... ok\ntest_v100_serializes_while_flash_is_independent (__main__.Boundaries.test_v100_serializes_while_flash_is_independent) ... ok\n\n----------------------------------------------------------------------\nRan 18 tests in 0.176s\n\nOK\n"
+      },
+      "test_priority_harness.py": {
+        "exit": 0,
+        "output": "test_actual_native_status_without_backend_admits_matching_completed_generation (__main__.PriorityContracts.test_actual_native_status_without_backend_admits_matching_completed_generation) ... ok\ntest_duplicate_write_ownership_is_refused_even_across_priority_groups (__main__.PriorityContracts.test_duplicate_write_ownership_is_refused_even_across_priority_groups) ... ok\ntest_escaping_task_path_is_refused (__main__.PriorityContracts.test_escaping_task_path_is_refused) ... ok\ntest_existing_candidate_is_never_requeued_and_pause_remains_resumable (__main__.PriorityContracts.test_existing_candidate_is_never_requeued_and_pause_remains_resumable) ... ok\ntest_failed_work_needs_an_explicit_repair_before_retry (__main__.PriorityContracts.test_failed_work_needs_an_explicit_repair_before_retry) ... ok\ntest_manifest_uses_only_allocated_requirement_ids (__main__.PriorityContracts.test_manifest_uses_only_allocated_requirement_ids) ... ok\ntest_mission_groups_sort_before_per_group_order (__main__.PriorityContracts.test_mission_groups_sort_before_per_group_order) ... ok\ntest_native_admission_rejects_wrong_engine_owner_or_model_identity (__main__.PriorityContracts.test_native_admission_rejects_wrong_engine_owner_or_model_identity) ... ok\ntest_native_admission_requires_passed_receipt_and_matching_completed_output (__main__.PriorityContracts.test_native_admission_requires_passed_receipt_and_matching_completed_output) ... ok\ntest_scoped_clone_preserves_canonical_acceptance (__main__.PriorityContracts.test_scoped_clone_preserves_canonical_acceptance) ... ok\n\n----------------------------------------------------------------------\nRan 10 tests in 0.003s\n\nOK\n"
+      }
+    },
+    "bug": "separate Git status diagnostics from machine-readable porcelain; failures remain blocked"
+  }
+}
