@@ -56,6 +56,29 @@ def _canonical(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
 
 
+def _backend_source_manifest():
+    """Pin code that reconstructs weights and executes this training backend.
+
+    The full manifest belongs to the loader report; its canonical hash belongs
+    to checkpoint identity. Test fixtures are deliberately not execution code.
+    """
+    from importlib.metadata import version
+    from gguf import constants, gguf_reader, quants
+    package = Path(__file__).resolve().parent
+    alora_sources = {
+        path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in sorted(package.glob("*.py")) if not path.name.startswith("test_")
+    }
+    gguf_sources = {
+        module.__name__.rsplit(".", 1)[-1] + ".py":
+            hashlib.sha256(Path(inspect.getfile(module)).read_bytes()).hexdigest()
+        for module in (constants, gguf_reader, quants)
+    }
+    return {"schema": 1, "alora_sources": alora_sources,
+            "gguf_version": version("gguf"), "gguf_sources": gguf_sources,
+            "numpy_version": str(np.__version__)}
+
+
 def _configuration(config_dict):
     if type(config_dict) is not dict:
         raise ValueError("Supply the pinned JSON configuration as a dictionary")
@@ -569,12 +592,15 @@ def load_text_model(store, config_dict, *, selections=None, rank=8, alpha=16,
                          for parameter in module.parameters() if parameter.requires_grad}
     if any(p.requires_grad and id(p) not in allowed_trainable for p in model.parameters()):
         raise ValueError("A frozen base parameter was left trainable")
+    backend_manifest = _backend_source_manifest()
     model.alora_loader_report = {
         "schema": 1, "kind": "qwen4exp-gguf-native-text-candidate",
         "source_identity": store.source_identity,
         "source_attestation": copy.deepcopy(source_identity),
         "config_sha256": hashlib.sha256(_canonical(supplied_config)).hexdigest(),
         "execution_config_sha256": hashlib.sha256(_canonical(model.config.to_dict())).hexdigest(),
+        "backend_source_manifest": backend_manifest,
+        "backend_source_sha256": hashlib.sha256(_canonical(backend_manifest)).hexdigest(),
         "transformers_version": _TRANSFORMERS_VERSION,
         "native_class": type(model).__name__,
         "native_modeling_sha256": hashlib.sha256(Path(inspect.getfile(Qwen4ExpForCausalLM)).read_bytes()).hexdigest(),

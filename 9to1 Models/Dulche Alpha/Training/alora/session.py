@@ -62,13 +62,20 @@ def _loader_identity(model):
     if report is None:
         return None
     keys = ("source_identity", "config_sha256", "execution_config_sha256",
-            "native_modeling_sha256", "native_configuration_sha256",
+            "native_modeling_sha256", "native_configuration_sha256", "backend_source_sha256",
             "native_class", "transformers_version", "device", "dtype", "chunk_rows")
     if type(report) is not dict or any(key not in report for key in keys):
         raise ValueError("The paged loader identity is incomplete")
-    for key in keys[:5]:
+    for key in keys[:6]:
         if type(report[key]) is not str or not _SHA.fullmatch(report[key]):
             raise ValueError("Paged loader source/configuration digests are invalid")
+    manifest = report.get("backend_source_manifest")
+    if type(manifest) is not dict:
+        raise ValueError("The paged backend source manifest is missing")
+    manifest_sha = hashlib.sha256(json.dumps(manifest, sort_keys=True,
+                                             separators=(",", ":"), allow_nan=False).encode()).hexdigest()
+    if manifest_sha != report["backend_source_sha256"]:
+        raise ValueError("The paged backend source manifest digest differs")
     config = getattr(model, "config", None)
     if config is None or not callable(getattr(config, "to_dict", None)):
         raise ValueError("A paged native model must retain its execution configuration")

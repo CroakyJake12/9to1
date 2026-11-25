@@ -116,7 +116,10 @@ with GGUFWeightStore(
 
 The native loader report binds canonical source and execution configuration,
 installed native source hashes, runtime version, device/dtype and row-chunk size
-into session/checkpoint identity. A different loader identity cannot resume the
+into session/checkpoint identity. A canonical backend manifest also binds every
+production ALORA Python module, the GGUF reader/dequantizer/constants and their
+runtime versions, so a mapping or decoding change cannot silently resume an
+older GGUF checkpoint. A different loader identity cannot resume the
 checkpoint, and changed execution configuration is refused before an update.
 
 Byte limits bound requested buffers, not total RAM. Temporary decoder arrays,

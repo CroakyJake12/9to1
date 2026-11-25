@@ -1,5 +1,7 @@
 """Native GGUF loader identity remains bound through adapter checkpoints."""
 import copy
+import hashlib
+import json
 import unittest
 
 from hf_backend.cpu_guard import install
@@ -48,3 +50,23 @@ class GGUFSessionTests(unittest.TestCase):
         changed["identity"]["loader"]["config_sha256"] = "e" * 64
         with self.assertRaisesRegex(ValueError, "identity"):
             first.restore(changed)
+
+    def test_changed_backend_mapping_or_dequantizer_cannot_restore_checkpoint(self):
+        first = TrainingSession(self.model, identity=self.identity, purpose="software_test_only")
+        snapshot = first.snapshot()
+        other = load_text_model(self.store, self.raw, rank=2, alpha=4, chunk_rows=3,
+                                selections={"model.layers.0.mlp.experts": [0, 1, 2]})
+        report = other.alora_loader_report
+        manifest = report["backend_source_manifest"]
+        self.assertIn("gguf_model.py", manifest["alora_sources"])
+        self.assertIn("session.py", manifest["alora_sources"])
+        self.assertIn("quants.py", manifest["gguf_sources"])
+        self.assertFalse(any(n.startswith("test_") for n in manifest["alora_sources"]))
+        manifest["gguf_sources"]["quants.py"] = "f" * 64
+        with self.assertRaisesRegex(ValueError, "manifest digest"):
+            TrainingSession(other, identity=self.identity, purpose="software_test_only")
+        report["backend_source_sha256"] = hashlib.sha256(json.dumps(
+            manifest, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+        second = TrainingSession(other, identity=self.identity, purpose="software_test_only")
+        with self.assertRaisesRegex(ValueError, "identity"):
+            second.restore(snapshot)
