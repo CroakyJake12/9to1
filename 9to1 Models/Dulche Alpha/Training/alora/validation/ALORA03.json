@@ -1,0 +1,1472 @@
+{
+  "actual_guard_lineage": {
+    "child_receipt": {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-guard-lineage-proof/child-receipt.json",
+      "sha256": "2fb83e7c8fd07e05ef3c7c08295909a87605fa74f40a874c06385449b4de6642",
+      "size_bytes": 3378
+    },
+    "dataset_opened": false,
+    "guard": {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-guard-lineage-proof/guard.log.guard.json",
+      "sha256": "8a00241a6d09339b7a503d0d25a2ba46834d79fbc04ab52bed2ad7677af83c2e",
+      "size_bytes": 678
+    },
+    "kernel_flock_verified": true,
+    "model_loaded": false,
+    "permit_checked": true,
+    "phase": "passed",
+    "receipt": {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-guard-lineage-proof/receipt.json",
+      "sha256": "a84f2825e2f0242c32d4de2a0b6ed5f72fce147982e69fa8a502e0a63ab43c2b",
+      "size_bytes": 1939
+    },
+    "scope_note": "Actual guard/lock/process lineage proof; not a model calibration, service training launch or GPU proof.",
+    "torch_imported": false,
+    "training_control_imported": false,
+    "training_observations_created": 0
+  },
+  "alora03_delta_from_alora02": [
+    {
+      "change": "M",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/README.md",
+      "sha256": "0d3e216c1fcd855906760fea321f76ca89324bfe79ab4e0547b39b0b5664fda2",
+      "size_bytes": 16706
+    },
+    {
+      "change": "A",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/RUNBOOK.md",
+      "sha256": "e1b48234b2af36672216a66b383178b9d391529a9ae2fa78006e3fdaad1aab87",
+      "size_bytes": 19844
+    },
+    {
+      "change": "M",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/__main__.py",
+      "sha256": "8e0c0df7b43adb6b745fc84d3746bb542be6a665717f792288771622b933468f",
+      "size_bytes": 6335
+    },
+    {
+      "change": "A",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/calibration.py",
+      "sha256": "447ebe568f2bdcba64afd94eafda8b9ebc345f1c6b46b62e82e5c1d0185da62a",
+      "size_bytes": 12710
+    },
+    {
+      "change": "A",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/calibration_cli.py",
+      "sha256": "f76dae7a5e0fb27a3ac1e004451c7531c57fd9f959a4f774da00e0ab6b484546",
+      "size_bytes": 15318
+    },
+    {
+      "change": "M",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/capture.py",
+      "sha256": "918397285fe445a9ea3f231e0e8858344b7dfb2f637ddb7a3074e9c5db8f7565",
+      "size_bytes": 8351
+    },
+    {
+      "change": "A",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/compute.py",
+      "sha256": "3d7e2b702a3c603362aaf961093355135bb3a7d5f0f6aa7df2b506533ebfac65",
+      "size_bytes": 10170
+    },
+    {
+      "change": "M",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/gguf_model.py",
+      "sha256": "ac5ea1f7ecedfab968f158bf78f00b68492d830a1fb524d3bf8d38c16fd8de45",
+      "size_bytes": 37274
+    },
+    {
+      "change": "M",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/gguf_store.py",
+      "sha256": "163b63f47d1593d72822dd5ea4c0f3be528071b0952515a85bef499083a65676",
+      "size_bytes": 19484
+    },
+    {
+      "change": "M",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/paged_experts.py",
+      "sha256": "d9b38a0c274f7fad47d68711c01954ba9ba8abc448b6b49fb9bc0a7a79aa4ca7",
+      "size_bytes": 11111
+    },
+    {
+      "change": "A",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/paged_loss.py",
+      "sha256": "93c7b90a27303ed10aea74fdbd5c2dae1875546441082e5e54038b0b9abb5e5f",
+      "size_bytes": 8319
+    },
+    {
+      "change": "M",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/paging.py",
+      "sha256": "1e546560f44dfcae8dc863bd1424a9dc7effcd0e6311871ee7f3a5faafdd7fd2",
+      "size_bytes": 10319
+    },
+    {
+      "change": "A",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/read_limits.py",
+      "sha256": "bfd7baeac589ee9ed2be7a63758f1f75568be28c5ad454203620ee961bac5aad",
+      "size_bytes": 444
+    },
+    {
+      "change": "A",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/runner.py",
+      "sha256": "9d605d2d12b93652381dd3e607c2de19eca2b0a96a58b03adbd66f538748412c",
+      "size_bytes": 15867
+    },
+    {
+      "change": "M",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/session.py",
+      "sha256": "6fa255881a9101793623868de41bb82f382cf10c7f028bda11f6ec103146a7d8",
+      "size_bytes": 25532
+    },
+    {
+      "change": "A",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_calibration.py",
+      "sha256": "643c4359afe17d539491fae3c3c7a3d99b47449c74f0eab4d612d60098bf0d18",
+      "size_bytes": 15916
+    },
+    {
+      "change": "A",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_calibration_cli.py",
+      "sha256": "ee3dbe98fd26b6453fd7fc3aca8bb5fcf6e4f1454a2038d115a929d4e57c835a",
+      "size_bytes": 14848
+    },
+    {
+      "change": "A",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_capacity_pause.py",
+      "sha256": "c07e497750fb2c6842d5b60d02a8cbc6686db5ca488ceca65647b3dc0a01914f",
+      "size_bytes": 6981
+    },
+    {
+      "change": "M",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_capture.py",
+      "sha256": "a052d1c586d8c5b8fb704db1af68041c7cd95bfd215c092e1eadeb8ecdfa2ac8",
+      "size_bytes": 13850
+    },
+    {
+      "change": "A",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_compute.py",
+      "sha256": "1345d69bc4dab449270326e5bdc6425afc8f37c090a5eb522f2b4975b9835984",
+      "size_bytes": 9620
+    },
+    {
+      "change": "M",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_gguf_model.py",
+      "sha256": "89da2f3d7cdf988fe0ca1bc44fa9f7700f88dfbebf16c96a217058d4a030f05b",
+      "size_bytes": 22176
+    },
+    {
+      "change": "M",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_gguf_store.py",
+      "sha256": "5a8b215ec73955571b4081049487adb8fb6010404bd1f32e656524480c3a6aaa",
+      "size_bytes": 16112
+    },
+    {
+      "change": "M",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_paged_experts.py",
+      "sha256": "ba97ced5f7ef3fca4672250e9d99dc233ec17e29b68ab50d5606ec62c854a3b6",
+      "size_bytes": 11513
+    },
+    {
+      "change": "A",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_paged_loss.py",
+      "sha256": "1a5cd0d9446c1d3bf473af66632ce5079e639309506341662aa70c58e7b83afb",
+      "size_bytes": 11182
+    },
+    {
+      "change": "A",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_paged_loss_wide.py",
+      "sha256": "8f43c18cbd0562491daaf3c95b0430f9ff8478c54864f9f7e2e94c44608427ce",
+      "size_bytes": 9334
+    },
+    {
+      "change": "M",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_paging.py",
+      "sha256": "db58db3a2e02e6655e373470ca7d9d3ef74ba94a863355afc32b9190da3c68c0",
+      "size_bytes": 19363
+    },
+    {
+      "change": "A",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_runner.py",
+      "sha256": "c27fe834605bd365548850f9dd849297716be55c10c8bc977caf7b1eca942d82",
+      "size_bytes": 11957
+    },
+    {
+      "change": "A",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_workflow.py",
+      "sha256": "c1ebc523d0adc0123c570c43651518fa4094469e5204df522d2349c966e7b67d",
+      "size_bytes": 10255
+    },
+    {
+      "change": "A",
+      "path": "9to1 Models/Dulche Alpha/Training/alora/workflow.py",
+      "sha256": "5b91ab069d985cda4fa744f578ab388031738f6aa5b6378377c6e895eb4c1cec",
+      "size_bytes": 32317
+    }
+  ],
+  "checkpoint_source_identity_note": "The b9 native checkpoint pins the b9 backend source identity. The final c6 validation change intentionally changes source identity; the checkpoint is not claimed to restore across those revisions. The final regression suite tests exact-source restore behavior.",
+  "created_utc": "2026-11-25T17:33:55.847471+00:00",
+  "evidence_files": [
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-budget-final-1795627788.log",
+      "sha256": "2febc402279b2ddcaf354261c27a8ff6ede183c8fab16f746d2583aa3c9349b8",
+      "size_bytes": 38530
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-core-1795625258.log",
+      "sha256": "639d6b0ffb86018813d11c4d47c4f5b79aa7d12dea24f407d70a8037532e9890",
+      "size_bytes": 31128
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-final-1795625919.log",
+      "sha256": "59c475558fb545f2c01d7df2412b60aabe914763c62f76cdcd1464eace2e647c",
+      "size_bytes": 36253
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-first-1795624505.log",
+      "sha256": "75e33eae69835e336948237dd7daba7382e00d2600670363250d7974288bf8f7",
+      "size_bytes": 33942
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-head-1795625982.log",
+      "sha256": "fb4d20f925b91d48e523a3f12e7e75442df81111f4d3284e0a4a61a63d6e3d0b",
+      "size_bytes": 1086
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-matched-1795626254.log",
+      "sha256": "7617a99899a736d32ae9a05c56df441e920ee684eaeec9428f6ef959ecf28b72",
+      "size_bytes": 3515
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-native-1795625339.log",
+      "sha256": "6ae1e76a3230ca4b0f7d95da62bd3c491c2b24733c4856844f4e506f0f79c467",
+      "size_bytes": 3850
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-precision-1795626778.log",
+      "sha256": "16fd6fd6e8d618a4af4d27b2f680d15b0bc7ed03dab85d45c040fc516813924f",
+      "size_bytes": 3076
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-qualified-1795627289.log",
+      "sha256": "44fb38690cf58dec792812e466fc249f9857b0a35d823fd836680e8e77759e89",
+      "size_bytes": 3487
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-second-1795624642.log",
+      "sha256": "de36293c02fdc93fb5302bd233f1d3e5cee68c509f966c21db92b0bb9befdf50",
+      "size_bytes": 32330
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-stable-loss-1795627180.log",
+      "sha256": "cc05e32473b609a18be31a04f26784b1fe8b47b2da073595170ade72c1d6dbfa",
+      "size_bytes": 38530
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-third-1795624999.log",
+      "sha256": "ec6aba041badd7f2b48107fbb56925e77c28b4b9bff7b07a24e1498a8e2e4915",
+      "size_bytes": 35896
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-wide-1795627076.log",
+      "sha256": "b17dae112620a50ec7bc123b95aadd677c63bf7b4a4f586a057afd1518abba2b",
+      "size_bytes": 3721
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-budget-final-1795627788.log.guard.json",
+      "sha256": "25f366a641916f4cc8cf9f75757cb8aa3710aaf8dfd61f0c435ef0fbe133b95c",
+      "size_bytes": 509
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-core-1795625258.log.guard.json",
+      "sha256": "d43c3e37b97988538aa5e170f3245911ebb992e50951a572c1ad77e2ba9399d2",
+      "size_bytes": 509
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-final-1795625919.log.guard.json",
+      "sha256": "70a994cbaadbf22195222da849d089177941626cffe4dfbab20aa8643d2dd241",
+      "size_bytes": 509
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-first-1795624505.log.guard.json",
+      "sha256": "4ccff19b45dffbe75c263468c409afd45aae19079cf42848a869c97c45f146db",
+      "size_bytes": 513
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-head-1795625982.log.guard.json",
+      "sha256": "2945a5494cd7be9d14a583769d620bf6d60580948143a04a537fdf75814deb6e",
+      "size_bytes": 523
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-matched-1795626254.log.guard.json",
+      "sha256": "f0e432bd098bd5b6521e43aa02952df26bafcec27d92609e896709d77e20bb71",
+      "size_bytes": 526
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-native-1795625339.log.guard.json",
+      "sha256": "e3a26a4809b842d722363382acc3d1710f07b3bcaffe04b7fde738c3d2d341f3",
+      "size_bytes": 524
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-precision-1795626778.log.guard.json",
+      "sha256": "c2aea083374843327718b24a9b25e072ac0e4687a9d045b099badf581b486219",
+      "size_bytes": 527
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-qualified-1795627289.log.guard.json",
+      "sha256": "c9ddbb90263f762d58979b3d476caeb089593247942320a0268c1f990c4ca1db",
+      "size_bytes": 529
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-second-1795624642.log.guard.json",
+      "sha256": "c2d8d589a8a6852dbd82d6d27c9bde644367dc617a21dbd096030892820edaa3",
+      "size_bytes": 508
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-stable-loss-1795627180.log.guard.json",
+      "sha256": "7a4a06d7e3a0b2a6a42cd930ccca054339a7f7122e6d9baf6a36376ac0487cbb",
+      "size_bytes": 509
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-third-1795624999.log.guard.json",
+      "sha256": "01c7ef53955562821a9a2461009afe980ae5452a21f804cfcb04413e05682141",
+      "size_bytes": 513
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-wide-1795627076.log.guard.json",
+      "sha256": "30af7167eafb3750bfe9183e02343f5945484cf204e5645f2fe5dc09d35a7c68",
+      "size_bytes": 513
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-budget-final-run.json",
+      "sha256": "53f9c98d8fcbf350d66a7aaa5c678e65ddf93c0acd76b1f8697e95623a982291",
+      "size_bytes": 866
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-core-run.json",
+      "sha256": "b5276b55b2e4fa9f8a3e1831fd4c693e705312415c773febc1abaec1a654feb3",
+      "size_bytes": 859
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-final-run.json",
+      "sha256": "4ddc9724b5ecb062a1fb3db6c6d1f33bdab5a30e1536851febc34e229911ad05",
+      "size_bytes": 845
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-first-run.json",
+      "sha256": "79f0955d6f79e09438a7ac8d150b4f68c73d3185ef40e0b98cd958ff92651ac3",
+      "size_bytes": 712
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-head-run.json",
+      "sha256": "0d559b8eb4f180e7a7c78275464d017701d991954892848e884ef9adc5605b3d",
+      "size_bytes": 856
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-matched-run.json",
+      "sha256": "f13629ceeb1c5d59c6c1fd481c7bb5d24dd7c55a7c78bcfea2c8cf71f158cf93",
+      "size_bytes": 862
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-native-run.json",
+      "sha256": "ed51ac386c4a7b9dc307254b07a04cd5390de740601174e180917303e3464abd",
+      "size_bytes": 874
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-precision-run.json",
+      "sha256": "3f7087b4bcada65252a04eae6cedd62fc2b4c2151fed6249fc671c0a4623d243",
+      "size_bytes": 873
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-qualified-run.json",
+      "sha256": "1e45ef45ddb6e07e92dd9ad20dd5dcbd4905239da53e5996e007c5afbb82dd1c",
+      "size_bytes": 875
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-second-run.json",
+      "sha256": "84a62bc98a0c552fd586cfa4c962c157edcb7b3aba774c3f038cecc4e2cd65e7",
+      "size_bytes": 715
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-stable-loss-run.json",
+      "sha256": "7debbe20f71381019724487c6947f87d9ef2e6db5ed06fcf40ea5a35b89903e2",
+      "size_bytes": 863
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-third-run.json",
+      "sha256": "f71e6bf95ba9c038d35c6f934dfa4649a2fd56572b76b0a563ab8d8aefe5e84e",
+      "size_bytes": 712
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-wide-run.json",
+      "sha256": "288cdf09978b55cd613d7674aa62a2d4b963f4557e95698a79497871819aca54",
+      "size_bytes": 843
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-budget-final-1795627788/test-summary.json",
+      "sha256": "0061311efe98d6e778934990f44df8c0e91d86d4d9dcfa06c6863ff938a847fc",
+      "size_bytes": 318
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-budget-final-1795627788/source-pins.json",
+      "sha256": "941f00eee136b7299d5028dc67a245e0190c03b96f014d30d4d949cbe7279fbe",
+      "size_bytes": 3804
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-core-1795625258/test-summary.json",
+      "sha256": "e3b3ebac4798200e7919e776a1f21a40677bca4d5666b97f959b0b3c647c9f1a",
+      "size_bytes": 318
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-core-1795625258/source-pins.json",
+      "sha256": "efc583fbc99e7c1cbee02078b4dfd4309676479bad1c303adada2912168033b6",
+      "size_bytes": 3172
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-final-1795625919/test-summary.json",
+      "sha256": "2c45357efe3edaca76afb108aecd807c2211c1f2cf656d93ebc388825c73c708",
+      "size_bytes": 318
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-final-1795625919/source-pins.json",
+      "sha256": "0d0be54dd46e8c6b88a401a8f1baea09ea2a0e49052dcc078a965fb0078c7d1c",
+      "size_bytes": 3707
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-first-1795624505/test-summary.json",
+      "sha256": "3c73de891190c375f98fc0f9c67b7c646dbc6fa8134eb5174285d60a244511ab",
+      "size_bytes": 318
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-first-1795624505/source-pins.json",
+      "sha256": "5c578c8803e04ddc5a9bb5cedc993941cece4297e5ff719dd7887c3655ae3ed2",
+      "size_bytes": 3337
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-guard-lineage-proof/receipt.json",
+      "sha256": "a84f2825e2f0242c32d4de2a0b6ed5f72fce147982e69fa8a502e0a63ab43c2b",
+      "size_bytes": 1939
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-guard-lineage-proof/child-receipt.json",
+      "sha256": "2fb83e7c8fd07e05ef3c7c08295909a87605fa74f40a874c06385449b4de6642",
+      "size_bytes": 3378
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-guard-lineage-proof/guard.log.guard.json",
+      "sha256": "8a00241a6d09339b7a503d0d25a2ba46834d79fbc04ab52bed2ad7677af83c2e",
+      "size_bytes": 678
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-matched-1795626254/native-graph-proof.json",
+      "sha256": "e2aaa3d27b856292f815495fea6366c15cf0910020edd927799f5b8d7884c915",
+      "size_bytes": 63889
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-matched-1795626254/loader-report.json",
+      "sha256": "c0f86fe269213ea3aae0dd09c763c4613bc10e2433d77dbbc94e03cb22d96625",
+      "size_bytes": 48640
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-native-1795625339/native-graph-proof.json",
+      "sha256": "afec03aab407cd07b7bac3743ce32dc38c2e45a42fc862125ebe5e5c63c6fe9f",
+      "size_bytes": 62589
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-native-1795625339/loader-report.json",
+      "sha256": "6140249b5a7dd1c4e64b484e34aecfc20c1b08d634621e57e72c282cc777f529",
+      "size_bytes": 48368
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-precision-1795626778/precision-diagnostic.json",
+      "sha256": "24844c1f9c69abe4523c2dd4b95473f50d65c017b219e3b0c6ec8148a6a78352",
+      "size_bytes": 53424
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-qualified-1795627289/native-graph-proof.json",
+      "sha256": "45a6e3bf26cd5ae4c3f7b7a72a973124d4335cb16688e7dbd5f385f45ba5de50",
+      "size_bytes": 137147
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-qualified-1795627289/loader-report.json",
+      "sha256": "26031e265e95fa57a9f15cf32af5bf54c8ed0e68f3b20ff3dcd6acf8ae354b88",
+      "size_bytes": 48640
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-second-1795624642/test-summary.json",
+      "sha256": "1c1d8c5004a8051c9fd17943433e9592b4a0a021edf40073f3657e6f17cbbe57",
+      "size_bytes": 318
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-second-1795624642/source-pins.json",
+      "sha256": "3f818a6bcd414caf0aa8205ca34fc1c72a79bb22964030fcc9c6ff64bdfac952",
+      "size_bytes": 3337
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-stable-loss-1795627180/test-summary.json",
+      "sha256": "0061311efe98d6e778934990f44df8c0e91d86d4d9dcfa06c6863ff938a847fc",
+      "size_bytes": 318
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-stable-loss-1795627180/source-pins.json",
+      "sha256": "6fb32b6c7d6dee6a4a9c0d1b514d7055233f4394122c64948e6c266cdada78a6",
+      "size_bytes": 3804
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-third-1795624999/test-summary.json",
+      "sha256": "88eaeb2efe7166fca644b0bf7c55a64e2a769986f02fdde9e304a629f44868c8",
+      "size_bytes": 318
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-third-1795624999/source-pins.json",
+      "sha256": "9f3dbbf7e274e2dfbd050bada485c481736dc07120f06e994b235e3dd0de318e",
+      "size_bytes": 3518
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-wide-1795627076/test-summary.json",
+      "sha256": "56f1a5518c8a2d24f44faab67e9a72b777360e814fd60fcb658e3059afc655be",
+      "size_bytes": 309
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-wide-1795627076/source-pins.json",
+      "sha256": "64e0532d384b0f679627a441642b39328a4dbb8dee6c98b529a7d657658cef69",
+      "size_bytes": 3804
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-memory-bound-review.json",
+      "sha256": "767db4f02cba02d40709cd780cec0e2ab7d5a365518055eede083024d547ac47",
+      "size_bytes": 475
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-memory-bound-qualified.json",
+      "sha256": "a705c70fc91355e1ebc52806f1789a3835f9c20aeaab7d82d8f84eb9f0b65202",
+      "size_bytes": 853
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-native-source-qualified.json",
+      "sha256": "2d2c1bd7f34b96b5d0a7411f16f5632c3982867a72a8b54836dd55e2c5969356",
+      "size_bytes": 615
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-integration-preflight-review.json",
+      "sha256": "f3e8ae78d8fc1beb40904b255eb2b6072c95b3ac4b6a3159b40899aaa4fd2917",
+      "size_bytes": 57166
+    },
+    {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-qualified-source.json",
+      "sha256": "f2087c0615dfc4c025fbe184b293118847f5d09569afe5fd3437f414a44f29dd",
+      "size_bytes": 4207
+    }
+  ],
+  "external_gates": [
+    {
+      "existing_not_substituted": "Older owner Atlas corpus has 2,000 total items (1,675 train / 220 validation / 105 originally held out), expanded pool 2,955.",
+      "kind": "corpus",
+      "required": "Independently admitted 5,000\u201310,000-row ALORA training split with exact five-category quotas, provenance and separate validation/final-heldout splits.",
+      "status": "not_located_in_bounded_audit"
+    },
+    {
+      "existing_not_substituted": "Consumed 105-case evaluation is development data. Existing cycle has heldout_pending:true and awaiting-independent-sealed-final; its split digest alone is not corpus admission.",
+      "kind": "evaluation",
+      "required": "Pinned independent 54-case computer-use evaluation.",
+      "status": "not_located_in_bounded_audit"
+    },
+    {
+      "kind": "real_training",
+      "required": "Real admitted curriculum/calibration/service job, followed by independent evaluation and promotion gates.",
+      "software_fixture_updates_are_not_real_training": true,
+      "status": "not_run"
+    },
+    {
+      "cuda_execution_qualified": false,
+      "kind": "gpu",
+      "production_gpu_launcher": false,
+      "status": "library_candidate_unexecuted"
+    },
+    {
+      "kind": "independent_review",
+      "required": "Independent Qwen review of code, actual native receipts, production input admission and any later GPU qualification.",
+      "status": "pending_qwen_review"
+    }
+  ],
+  "failed_receipts_preserved": [
+    {
+      "exit_code": 1,
+      "floor_mib": 8192,
+      "guard": {
+        "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-first-1795624505.log.guard.json",
+        "sha256": "4ccff19b45dffbe75c263468c409afd45aae19079cf42848a869c97c45f146db",
+        "size_bytes": 513
+      },
+      "log": {
+        "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-first-1795624505.log",
+        "sha256": "75e33eae69835e336948237dd7daba7382e00d2600670363250d7974288bf8f7",
+        "size_bytes": 33942
+      },
+      "min_mem_available_mib": 36959,
+      "peak_process_tree_rss_mib": 227,
+      "result": "exited",
+      "run": "ALORA03-first-1795624505",
+      "seconds": 15.5,
+      "test_summary": {
+        "cuda_initialization_attempts": 0,
+        "cuda_initialized": false,
+        "errors": 0,
+        "failures": 2,
+        "purpose": "software_test_only",
+        "python": "3.12.3",
+        "scope": "ALORA01 regression plus complete ALORA03 CPU candidate",
+        "skipped": 0,
+        "tests_run": 177,
+        "torch": "2.13.0+cu130",
+        "transformers": "5.20.1"
+      },
+      "test_summary_pin": {
+        "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-first-1795624505/test-summary.json",
+        "sha256": "3c73de891190c375f98fc0f9c67b7c646dbc6fa8134eb5174285d60a244511ab",
+        "size_bytes": 318
+      }
+    },
+    {
+      "exit_code": 1,
+      "floor_mib": 8192,
+      "guard": {
+        "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-matched-1795626254.log.guard.json",
+        "sha256": "f0e432bd098bd5b6521e43aa02952df26bafcec27d92609e896709d77e20bb71",
+        "size_bytes": 526
+      },
+      "log": {
+        "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-matched-1795626254.log",
+        "sha256": "7617a99899a736d32ae9a05c56df441e920ee684eaeec9428f6ef959ecf28b72",
+        "size_bytes": 3515
+      },
+      "min_mem_available_mib": 29609,
+      "peak_process_tree_rss_mib": 1896,
+      "result": "exited",
+      "run": "ALORA03-matched-1795626254",
+      "seconds": 225.8
+    },
+    {
+      "exit_code": 1,
+      "floor_mib": 8192,
+      "guard": {
+        "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-native-1795625339.log.guard.json",
+        "sha256": "e3a26a4809b842d722363382acc3d1710f07b3bcaffe04b7fde738c3d2d341f3",
+        "size_bytes": 524
+      },
+      "log": {
+        "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-native-1795625339.log",
+        "sha256": "6ae1e76a3230ca4b0f7d95da62bd3c491c2b24733c4856844f4e506f0f79c467",
+        "size_bytes": 3850
+      },
+      "min_mem_available_mib": 28885,
+      "peak_process_tree_rss_mib": 1707,
+      "result": "exited",
+      "run": "ALORA03-native-1795625339",
+      "seconds": 353.4
+    },
+    {
+      "exit_code": 1,
+      "floor_mib": 8192,
+      "guard": {
+        "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-third-1795624999.log.guard.json",
+        "sha256": "01c7ef53955562821a9a2461009afe980ae5452a21f804cfcb04413e05682141",
+        "size_bytes": 513
+      },
+      "log": {
+        "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-third-1795624999.log",
+        "sha256": "ec6aba041badd7f2b48107fbb56925e77c28b4b9bff7b07a24e1498a8e2e4915",
+        "size_bytes": 35896
+      },
+      "min_mem_available_mib": 36550,
+      "peak_process_tree_rss_mib": 229,
+      "result": "exited",
+      "run": "ALORA03-third-1795624999",
+      "seconds": 23.5,
+      "test_summary": {
+        "cuda_initialization_attempts": 0,
+        "cuda_initialized": false,
+        "errors": 0,
+        "failures": 2,
+        "purpose": "software_test_only",
+        "python": "3.12.3",
+        "scope": "ALORA01 regression plus complete ALORA03 CPU candidate",
+        "skipped": 0,
+        "tests_run": 186,
+        "torch": "2.13.0+cu130",
+        "transformers": "5.20.1"
+      },
+      "test_summary_pin": {
+        "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-third-1795624999/test-summary.json",
+        "sha256": "88eaeb2efe7166fca644b0bf7c55a64e2a769986f02fdde9e304a629f44868c8",
+        "size_bytes": 318
+      }
+    },
+    {
+      "exit_code": 1,
+      "floor_mib": 8192,
+      "guard": {
+        "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-wide-1795627076.log.guard.json",
+        "sha256": "30af7167eafb3750bfe9183e02343f5945484cf204e5645f2fe5dc09d35a7c68",
+        "size_bytes": 513
+      },
+      "log": {
+        "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-wide-1795627076.log",
+        "sha256": "b17dae112620a50ec7bc123b95aadd677c63bf7b4a4f586a057afd1518abba2b",
+        "size_bytes": 3721
+      },
+      "min_mem_available_mib": 30085,
+      "peak_process_tree_rss_mib": 133,
+      "result": "exited",
+      "run": "ALORA03-wide-1795627076",
+      "seconds": 6.2,
+      "test_summary": {
+        "cuda_initialization_attempts": 0,
+        "cuda_initialized": false,
+        "errors": 0,
+        "failures": 1,
+        "purpose": "software_test_only",
+        "python": "3.12.3",
+        "scope": "Wide-vocabulary FP64 oracle software regression",
+        "skipped": 0,
+        "tests_run": 1,
+        "torch": "2.13.0+cu130",
+        "transformers": "5.20.1"
+      },
+      "test_summary_pin": {
+        "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-wide-1795627076/test-summary.json",
+        "sha256": "56f1a5518c8a2d24f44faab67e9a72b777360e814fd60fcb658e3059afc655be",
+        "size_bytes": 309
+      }
+    }
+  ],
+  "full_package_files_at_code_checkpoint": [
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/README.md",
+      "sha256": "0d3e216c1fcd855906760fea321f76ca89324bfe79ab4e0547b39b0b5664fda2",
+      "size_bytes": 16706
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/RUNBOOK.md",
+      "sha256": "e1b48234b2af36672216a66b383178b9d391529a9ae2fa78006e3fdaad1aab87",
+      "size_bytes": 19844
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/__init__.py",
+      "sha256": "d729ac59d0256fbb99883c9f228e3e6b2fa6833d66e8b9dfc8a06a8bfa52d682",
+      "size_bytes": 95
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/__main__.py",
+      "sha256": "8e0c0df7b43adb6b745fc84d3746bb542be6a665717f792288771622b933468f",
+      "size_bytes": 6335
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/adapters.py",
+      "sha256": "dfa67ecc5e57c880a1eebf69e9ecf9a2445ce2356f65cf6d8f480ebcb3b4c892",
+      "size_bytes": 11546
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/calibration.py",
+      "sha256": "447ebe568f2bdcba64afd94eafda8b9ebc345f1c6b46b62e82e5c1d0185da62a",
+      "size_bytes": 12710
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/calibration_cli.py",
+      "sha256": "f76dae7a5e0fb27a3ac1e004451c7531c57fd9f959a4f774da00e0ab6b484546",
+      "size_bytes": 15318
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/capture.py",
+      "sha256": "918397285fe445a9ea3f231e0e8858344b7dfb2f637ddb7a3074e9c5db8f7565",
+      "size_bytes": 8351
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/checkpoints.py",
+      "sha256": "f498be7450aea4adfef16379d4e29441158aafdcf790a8b6466a90963b019b7c",
+      "size_bytes": 8123
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/compute.py",
+      "sha256": "3d7e2b702a3c603362aaf961093355135bb3a7d5f0f6aa7df2b506533ebfac65",
+      "size_bytes": 10170
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/curriculum.py",
+      "sha256": "51719b666c7abefdf8eaedcf6f0d10fe90d3c42c8ba0af9524dec4b59ca049bb",
+      "size_bytes": 1823
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/data.py",
+      "sha256": "d49af53fa99128a7c413f581dd6e1be56f9636b9a1f72f10532aa1945d4645c6",
+      "size_bytes": 11048
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/gguf_model.py",
+      "sha256": "ac5ea1f7ecedfab968f158bf78f00b68492d830a1fb524d3bf8d38c16fd8de45",
+      "size_bytes": 37274
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/gguf_store.py",
+      "sha256": "163b63f47d1593d72822dd5ea4c0f3be528071b0952515a85bef499083a65676",
+      "size_bytes": 19484
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/paged_experts.py",
+      "sha256": "d9b38a0c274f7fad47d68711c01954ba9ba8abc448b6b49fb9bc0a7a79aa4ca7",
+      "size_bytes": 11111
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/paged_loss.py",
+      "sha256": "93c7b90a27303ed10aea74fdbd5c2dae1875546441082e5e54038b0b9abb5e5f",
+      "size_bytes": 8319
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/paging.py",
+      "sha256": "1e546560f44dfcae8dc863bd1424a9dc7effcd0e6311871ee7f3a5faafdd7fd2",
+      "size_bytes": 10319
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/profile.py",
+      "sha256": "f5cfcd823a2889886f88c294e1a948d091e5e9576273840f82127545266f81f6",
+      "size_bytes": 19625
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/read_limits.py",
+      "sha256": "bfd7baeac589ee9ed2be7a63758f1f75568be28c5ad454203620ee961bac5aad",
+      "size_bytes": 444
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/runner.py",
+      "sha256": "9d605d2d12b93652381dd3e607c2de19eca2b0a96a58b03adbd66f538748412c",
+      "size_bytes": 15867
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/session.py",
+      "sha256": "6fa255881a9101793623868de41bb82f382cf10c7f028bda11f6ec103146a7d8",
+      "size_bytes": 25532
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_adapters.py",
+      "sha256": "6e2d949954b485e0f29c33677c8ed364299c04311b05ed176e143ace5f6f6b3a",
+      "size_bytes": 9053
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_calibration.py",
+      "sha256": "643c4359afe17d539491fae3c3c7a3d99b47449c74f0eab4d612d60098bf0d18",
+      "size_bytes": 15916
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_calibration_cli.py",
+      "sha256": "ee3dbe98fd26b6453fd7fc3aca8bb5fcf6e4f1454a2038d115a929d4e57c835a",
+      "size_bytes": 14848
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_capacity_pause.py",
+      "sha256": "c07e497750fb2c6842d5b60d02a8cbc6686db5ca488ceca65647b3dc0a01914f",
+      "size_bytes": 6981
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_capture.py",
+      "sha256": "a052d1c586d8c5b8fb704db1af68041c7cd95bfd215c092e1eadeb8ecdfa2ac8",
+      "size_bytes": 13850
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_checkpoints.py",
+      "sha256": "8405d3b96bb9e1e0d27c92bba73a0b4eb5bbc58b90833d85040d64110d855cc6",
+      "size_bytes": 10207
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_cli.py",
+      "sha256": "0d5de0cf5b31f0cefcc7a5c9cb71a89bf9a69786210046b8e257af095d6e2853",
+      "size_bytes": 2206
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_compute.py",
+      "sha256": "1345d69bc4dab449270326e5bdc6425afc8f37c090a5eb522f2b4975b9835984",
+      "size_bytes": 9620
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_data.py",
+      "sha256": "7145ddc88346cb351ce8d0d27faea966ce418535ec645ecfe4dd87d34ae77631",
+      "size_bytes": 11448
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_gguf_model.py",
+      "sha256": "89da2f3d7cdf988fe0ca1bc44fa9f7700f88dfbebf16c96a217058d4a030f05b",
+      "size_bytes": 22176
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_gguf_session.py",
+      "sha256": "03c28c8d33ce6dd8288fb9940131ed7ad8a09eb59a52fc327cf7f07af293d0f7",
+      "size_bytes": 3813
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_gguf_store.py",
+      "sha256": "5a8b215ec73955571b4081049487adb8fb6010404bd1f32e656524480c3a6aaa",
+      "size_bytes": 16112
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_paged_experts.py",
+      "sha256": "ba97ced5f7ef3fca4672250e9d99dc233ec17e29b68ab50d5606ec62c854a3b6",
+      "size_bytes": 11513
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_paged_loss.py",
+      "sha256": "1a5cd0d9446c1d3bf473af66632ce5079e639309506341662aa70c58e7b83afb",
+      "size_bytes": 11182
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_paged_loss_wide.py",
+      "sha256": "8f43c18cbd0562491daaf3c95b0430f9ff8478c54864f9f7e2e94c44608427ce",
+      "size_bytes": 9334
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_paging.py",
+      "sha256": "db58db3a2e02e6655e373470ca7d9d3ef74ba94a863355afc32b9190da3c68c0",
+      "size_bytes": 19363
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_profile.py",
+      "sha256": "9c8a495b8ab5145c832705bbfa4a4bd43db41c159a8b06c3320a19c5de804cea",
+      "size_bytes": 20608
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_runner.py",
+      "sha256": "c27fe834605bd365548850f9dd849297716be55c10c8bc977caf7b1eca942d82",
+      "size_bytes": 11957
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_session.py",
+      "sha256": "034c70c9860489d40eaeb4c30f50ecc84fbafc9e523b007d8bed2ac678e3e707",
+      "size_bytes": 11831
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_support.py",
+      "sha256": "5bbcae29d71e75aa6460384de01c5ba35b824b77c471493547990b3d02406dde",
+      "size_bytes": 2404
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_worker.py",
+      "sha256": "0f990b6dd1123e99890a855e88b941df9c569af626f87074b2fc9bd7090927e0",
+      "size_bytes": 13066
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/test_workflow.py",
+      "sha256": "c1ebc523d0adc0123c570c43651518fa4094469e5204df522d2349c966e7b67d",
+      "size_bytes": 10255
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/worker.py",
+      "sha256": "2cefc6795d83eef7a8fe4eae211ea690ee7e88ec3e757559325439d2870b31be",
+      "size_bytes": 9774
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Training/alora/workflow.py",
+      "sha256": "5b91ab069d985cda4fa744f578ab388031738f6aa5b6378377c6e895eb4c1cec",
+      "size_bytes": 32317
+    }
+  ],
+  "implementation_slices": [
+    {
+      "changes": "Native decoder and optional router auxiliary loss retained; full-vocabulary CE uses token/vocabulary tiles, masked causal targets and rematerialized frozen-head backward. FP64 normalization fixes the wide-vocabulary drift; FP32 scores/exp/gradients can coexist with a bounded FP64 reduction temporary. All admission points enforce the conservative eight-byte-per-element, 16 MiB per-buffer bound. No full training logits tensor is retained.",
+      "files": [
+        "paged_loss.py",
+        "session.py"
+      ],
+      "name": "Bounded native causal loss"
+    },
+    {
+      "changes": "Propagate actual compute callbacks through bounded reads/transfers/arithmetic and autograd threads; check existing worker PID/cgroup/device/permit and reference-kernel policy for the unexecuted CUDA candidate. Production launchers remain CPU-only.",
+      "files": [
+        "compute.py",
+        "paging.py",
+        "paged_experts.py",
+        "capture.py",
+        "gguf_model.py",
+        "session.py"
+      ],
+      "name": "Per-operation permits and CUDA library admission"
+    },
+    {
+      "changes": "Specific capacity exception retains live pins; interruption before optimizer restores RNG and clears gradients without advancing cursor. Completed state is sealed and the next attempt uses a fresh store.",
+      "files": [
+        "read_limits.py",
+        "gguf_store.py",
+        "session.py",
+        "test_capacity_pause.py"
+      ],
+      "name": "Recoverable fingerprint capacity"
+    },
+    {
+      "changes": "Default 20 real dispatch samples from verified train rows; reject missing categories/trainable or adapted graphs; atomic complete/partial profile+receipt; raw/canonical hashes; verified original-path partial resume with exact whole-row progress.",
+      "files": [
+        "calibration.py",
+        "capture.py",
+        "test_calibration.py"
+      ],
+      "name": "Retained category-balanced calibration"
+    },
+    {
+      "changes": "Public calibrate owns existing SDK flock and runs pinned approved guard+private CPU child. Child verifies actual lineage and lock; corpus/model work remains guarded. No invented TrainingControl progress for calibration.",
+      "files": [
+        "calibration_cli.py",
+        "workflow.py",
+        "__main__.py",
+        "test_calibration_cli.py"
+      ],
+      "name": "Guarded CPU calibration CLI"
+    },
+    {
+      "changes": "Prepare immutable deployment/regular venv-preserving executable and existing-supervisor manifest; verify actual job context; import content-addressed checkpoint bytes into new custody without pickle or mutating source; retain single readiness handshake.",
+      "files": [
+        "workflow.py",
+        "runner.py",
+        "__main__.py",
+        "test_workflow.py",
+        "test_runner.py"
+      ],
+      "name": "Pinned CPU workflow and service continuation"
+    },
+    {
+      "changes": "Exact schema/CLI examples, verified existing supervisor commands, digest distinctions, original partial paths, CPU/CUDA evidence boundaries and missing corpus/evaluation admission.",
+      "files": [
+        "README.md",
+        "RUNBOOK.md"
+      ],
+      "name": "Operator documentation"
+    }
+  ],
+  "input_audit_sources": [
+    "/home/jacob/Documents/GitHub/9to1/docs/dulche/independent-training.md",
+    "/home/jacob/Documents/Codex/2026-11-22/files-pasted-by-the-user-mission/work/dulche-2026-11-23/qwen-training-owner/training-dataset/DATASET-CARD.md",
+    "/home/jacob/Documents/Codex/2026-11-22/files-pasted-by-the-user-mission/work/dulche-2026-11-23/qwen-training-owner/FINAL-REPORT.md",
+    "/home/jacob/.local/state/9to1/dulche/training/cycles/qwen-ui27-cycle-20261123/cycle.json"
+  ],
+  "memory_bound_followup": {
+    "actual_native_proof_revision": "b9c86d405a6b2ef38be75a18bf8e9965d9200ac8",
+    "change": "Conservative eight-byte compute/reduction tile validation; no arithmetic changes",
+    "default_loss_tile_bytes": 262144,
+    "final_code_revision": "c6c135e8c047d510b35f91723a024fa3414cd3e1",
+    "forward_backward_ast_unchanged": true,
+    "limit_bytes": 16777216,
+    "proof_loss_tile_bytes": 4096,
+    "schema": 1,
+    "source_pins_verified": 43,
+    "streaming_cross_entropy_class_ast_sha256": "8e1a21455b0b06530ea415cf2b7845efffe0186e2615b327335f03fe471d3a81",
+    "test_summary": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-budget-final-1795627788/test-summary.json",
+    "test_summary_sha256": "0061311efe98d6e778934990f44df8c0e91d86d4d9dcfa06c6863ff938a847fc",
+    "updated_utc": "2026-11-25T17:30:43.086053+00:00",
+    "validation_pending": false
+  },
+  "native_proof": {
+    "guard": {
+      "command": [
+        "/home/jacob/.unsloth/native-venv/bin/python",
+        "-B",
+        "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-native-fp64-qualified-proof.py"
+      ],
+      "evidence_note": "Compile/test evidence only. Nothing here renders, runs natively, packages or accepts anything. A guard stop means PARTIAL and NOT REUSABLE.",
+      "exit_code": 0,
+      "floor_mib": 8192,
+      "min_mem_available_mib": 27875,
+      "peak_process_tree_rss_mib": 1773,
+      "result": "OK",
+      "seconds": 224.0,
+      "signal_reason": "exited"
+    },
+    "guard_pin": {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-qualified-1795627289.log.guard.json",
+      "sha256": "c9ddbb90263f762d58979b3d476caeb089593247942320a0268c1f990c4ca1db",
+      "size_bytes": 529
+    },
+    "proof_pin": {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-qualified-1795627289/native-graph-proof.json",
+      "sha256": "45a6e3bf26cd5ae4c3f7b7a72a973124d4335cb16688e7dbd5f385f45ba5de50",
+      "size_bytes": 137147
+    },
+    "source_binding": {
+      "all_native_source_pins_match_revision": true,
+      "arithmetic_revision": "b9c86d405a6b2ef38be75a18bf8e9965d9200ac8",
+      "final_code_revision": "c6c135e8c047d510b35f91723a024fa3414cd3e1",
+      "post_proof_change": "Conservative memory admission only; same streaming autograd class AST; backend source identity intentionally differs.",
+      "production_source_count": 21,
+      "proof_path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-qualified-1795627289/native-graph-proof.json",
+      "proof_sha256": "45a6e3bf26cd5ae4c3f7b7a72a973124d4335cb16688e7dbd5f385f45ba5de50",
+      "qualification": "passed"
+    },
+    "summary": {
+      "backend_source_sha256": "9ac0f14416680630408bd3f96f70b0cbee7a1f277a054fffdef40db6927282e2",
+      "backward_layer_count": 48,
+      "changed_adapter_tensors": 96,
+      "checkpoint_roundtrip_verified": true,
+      "completed_checkpoint": {
+        "checkpoint": {
+          "artifact_id": "d6e1701b-1bfc-4e3a-a668-a661409b90da",
+          "attempt_id": "1d36e139-8233-4da5-9b9f-4355356d475f",
+          "run_id": "61170ea2-7df5-4b3c-912e-a73686f0c7f4",
+          "sha256": "65eb75fd1c7c1fb303fd72ed43cf475a6514cdae32c13e91fc0988fa62832b87",
+          "size_bytes": 8340083
+        },
+        "evidence": {
+          "artifact_id": "f2ca5db1-31b7-4d5d-b82b-9e416b4eb2c5",
+          "attempt_id": "1d36e139-8233-4da5-9b9f-4355356d475f",
+          "run_id": "61170ea2-7df5-4b3c-912e-a73686f0c7f4",
+          "sha256": "d2c5353eafa9f69fca2e6fd78cd3979e0cb0c7b1d78871ca8dc48d96a169b7a8",
+          "size_bytes": 45508
+        }
+      },
+      "cuda_initialization_attempts": 0,
+      "cuda_initialized": false,
+      "forward_layer_count": 48,
+      "fresh_full_file_hashes_verified": false,
+      "grad_norm": 8.955538749694824,
+      "held_out_tasks_used": false,
+      "loss": 12.876958847045898,
+      "mapped_tensor_count": 1224,
+      "native_class": "Qwen4ExpForCausalLM",
+      "numeric_input_ids": [
+        [
+          1,
+          3,
+          9
+        ]
+      ],
+      "optimizer_updates": 1,
+      "peak_self_rss_kib": 7265728,
+      "permit_checks": 81187,
+      "permit_issuer": "isolated software fixture; not a production supervisor or GPU grant",
+      "permit_renewals": 1368,
+      "purpose": "software_test_only",
+      "reused_calibration_forward": {
+        "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-native-1795625339/native-graph-proof.json",
+        "previous_overall_proof_status": "failed",
+        "scope": "previous completed frozen48-layer numeric forward only",
+        "sha256": "afec03aab407cd07b7bac3743ce32dc38c2e45a42fc862125ebe5e5c63c6fe9f"
+      },
+      "revision": "b9c86d405a6b2ef38be75a18bf8e9965d9200ac8",
+      "rss_note": "Self ru_maxrss records the process high-water RSS. The guard process-tree RSS is sampled and can miss a short peak.",
+      "same_hidden_reference": {
+        "hidden_sha256": "6a18c2d6b1fd8b1d960f0366aa2aa1008bc60d613915097b3bf7550e99a2503b",
+        "hidden_shape": [
+          1,
+          3,
+          2560
+        ],
+        "logits_max": 17.11119270324707,
+        "logits_min": -13.558732032775879,
+        "logits_shape": [
+          1,
+          3,
+          248320
+        ],
+        "native_fp32_loss": 12.876818656921387,
+        "native_loss": 12.876957994436642,
+        "native_vs_trimmed_logit_max_absolute": 2.86102294921875e-06,
+        "oracle": "FP64 cross_entropy on fixed native FP32 logits",
+        "trimmed_native_loss": 12.876958495239577
+      },
+      "scope": "actual 48-layer training graph, same-hidden FP64 CE oracle parity, worker permits and checkpoint proof",
+      "seconds": 214.625,
+      "source_identity": "4a6a3aa5010d91cb55ba0cf7668cbc4375fe81eaabf869e226821fca8a5dfc56",
+      "status": "passed",
+      "store_stats": {
+        "decode_count": 27065,
+        "fingerprint_count": 12947,
+        "fingerprint_limit": 262144,
+        "gather_count": 2,
+        "max_decoded_bytes": 10485760,
+        "max_read_bytes": 5242880,
+        "read_count": 27065,
+        "total_decoded_bytes": 78133624320,
+        "total_read_bytes": 14817289920
+      },
+      "trainable_parameter_count": 675840,
+      "training_corpus_used": false,
+      "worker": {
+        "control_client_sha256": "ecef815d9597c6e7e84cd778acc1f59c7c3b70e42628eb175b237c78f73bedd8",
+        "delivered_checkpoint_path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-qualified-1795627289/worker-output/checkpoints/alora-1-14b05ee80818446484c623aa1d6aaf46.snapshot",
+        "delivered_checkpoint_sha256": "65eb75fd1c7c1fb303fd72ed43cf475a6514cdae32c13e91fc0988fa62832b87",
+        "loss_difference_from_same_hidden_fp64_ce": 8.526092560856569e-07,
+        "loss_difference_from_same_hidden_trimmed_fp64_ce": 3.5180632096398767e-07,
+        "permit_checks": 81187,
+        "permit_renewals": 1368,
+        "phase": "completed",
+        "production_supervisor_used": false,
+        "separate_frozen_forward_loss_difference": 0.00014019012451171875,
+        "updates": 1
+      }
+    }
+  },
+  "ownership": {
+    "feature_inventory_modified": false,
+    "integration_state_at_document_creation": "ready_for_scoped_local_fast_forward",
+    "main_repository": "/home/jacob/Documents/GitHub/9to1",
+    "preflight": {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-integration-preflight-review.json",
+      "sha256": "f3e8ae78d8fc1beb40904b255eb2b6072c95b3ac4b6a3159b40899aaa4fd2917",
+      "size_bytes": 57166
+    },
+    "scope": "9to1 Models/Dulche Alpha/Training/alora/**",
+    "service_or_inference_configuration_modified": false,
+    "worktree": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/worktrees/ALORA03"
+  },
+  "precision_diagnosis": {
+    "artifacts": {
+      "hidden": {
+        "dtype": "torch.float32",
+        "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-precision-1795626778/hidden.npy",
+        "sha256": "e2205a4d1f6ce7935d376cfa031713ca406e7cacfa74e2601ffd61b2ba9038b0",
+        "shape": [
+          1,
+          3,
+          2560
+        ],
+        "size_bytes": 30848
+      },
+      "logits": {
+        "dtype": "torch.float32",
+        "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-precision-1795626778/logits.npy",
+        "sha256": "67edf5c211a8102809d3671929b1d8c5cc680b66b3a2e01eb8d5804ffc17135b",
+        "shape": [
+          1,
+          3,
+          248320
+        ],
+        "size_bytes": 2979968
+      }
+    },
+    "cuda_initialization_attempts": 0,
+    "cuda_initialized": false,
+    "fp64_loss_on_native_fp32_logits": 12.876957994436642,
+    "gradient_l2_difference_vs_fp64_loss": 6.756505968041893e-07,
+    "guard": {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-precision-1795626778.log.guard.json",
+      "sha256": "c2aea083374843327718b24a9b25e072ac0e4687a9d045b099badf581b486219",
+      "size_bytes": 527
+    },
+    "hidden_tensor_sha256": "6a18c2d6b1fd8b1d960f0366aa2aa1008bc60d613915097b3bf7550e99a2503b",
+    "interpretation": "The original actual-H native-FP32 comparison gate used a less accurate wide-vocabulary reduction. On identical native FP32 scores, streamed loss is within 1.011e-7 of the FP64 oracle. This diagnosis does not turn either preserved failed full-model run into a pass.",
+    "log": {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-precision-1795626778.log",
+      "sha256": "16fd6fd6e8d618a4af4d27b2f680d15b0bc7ed03dab85d45c040fc516813924f",
+      "size_bytes": 3076
+    },
+    "maximum_hidden_gradient_difference_vs_fp64_loss": 1.7881393432617188e-07,
+    "native_fp32_absolute_error_vs_fp64": 0.0001393375152556331,
+    "native_fp32_loss": 12.876818656921387,
+    "purpose": "software_test_only",
+    "receipt": {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-precision-1795626778/precision-diagnostic.json",
+      "sha256": "24844c1f9c69abe4523c2dd4b95473f50d65c017b219e3b0c6ec8148a6a78352",
+      "size_bytes": 53424
+    },
+    "same_hidden_as_failed_matched_run": true,
+    "scope": "actual numeric hidden/logit precision diagnostic",
+    "source_identity": "4a6a3aa5010d91cb55ba0cf7668cbc4375fe81eaabf869e226821fca8a5dfc56",
+    "status": "measured",
+    "streamed_absolute_error_vs_fp64": 1.0106506032059315e-07,
+    "streamed_fp32_loss": 12.876957893371582
+  },
+  "purpose": "software_test_only",
+  "requirements": {
+    "calibration": {
+      "default_samples_per_category": 4,
+      "default_total": 20,
+      "retained_profile_and_receipt": true,
+      "supports_fifteen_with_three_per_category": true,
+      "training_rows_only": true,
+      "verified_partial_resume": true
+    },
+    "category_percentages": {
+      "autonomous_recovery": 25,
+      "coding": 20,
+      "proactive_reasoning": 15,
+      "ui": 25,
+      "ux": 15
+    },
+    "evaluation": {
+      "admitted_artifact_located": false,
+      "independent_heldout_required": true,
+      "requested_cases": 54
+    },
+    "preservation": [
+      "Canonical source/data/purpose and checkpoint progress",
+      "Frozen base/router/shared experts",
+      "Independent input rights/custody",
+      "Existing Dulche inference and local-worker ownership",
+      "Existing SDK lock and guarded execution"
+    ],
+    "training_examples": {
+      "maximum": 10000,
+      "minimum": 5000,
+      "source": "Owner ALORA brief; enforced by real request/curriculum validators",
+      "split": "train"
+    }
+  },
+  "revisions": {
+    "alora02_base": "11b71cadc28318b4c0dc4b968b47465643920ebf",
+    "alora03_core": "8069faedd1cf665d2bef969f307fc9d2ef1dc1bb",
+    "cli_checkpoint": "e98cfd80af7979b4f59986fd5d60e3ab7a33a4cb",
+    "integration_receipt": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-integration.json",
+    "native_arithmetic_checkpoint": "b9c86d405a6b2ef38be75a18bf8e9965d9200ac8",
+    "qualified_code_checkpoint": "c6c135e8c047d510b35f91723a024fa3414cd3e1",
+    "validation_document_revision": "Commit containing this document; intentionally separate from the qualified code checkpoint"
+  },
+  "schema": "alora-qualified-implementation-v1",
+  "status": "cpu_code_and_native_numeric_mechanism_qualified",
+  "task": "ALORA selected-expert LoRA training mechanism",
+  "tests": {
+    "all_43_sources_match_qualified_code_checkpoint": true,
+    "guard": {
+      "command": [
+        "/home/jacob/.unsloth/native-venv/bin/python",
+        "-B",
+        "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-all-tests.py"
+      ],
+      "evidence_note": "Compile/test evidence only. Nothing here renders, runs natively, packages or accepts anything. A guard stop means PARTIAL and NOT REUSABLE.",
+      "exit_code": 0,
+      "floor_mib": 8192,
+      "min_mem_available_mib": 30160,
+      "peak_process_tree_rss_mib": 229,
+      "result": "OK",
+      "seconds": 23.1,
+      "signal_reason": "exited"
+    },
+    "guard_pin": {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-budget-final-1795627788.log.guard.json",
+      "sha256": "25f366a641916f4cc8cf9f75757cb8aa3710aaf8dfd61f0c435ef0fbe133b95c",
+      "size_bytes": 509
+    },
+    "source_pins": {
+      "__init__.py": "d729ac59d0256fbb99883c9f228e3e6b2fa6833d66e8b9dfc8a06a8bfa52d682",
+      "__main__.py": "8e0c0df7b43adb6b745fc84d3746bb542be6a665717f792288771622b933468f",
+      "adapters.py": "dfa67ecc5e57c880a1eebf69e9ecf9a2445ce2356f65cf6d8f480ebcb3b4c892",
+      "calibration.py": "447ebe568f2bdcba64afd94eafda8b9ebc345f1c6b46b62e82e5c1d0185da62a",
+      "calibration_cli.py": "f76dae7a5e0fb27a3ac1e004451c7531c57fd9f959a4f774da00e0ab6b484546",
+      "capture.py": "918397285fe445a9ea3f231e0e8858344b7dfb2f637ddb7a3074e9c5db8f7565",
+      "checkpoints.py": "f498be7450aea4adfef16379d4e29441158aafdcf790a8b6466a90963b019b7c",
+      "compute.py": "3d7e2b702a3c603362aaf961093355135bb3a7d5f0f6aa7df2b506533ebfac65",
+      "curriculum.py": "51719b666c7abefdf8eaedcf6f0d10fe90d3c42c8ba0af9524dec4b59ca049bb",
+      "data.py": "d49af53fa99128a7c413f581dd6e1be56f9636b9a1f72f10532aa1945d4645c6",
+      "gguf_model.py": "ac5ea1f7ecedfab968f158bf78f00b68492d830a1fb524d3bf8d38c16fd8de45",
+      "gguf_store.py": "163b63f47d1593d72822dd5ea4c0f3be528071b0952515a85bef499083a65676",
+      "paged_experts.py": "d9b38a0c274f7fad47d68711c01954ba9ba8abc448b6b49fb9bc0a7a79aa4ca7",
+      "paged_loss.py": "93c7b90a27303ed10aea74fdbd5c2dae1875546441082e5e54038b0b9abb5e5f",
+      "paging.py": "1e546560f44dfcae8dc863bd1424a9dc7effcd0e6311871ee7f3a5faafdd7fd2",
+      "profile.py": "f5cfcd823a2889886f88c294e1a948d091e5e9576273840f82127545266f81f6",
+      "read_limits.py": "bfd7baeac589ee9ed2be7a63758f1f75568be28c5ad454203620ee961bac5aad",
+      "runner.py": "9d605d2d12b93652381dd3e607c2de19eca2b0a96a58b03adbd66f538748412c",
+      "session.py": "6fa255881a9101793623868de41bb82f382cf10c7f028bda11f6ec103146a7d8",
+      "test_adapters.py": "6e2d949954b485e0f29c33677c8ed364299c04311b05ed176e143ace5f6f6b3a",
+      "test_calibration.py": "643c4359afe17d539491fae3c3c7a3d99b47449c74f0eab4d612d60098bf0d18",
+      "test_calibration_cli.py": "ee3dbe98fd26b6453fd7fc3aca8bb5fcf6e4f1454a2038d115a929d4e57c835a",
+      "test_capacity_pause.py": "c07e497750fb2c6842d5b60d02a8cbc6686db5ca488ceca65647b3dc0a01914f",
+      "test_capture.py": "a052d1c586d8c5b8fb704db1af68041c7cd95bfd215c092e1eadeb8ecdfa2ac8",
+      "test_checkpoints.py": "8405d3b96bb9e1e0d27c92bba73a0b4eb5bbc58b90833d85040d64110d855cc6",
+      "test_cli.py": "0d5de0cf5b31f0cefcc7a5c9cb71a89bf9a69786210046b8e257af095d6e2853",
+      "test_compute.py": "1345d69bc4dab449270326e5bdc6425afc8f37c090a5eb522f2b4975b9835984",
+      "test_data.py": "7145ddc88346cb351ce8d0d27faea966ce418535ec645ecfe4dd87d34ae77631",
+      "test_gguf_model.py": "89da2f3d7cdf988fe0ca1bc44fa9f7700f88dfbebf16c96a217058d4a030f05b",
+      "test_gguf_session.py": "03c28c8d33ce6dd8288fb9940131ed7ad8a09eb59a52fc327cf7f07af293d0f7",
+      "test_gguf_store.py": "5a8b215ec73955571b4081049487adb8fb6010404bd1f32e656524480c3a6aaa",
+      "test_paged_experts.py": "ba97ced5f7ef3fca4672250e9d99dc233ec17e29b68ab50d5606ec62c854a3b6",
+      "test_paged_loss.py": "1a5cd0d9446c1d3bf473af66632ce5079e639309506341662aa70c58e7b83afb",
+      "test_paged_loss_wide.py": "8f43c18cbd0562491daaf3c95b0430f9ff8478c54864f9f7e2e94c44608427ce",
+      "test_paging.py": "db58db3a2e02e6655e373470ca7d9d3ef74ba94a863355afc32b9190da3c68c0",
+      "test_profile.py": "9c8a495b8ab5145c832705bbfa4a4bd43db41c159a8b06c3320a19c5de804cea",
+      "test_runner.py": "c27fe834605bd365548850f9dd849297716be55c10c8bc977caf7b1eca942d82",
+      "test_session.py": "034c70c9860489d40eaeb4c30f50ecc84fbafc9e523b007d8bed2ac678e3e707",
+      "test_support.py": "5bbcae29d71e75aa6460384de01c5ba35b824b77c471493547990b3d02406dde",
+      "test_worker.py": "0f990b6dd1123e99890a855e88b941df9c569af626f87074b2fc9bd7090927e0",
+      "test_workflow.py": "c1ebc523d0adc0123c570c43651518fa4094469e5204df522d2349c966e7b67d",
+      "worker.py": "2cefc6795d83eef7a8fe4eae211ea690ee7e88ec3e757559325439d2870b31be",
+      "workflow.py": "5b91ab069d985cda4fa744f578ab388031738f6aa5b6378377c6e895eb4c1cec"
+    },
+    "source_pins_pin": {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-budget-final-1795627788/source-pins.json",
+      "sha256": "941f00eee136b7299d5028dc67a245e0190c03b96f014d30d4d949cbe7279fbe",
+      "size_bytes": 3804
+    },
+    "summary": {
+      "cuda_initialization_attempts": 0,
+      "cuda_initialized": false,
+      "errors": 0,
+      "failures": 0,
+      "purpose": "software_test_only",
+      "python": "3.12.3",
+      "scope": "ALORA01 regression plus complete ALORA03 CPU candidate",
+      "skipped": 0,
+      "tests_run": 198,
+      "torch": "2.13.0+cu130",
+      "transformers": "5.20.1"
+    },
+    "summary_pin": {
+      "path": "/home/jacob/9to1-swarm-harness-20261124/owner-queue-20261125/ALORA03-budget-final-1795627788/test-summary.json",
+      "sha256": "0061311efe98d6e778934990f44df8c0e91d86d4d9dcfa06c6863ff938a847fc",
+      "size_bytes": 318
+    }
+  },
+  "ui_evidence": {
+    "atlas_routes": [],
+    "cui_native_preview": "not_applicable",
+    "reason": "This is the owner-steered ALORA training/runtime slice; no Haven/Spaces layout or CUI surface was edited. Native neural-model arithmetic evidence is not a CUI preview."
+  },
+  "wide_vocabulary_regression": [
+    {
+      "accuracy_ranking_assumed": false,
+      "analytic_loss": 8.510227769535685,
+      "candidate_hidden_gradient_absolute_tolerance": 2e-06,
+      "candidate_loss_absolute_tolerance": 2e-06,
+      "chunk_rows": 256,
+      "cuda_initialization_attempts": 0,
+      "dominant_index": 0,
+      "dominant_logit": 17,
+      "hidden_rows": 2,
+      "kind": "wide-vocabulary-fixed-fp32-score-loss",
+      "max_decoded_bytes": 2048,
+      "native_fp32_hidden_gradient_max_absolute_error": 0.010710196138091987,
+      "native_fp32_loss": 8.508955001831055,
+      "native_fp32_loss_absolute_error": 0.0012727677090396128,
+      "oracle": "FP64 cross_entropy on fixed FP32 scores, checked against log1p closed form",
+      "oracle_closed_form_absolute_tolerance": 1e-09,
+      "oracle_loss": 8.510227769540094,
+      "other_logit": 0,
+      "purpose": "software_test_only",
+      "schema": 1,
+      "source_reads": 1940,
+      "streamed_hidden_gradient_max_absolute_error": 4.3356484979995e-07,
+      "streamed_loss": 8.510228157043457,
+      "streamed_loss_absolute_error": 3.8750336273096764e-07,
+      "vocabulary": 248320,
+      "weight_bytes": 1986560,
+      "width": 2
+    },
+    {
+      "accuracy_ranking_assumed": false,
+      "analytic_loss": 8.510227769535685,
+      "candidate_hidden_gradient_absolute_tolerance": 2e-06,
+      "candidate_loss_absolute_tolerance": 2e-06,
+      "chunk_rows": 256,
+      "cuda_initialization_attempts": 0,
+      "dominant_index": 248319,
+      "dominant_logit": 17,
+      "hidden_rows": 2,
+      "kind": "wide-vocabulary-fixed-fp32-score-loss",
+      "max_decoded_bytes": 2048,
+      "native_fp32_hidden_gradient_max_absolute_error": 6.242192499783528e-06,
+      "native_fp32_loss": 8.510229110717773,
+      "native_fp32_loss_absolute_error": 1.3411820916076067e-06,
+      "oracle": "FP64 cross_entropy on fixed FP32 scores, checked against log1p closed form",
+      "oracle_closed_form_absolute_tolerance": 1e-09,
+      "oracle_loss": 8.510227769535682,
+      "other_logit": 0,
+      "purpose": "software_test_only",
+      "schema": 1,
+      "source_reads": 1940,
+      "streamed_hidden_gradient_max_absolute_error": 4.3352771506022236e-07,
+      "streamed_loss": 8.510228157043457,
+      "streamed_loss_absolute_error": 3.875077752013567e-07,
+      "vocabulary": 248320,
+      "weight_bytes": 1986560,
+      "width": 2
+    }
+  ]
+}
