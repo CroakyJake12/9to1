@@ -50,7 +50,7 @@ public sealed record DeveloperSourceControlStatus(string BindingId, string Canon
         if (string.IsNullOrWhiteSpace(relativePath)) throw new InvalidDataException("A status query requires a path.");
         var normalized = relativePath.Replace('\\', '/');
         var entry = captured.Entries.FirstOrDefault(e => string.Equals(e.RelativePath, normalized, StringComparison.Ordinal));
-        return new DeveloperFileSourceStatus(documentId, normalized, captured.CanonicalRepositoryId, entry?.State ?? DeveloperFileSourceState.NotInRepository);
+        return (new DeveloperFileSourceStatus(documentId, normalized, captured.CanonicalRepositoryId, entry?.State ?? DeveloperFileSourceState.NotInRepository));
     }
 
     /// <summary>Paths currently in conflict within the bound repository.</summary>
