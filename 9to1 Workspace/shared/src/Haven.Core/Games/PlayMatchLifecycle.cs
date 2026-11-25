@@ -33,7 +33,7 @@ public sealed record PlayMatchRound(int Round, PlayToolProfile AssistancePolicy,
         return new PlayToolCallResult(authorization, deniedByCapability);
     }
 
-    public PlayMatchRound WithLedger(PlayAnswerLedger ledger) => this with { Ledger = ledger }.Capture();
+    public PlayMatchRound WithLedger(PlayAnswerLedger ledger) => (this with { Ledger = ledger }).Capture();
 }
 
 /// <summary>The match lifecycle. It pins a ruleset revision, holds rounds and phase, and supports host pause/resume/next-round/replay.
