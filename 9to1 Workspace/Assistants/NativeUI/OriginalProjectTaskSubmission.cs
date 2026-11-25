@@ -113,8 +113,9 @@ internal sealed class OriginalProjectTaskSubmission
     internal void Acknowledge(AssistantsWorkspaceSnapshot actual)
     {
         if (OriginalCommand?.IsCompletedSuccessfully != true || !ReferenceEquals(OriginalCommand.Result, actual) ||
-            actual.SelectedAssistant?.Identity != Identity || actual.ConversationBinding is not { } binding ||
-            binding.Definition.Identity != Identity || binding.Conversation.Id != ConversationId ||
+            actual.SelectedAssistant?.Identity != Identity || actual.SelectedAssistant.Revision != DefinitionRevision ||
+            actual.ConversationBinding is not { } binding || binding.Definition.Identity != Identity ||
+            binding.Definition.Revision != DefinitionRevision || binding.Conversation.Id != ConversationId ||
             binding.Conversation.Mode != HavenMode.Tasks || binding.Conversation.Kind != ConversationKind.Task ||
             actual.Conversation is not { Conversation: var conversation } || conversation.Id != ConversationId ||
             conversation.Mode != HavenMode.Tasks || conversation.Kind != ConversationKind.Task)

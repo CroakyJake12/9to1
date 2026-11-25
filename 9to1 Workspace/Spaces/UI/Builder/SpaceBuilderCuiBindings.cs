@@ -126,7 +126,8 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
                 index = index,
                 key = index.ToString(System.Globalization.CultureInfo.InvariantCulture),
                 user = pair.User,
-                assistant = pair.Assistant
+                assistant = pair.Assistant,
+                OriginalPair = pair
             }).ToArray(),
             "builder.hasExamplePairs" => state.Draft.ExamplePairs.Count != 0,
             "builder.canEditExamplePairs" => _isCurrent() && state.CanEdit && _updateExamplePair is not null,
@@ -370,7 +371,8 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             exampleRow.index < state.Draft.ExamplePairs.Count)
         {
             var expected = state.Draft.ExamplePairs[exampleRow.index];
-            if (!StringComparer.Ordinal.Equals(expected.User, exampleRow.user) ||
+            if (!ReferenceEquals(expected, exampleRow.OriginalPair) ||
+                !StringComparer.Ordinal.Equals(expected.User, exampleRow.user) ||
                 !StringComparer.Ordinal.Equals(expected.Assistant, exampleRow.assistant)) return false;
             var updated = path == "user" ? expected with { User = text } : expected with { Assistant = text };
             if (!_updateExamplePair(exampleRow.index, expected, updated)) return false;
@@ -493,6 +495,8 @@ public sealed class SpaceBuilderCapabilityRow
 
 public sealed class SpaceBuilderExamplePairRow
 {
+    // Presentation-only identity. Equal text in another row is not the original example.
+    internal SpaceExamplePair? OriginalPair { get; init; }
     public int index { get; init; }
     public string key { get; init; } = string.Empty;
     public string user { get; init; } = string.Empty;

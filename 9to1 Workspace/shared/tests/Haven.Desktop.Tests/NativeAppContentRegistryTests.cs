@@ -24,6 +24,13 @@ public sealed class NativeAppContentRegistryTests
     {
         var owner = new StrongOwner(AppContentAddress.Parse("9to1://files"));
         BrowseChrome? chrome = null;
+        owner.OnCheck = () =>
+        {
+            // Write checks a mutable document fingerprint on its dispatcher. The real
+            // registered host also re-enters Chrome here to check publication.
+            Avalonia.Threading.Dispatcher.UIThread.VerifyAccess();
+            Assert.Null(chrome!.OriginalClose);
+        };
         owner.OnBegin = () =>
         {
             Avalonia.Threading.Dispatcher.UIThread.VerifyAccess();
@@ -122,6 +129,32 @@ public sealed class NativeAppContentRegistryTests
         Assert.True(startup.IsFaulted);
         Assert.Same(startup, session.OriginalInitialization);
         Assert.True(session.CanRetireOriginalView);
+    }
+
+    [AvaloniaFact]
+    public async Task Worker_close_observation_detects_later_owner_edit_and_revocation()
+    {
+        var request = Request();
+        var owner = new StrongOwner(request.Address) { OnCheck = () => Avalonia.Threading.Dispatcher.UIThread.VerifyAccess() };
+        var session = Registry(new(), new(_ => owner)).CreateSession(request);
+        await session.InitializeAsync();
+        var participant = Strong(session);
+        var first = (await participant.PrepareCloseAsync())!;
+        Assert.True(await Task.Run(() => first.IsCurrent).WaitAsync(StrongBound));
+        owner.Revision++;
+        Assert.False(await Task.Run(() => first.IsCurrent).WaitAsync(StrongBound));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => Task.Run(first.BeginClose).WaitAsync(StrongBound));
+        Assert.Null(session.OriginalClose);
+        await first.AbortAsync();
+
+        var second = (await participant.PrepareCloseAsync())!;
+        await Task.Run(second.AbortAsync).WaitAsync(StrongBound);
+        Assert.False(await Task.Run(() => second.IsCurrent).WaitAsync(StrongBound));
+        Assert.Null(owner.OriginalClose);
+        var last = (await participant.PrepareCloseAsync())!;
+        var original = await Task.Run(() => new[] { last.BeginClose() }).WaitAsync(StrongBound);
+        Assert.Same(session.OriginalClose, Assert.Single(original));
+        await original[0].WaitAsync(StrongBound);
     }
 
     [AvaloniaTheory]
@@ -893,6 +926,7 @@ public sealed class NativeAppContentRegistryTests
         public Task? ReportedClose, AbortOriginal, PrepareOverride;
         public Func<Task>? BeforeYield, CloseBody; public Action? OnBegin;
         public IBrowseAppContentSession? ClaimedSession;
+        public Action? OnCheck;
         public bool Frozen, AllowPreparation = true; public int Revision, Prepares, Aborts, Begins, Closes;
         public Task? PrepareOriginal;
         public readonly TaskCompletionSource PrepareEntered = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -922,7 +956,10 @@ public sealed class NativeAppContentRegistryTests
         {
             private Task? _abort; private bool _accepted, _aborted;
             public IBrowseAppContentSession Session => owner.ClaimedSession ?? owner;
-            public bool IsCurrent => !_aborted && !_accepted && owner.Frozen && owner.Revision == revision && owner._close is null;
+            public bool IsCurrent
+            {
+                get { owner.OnCheck?.Invoke(); return !_aborted && !_accepted && owner.Frozen && owner.Revision == revision && owner._close is null; }
+            }
             public Task AbortAsync()
             { if (_abort is not null) return _abort; _aborted = true; owner.Frozen = false; owner.Aborts++; return _abort = owner.AbortOriginal ?? Task.CompletedTask; }
             public Task BeginClose()

@@ -331,7 +331,14 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
             internal readonly List<Exception> BeginFailures = [];
             internal bool Aborting, Accepted;
             public IBrowseAppContentSession Session => Owner;
-            public bool IsCurrent { get { lock (Owner._gate) return Owner.IsPreparationCurrent(this); } }
+            public bool IsCurrent => Dispatcher.UIThread.CheckAccess()
+                ? CheckOnOwnerThread()
+                : Dispatcher.UIThread.Invoke(CheckOnOwnerThread);
+
+            private bool CheckOnOwnerThread()
+            {
+                lock (Owner._gate) return Owner.IsPreparationCurrent(this);
+            }
             public Task AbortAsync() { Owner.DemandExternalJoin(); return Owner.AbortRegistered(this); }
             public Task BeginClose() { Owner.DemandExternalJoin(); return Owner.BeginRegistered(this); }
         }

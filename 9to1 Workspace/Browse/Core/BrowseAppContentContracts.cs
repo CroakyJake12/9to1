@@ -104,6 +104,8 @@ public interface IBrowseAppContentClosePreparationParticipant
 public interface IBrowseAppContentClosePreparation
 {
     IBrowseAppContentSession Session { get; }
+    /// <summary>Checks the actual edit fence from any caller thread. UI-affine owners marshal
+    /// before taking their own gates. Callers must release topology gates before observing.</summary>
     bool IsCurrent { get; }
     /// <summary>Idempotent retained restoration task; never reverses an accepted close.</summary>
     Task AbortAsync();

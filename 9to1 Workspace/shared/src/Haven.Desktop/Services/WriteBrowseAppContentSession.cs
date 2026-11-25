@@ -273,14 +273,14 @@ internal sealed class WriteBrowseAppContentSession : IBrowseNativeAppContentSess
     {
         private bool _aborted, _accepted;
         public IBrowseAppContentSession Session => owner;
-        public bool IsCurrent
+        public bool IsCurrent => Dispatcher.UIThread.CheckAccess()
+            ? CheckOnOwnerThread()
+            : Dispatcher.UIThread.Invoke(CheckOnOwnerThread);
+
+        private bool CheckOnOwnerThread()
         {
-            get
-            {
-                if (!Dispatcher.UIThread.CheckAccess()) return false;
-                lock (owner._gate) return !_aborted && !_accepted && ReferenceEquals(owner._preparedClose, this) &&
-                    owner.SupportsReversibleClosePreparation && owner._page?.IsOriginalBrowseCloseFenceCurrent(fence) == true;
-            }
+            lock (owner._gate) return !_aborted && !_accepted && ReferenceEquals(owner._preparedClose, this) &&
+                owner.SupportsReversibleClosePreparation && owner._page?.IsOriginalBrowseCloseFenceCurrent(fence) == true;
         }
         public Task AbortAsync()
         {
@@ -296,11 +296,15 @@ internal sealed class WriteBrowseAppContentSession : IBrowseNativeAppContentSess
         public Task BeginClose()
         {
             CloudflareOriginalExecutionGuard.DemandExternalJoin(owner);
-            Dispatcher.UIThread.VerifyAccess();
+            return Dispatcher.UIThread.CheckAccess() ? BeginOnOwnerThread() : Dispatcher.UIThread.Invoke(BeginOnOwnerThread);
+        }
+
+        private Task BeginOnOwnerThread()
+        {
             lock (owner._gate)
             {
                 if (_accepted) return owner._close!;
-                if (!IsCurrent) throw new InvalidOperationException("The page changed after preparation; prepare its current draft again.");
+                if (!CheckOnOwnerThread()) throw new InvalidOperationException("The page changed after preparation; prepare its current draft again.");
                 owner.DemandPublicationCurrent();
                 // Start the actual page retirement before publishing any close/fence.
                 // A synchronous no-effect refusal leaves both owner and registry retryable.

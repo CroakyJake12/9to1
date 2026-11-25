@@ -118,15 +118,15 @@ public sealed partial class BrowseChrome
         internal Task? Abort;
         internal bool Accepted, Beginning;
     }
-    private bool IsCurrent(ContentCloseAttempt attempt)
-    {
-        // Evaluate the subordinate observation first, then revalidate our own exact
-        // identities in case its getter reentered a canonical owner notification.
-        var leaseCurrent = attempt.Lease?.IsCurrent ?? true;
-        return leaseCurrent && _tabs.Contains(attempt.Tab) && ReferenceEquals(attempt.Tab.AppOwner, attempt.Owner) &&
-            attempt.Tab.Address == attempt.Address && attempt.Tab.NavigationGeneration == attempt.Generation &&
-            (attempt.Owner is null || attempt.Owner.Close is not null || ReferenceEquals(attempt.Owner.Preparation, attempt));
-    }
+    // A native preparation may synchronously marshal this observation onto its owner
+    // thread. That thread can call back into Chrome, so never wait for it under our gate.
+    private static bool ObserveLease(ContentCloseAttempt attempt) => attempt.Lease?.IsCurrent ?? true;
+
+    private bool IsOwnerCurrentLocked(ContentCloseAttempt attempt) =>
+        _tabs.Contains(attempt.Tab) && ReferenceEquals(attempt.Tab.AppOwner, attempt.Owner) &&
+        attempt.Tab.Address == attempt.Address && attempt.Tab.NavigationGeneration == attempt.Generation &&
+        (attempt.Owner is null || attempt.Owner.Close is not null || ReferenceEquals(attempt.Owner.Preparation, attempt));
+
     private string DescribeContentTransitions()
     {
         lock (_nativeSourceGate)
@@ -148,11 +148,11 @@ public sealed partial class BrowseChrome
         }
     }
 
-    private static string DescribeStaleAttempt(ContentCloseAttempt attempt)
+    private static string DescribeStaleAttempt(ContentCloseAttempt attempt, bool leaseCurrent)
     {
         var owner = attempt.Owner;
         var causes = new List<string>();
-        if (attempt.Lease?.IsCurrent != true) causes.Add("the preparation lease is no longer current");
+        if (!leaseCurrent) causes.Add("the preparation lease is no longer current");
         if (!attempt.Tab.Address.Equals(attempt.Address)) causes.Add("the tab address changed from " +
             attempt.Address + " to " + attempt.Tab.Address);
         if (attempt.Tab.NavigationGeneration != attempt.Generation)
@@ -253,14 +253,15 @@ public sealed partial class BrowseChrome
                 }
             }
             token.ThrowIfCancellationRequested();
+            var leaseCurrent = ObserveLease(attempt);
             lock (_nativeSourceGate)
             {
-                if (!IsCurrent(attempt))
+                if (!leaseCurrent || !IsOwnerCurrentLocked(attempt))
                 {
                     // The 8-tab control run on 29 October aborted exactly here with the generic
                     // "The native app has unsaved or pending work" message, which names no tab and
                     // no cause. The sub-conditions below are the same ones IsCurrent already reads.
-                    throw Veto("acquire-not-current", "tab " + tab.Address + " - " + DescribeStaleAttempt(attempt));
+                    throw Veto("acquire-not-current", "tab " + tab.Address + " - " + DescribeStaleAttempt(attempt, leaseCurrent));
                 }
             }
             return attempt;
@@ -298,9 +299,10 @@ public sealed partial class BrowseChrome
     private void BeginContentClose(ContentCloseAttempt attempt)
     {
         AppContentOwner owner;
+        var leaseCurrent = ObserveLease(attempt);
         lock (_nativeSourceGate)
         {
-            if (!IsCurrent(attempt)) throw Veto("begin-not-current", "tab " + attempt.Tab.Address + " - " + DescribeStaleAttempt(attempt));
+            if (!leaseCurrent || !IsOwnerCurrentLocked(attempt)) throw Veto("begin-not-current", "tab " + attempt.Tab.Address + " - " + DescribeStaleAttempt(attempt, leaseCurrent));
             if (attempt.Owner is not { } actualOwner) { attempt.Accepted = true; return; }
             owner = actualOwner;
             if (owner.Close is not null) { attempt.Accepted = true; return; }
@@ -404,20 +406,27 @@ public sealed partial class BrowseChrome
         // and exact registered token reference remain the issuing Chrome's custody.
         internal object State { get; }
         internal ClosePreparation(object state) => State = state;
-        public bool IsCurrent
-        {
-            get
-            {
-                var actual = StateOf(this);
-                lock (actual.Owner._nativeSourceGate) return actual.Ready && !actual.Aborted && !actual.Committing &&
-                    ReferenceEquals(actual.Owner._windowPreparation, this) &&
-                    actual.Tabs.SequenceEqual(actual.Owner._tabs, ReferenceEqualityComparer.Instance) &&
-                    actual.Entries.All(actual.Owner.IsCurrent);
-            }
-        }
+        public bool IsCurrent => StateOf(this).Owner.IsWindowCurrent(this);
         public Task AbortAsync() => StateOf(this).Owner.AbortWindowClose(this);
         public Task BeginClose() => StateOf(this).Owner.BeginWindowClose(this);
     }
+    private bool IsWindowCurrentLocked(ClosePreparation cohort)
+    {
+        var state = StateOf(cohort);
+        return state.Ready && !state.Aborted && !state.Committing &&
+            ReferenceEquals(_windowPreparation, cohort) &&
+            state.Tabs.SequenceEqual(_tabs, ReferenceEqualityComparer.Instance) &&
+            state.Entries.All(IsOwnerCurrentLocked);
+    }
+
+    private bool IsWindowCurrent(ClosePreparation cohort)
+    {
+        // Entries are complete before Ready is published and are never changed afterwards.
+        lock (_nativeSourceGate) if (!IsWindowCurrentLocked(cohort)) return false;
+        if (!StateOf(cohort).Entries.All(ObserveLease)) return false;
+        lock (_nativeSourceGate) return IsWindowCurrentLocked(cohort);
+    }
+
     private static WindowCloseState StateOf(ClosePreparation actual) => (WindowCloseState)actual.State;
     private Task AbortWindowClose(ClosePreparation cohort)
     {
@@ -438,12 +447,14 @@ public sealed partial class BrowseChrome
     {
         DemandExternalOriginalRetirementJoin();
         var state = StateOf(cohort);
+        lock (_nativeSourceGate) if (state.Close is not null) return state.Close;
+        var cohortCurrent = IsWindowCurrent(cohort);
         lock (_nativeSourceGate)
         {
             if (state.Close is not null) return state.Close;
-            if (!ReferenceEquals(state.Owner, this) || !cohort.IsCurrent || _contentTransitions.Count != 0)
+            if (!ReferenceEquals(state.Owner, this) || !cohortCurrent || !IsWindowCurrentLocked(cohort) || _contentTransitions.Count != 0)
                 throw Veto("commit-window", "host current=" + ReferenceEquals(state.Owner, this) +
-                    ", cohort current=" + cohort.IsCurrent + ", live fences=" + _contentTransitions.Count +
+                    ", cohort current=" + cohortCurrent + ", live fences=" + _contentTransitions.Count +
                     " [" + DescribeContentTransitions() + "]");
             // Keep the reversible host publication alive while synchronously
             // acquiring exact participant originals. Publishing Chrome retirement
@@ -547,25 +558,26 @@ public sealed partial class BrowseChrome
                 StateOf(cohort).Entries.Add(acquired);
             }
             token.ThrowIfCancellationRequested();
+            var state = StateOf(cohort);
+            var observations = state.Entries.Select(entry => (Entry: entry, LeaseCurrent: ObserveLease(entry))).ToArray();
             lock (_nativeSourceGate)
             {
-                var state = StateOf(cohort);
+                var stale = observations.Where(value => !value.LeaseCurrent || !IsOwnerCurrentLocked(value.Entry)).ToArray();
                 if (state.Aborted || !state.Tabs.SequenceEqual(_tabs, ReferenceEqualityComparer.Instance) ||
-                    !state.Entries.All(IsCurrent))
+                    stale.Length != 0)
                 {
                     // Measured 29 October: this is the null path that produced an EMPTY cause list in
                     // both reproduced aborts, because it is the only cohort void that never consults
                     // an app session and never throws. Each condition is named separately - the tab
                     // set changing underneath a preparation and an entry going stale after its own
                     // save are entirely different faults, and the fix must know which one it is.
-                    var stale = state.Entries.Where(entry => !IsCurrent(entry)).ToArray();
                     ReportCloseRefusal("cohort-not-settled",
                         "aborted=" + state.Aborted +
                         ", tab set changed=" + !state.Tabs.SequenceEqual(_tabs, ReferenceEqualityComparer.Instance) +
                         " (prepared " + state.Tabs.Length + ", now " + _tabs.Count + ")" +
                         ", stale entries=" + stale.Length +
-                        (stale.Length == 0 ? string.Empty : " [" + string.Join(" | ", stale.Select(entry =>
-                            entry.Tab.Address + " - " + DescribeStaleAttempt(entry))) + "]"));
+                        (stale.Length == 0 ? string.Empty : " [" + string.Join(" | ", stale.Select(value =>
+                            value.Entry.Tab.Address + " - " + DescribeStaleAttempt(value.Entry, value.LeaseCurrent))) + "]"));
                     return null;
                 }
                 StateOf(cohort).Ready = true; return cohort;
@@ -623,8 +635,9 @@ public sealed partial class BrowseChrome
         try
         {
             DemandContentAdmission(token);
-            lock (_nativeSourceGate) if (!IsCurrent(attempt)) throw Veto("navigation-not-current",
-                "tab " + attempt.Tab.Address + " - " + DescribeStaleAttempt(attempt));
+            var leaseCurrent = ObserveLease(attempt);
+            lock (_nativeSourceGate) if (!leaseCurrent || !IsOwnerCurrentLocked(attempt)) throw Veto("navigation-not-current",
+                "tab " + attempt.Tab.Address + " - " + DescribeStaleAttempt(attempt, leaseCurrent));
             if (address.IsWeb)
             {
                 var assessment = BrowserNativeRequestPolicy.AssessTopLevel(address.WebUri!);

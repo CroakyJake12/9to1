@@ -84,6 +84,46 @@ public sealed class OriginalCompatibleProjectSubmissionTests
         Assert.False(bindings.IsActionAvailable("assistants.project.pending.resume"));
     }
 
+    [Theory]
+    [InlineData(1, 2, false)]
+    [InlineData(2, 1, false)]
+    [InlineData(2, 2, false)]
+    [InlineData(1, 1, true)]
+    public void Ordinary_project_receipt_requires_the_original_definition_revision(
+        long selectedRevision, long bindingRevision, bool accepted)
+    {
+        var definition = Definition();
+        var submission = new OriginalProjectTaskSubmission(Choice(), definition.Identity, definition.Revision, "Project task");
+        var now = DateTimeOffset.UtcNow;
+        var conversation = new Conversation(submission.ConversationId, HavenMode.Tasks, ConversationKind.Task,
+            submission.Title, Guid.NewGuid(), null, false, false, now, now);
+        var binding = new AssistantConversationBinding(new object(), definition with { Revision = bindingRevision },
+            "fixture-session", 1, conversation);
+        var receipt = AssistantsWorkspaceSnapshot.Empty with
+        {
+            Revision = 1,
+            SelectedAssistant = definition with { Revision = selectedRevision },
+            ConversationBinding = binding,
+            Conversation = new(conversation, [], [], [], null, null)
+        };
+        submission.EnterOriginalFactory();
+        var actual = Task.FromResult(receipt);
+        submission.CaptureOriginalCommand(actual);
+        if (accepted)
+        {
+            submission.Acknowledge(receipt);
+            Assert.True(submission.IsAcknowledged);
+            Assert.False(submission.HasUnresolvedAttempt);
+        }
+        else
+        {
+            Assert.Throws<InvalidOperationException>(() => submission.Acknowledge(receipt));
+            Assert.False(submission.IsAcknowledged);
+            Assert.True(submission.HasUnresolvedAttempt);
+        }
+        Assert.Same(actual, submission.OriginalCommand);
+    }
+
     private static AssistantDefinitionSnapshot Definition() => new(new("fixture-den", "personal", "fixture-assistant"), 1,
         ConfiguredIdentityKind.Assistant, new() { Name = "Fixture Assistant" }, []);
     private static AssistantOriginalProjectChoice Choice()

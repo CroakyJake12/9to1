@@ -12,6 +12,57 @@ namespace HavenOS.Apps.Spaces.Tests;
 public sealed class SpaceBuilderCuiTests
 {
     [Fact]
+    public async Task Retained_example_row_cannot_edit_an_identical_replacement_at_the_same_index()
+    {
+        using var files = new SpaceDetailsTestFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var registry = files.OpenRegistry();
+        var space = await registry.CreateAsync("Example identity", cancellationToken: deadline.Token);
+        var controller = new SpaceBuilderController(registry, space.Id);
+        Assert.True(await controller.LoadAsync(deadline.Token));
+        Assert.True(controller.AddExamplePair());
+        Assert.True(controller.AddExamplePair());
+        for (var index = 0; index < 2; index++)
+        {
+            var pair = controller.State.Draft.ExamplePairs[index];
+            Assert.True(controller.UpdateExamplePair(index, pair, pair with { User = "Same prompt", Assistant = "Same response" }));
+        }
+        var first = controller.State.Draft.ExamplePairs[0];
+        var second = controller.State.Draft.ExamplePairs[1];
+        Assert.Equal(first, second);
+        Assert.NotSame(first, second);
+        var calls = 0;
+        var bindings = new SpaceBuilderCuiBindings(() => controller.State,
+            (field, value) => controller.SetField(field, value),
+            (category, state) => controller.SetCategoryState(category, state),
+            (kind, id) => controller.DetachCapability(kind, id),
+            () => [], () => [], (_, _, _) => ValueTask.CompletedTask,
+            updateExamplePair: (index, expected, updated) =>
+            {
+                calls++;
+                return controller.UpdateExamplePair(index, expected, updated);
+            });
+        Assert.True(bindings.TryGetValue("builder.examplePairs", out var oldRows));
+        var retained = Assert.IsType<SpaceBuilderExamplePairRow>(Assert.IsAssignableFrom<object[]>(oldRows)[0]);
+        Assert.True(controller.RemoveExamplePair(0, first));
+        var before = controller.State;
+        Assert.Same(second, Assert.Single(before.Draft.ExamplePairs));
+
+        Assert.False(bindings.TrySetItemValue(retained, "assistant", "Late stale edit"));
+        Assert.Equal(0, calls);
+        Assert.Same(before, controller.State);
+
+        Assert.True(bindings.TryGetValue("builder.examplePairs", out var currentRows));
+        var current = Assert.IsType<SpaceBuilderExamplePairRow>(Assert.Single(Assert.IsAssignableFrom<object[]>(currentRows)));
+        Assert.True(bindings.TrySetItemValue(current, "assistant", "Current edit"));
+        Assert.Equal(1, calls);
+        var updatedPair = Assert.Single(controller.State.Draft.ExamplePairs);
+        Assert.Equal("Same prompt", updatedPair.User);
+        Assert.Equal("Current edit", updatedPair.Assistant);
+        Assert.Equal(space.Id, controller.State.SpaceId);
+    }
+
+    [Fact]
     public async Task View_actions_select_projections_of_the_same_loaded_space()
     {
         using var files = new SpaceDetailsTestFiles();
