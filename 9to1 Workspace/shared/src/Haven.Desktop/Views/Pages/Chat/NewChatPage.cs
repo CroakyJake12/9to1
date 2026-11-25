@@ -249,6 +249,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     internal bool IsAssistantCatalogueOpen => !_disposed && !_originalWork.IsRetiring && _scene.IsAssistantCatalogueOpen;
     internal long AssistantCatalogueRequestGeneration => _scene.AssistantCatalogueRequestGeneration;
     public bool IsTemporary => _conversation.IsTemporary;
+    internal bool HasSavedConversationRoute =>
+        !_conversation.IsTemporary && !_unpublishedFreshChat.ContainsKey(_conversation.Id);
     public bool HasStarted => _messages.Count > 0 || _startedTemporaryLifecycle.ContainsKey(_conversation.Id);
     public string ActiveAgentName => _activeAgent?.Name ?? "No Agent (Default)";
     public ChatActionMode EffectiveChatActionMode => _chatActionModeOverride ?? ChatActionMode.AllowBasicActions;
@@ -1710,15 +1712,27 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                                availableCapabilities: ActiveCapabilitiesForCurrentChat(),
                                taskExecutionIntent: originalConversation.Mode == HavenMode.Tasks
                                    ? TaskRunExecutionIntent.CanonicalAgenticTask : TaskRunExecutionIntent.OrdinaryConversation,
-                               userInputCommitted: (committedInput, commitToken) =>
+                               userInputCommitted: async (committedInput, commitToken) =>
                                {
                                    // Genuine acceptance from the real owner of the actual writes:
                                    // retire exactly the consumed draft identity (a newer draft
                                    // typed or attached since is preserved) and record the message.
                                    committedUserMessageId = committedInput.Id;
-                                   _unpublishedFreshChat.TryRemove(committedInput.ConversationId, out _);
+                                   var becameDurable = _unpublishedFreshChat.TryRemove(committedInput.ConversationId, out _);
                                    _startedTemporaryLifecycle.TryAdd(committedInput.ConversationId, 0);
-                                   return RetireCommittedSendDraftAsync(acceptedSend);
+                                   await RetireCommittedSendDraftAsync(acceptedSend);
+                                   if (becameDurable)
+                                   {
+                                       // The visible UserMessage is earlier than storage. Publish a
+                                       // restorable route only after this real committed-input receipt.
+                                       var owner = RequireChatOriginal();
+                                       await owner.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+                                           owner.RunAcceptedPublicationCallback(() =>
+                                           {
+                                               if (_conversation.Id == committedInput.ConversationId)
+                                                   ConversationStateChanged?.Invoke(this, EventArgs.Empty);
+                                           })).GetTask());
+                                   }
                                }), PublishOriginalStreamEventAsync).ConfigureAwait(false);
             }
             if (!_originalWork.IsRetiring)

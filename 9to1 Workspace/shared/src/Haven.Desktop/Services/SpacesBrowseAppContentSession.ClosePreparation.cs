@@ -204,7 +204,7 @@ internal sealed partial class SpacesBrowseAppContentSession
                             if (priorChat is not null && !ReferenceEquals(priorView, priorChat.Page) &&
                                 !ReferenceEquals(priorWorkspace, priorChat.Page))
                                 throw new InvalidOperationException("The retained Chat view and route owner disagree.");
-                            var restoredChat = priorChat is null ? null : new PublishedChatRoute(priorChat.Page, ConversationAddress(priorChat.Page.CurrentConversation));
+                            var restoredChat = priorChat is null ? null : new PublishedChatRoute(priorChat.Page, ConversationAddress(priorChat.Page));
                             var restoredAddress = restoredChat?.Address ?? priorAddress!;
                             SetRootContent(priorView);
                             _publishedBuilderRoute = priorBuilder; _publishedDetailsRoute = priorDetails; _publishedChatRoute = restoredChat; _address = restoredAddress;
@@ -297,7 +297,7 @@ internal sealed partial class SpacesBrowseAppContentSession
                             if (priorChat is not null && !ReferenceEquals(priorView, priorChat.Page) &&
                                 !ReferenceEquals(priorWorkspace, priorChat.Page))
                                 throw new InvalidOperationException("The retained Chat view and route owner disagree.");
-                            var restoredChat = priorChat is null ? null : new PublishedChatRoute(priorChat.Page, ConversationAddress(priorChat.Page.CurrentConversation));
+                            var restoredChat = priorChat is null ? null : new PublishedChatRoute(priorChat.Page, ConversationAddress(priorChat.Page));
                             var restoredAddress = restoredChat?.Address ?? priorAddress!;
                             SetRootContent(priorView);
                             _publishedBuilderRoute = priorBuilder; _publishedDetailsRoute = priorDetails; _publishedChatRoute = restoredChat; _address = restoredAddress;

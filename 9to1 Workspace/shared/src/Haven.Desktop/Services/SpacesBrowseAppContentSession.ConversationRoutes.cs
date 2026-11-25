@@ -35,13 +35,14 @@ internal sealed partial class SpacesBrowseAppContentSession
         return null;
     }
 
-    private static AppContentAddress ConversationAddress(Conversation conversation)
+    private static AppContentAddress ConversationAddress(NewChatPage page)
     {
-        // Temporary conversations remain session-only; never persist a saved
-        // restoration target for an intentionally non-durable conversation.
-        if (conversation.IsTemporary)
-            return AppContentAddress.Parse(conversation.SpaceId is { } temporarySpace
-                ? $"9to1://spaces/selected/{temporarySpace:D}" : "9to1://spaces");
+        var conversation = page.CurrentConversation;
+        // Ordinary fresh drafts and Temporary chats do not have a restorable row.
+        // Keep the tab at its Space until the actual owner makes the row durable.
+        if (!page.HasSavedConversationRoute)
+            return AppContentAddress.Parse(conversation.SpaceId is { } selectedSpace
+                ? $"9to1://spaces/selected/{selectedSpace:D}" : "9to1://spaces");
         return AppContentAddress.Parse(conversation.SpaceId is { } spaceId
             ? $"9to1://spaces/selected/{spaceId:D}/chat/{conversation.Id:D}"
             : $"9to1://spaces/chat/{conversation.Id:D}");
@@ -123,15 +124,19 @@ internal sealed partial class SpacesBrowseAppContentSession
         if (_conversationRouteHandlers.ContainsKey(chat)) return;
         EventHandler handler = (_, _) =>
         {
+            bool refreshSavedHistory;
             lock (_gate)
             {
                 if (_closing || !_published || _publishedChatRoute is not { } current || !ReferenceEquals(current.Page, chat)) return;
                 // CurrentConversation is a plain immutable domain record. The exact
                 // page callback can update its route without reading native controls.
-                _publishedChatRoute = new(chat, ConversationAddress(chat.CurrentConversation));
-                _address = _publishedChatRoute.Address;
+                var address = ConversationAddress(chat);
+                refreshSavedHistory = chat.HasSavedConversationRoute && current.Address != address;
+                _publishedChatRoute = new(chat, address);
+                _address = address;
             }
             PublishStateChanged();
+            if (refreshSavedHistory) ObserveSpacesConversationRefresh();
         };
         _conversationRouteHandlers.Add(chat, handler);
         chat.ConversationStateChanged += handler;

@@ -1,12 +1,26 @@
 using System.Reflection;
 using System.Threading.Channels;
+using Avalonia;
+using Avalonia.Automation;
+using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
+using Avalonia.VisualTree;
 using Haven.Application;
 using Haven.Core;
+using Haven.Desktop.Events;
+using Haven.Desktop.Services;
 using Haven.Desktop.Views.Pages.Chat;
+using Haven.Desktop.Views.Pages.Spaces;
 using Haven.Desktop.Views.Shell;
 using Haven.Desktop.Views.Shell.NativePresentation;
+using Haven.Infrastructure;
 using Haven.UI;
+using HavenOS.Apps.Browse;
+using HavenOS.Apps.Spaces;
+using HavenOS.Home.Core;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using HavenButton = Haven.UI.Components.Button;
 
@@ -14,6 +28,117 @@ namespace Haven.Desktop.Tests;
 
 public sealed partial class ChatCloudPermissionCallerTests
 {
+    [AvaloniaFact]
+    public async Task Spaces_production_New_Chat_does_not_publish_history_or_a_restore_address_before_storage()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var timeout = TimeSpan.FromSeconds(15);
+        await using var rig = new Rig(temporary: false);
+        using var paths = new ObservationPaths();
+        Directory.CreateDirectory(paths.DataDirectory);
+        if (OperatingSystem.IsLinux())
+            File.SetUnixFileMode(paths.DataDirectory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        var principal = new OperatingSystemPrincipalSource();
+        await using var home = new HomeNativeWindowsComposition(
+            new FileHomeCoreStateStore(Path.Combine(paths.DataDirectory, "home.json")), principal, paths,
+            new("9to1.home.spaces.fresh." + Guid.NewGuid().ToString("N")));
+        var registry = new SpaceRegistry(new ObservationSettings());
+        var space = await registry.CreateAsync("Scoped fresh Chat", cancellationToken: token);
+        var settings = new UserPreferencesService(paths);
+        var services = new ServiceCollection();
+        services.AddHavenInfrastructure();
+        services.AddHavenOwnedWindowsHomeDomain(home, paths, principal);
+        services.AddSingleton(registry);
+        services.AddSingleton<HavenEventBus>();
+        services.AddSingleton(rig.Service);
+        services.AddSingleton<IConversationSafetyService>(new Safety());
+        services.AddSingleton<IConversationRepository>(rig.Conversations);
+        var drafts = new NativeComposerDraftStore();
+        services.AddSingleton(drafts.Source);
+        services.AddSingleton(settings);
+        services.AddSingleton(NativeComposerProxy<IProviderModelClient>((name, _) => name switch
+        {
+            "GetModelsAsync" => Task.FromResult<IReadOnlyList<ModelDescriptor>>([]),
+            "IsAvailableAsync" => Task.FromResult(true),
+            _ => throw new InvalidOperationException("Unexpected controlled model call: " + name)
+        }));
+        await using var provider = services.BuildServiceProvider();
+        using var app = new CancellationTokenSource();
+        using var host = new CancellationTokenSource();
+        await provider.GetRequiredService<IAppDatabase>().InitializeAsync(token);
+        await home.StartOriginalAsync().WaitAsync(timeout, token);
+        var actor = (await home.Profiles.GetCurrentAsync(token))!;
+        var expectedLocation = AppContentAddress.Parse($"9to1://spaces/selected/{space.Id:D}");
+        var factory = SpacesBrowseAppContentFactory.BindOriginalSameProcess(provider, home, app.Token, host.Token);
+        var session = Assert.IsType<SpacesBrowseAppContentSession>(factory.CreateSession(
+            new(Guid.NewGuid(), expectedLocation, actor.ProfileId, BrowserTabPrivacy.Standard)));
+        var window = new Window { Width = 1200, Height = 900 };
+        try
+        {
+            await session.InitializeAsync(token).WaitAsync(timeout, token);
+            var root = session.OriginalNativeView;
+            window.Content = root;
+            window.Show();
+            window.UpdateLayout();
+            var spaces = Assert.Single(root.GetVisualDescendants().OfType<SpacesHomePage>());
+            async Task<NewChatPage> ClickNewChatAsync()
+            {
+                window.UpdateLayout();
+                var newChat = Assert.Single(root.GetVisualDescendants().OfType<Avalonia.Controls.Button>(),
+                    button => AutomationProperties.GetAutomationId(button) == "space-new-chat");
+                var center = newChat.TranslatePoint(new Point(newChat.Bounds.Width / 2, newChat.Bounds.Height / 2), window)!.Value;
+                window.MouseDown(center, MouseButton.Left);
+                window.MouseUp(center, MouseButton.Left);
+                await spaces.CaptureTaskSidebarActionsAsync().WaitAsync(timeout, token);
+                return Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            }
+
+            var startingWrites = rig.Conversations.Writes;
+            var page = await ClickNewChatAsync();
+            Assert.Equal(space.Id, page.CurrentConversation.SpaceId);
+            Assert.Equal(startingWrites, rig.Conversations.Writes);
+            Assert.Equal(expectedLocation, session.Address);
+            Assert.Null(await rig.Conversations.GetAsync(page.ConversationId, token));
+            var toggle = Assert.Single(page.Scene.Root!.DescendantsAndSelf().OfType<HavenButton>(),
+                item => item.Name == "TemporaryToggle");
+            var id = page.ConversationId;
+            InvokeButton(toggle);
+            await page.JoinAdmittedOriginalWorkAsync().WaitAsync(timeout, token);
+            Assert.True(page.IsTemporary);
+            Assert.Equal("Temporary: on", toggle.Content);
+            Assert.Equal(id, page.ConversationId);
+            Assert.Equal(expectedLocation, session.Address);
+            Assert.Equal(startingWrites, rig.Conversations.Writes);
+
+            page.ComposerInput.Text = "Unsent text must not leave Temporary Chat";
+            var ordinary = await ClickNewChatAsync();
+            Assert.NotEqual(id, ordinary.ConversationId);
+            Assert.False(ordinary.IsTemporary);
+            Assert.Null(await rig.Conversations.GetAsync(id, token));
+            Assert.Equal(startingWrites, rig.Conversations.Writes);
+            Assert.Null(drafts.Last);
+
+            var ordinaryId = ordinary.ConversationId;
+            ordinary.ComposerInput.Text = "Preserve this distinct ordinary draft";
+            var next = await ClickNewChatAsync();
+            Assert.NotEqual(ordinaryId, next.ConversationId);
+            Assert.Empty(next.ComposerInput.Text ?? string.Empty);
+            Assert.Equal(expectedLocation, session.Address);
+            Assert.Null(await rig.Conversations.GetAsync(next.ConversationId, token));
+            var saved = Assert.IsType<Conversation>(await rig.Conversations.GetAsync(ordinaryId, token));
+            Assert.Equal(space.Id, saved.SpaceId);
+            Assert.Equal(startingWrites + 1, rig.Conversations.Writes);
+            Assert.Equal(ordinaryId, Assert.IsType<ConversationDraft>(drafts.Last).ConversationId);
+            Assert.Equal("Preserve this distinct ordinary draft", drafts.Last!.Content);
+        }
+        finally
+        {
+            await session.CloseAndDrainAsync();
+            window.Content = null;
+            window.Close();
+        }
+    }
+
     [AvaloniaFact]
     public async Task Temporary_chat_current_native_controls_cancel_and_fail_without_saving_then_use_exact_local_receipt()
     {
