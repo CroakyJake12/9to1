@@ -10,7 +10,8 @@ public sealed class DeveloperLandingCuiDocumentTests
     {
         var nodes = Descendants(DeveloperLandingCuiDocument.Load().Components).ToArray();
         string[] expected = ["dev.references.refresh", "dev.references.open-space", "dev.references.open-task",
-            "dev.references.create-manual-project", "dev.references.previous-projects", "dev.references.next-projects"];
+            "dev.references.create-manual-project", "dev.references.previous-projects", "dev.references.next-projects",
+            "dev.templates.select", "dev.templates.review", "dev.templates.create"];
         Assert.Equal(expected.OrderBy(value => value), nodes.SelectMany(node => node.Actions.Values).Select(action => action.Name).OrderBy(value => value));
         var filter = Assert.Single(nodes, node => node.Name == "dev-project-query");
         Assert.Contains(filter.Properties, property => property.Key.Equals("Value", StringComparison.OrdinalIgnoreCase)
@@ -18,7 +19,9 @@ public sealed class DeveloperLandingCuiDocumentTests
         var open = Assert.Single(nodes, node => node.Name == "dev-open-task");
         Assert.Contains(open.Properties, property => property.Key.Equals("Content", StringComparison.OrdinalIgnoreCase)
             && property.Value is CuiBindingValue binding && binding.Path == "item.OpenLabel");
-        foreach (var (id, availability) in new[] { ("dev-projects-previous", "CanPreviousProjectPage"), ("dev-projects-next", "CanNextProjectPage") })
+        foreach (var (id, availability) in new[] { ("dev-projects-previous", "CanPreviousProjectPage"),
+            ("dev-projects-next", "CanNextProjectPage"), ("dev-review-project-template", "CanReviewTemplate"),
+            ("dev-create-template-project", "CanCreateTemplateProject") })
             Assert.Contains(Assert.Single(nodes, node => node.Name == id).Properties, property => property.Key.Equals("Interactive", StringComparison.OrdinalIgnoreCase)
                 && property.Value is CuiBindingValue binding && binding.Path == availability);
     }
