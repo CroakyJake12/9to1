@@ -22,7 +22,7 @@ public sealed record DeveloperProcessStopResult(Guid SessionId, IReadOnlyList<in
     public DeveloperProcessStopResult Capture()
     {
         if (SessionId == Guid.Empty) throw new InvalidDataException("A stop result requires a session identity.");
-        var pids = (StoppedPids ?? []).ToArray();
+        var pids = (StoppedPids ?? Array.Empty<int>()).ToArray();
         if (pids.Distinct().Count() != pids.Length) throw new InvalidOperationException("A stop result lists a PID more than once.");
         return this with { StoppedPids = Array.AsReadOnly(pids) };
     }
@@ -38,7 +38,7 @@ public sealed record DeveloperProcessSession(Guid SessionId, string RunConfigura
     {
         if (SessionId == Guid.Empty) throw new InvalidDataException("A process session requires an identity.");
         if (string.IsNullOrWhiteSpace(RunConfigurationId)) throw new InvalidDataException("A process session requires its owning run configuration.");
-        var handles = (Processes ?? []).Select(h => h?.Capture() ?? throw new InvalidDataException("An owned process handle is missing.")).ToArray();
+        var handles = (Processes ?? Array.Empty<DeveloperProcessHandle>()).Select(h => h?.Capture() ?? throw new InvalidDataException("An owned process handle is missing.")).ToArray();
         if (handles.Length > MaximumProcesses) throw new InvalidDataException("The owned process tree exceeds the configured limit.");
         if (handles.Select(h => h.Pid).Distinct().Count() != handles.Length) throw new InvalidOperationException("Duplicate PID in an owned process tree.");
         if (!handles.Any(h => h.Pid == RootPid)) throw new InvalidOperationException("An owned process tree must contain its root PID.");
