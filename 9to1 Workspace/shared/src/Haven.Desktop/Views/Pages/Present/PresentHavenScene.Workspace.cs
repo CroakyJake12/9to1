@@ -56,8 +56,8 @@ internal sealed partial class PresentHavenScene
     public Container SlideRail { get; private set; } = null!;
     public Container StageHost { get; private set; } = null!;
     public Container CanvasOverlay { get; private set; } = null!;
-    internal NativeHost FreehandToolsHost { get; private set; } = null!;
-    internal NativeHost FreehandInputHost { get; private set; } = null!;
+    internal Haven.NativeHost FreehandToolsHost { get; private set; } = null!;
+    internal Haven.NativeHost FreehandInputHost { get; private set; } = null!;
     public Container WorkspacePill { get; private set; } = null!;
     public HavenButton AdvancedButton { get; private set; } = null!;
     public Container AdvancedPanel { get; private set; } = null!;
