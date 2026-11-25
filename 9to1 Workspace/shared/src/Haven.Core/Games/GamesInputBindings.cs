@@ -47,7 +47,7 @@ public sealed record GamesInputMap(int Revision, IReadOnlyList<GamesInputBinding
         return this with { Bindings = snapshot };
     }
 
-    public static GamesInputMap Create(IEnumerable<GamesInputBinding> bindings) => new(1, bindings.ToArray()).Capture();
+    public static GamesInputMap Create(IEnumerable<GamesInputBinding> bindings) => new GamesInputMap(1, bindings.ToArray()).Capture();
 
     private GamesInputMap Next(int expectedRevision, IReadOnlyList<GamesInputBinding> bindings)
     {
