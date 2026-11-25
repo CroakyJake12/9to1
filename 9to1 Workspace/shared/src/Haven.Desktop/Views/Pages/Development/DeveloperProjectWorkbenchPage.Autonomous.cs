@@ -482,7 +482,9 @@ public sealed partial class DeveloperProjectWorkbenchPage
             AutoAdvance = _missionAutoAdvance,
             GuardedIntegration = _missionGuardedIntegration,
             EnableReasoning = _missionEnableReasoning,
-            SdkLockPath = File.Exists(defaultLock) ? defaultLock : null
+            MemoryFloorMiB = 12_000,
+            DiskFloorGiB = 70,
+            SdkLockPath = defaultLock
         };
 
         var engine = new DeveloperAutonomousMissionEngine(options, gateway);
