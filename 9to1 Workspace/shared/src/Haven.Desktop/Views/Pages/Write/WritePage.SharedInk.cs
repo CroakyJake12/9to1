@@ -124,7 +124,7 @@ public sealed partial class WritePage
             {
                 if (!_sharedInkEntries.TryGetValue(id, out var entry))
                 {
-                    var host = new HavenElement { Name = "Write.Drawing." + id.ToString("N") };
+                    var host = new global::Haven.UI.Components.NativeHost { Name = "Write.Drawing." + id.ToString("N") };
                     host.Accessibility.AccessibleName = "Shared drawing";
                     host.SetValue(HavenProperties.Clip, true);
                     var input = new CanvasSharedInkInput(_sharedInkEngine, () => CaptureInkOwner(editor, id),

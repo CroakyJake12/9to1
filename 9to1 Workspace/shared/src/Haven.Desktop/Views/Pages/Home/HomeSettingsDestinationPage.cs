@@ -388,7 +388,7 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
                 ClearSearch();
                 return ValueTask.CompletedTask;
             case "SettingsDirectory":
-                if (parameter is string selected && _categoryRows.FirstOrDefault(row => row.Key == selected) is { } row)
+                if (parameter is string selectedCategory && _categoryRows.FirstOrDefault(row => row.Key == selectedCategory) is { } row)
                 {
                     if (row.Parent is null) SetGroupExpanded(row.Key, !row.Expanded);
                     else SelectCategory(row.Key);
