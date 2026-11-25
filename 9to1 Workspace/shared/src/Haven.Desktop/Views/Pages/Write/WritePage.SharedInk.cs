@@ -12,6 +12,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Haven.Application;
 using Haven.Desktop.HavenUI.Backend;
+using Haven.NativeHosts;
 using Haven.UI;
 using Haven.UI.Components;
 using HavenOS.Apps.Canvas;
@@ -42,7 +43,7 @@ public sealed partial class WritePage
         _sharedInkEngine?.GetCompatibility("write", "development", ["drawing.ink"]);
 
 
-    private sealed record WriteInkEntry(WriteDocumentEditor Owner, NativeHost Host, CanvasSharedInkInput Input);
+    private sealed record WriteInkEntry(WriteDocumentEditor Owner, Haven.NativeHosts.NativeHost Host, CanvasSharedInkInput Input);
 
     private void InitializeSharedInkMount()
     {
@@ -123,7 +124,7 @@ public sealed partial class WritePage
             {
                 if (!_sharedInkEntries.TryGetValue(id, out var entry))
                 {
-                    var host = new NativeHost { Name = "Write.Drawing." + id.ToString("N") };
+                    var host = new Haven.NativeHosts.NativeHost { Name = "Write.Drawing." + id.ToString("N") };
                     host.Accessibility.AccessibleName = "Shared drawing";
                     host.SetValue(HavenProperties.Clip, true);
                     var input = new CanvasSharedInkInput(_sharedInkEngine, () => CaptureInkOwner(editor, id),
