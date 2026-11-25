@@ -104,7 +104,7 @@ internal sealed partial class ChatHavenScene : IDisposable
         TemporaryToggle.Invoked += (_, _) => TemporaryToggleRequested?.Invoke(this, EventArgs.Empty);
         AttachmentStatus = (HavenText)Root.DescendantsAndSelf().Single(element => element.Name == "AttachmentStatus");
         ManageAttachments = (HavenButton)Root.DescendantsAndSelf().Single(element => element.Name == "ManageAttachments");
-        RecoveryHost = Root.DescendantsAndSelf().OfType<Haven.NativeHost>().Single(element => element.Name == "RecoveryHost");
+        RecoveryHost = Root.DescendantsAndSelf().OfType<NativeHost>().Single(element => element.Name == "RecoveryHost");
         _recoveryBindings = new ChatRecoveryBindings();
         _recoveryBindings.ManageLocalModelsRequested += (_, _) => ManageLocalModelsRequested?.Invoke(this, EventArgs.Empty);
         RecoveryView = new ChatRecoveryCuiView(_recoveryBindings);
@@ -144,7 +144,7 @@ internal sealed partial class ChatHavenScene : IDisposable
     public Page Root { get; }
 
     /// <summary>The narrow native transport host that carries the shared CUI composer into this scene.</summary>
-    public Haven.NativeHost ComposerHost { get; }
+    public NativeHost ComposerHost { get; }
 
     /// <summary>The single shared canonical composer view mounted at the Footer composer position.</summary>
     public ChatComposerCuiView ComposerView { get; }
@@ -172,7 +172,7 @@ internal sealed partial class ChatHavenScene : IDisposable
     }
     public HavenText AttachmentStatus { get; }
     public HavenButton ManageAttachments { get; }
-    public Haven.NativeHost RecoveryHost { get; }
+    public NativeHost RecoveryHost { get; }
     public ChatRecoveryCuiView RecoveryView { get; }
     public Container TaskActions { get; }
     public HavenButton NewTask { get; }
