@@ -46,16 +46,16 @@ public sealed record DeveloperDirtyBuffer(Guid DocumentId, long SavedDiskRevisio
         var captured = Capture();
         ArgumentNullException.ThrowIfNull(revisedText);
         if (revisedText.Length > MaximumTextCharacters) throw new InvalidDataException("The edited buffer text exceeds the editor limit.");
-        return captured with { DraftText = revisedText }.Capture();
+        return (captured with { DraftText = revisedText }).Capture();
     }
 
     /// <summary>Update the retained selection without affecting dirtiness or the saved revision.</summary>
     public DeveloperDirtyBuffer SetSelection(int anchor, int caret)
-        => Capture() with { Selection = new DeveloperBufferSelection(anchor, caret) }.Capture();
+        => (Capture() with { Selection = new DeveloperBufferSelection(anchor, caret) }).Capture();
 
     /// <summary>Change the presentation encoding/line-ending independently of text and the saved revision.</summary>
     public DeveloperDirtyBuffer SetPresentation(string encodingId, DeveloperLineEnding lineEnding)
-        => Capture() with { EncodingId = encodingId, LineEnding = lineEnding }.Capture();
+        => (Capture() with { EncodingId = encodingId, LineEnding = lineEnding }).Capture();
 
     /// <summary>Persist to disk: advance the saved revision to newSavedRevision, adopt the current draft as the clean snapshot, and preserve
 /// encoding/line-endings/selection. The buffer becomes clean.</summary>
@@ -63,6 +63,6 @@ public sealed record DeveloperDirtyBuffer(Guid DocumentId, long SavedDiskRevisio
     {
         var captured = Capture();
         if (newSavedRevision < captured.SavedDiskRevision) throw new InvalidOperationException("The saved disk revision cannot move backwards.");
-        return captured with { SavedDiskRevision = newSavedRevision, SavedSnapshotText = captured.DraftText }.Capture();
+        return (captured with { SavedDiskRevision = newSavedRevision, SavedSnapshotText = captured.DraftText }).Capture();
     }
 }
