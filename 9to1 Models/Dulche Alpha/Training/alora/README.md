@@ -118,8 +118,11 @@ causal-LM forward retain that model's normal logits-returning behavior.
 
 `loss_token_rows` defaults to 128; `chunk_rows` bounds vocabulary rows.
 Their score tile is limited to 16 MiB, accounting for the compute element size.
-FP32/FP64 computation follows the native loss's FP32 logit upcast. Higher-order
-derivatives are explicitly refused.
+Projection scores follow the native loss's FP32 upcast. Per-token normalization
+sums use FP64 to preserve small probability masses across a wide vocabulary;
+large score tiles remain FP32, and the returned loss is FP32. Qualification uses
+FP64 CE on the same FP32 scores, since a native FP32 whole-vocabulary reduction
+can itself lose precision. Higher-order derivatives are explicitly refused.
 
 Slice and score-tile bounds do not bound total process RAM. Decoder activations,
 attention state, retained hidden states, small resident parameters, optimizer

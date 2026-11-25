@@ -25,7 +25,10 @@ class _StreamingCrossEntropy(torch.autograd.Function):
         device, count = hidden.device, hidden.shape[0]
         check_compute(device=device)
         maxima = torch.full((count,), -torch.inf, dtype=torch.float32, device=device)
-        totals = torch.zeros_like(maxima)
+        # Only per-token statistics use FP64. Wide vocabularies can otherwise
+        # lose small masses repeatedly added after an early dominant logit.
+        # The large score/exp tiles remain FP32 and retain their existing bound.
+        totals = torch.zeros_like(maxima, dtype=torch.float64)
         selected = torch.empty_like(maxima)
         for ref in refs:
             check_compute(device=device)
@@ -39,8 +42,8 @@ class _StreamingCrossEntropy(torch.autograd.Function):
                 chunk_max = scores.amax(dim=-1)
                 old_max = maxima[start:end]
                 new_max = torch.maximum(old_max, chunk_max)
-                totals[start:end] = (totals[start:end] * torch.exp(old_max - new_max)
-                                     + torch.exp(scores - new_max[:, None]).sum(dim=-1))
+                totals[start:end] = (totals[start:end] * torch.exp(old_max.double() - new_max.double())
+                                     + torch.exp(scores - new_max[:, None]).sum(dim=-1, dtype=torch.float64))
                 maxima[start:end] = new_max
                 labels = targets[start:end]
                 matches = (labels >= lo) & (labels < hi)
@@ -50,18 +53,18 @@ class _StreamingCrossEntropy(torch.autograd.Function):
         log_totals = totals.log()
         # Keep the shift separate: adding a small log-total to a large FP32
         # maximum loses probability precision even when the loss is finite.
-        loss = ((maxima - selected) + log_totals).mean()
+        loss = ((maxima.double() - selected.double()) + log_totals).mean().float()
         if not bool(torch.isfinite(loss)):
             raise ValueError("Streaming output-head loss is nonfinite")
         ctx.store, ctx.refs, ctx.token_rows = store, refs, token_rows
         ctx.callback = callback
-        ctx.save_for_backward(hidden, targets, maxima, log_totals)
+        ctx.save_for_backward(hidden, targets, maxima, totals)
         return loss
 
     @staticmethod
     @once_differentiable
     def backward(ctx, grad_loss):
-        hidden, targets, maxima, log_totals = ctx.saved_tensors
+        hidden, targets, maxima, totals = ctx.saved_tensors
         count, device = hidden.shape[0], hidden.device
         # Autograd engine threads need an explicit captured callback; Python
         # ContextVars are not assumed to propagate to those threads.
@@ -75,8 +78,8 @@ class _StreamingCrossEntropy(torch.autograd.Function):
                 for start, end in _chunks(count, ctx.token_rows):
                     check_compute(device=device)
                     scores = F.linear(hidden[start:end], weight).float()
-                    probabilities = torch.exp((scores - maxima[start:end, None])
-                                              - log_totals[start:end, None])
+                    probabilities = torch.exp(scores - maxima[start:end, None])
+                    probabilities.div_(totals[start:end, None].float())
                     labels = targets[start:end]
                     matches = (labels >= lo) & (labels < hi)
                     local_rows = torch.where(matches)[0]
