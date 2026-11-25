@@ -22,7 +22,7 @@ public sealed record PlayMatchRound(int Round, PlayToolProfile AssistancePolicy,
     }
 
     public static PlayMatchRound Open(int round, PlayToolProfile assistancePolicy)
-        => new(round, assistancePolicy, PlayAnswerLedger.Open(Guid.NewGuid(), round)).Capture();
+        => new PlayMatchRound(round, assistancePolicy, PlayAnswerLedger.Open(Guid.NewGuid(), round)).Capture();
 
     /// <summary>Attempt a participant tool call. The runtime capability gate (tool profile) decides; no-tools rounds deny with PlayNoOutsideAssistance.</summary>
     public PlayToolCallResult AttemptToolCall(string toolID)
