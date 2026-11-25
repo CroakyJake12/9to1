@@ -30,7 +30,7 @@ public sealed record GamesSelectionContext(int Revision, IReadOnlyList<GamesSele
         return this with { Selected = items };
     }
 
-    public static GamesSelectionContext Empty() => new(1, Array.Empty<GamesSelectionItem>()).Capture();
+    public static GamesSelectionContext Empty() => new GamesSelectionContext(1, Array.Empty<GamesSelectionItem>()).Capture();
 
     private GamesSelectionContext Next(int expectedRevision, IReadOnlyList<GamesSelectionItem> selected)
     {
