@@ -1,7 +1,5 @@
 using Haven.Application;
 using Haven.Core;
-using Haven.NativeHost;
-using Haven.NativeHost.Controls;
 using Haven.UI;
 using Haven.UI.Components;
 using HavenButton = Haven.UI.Components.Button;
@@ -157,7 +155,7 @@ internal sealed class DataHavenScene : IDisposable
     public Input WorkbookTitleInput { get; } public HavenText PositionText { get; } public HavenText StatusText { get; }
     public HavenButton PreviousWorkbookButton { get; } public HavenButton NextWorkbookButton { get; } public HavenButton NewWorkbookButton { get; } public HavenButton SaveButton { get; } public HavenButton ImportButton { get; } public HavenButton ExportButton { get; }
     public Input SheetNameInput { get; private set; } = null!; public Container GridHost { get; private set; } = null!; public HavenText GridWindowText { get; private set; } = null!;
-    public NativeHostControl SharedInkHost { get; private set; } = null!;
+    public Container SharedInkHost { get; private set; } = null!;
     public HavenText DrawingSummaryText { get; private set; } = null!; public HavenButton AddShapeButton { get; private set; } = null!; public HavenButton PreviousDrawingButton { get; private set; } = null!; public HavenButton NextDrawingButton { get; private set; } = null!; public HavenButton RotateDrawingButton { get; private set; } = null!; public HavenButton DeleteDrawingButton { get; private set; } = null!;
     public HavenButton AddSheetButton { get; private set; } = null!; public HavenButton DeleteSheetButton { get; private set; } = null!; public HavenButton PreviousRowsButton { get; private set; } = null!; public HavenButton NextRowsButton { get; private set; } = null!; public HavenButton PreviousColumnsButton { get; private set; } = null!; public HavenButton NextColumnsButton { get; private set; } = null!;
     public HavenText SelectedCellText { get; private set; } = null!; public HavenText FormulaStatusText { get; private set; } = null!; public Input CellValueInput { get; private set; } = null!; public Input CellFormulaInput { get; private set; } = null!;
@@ -287,7 +285,7 @@ internal sealed class DataHavenScene : IDisposable
         var drawings = NewCard("Data.Drawings"); drawings.Add(new HavenText("Sheet drawings") { Level = TextLevel.H2 }); DrawingSummaryText = Caption("No drawing objects on this sheet."); DrawingSummaryText.Name = "Data.Drawings.Summary"; drawings.Add(DrawingSummaryText);
         var drawingActions = NewToolbar("Data.Drawings.Actions", 0); AddShapeButton = NewButton("Data.Drawings.AddShape", "Add custom shape"); PreviousDrawingButton = NewButton("Data.Drawings.Previous", "Previous shape"); NextDrawingButton = NewButton("Data.Drawings.Next", "Next shape"); RotateDrawingButton = NewButton("Data.Drawings.Rotate", "Rotate +15°"); DeleteDrawingButton = NewButton("Data.Drawings.Delete", "Delete shape"); DeleteDrawingButton.Variant = ButtonVariant.Danger; foreach (var button in new[] { AddShapeButton, PreviousDrawingButton, NextDrawingButton, RotateDrawingButton, DeleteDrawingButton }) drawingActions.Add(button); drawings.Add(drawingActions);
         // The typed native slot mounts the canonical DataSharedInk.cui pane; app UI is authored there.
-        SharedInkHost = new NativeHostControl { Name = "Data.SharedInk.Host" }; SharedInkHost.SetValue(HavenProperties.Width, HavenLength.Percent(100)); SharedInkHost.SetValue(HavenProperties.Height, HavenLength.Px(640)); SharedInkHost.SetValue(HavenProperties.Clip, true); drawings.Add(SharedInkHost); Editor.Add(drawings);
+        SharedInkHost = new Container { Name = "Data.SharedInk.Host" }; SharedInkHost.SetValue(HavenProperties.Width, HavenLength.Percent(100)); SharedInkHost.SetValue(HavenProperties.Height, HavenLength.Px(640)); SharedInkHost.SetValue(HavenProperties.Clip, true); drawings.Add(SharedInkHost); Editor.Add(drawings);
 
         var cellEditor = NewCard("Data.Cell.Editor"); SelectedCellText = new HavenText { Name = "Data.Cell.Selected", Level = TextLevel.Caption }; cellEditor.Add(SelectedCellText);
         cellEditor.Add(Caption("Cell value")); CellValueInput = NewInput("Data.Cell.Value", "Selected cell value", "Value"); cellEditor.Add(CellValueInput);
