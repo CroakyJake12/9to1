@@ -59,7 +59,7 @@ public sealed record DeveloperProcessSession(Guid SessionId, string RunConfigura
         if (captured.Processes.Any(h => h.Pid == pid)) throw new InvalidOperationException("That PID is already owned by this session.");
         if (!captured.Processes.Any(h => h.Pid == parentPid && h.State == DeveloperProcessState.Running)) throw new InvalidOperationException("A child may only attach to a running process in this session.");
         var newProcesses = new List<DeveloperProcessHandle>(captured.Processes) { new DeveloperProcessHandle(pid, parentPid, label, DeveloperProcessState.Running) };
-        return captured.Capture().with(Processes: newProcesses.AsReadOnly()).Capture();
+        return (captured.Capture() with { Processes = newProcesses.AsReadOnly() }).Capture();
     }
 
     /// <summary>Terminate exactly this session's owned subtree. Returns the PIDs stopped and the real per-process result; other sessions are untouched.</summary>
