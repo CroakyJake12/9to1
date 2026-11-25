@@ -17,7 +17,7 @@ public static class SiteComponentInstanceModel
         ArgumentNullException.ThrowIfNull(component);
         if (component.ReusableDefinitionId is not { } definitionId) return SiteInstanceKind.Standalone;
         // A detached copy keeps its origin id recorded but no longer tracks the definition; it carries an independent property tree.
-        if (!knownDefinitionIds.Contains(definitionId)) return SiteInstanceKind.Detached;
+        if (!knownDefinitionIds.Contains<Guid>(definitionId)) return SiteInstanceKind.Detached;
         return component.Overrides.Count == 0 ? SiteInstanceKind.Linked : SiteInstanceKind.Overridden;
     }
 
@@ -40,7 +40,7 @@ public static class SiteComponentInstanceModel
     {
         ArgumentNullException.ThrowIfNull(components);
         return components
-            .Where(component => component.ReusableDefinitionId == definitionId && Classify(component, knownDefinitionIds) is SiteInstanceKind.Linked or SiteInstanceKind.Overridden)
+            .Where(component => component.ReusableDefinitionId.HasValue && component.ReusableDefinitionId.Value == definitionId && Classify(component, knownDefinitionIds) is SiteInstanceKind.Linked or SiteInstanceKind.Overridden)
             .Select(component => component.ComponentId)
             .ToArray();
     }
