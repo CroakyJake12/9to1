@@ -85,7 +85,7 @@ public sealed record GameDefinition(Guid DefinitionID, int Revision, IReadOnlyLi
 
     public static GameDefinition Create(Guid definitionID, IEnumerable<PlayStateField> stateSchema, IEnumerable<PlayRole> roles,
         IEnumerable<string> teams, PlayClock clock, string scoringRule, string winnerRule)
-        => new(definitionID, 1, stateSchema.ToArray(), roles.ToArray(), teams.ToArray(), Array.Empty<PlayAction>(), clock, scoringRule, winnerRule).Capture();
+        => new GameDefinition(definitionID, 1, stateSchema.ToArray(), roles.ToArray(), teams.ToArray(), Array.Empty<PlayAction>(), clock, scoringRule, winnerRule).Capture();
 
     private GameDefinition Next(int expectedRevision, IReadOnlyList<PlayStateField> fields, IReadOnlyList<PlayRole> roles,
         IReadOnlyList<string> teams, IReadOnlyList<PlayAction> actions, PlayClock clock, string scoringRule, string winnerRule)
