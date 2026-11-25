@@ -5,6 +5,7 @@ import gc
 import math
 import unittest
 import weakref
+import threading
 
 import numpy as np
 
@@ -16,6 +17,7 @@ import torch
 from torch.nn import functional as F
 
 from alora.paging import PagedEmbedding, PagedLinear, frozen_linear
+from alora.compute import ComputeAdmissionError, compute_scope, current_compute_callback
 
 
 @dataclass(frozen=True)
@@ -160,7 +162,8 @@ class PagingTests(unittest.TestCase):
         x = torch.randn(3, 5, requires_grad=True)
         result = frozen_linear(x, self.store, ref)
         context = result.grad_fn
-        self.assertEqual(set(context.__dict__), {"store", "ref", "input_dtype", "input_device"})
+        self.assertEqual(set(context.__dict__), {"store", "ref", "input_dtype", "input_device", "callback"})
+        self.assertIsNone(context.callback)
         self.assertEqual(context.saved_tensors, ())
         self.assertFalse(any(isinstance(value, torch.Tensor) for value in context.__dict__.values()))
         self.store.evict()
@@ -331,6 +334,60 @@ class PagingTests(unittest.TestCase):
         embedding = PagedEmbedding(self.store, "embedding", dtype=torch.float16)
         with self.assertRaisesRegex(ValueError, "represented"):
             embedding(torch.tensor([0, 1]))
+
+
+    def test_backward_reenters_the_forward_callback_on_another_thread(self):
+        calls, errors = [], []
+        x = torch.randn(2, 5, requires_grad=True)
+        with compute_scope(lambda: calls.append(threading.get_ident())):
+            output = frozen_linear(x, self.store, self.store.matrix_ref("linear"))
+        forward_calls = len(calls)
+        self.assertGreater(forward_calls, 0)
+        self.assertIsNone(current_compute_callback())
+
+        def backward():
+            try:
+                output.sum().backward()
+            except BaseException as error:
+                errors.append(error)
+
+        worker = threading.Thread(target=backward)
+        worker.start()
+        worker.join(timeout=10)
+        self.assertFalse(worker.is_alive())
+        self.assertEqual(errors, [])
+        self.assertGreater(len(calls), forward_calls)
+        self.assertNotEqual(calls[-1], threading.get_ident())
+        expected = torch.from_numpy(self.store.expected("linear")).sum(0).expand_as(x)
+        torch.testing.assert_close(x.grad, expected)
+        self.assertIsNone(current_compute_callback())
+
+    def test_callback_stops_additional_weight_reads(self):
+        layer = PagedLinear(self.store, "linear", chunk_rows=2)
+        def checkpoint():
+            if self.store.read_requests:
+                raise RuntimeError("checkpoint requested")
+        with compute_scope(checkpoint), self.assertRaisesRegex(RuntimeError, "checkpoint requested"):
+            layer(torch.ones(1, 5, requires_grad=True))
+        self.assertEqual(len(self.store.read_requests), 1)
+        self.assertIsNone(current_compute_callback())
+
+    def test_cuda_modules_require_admission_before_zero_size_anchors(self):
+        count = _GUARD.dulche_guard_calls
+        for constructor, name in ((PagedLinear, "linear"), (PagedEmbedding, "embedding")):
+            with self.subTest(constructor=constructor.__name__), self.assertRaises(ComputeAdmissionError):
+                constructor(self.store, name, device="cuda:0")
+        self.assertEqual(_GUARD.dulche_guard_calls, count)
+
+
+    def test_cuda_modules_refuse_unqualified_dtypes_before_allocation(self):
+        count = _GUARD.dulche_guard_calls
+        for constructor, name in ((PagedLinear, "linear"), (PagedEmbedding, "embedding")):
+            for dtype in (torch.float16, torch.bfloat16, torch.float64):
+                with self.subTest(constructor=constructor.__name__, dtype=dtype), \
+                     self.assertRaisesRegex(ValueError, "FP32"):
+                    constructor(self.store, name, device="cuda:0", dtype=dtype)
+        self.assertEqual(_GUARD.dulche_guard_calls, count)
 
 
 if __name__ == "__main__":

@@ -25,6 +25,7 @@ import numpy as np
 from gguf import GGUFReader, GGMLQuantizationType, GGML_QUANT_SIZES, GGUFValueType
 from gguf import quants
 from custody.artifacts import _open_regular, checked_path
+from .read_limits import FingerprintCapacityExceeded
 
 _SHA = re.compile(r"[0-9a-f]{64}")
 _SUPPORTED = {GGMLQuantizationType[name] for name in
@@ -271,7 +272,7 @@ class GGUFWeightStore:
         # slice. Capacity is a runtime budget, not part of source provenance.
         previous = self._slice_hashes.get(key)
         if previous is None and len(self._slice_hashes) >= self._max_fingerprints:
-            raise ValueError("Fingerprint capacity exhausted; existing pins are retained")
+            raise FingerprintCapacityExceeded("Fingerprint capacity exhausted; existing pins are retained")
         self._check_shard(shard)
         encoded = np.array(view, copy=True, order="C")
         digest = hashlib.sha256(memoryview(encoded).cast("B")).hexdigest()
@@ -345,7 +346,7 @@ class GGUFWeightStore:
             refs = {index: self.matrix_ref(name, row_start=index, row_count=1) for index in positions}
             new_pins = sum(ref not in self._slice_hashes for ref in refs.values())
             if len(self._slice_hashes) + new_pins > self._max_fingerprints:
-                raise ValueError("Fingerprint capacity exhausted; existing pins are retained")
+                raise FingerprintCapacityExceeded("Fingerprint capacity exhausted; existing pins are retained")
             result = np.empty((len(indices), columns), dtype=np.float32)
             for index, destinations in positions.items():
                 row = self.read(refs[index])

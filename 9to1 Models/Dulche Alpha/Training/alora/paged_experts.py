@@ -15,6 +15,7 @@ from torch.nn import functional as F
 
 from .adapters import SelectedExperts, _ExpertAdapter
 from .paging import frozen_linear, _dtype, _device
+from .compute import check_compute
 
 
 def _selection(ids, experts, hidden, intermediate, rank, alpha):
@@ -52,6 +53,9 @@ class PagedExperts(SelectedExperts):
         experts, intermediate, hidden = gate
         ids = _selection(expert_ids, experts, hidden, intermediate, rank, alpha)
         device, dtype = _device(device), _dtype(dtype)
+        if device.type == "cuda" and dtype != torch.float32:
+            raise ValueError("The supervised single-CUDA candidate supports only FP32")
+        check_compute(device=device)
         source = getattr(store, "source_identity", None)
         if type(source) is not str or len(source) != 64 or any(c not in "0123456789abcdef" for c in source):
             raise ValueError("Paged experts require an immutable source identity")
@@ -61,10 +65,10 @@ class PagedExperts(SelectedExperts):
         self.num_experts, self.hidden_dim, self.intermediate_dim = experts, hidden, intermediate
         self.rank, self.alpha, self.expert_ids = rank, float(alpha), ids
         self.register_buffer("_anchor", torch.empty(0, device=device, dtype=dtype), persistent=False)
-        self.adapters = nn.ModuleDict({
-            str(e): _ExpertAdapter(hidden, intermediate, rank, alpha, self._anchor)
-            for e in ids
-        })
+        self.adapters = nn.ModuleDict()
+        for expert in ids:
+            check_compute(device=device)
+            self.adapters[str(expert)] = _ExpertAdapter(hidden, intermediate, rank, alpha, self._anchor)
 
     @property
     def device(self):
@@ -89,6 +93,9 @@ class PagedExperts(SelectedExperts):
                 or top_k_weights.device != hidden_states.device
                 or hidden_states.device != self.device or hidden_states.dtype != self.dtype):
             raise ValueError("Dispatch tensors do not match the paged expert interface")
+        if self.device.type == "cuda" and self.dtype != torch.float32:
+            raise ValueError("The supervised single-CUDA candidate supports only FP32")
+        check_compute(device=self.device)
         if ((top_k_index < 0).any().item() or (top_k_index > self.num_experts).any().item()
                 or not torch.isfinite(top_k_weights).all().item()
                 or (top_k_weights < 0).any().item()):
@@ -98,6 +105,7 @@ class PagedExperts(SelectedExperts):
         for expert_id in torch.unique(top_k_index, sorted=True).tolist():
             if expert_id == self.num_experts:
                 continue
+            check_compute(device=self.device)
             token_idx, route_idx = torch.where(top_k_index == expert_id)
             value = hidden_states[token_idx]
             gate_ref, up_ref, down_ref = self._refs(expert_id)
@@ -105,11 +113,13 @@ class PagedExperts(SelectedExperts):
             up = frozen_linear(value, self.store, up_ref)
             adapter = self.adapters[str(expert_id)] if str(expert_id) in self.adapters else None
             if adapter is not None:
+                check_compute(device=self.device)
                 gate_delta, up_delta = adapter.gate_up(value).chunk(2, dim=-1)
                 gate, up = gate + gate_delta.to(gate.dtype), up + up_delta.to(up.dtype)
             activated = F.silu(gate) * up
             result = frozen_linear(activated, self.store, down_ref)
             if adapter is not None:
+                check_compute(device=self.device)
                 result = result + adapter.down(activated).to(result.dtype)
             result = result * top_k_weights[token_idx, route_idx, None]
             final.index_add_(0, token_idx, result.to(final.dtype))
@@ -127,9 +137,11 @@ class PagedExperts(SelectedExperts):
     @torch.no_grad()
     def merged_slices(self):
         """Yield one selected dequantized CPU expert; never modify a source shard."""
+        check_compute(device=self.device)
         if any(not torch.isfinite(p).all().item() for p in self.adapters.parameters()):
             raise ValueError("Cannot export non-finite adapter weights")
         for expert_id in self.expert_ids:
+            check_compute(device=self.device)
             adapter = self.adapters[str(expert_id)]
             gate_ref, up_ref, down_ref = self._refs(expert_id)
             gate_up = torch.cat([torch.from_numpy(self.store.read(ref)) for ref in (gate_ref, up_ref)])
@@ -167,14 +179,19 @@ def attach_paged_experts(model, selections: Mapping[str, Sequence[int]], *, rank
         raise ValueError("Aliased expert layers require an explicit shared-adapter policy")
     staged = {}
     for path, wrapper in wrappers.items():
+        if wrapper.device.type == "cuda" and wrapper.dtype != torch.float32:
+            raise ValueError("The supervised single-CUDA candidate supports only FP32")
+        check_compute(device=wrapper.device)
         ids = _selection(selections[path], wrapper.num_experts, wrapper.hidden_dim,
                          wrapper.intermediate_dim, rank, alpha)
         if not ids:
             raise ValueError("Every observed layer must select at least one expert")
-        staged[path] = (ids, nn.ModuleDict({
-            str(e): _ExpertAdapter(wrapper.hidden_dim, wrapper.intermediate_dim,
-                                   rank, alpha, wrapper._anchor) for e in ids
-        }))
+        adapters = nn.ModuleDict()
+        for expert in ids:
+            check_compute(device=wrapper.device)
+            adapters[str(expert)] = _ExpertAdapter(wrapper.hidden_dim, wrapper.intermediate_dim,
+                                                  rank, alpha, wrapper._anchor)
+        staged[path] = (ids, adapters)
     for path, (ids, adapters) in staged.items():
         wrapper = wrappers[path]
         wrapper.adapters = adapters

@@ -17,6 +17,7 @@ from transformers.models.qwen4_exp.modeling_qwen4_exp import Qwen4ExpForCausalLM
 
 from .gguf_model import load_text_model, tiled_head_order
 from .paged_experts import PagedExperts
+from .compute import ComputeAdmissionError, compute_scope, current_compute_callback
 
 
 @dataclass(frozen=True)
@@ -380,6 +381,33 @@ class GGUFModelTests(unittest.TestCase):
             self.assertEqual(layer.mlp.gate.__class__.__name__, "Qwen4ExpTextTopKRouter")
             self.assertIsInstance(layer.mlp.experts, PagedExperts)
             self.assertFalse(layer.mlp.gate.weight.requires_grad)
+
+
+    def test_cuda_candidate_refuses_before_any_allocation_without_supervision(self):
+        _, raw, store = _fixture()
+        count = _GUARD.dulche_guard_calls
+        with self.assertRaises(ComputeAdmissionError):
+            load_text_model(store, raw, device="cuda:0")
+        with self.assertRaisesRegex(ValueError, "FP32"):
+            load_text_model(store, raw, device="cuda:0", dtype=torch.float16)
+        self.assertEqual(_GUARD.dulche_guard_calls, count)
+
+    def test_native_boundaries_and_backward_keep_the_forward_compute_callback(self):
+        _, raw, store = _fixture()
+        model = load_text_model(store, raw, selections={"model.layers.0.mlp.experts": [0, 1, 2]},
+                                rank=2, alpha=4, chunk_rows=3)
+        calls = []
+        with compute_scope(lambda: calls.append("permit")):
+            logits = model(input_ids=torch.tensor([[3, 5, 7]]), use_cache=False).logits
+        before_backward = len(calls)
+        self.assertGreater(before_backward, 0)
+        logits.square().sum().backward()
+        self.assertGreater(len(calls), before_backward)
+        self.assertIsNone(current_compute_callback())
+        report = model.alora_loader_report
+        self.assertIsNone(report["physical_gpu_uuid"])
+        self.assertIsNone(report["cuda_admission"])
+        self.assertEqual(len(report["reference_kernel_policy_sha256"]), 64)
 
 
 if __name__ == "__main__":

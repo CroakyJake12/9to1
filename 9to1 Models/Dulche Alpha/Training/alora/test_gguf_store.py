@@ -11,6 +11,7 @@ import numpy as np
 from gguf import GGUFWriter, GGMLQuantizationType as Q, GGML_QUANT_SIZES, GGUFValueType
 from custody.artifacts import create_directory
 from alora.gguf_store import GGUFWeightStore
+from alora.read_limits import FingerprintCapacityExceeded
 
 
 class GGUFWeightStoreTests(unittest.TestCase):
@@ -155,7 +156,7 @@ class GGUFWeightStoreTests(unittest.TestCase):
         self.assertEqual(before["fingerprint_limit"], 2)
         with patch("alora.gguf_store.np.array") as copy_array, patch("alora.gguf_store.quants.dequantize") as dequant:
             for operation in (lambda: store.read(refs[2]), lambda: store.read_tensor("matrix")):
-                with self.assertRaisesRegex(ValueError, "Fingerprint capacity"):
+                with self.assertRaisesRegex(FingerprintCapacityExceeded, "Fingerprint capacity"):
                     operation()
             copy_array.assert_not_called()
             dequant.assert_not_called()
@@ -174,7 +175,7 @@ class GGUFWeightStoreTests(unittest.TestCase):
         before = store.stats
         self.assertEqual(before["fingerprint_count"], 1)
         with patch("alora.gguf_store.np.empty") as allocate, patch("alora.gguf_store.quants.dequantize") as dequant:
-            with self.assertRaisesRegex(ValueError, "Fingerprint capacity"):
+            with self.assertRaisesRegex(FingerprintCapacityExceeded, "Fingerprint capacity"):
                 store.gather_rows("matrix", [1, 2])
             allocate.assert_not_called()
             dequant.assert_not_called()

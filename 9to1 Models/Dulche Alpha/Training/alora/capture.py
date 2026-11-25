@@ -16,6 +16,7 @@ from .data import TrainingDataset
 from .profile import ActivationProfiler
 from .paged_experts import PagedExperts
 from .paging import PagedEmbedding
+from .compute import compute_scope, check_compute
 
 
 def _input_device(model):
@@ -117,6 +118,7 @@ def profile_row(model, dataset, row, profiler, *, before_compute=None) -> Activa
                     or indices.dtype not in (torch.int32, torch.int64)
                     or not weights.is_floating_point()):
                 raise ValueError("Dispatch must contain exactly this single sample's flattened tokens.")
+            check_compute(device=device)
             observations[path] = (
                 indices.detach().to(device="cpu").tolist(),
                 weights.detach().to(device="cpu").tolist(),
@@ -131,16 +133,20 @@ def profile_row(model, dataset, row, profiler, *, before_compute=None) -> Activa
             handle = module.register_forward_pre_hook(capture(path), with_kwargs=True)
             cleanup.callback(handle.remove)
         model.eval()
-        with torch.no_grad():
-            if before_compute is not None:
-                before_compute()
+        with torch.no_grad(), compute_scope(before_compute, device=device):
+            check_compute(device=device)
             inputs = {
                 name: torch.tensor([snapshot[name]], dtype=torch.long, device=device)
                 for name in ("input_ids", "attention_mask")
             }
-            if before_compute is not None:
-                before_compute()
-            model(**inputs, use_cache=False)
+            check_compute(device=device)
+            if getattr(model, "alora_loader_report", None) is not None:
+                from transformers.models.qwen4_exp.modeling_qwen4_exp import Qwen4ExpForCausalLM
+                if type(model) is not Qwen4ExpForCausalLM:
+                    raise ValueError("Paged calibration requires the actual native text model")
+                model.model(**inputs, use_cache=False, output_router_logits=False, return_dict=True)
+            else:
+                model(**inputs, use_cache=False)
         missing = sorted(set(targets) - set(observations))
         if missing:
             raise ValueError(f"Expected expert layers did not execute: {', '.join(missing)}")

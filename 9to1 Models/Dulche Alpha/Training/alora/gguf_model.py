@@ -1,4 +1,4 @@
-"""Explicit, CPU-first Qwen4Exp text graph backed by immutable GGUF slices.
+"""CPU-default Qwen4Exp text graph with an explicitly supervised CUDA candidate.
 
 This loader constructs the installed native CausalLM graph under meta, replaces
 large frozen weights with bounded paging, and loads only small frozen state.
@@ -23,11 +23,14 @@ from transformers import __version__ as _TRANSFORMERS_VERSION
 from transformers.models.qwen4_exp.configuration_qwen4_exp import Qwen4ExpTextConfig
 from transformers.models.qwen4_exp.modeling_qwen4_exp import (
     Qwen4ExpForCausalLM, Qwen4ExpTextExperts, Qwen4ExpTextNGramEmbedding,
+    Qwen4ExpTextDecoderLayer,
     Qwen4ExpTextRotaryEmbedding,
 )
 
 from .paging import PagedEmbedding, PagedLinear
 from .paged_experts import PagedExperts
+from .compute import (check_compute, compute_scope, current_compute_callback,
+                      reference_kernel_policy, validate_cuda_admission)
 
 _MAX_RESIDENT_BYTES = 512 * 1024 * 1024
 _QTYPES = {"F32", "F16", "BF16", "IQ3_S", "IQ4_XS", "IQ4_NL", "Q8_0", "Q6_K"}
@@ -214,7 +217,7 @@ def tiled_head_order(key_heads, value_heads, head_dim):
     if (any(type(v) is not int or v <= 0 for v in (key_heads, value_heads, head_dim))
             or value_heads % key_heads):
         raise ValueError("Invalid DeltaNet value-head grouping")
-    return (torch.arange(value_heads * head_dim, dtype=torch.long)
+    return (torch.arange(value_heads * head_dim, dtype=torch.long, device="cpu")
             .reshape(key_heads, value_heads // key_heads, head_dim)
             .transpose(0, 1).reshape(-1))
 
@@ -224,6 +227,9 @@ class _ReorderedLinear(nn.Module):
         super().__init__()
         self.projection = projection
         self.in_features, self.out_features = projection.in_features, projection.out_features
+        check_compute(device=projection.device)
+        input_order = None if input_order is None else input_order.to(device=projection.device)
+        output_order = None if output_order is None else output_order.to(device=projection.device)
         self.register_buffer("input_order", input_order, persistent=False)
         self.register_buffer("output_order", output_order, persistent=False)
 
@@ -284,6 +290,7 @@ class _PagedNGramEmbedding(Qwen4ExpTextNGramEmbedding):
                 raise ValueError("Invalid exact PLE integer metadata: " + suffix)
             if name != "ngram_heads_offsets" and any(v == 0 for v in values):
                 raise ValueError("PLE sizes and multipliers must be positive")
+            check_compute(device=embedding.device)
             result.register_buffer(name, torch.tensor(values, dtype=torch.long, device=embedding.device))
         if (metadata["qwen4exp.ple.head_vocab_sizes"] != native.head_vocab_sizes
                 or metadata["qwen4exp.ple.head_offsets"] != native.head_offsets):
@@ -338,10 +345,31 @@ def _guard_text_inputs(module, args, kwargs):
         return kwargs.get(name, args[position] if len(args) > position else None)
     requested_cache = argument("use_cache", 5)
     if argument("past_key_values", 3) is not None or (module.config.use_cache if requested_cache is None else requested_cache):
-        raise ValueError("This CPU training candidate requires use_cache=False and no mutable cache")
+        raise ValueError("This training candidate requires use_cache=False and no mutable cache")
     if (module.config.ple_layer_ids and argument("input_ids", 0) is None
             and argument("inputs_embeds", 4) is not None and argument("ple_input_ids", 6) is None):
         raise ValueError("Paged PLE requires explicit input_ids or ple_input_ids; reverse embedding is unsupported")
+
+
+def _decoder_compute_before(module, args):
+    if not args or not isinstance(args[0], torch.Tensor):
+        raise ValueError("A native decoder boundary requires its hidden-state tensor")
+    check_compute(device=args[0].device)
+
+
+def _decoder_compute_after(module, args, output):
+    if not isinstance(output, torch.Tensor):
+        raise ValueError("The installed native decoder output contract changed")
+    check_compute(device=output.device)
+    if output.requires_grad:
+        callback, device = current_compute_callback(), output.device
+
+        def boundary(gradient):
+            with compute_scope(callback, device=device):
+                check_compute(device=device)
+            return gradient
+
+        output.register_hook(boundary)
 
 
 def _refuse_base_export(module, prefix, keep_vars):
@@ -352,15 +380,25 @@ def load_text_model(store, config_dict, *, selections=None, rank=8, alpha=16,
                     device="cpu", dtype=torch.float32, chunk_rows=256):
     """Build a mapped native text graph; caller retains store lifetime/permits.
 
-    Only CPU float32/float64 are admitted by this first loader. Configuration,
-    every GGUF tensor, every native parameter and all buffers are checked. No
-    pretrained/download/inference-offload path is invoked.
+    CPU accepts float32/float64. Explicit cuda:0 accepts only FP32 inside an
+    already supervised compute_scope with the native reference-kernel policy.
+    This function cannot obtain a lease or bootstrap the readiness handshake.
+    Every GGUF tensor, native parameter and buffer is checked. No pretrained,
+    download, or inference-offload path is invoked.
     """
     device = torch.device(device)
-    if device.type != "cpu" or device.index is not None:
-        raise ValueError("This loader is currently qualified only as a CPU candidate")
-    if dtype not in (torch.float32, torch.float64):
-        raise ValueError("This CPU loader requires float32 or float64 compute")
+    cuda_admission, kernel_policy = None, None
+    if device.type == "cpu" and device.index is None:
+        if dtype not in (torch.float32, torch.float64):
+            raise ValueError("CPU requires float32 or float64 compute")
+    elif str(device) == "cuda:0":
+        if dtype != torch.float32:
+            raise ValueError("The supervised single-CUDA candidate supports only FP32")
+        check_compute(device=device)
+        cuda_admission = validate_cuda_admission(device)
+        kernel_policy = reference_kernel_policy()
+    else:
+        raise ValueError("Use CPU or explicitly supervised logical cuda:0")
     if type(chunk_rows) is not int or chunk_rows <= 0:
         raise ValueError("chunk_rows must be a positive integer")
     if type(rank) is not int or not 1 <= rank <= 4096:
@@ -434,7 +472,7 @@ def load_text_model(store, config_dict, *, selections=None, rank=8, alpha=16,
     inverse_order = torch.argsort(order)
     head_inverse = torch.argsort(tiled_head_order(k, v, 1))
     qk = 2 * config.linear_key_head_dim * k
-    qkv_inverse = torch.cat((torch.arange(qk), inverse_order + qk))
+    qkv_inverse = torch.cat((torch.arange(qk, device="cpu"), inverse_order + qk))
     ple_spec = None
     expected_buffer_names = {"model.rotary_emb.inv_freq", "model.rotary_emb.original_inv_freq"}
 
@@ -523,9 +561,9 @@ def load_text_model(store, config_dict, *, selections=None, rank=8, alpha=16,
     names = store.tensor_names
     if not isinstance(names, tuple) or len(names) != len(set(names)) or set(names) != set(expected_sources):
         raise ValueError("GGUF tensor inventory contains missing or unmapped tensors")
-    resident_bytes = sum(math.prod(shape) * torch.empty((), dtype=dtype).element_size()
+    resident_bytes = sum(math.prod(shape) * torch.empty((), dtype=dtype, device="cpu").element_size()
                          for _, _, _, shape in resident_specs)
-    resident_bytes += len(gate_specs) * config.hidden_size * torch.empty((), dtype=dtype).element_size()
+    resident_bytes += len(gate_specs) * config.hidden_size * torch.empty((), dtype=dtype, device="cpu").element_size()
     if resident_bytes > _MAX_RESIDENT_BYTES:
         raise ValueError("Small frozen resident parameters exceed the total resident budget")
 
@@ -536,7 +574,12 @@ def load_text_model(store, config_dict, *, selections=None, rank=8, alpha=16,
                 or array.shape != tuple(info["shape"]) or not array.flags.c_contiguous
                 or not array.flags.owndata or not np.isfinite(array).all()):
             raise ValueError("Store returned invalid owned small-tensor bytes")
-        return torch.from_numpy(array).to(device=device, dtype=dtype)
+        # Reconstruct GGUF norm/SSM/conv transforms in CPU FP32 first.
+        return torch.from_numpy(array)
+
+    def placed(value):
+        check_compute(device=device)
+        return value.to(device=device, dtype=dtype)
 
     def paged(name):
         return PagedLinear(store, name, device=device, dtype=dtype, chunk_rows=chunk_rows)
@@ -550,7 +593,7 @@ def load_text_model(store, config_dict, *, selections=None, rank=8, alpha=16,
     for target, query_name, key_name in qsa_specs:
         _replace(model, target, _ConcatenatedLinear(paged(query_name), paged(key_name)))
     for target, name in gate_specs:
-        _replace(model, target, _ResidentGate(decoded(name)))
+        _replace(model, target, _ResidentGate(placed(decoded(name))))
     for target, name, transform, shape in resident_specs:
         value = decoded(name)
         if transform == "minus_one":
@@ -567,7 +610,7 @@ def load_text_model(store, config_dict, *, selections=None, rank=8, alpha=16,
             value = value.unsqueeze(1)
         if tuple(value.shape) != shape or not bool(torch.isfinite(value).all()):
             raise ValueError("Small parameter inverse transform failed: " + target)
-        _replace(model, target, nn.Parameter(value.contiguous(), requires_grad=False))
+        _replace(model, target, nn.Parameter(placed(value.contiguous()), requires_grad=False))
     _replace(model, "model.embed_tokens", PagedEmbedding(store, "token_embd.weight", device=device, dtype=dtype))
     if ple_spec is not None:
         target, name = ple_spec
@@ -575,11 +618,20 @@ def load_text_model(store, config_dict, *, selections=None, rank=8, alpha=16,
         replacement = _PagedNGramEmbedding.from_native(
             native_ngram, PagedEmbedding(store, name, device=device, dtype=dtype), metadata)
         _replace(model, target, replacement)
-    model.model.rotary_emb = Qwen4ExpTextRotaryEmbedding(config)
+    with torch.device("cpu"):
+        rotary = Qwen4ExpTextRotaryEmbedding(config)
+    check_compute(device=device)
+    model.model.rotary_emb = rotary.to(device=device)
     for target, index in expert_specs:
+        check_compute(device=device)
         _replace(model, target, PagedExperts(store, index, expert_ids=selections.get(target, ()),
                                              rank=rank, alpha=alpha, device=device, dtype=dtype))
     model.model.register_forward_pre_hook(_guard_text_inputs, with_kwargs=True)
+    for layer in model.model.layers:
+        if type(layer) is not Qwen4ExpTextDecoderLayer:
+            raise ValueError("Unknown decoder boundary for cooperative compute")
+        layer.register_forward_pre_hook(_decoder_compute_before)
+        layer.register_forward_hook(_decoder_compute_after)
     model.register_state_dict_pre_hook(_refuse_base_export)
     for name, value in list(model.named_parameters()) + list(model.named_buffers()):
         if value.device.type == "meta" or value.device != device:
@@ -610,6 +662,9 @@ def load_text_model(store, config_dict, *, selections=None, rank=8, alpha=16,
         "mapped_tensor_names": sorted(expected_sources),
         "resident_parameter_bytes": resident_bytes,
         "device": str(device), "dtype": str(dtype), "chunk_rows": chunk_rows,
+        "physical_gpu_uuid": None if cuda_admission is None else cuda_admission["physical_gpu_uuid"],
+        "cuda_admission": cuda_admission, "reference_kernel_policy": kernel_policy,
+        "reference_kernel_policy_sha256": hashlib.sha256(_canonical(kernel_policy)).hexdigest(),
         "excluded_components": ["vision", "mtp"],
         "forward_verified": False, "training_verified": False,
         "base_export_supported": False,

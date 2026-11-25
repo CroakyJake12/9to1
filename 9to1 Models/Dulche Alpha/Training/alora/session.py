@@ -18,6 +18,8 @@ from .adapters import SelectedExperts, adapter_plan, trainable_adapters
 from .checkpoints import CheckpointPublisher
 from .data import TrainingDataset
 from .profile import ActivationProfiler
+from .compute import compute_scope, check_compute, validate_cuda_admission
+from .read_limits import FingerprintCapacityExceeded
 
 _SHA = re.compile(r"[a-f0-9]{64}")
 
@@ -63,12 +65,21 @@ def _loader_identity(model):
         return None
     keys = ("source_identity", "config_sha256", "execution_config_sha256",
             "native_modeling_sha256", "native_configuration_sha256", "backend_source_sha256",
-            "native_class", "transformers_version", "device", "dtype", "chunk_rows")
+            "native_class", "transformers_version", "device", "dtype", "chunk_rows",
+            "physical_gpu_uuid", "reference_kernel_policy_sha256")
     if type(report) is not dict or any(key not in report for key in keys):
         raise ValueError("The paged loader identity is incomplete")
     for key in keys[:6]:
         if type(report[key]) is not str or not _SHA.fullmatch(report[key]):
             raise ValueError("Paged loader source/configuration digests are invalid")
+    policy_sha = report["reference_kernel_policy_sha256"]
+    if type(policy_sha) is not str or not _SHA.fullmatch(policy_sha):
+        raise ValueError("Paged reference kernel policy digest is invalid")
+    physical = report["physical_gpu_uuid"]
+    if ((report["device"] == "cpu" and physical is not None)
+            or (report["device"] != "cpu" and (type(physical) is not str
+                                               or not physical.startswith("GPU-")))):
+        raise ValueError("Paged physical device identity is invalid")
     manifest = report.get("backend_source_manifest")
     if type(manifest) is not dict:
         raise ValueError("The paged backend source manifest is missing")
@@ -88,7 +99,7 @@ def _loader_identity(model):
 
 class TrainingSession:
     def __init__(self, model, *, identity, purpose, learning_rate=1e-4, max_grad_norm=1.0,
-                 profile=None, expert_budget_per_layer=None):
+                 profile=None, expert_budget_per_layer=None, loss_token_rows=128):
         if purpose not in {"real_training", "software_test_only"}:
             raise ValueError("An explicit execution purpose is required")
         if (type(identity) is not dict or set(identity) != {
@@ -98,6 +109,9 @@ class TrainingSession:
         for value in (learning_rate, max_grad_norm):
             if type(value) not in (int, float) or not math.isfinite(value) or value <= 0:
                 raise ValueError("Optimizer settings must be finite and positive")
+        if type(loss_token_rows) is not int or not 1 <= loss_token_rows <= 4096:
+            raise ValueError("Loss token rows must be a bounded positive integer")
+        self.loss_token_rows = loss_token_rows
         if purpose == "real_training" and type(profile) is not ActivationProfiler:
             raise ValueError("Real training requires its actual dataset-bound activation profile")
         if profile is not None:
@@ -144,6 +158,10 @@ class TrainingSession:
         }
         if loader_identity is not None:
             self.identity["loader"] = copy.deepcopy(loader_identity)
+            if (model.lm_head.chunk_rows * loss_token_rows
+                    * max(4, next(iter(self.parameters.values())).element_size()) > 16 * 1024 * 1024):
+                raise ValueError("The streaming loss score tile exceeds its memory bound")
+            self.identity["loss"] = {"kind": "streaming-causal-ce-v1", "token_rows": loss_token_rows}
         self.updates, self.cursor, self.failed = 0, 0, False
         self._lock = threading.Lock()
         self.last_record = None
@@ -173,6 +191,9 @@ class TrainingSession:
 
     def _snapshot(self):
         if self.device.type == "cuda":
+            # A revoked compute permit still allows the owned worker to drain
+            # and seal its existing state before the supervisor terminates it.
+            validate_cuda_admission(self.device, require_permit=False)
             torch.cuda.synchronize(self.device)
         slots = {}
         for name, parameter in self.parameters.items():
@@ -231,6 +252,9 @@ class TrainingSession:
         def loss():
             batch = {field: torch.tensor([checked[field]], dtype=torch.long, device=self.device)
                      for field in ("input_ids", "attention_mask", "labels")}
+            if self._loader_identity is not None:
+                from .paged_loss import native_causal_loss
+                return native_causal_loss(self.model, **batch, token_rows=self.loss_token_rows)
             return self.model(**batch, use_cache=False).loss
         return self._step(loss, publisher, before_compute, source=checked["_source"])
 
@@ -252,69 +276,69 @@ class TrainingSession:
         optimizer_started = False
         rng_before = None
         try:
-            if _loader_identity(self.model) != self._loader_identity:
-                raise ValueError("The paged loader identity changed after session admission")
-            actual = trainable_adapters(self.model)
-            if list(actual) != list(self.parameters) or any(actual[n] is not p for n, p in self.parameters.items()):
-                raise ValueError("The model's trainable parameter identities changed")
-            optimized = [p for group in self.optimizer.param_groups for p in group["params"]]
-            expected_parameters = list(self.parameters.values())
-            if (self.optimizer.state_dict()["param_groups"] != self._optimizer_groups
-                    or len(optimized) != len(expected_parameters)
-                    or any(actual is not expected for actual, expected in zip(optimized, expected_parameters))):
-                raise ValueError("Optimizer parameters or settings changed after admission")
-            rng_before = self._rng()
-            if before_compute:
-                before_compute()
-            before = {name: p.detach().clone() for name, p in self.parameters.items()}
-            before_sha = _digest(before)
-            self.optimizer.zero_grad(set_to_none=True)
-            self.model.train()
-            with torch.enable_grad():
-                loss = loss_function()
-                if not isinstance(loss, torch.Tensor) or loss.ndim != 0 or not torch.isfinite(loss).item():
-                    raise ValueError("The training loss must be one finite scalar")
-                if before_compute:
-                    before_compute()
-                loss.backward()
-            gradients = [p.grad for p in self.parameters.values() if p.grad is not None]
-            if not gradients or any(not torch.isfinite(g).all().item() for g in gradients):
-                raise ValueError("The update has absent or non-finite adapter gradients")
-            grad_norm = torch.nn.utils.clip_grad_norm_(
-                list(self.parameters.values()), self.max_grad_norm, error_if_nonfinite=True)
-            if before_compute:
-                before_compute()
-            optimizer_started = True
-            self.optimizer.step()
-            if not _finite(self.parameters) or not _finite(self.optimizer.state_dict()):
-                raise ValueError("The optimizer produced non-finite state")
-            changed = []
-            for name, parameter in self.parameters.items():
-                delta = torch.linalg.vector_norm((parameter.detach() - before[name]).double()).item()
-                if delta > 0:
-                    changed.append({"name": name, "l2_delta": delta,
-                                    "max_abs_update": float((parameter.detach() - before[name]).abs().max())})
-            if not changed:
-                raise ValueError("No selected adapter changed; this is not a completed training update")
-            self.updates += 1
-            self.cursor += 1
-            self.optimizer.zero_grad(set_to_none=True)
-            record = {
-                **self.record("completed"), "loss": float(loss.detach()),
-                "grad_norm": float(grad_norm), "changed_parameters": changed,
-                "parameter_before_sha256": before_sha, "parameter_after_sha256": _digest(self.parameters),
-                "source": source,
-            }
-            self.last_record = record
-            publication = publisher.publish(self.snapshot(), record) if publisher else None
-            return record, publication
-        except ComputeInterrupted:
+            with compute_scope(before_compute, device=self.device):
+                if _loader_identity(self.model) != self._loader_identity:
+                    raise ValueError("The paged loader identity changed after session admission")
+                actual = trainable_adapters(self.model)
+                if list(actual) != list(self.parameters) or any(actual[n] is not p for n, p in self.parameters.items()):
+                    raise ValueError("The model's trainable parameter identities changed")
+                optimized = [p for group in self.optimizer.param_groups for p in group["params"]]
+                expected_parameters = list(self.parameters.values())
+                if (self.optimizer.state_dict()["param_groups"] != self._optimizer_groups
+                        or len(optimized) != len(expected_parameters)
+                        or any(actual is not expected for actual, expected in zip(optimized, expected_parameters))):
+                    raise ValueError("Optimizer parameters or settings changed after admission")
+                check_compute(device=self.device)
+                rng_before = self._rng()
+                before = {name: p.detach().clone() for name, p in self.parameters.items()}
+                before_sha = _digest(before)
+                self.optimizer.zero_grad(set_to_none=True)
+                self.model.train()
+                with torch.enable_grad():
+                    loss = loss_function()
+                    if not isinstance(loss, torch.Tensor) or loss.ndim != 0 or not torch.isfinite(loss).item():
+                        raise ValueError("The training loss must be one finite scalar")
+                    check_compute(device=self.device)
+                    loss.backward()
+                gradients = [p.grad for p in self.parameters.values() if p.grad is not None]
+                if not gradients or any(not torch.isfinite(g).all().item() for g in gradients):
+                    raise ValueError("The update has absent or non-finite adapter gradients")
+                grad_norm = torch.nn.utils.clip_grad_norm_(
+                    list(self.parameters.values()), self.max_grad_norm, error_if_nonfinite=True)
+                check_compute(device=self.device)
+                optimizer_started = True
+                self.optimizer.step()
+                if not _finite(self.parameters) or not _finite(self.optimizer.state_dict()):
+                    raise ValueError("The optimizer produced non-finite state")
+                changed = []
+                for name, parameter in self.parameters.items():
+                    delta = torch.linalg.vector_norm((parameter.detach() - before[name]).double()).item()
+                    if delta > 0:
+                        changed.append({"name": name, "l2_delta": delta,
+                                        "max_abs_update": float((parameter.detach() - before[name]).abs().max())})
+                if not changed:
+                    raise ValueError("No selected adapter changed; this is not a completed training update")
+                self.updates += 1
+                self.cursor += 1
+                self.optimizer.zero_grad(set_to_none=True)
+                record = {
+                    **self.record("completed"), "loss": float(loss.detach()),
+                    "grad_norm": float(grad_norm), "changed_parameters": changed,
+                    "parameter_before_sha256": before_sha, "parameter_after_sha256": _digest(self.parameters),
+                    "source": source,
+                }
+                self.last_record = record
+                publication = publisher.publish(self.snapshot(), record) if publisher else None
+                return record, publication
+        except (ComputeInterrupted, FingerprintCapacityExceeded) as interrupted:
             if optimizer_started:
                 self.failed = True
-                raise RuntimeError("Compute interruption after optimizer start cannot be retried")
+                raise RuntimeError("Compute interruption after optimizer start cannot be retried") from interrupted
             if rng_before is not None:
                 self._restore_rng(rng_before)
             self.optimizer.zero_grad(set_to_none=True)
+            if isinstance(interrupted, FingerprintCapacityExceeded):
+                raise ComputeInterrupted("Fingerprint budget exhausted; checkpoint and resume with a fresh store") from interrupted
             raise
         except BaseException as original:
             self.failed = True
@@ -361,6 +385,7 @@ class TrainingSession:
                 raise ValueError("Checkpoint CPU RNG is invalid")
             generator.set_state(rng)  # Validation without mutating process RNG.
             if self.device.type == "cuda":
+                check_compute(device=self.device)
                 gpu_rng = snapshot.get("torch_device_rng")
                 gpu_generator = torch.Generator(device=self.device)
                 gpu_generator.set_state(gpu_rng)
@@ -395,6 +420,8 @@ class TrainingSession:
                     or (snapshot["updates"] > 0 and not slots)
                     or (snapshot["updates"] == 0 and slots)):
                 raise ValueError("Checkpoint optimizer slot coverage differs from recorded progress")
+            if self.device.type == "cuda":
+                check_compute(device=self.device)
             previous = self.snapshot()
             try:
                 with torch.no_grad():

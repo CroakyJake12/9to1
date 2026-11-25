@@ -204,6 +204,13 @@ class PagedExpertTests(unittest.TestCase):
         self.assertEqual(prior, adapter_plan({p: model.get_submodule(p) for p in plan}))
         self.assertFalse(any(p.requires_grad for p in model.parameters()))
 
+    def test_cuda_adapter_construction_refuses_unqualified_dtype_before_allocation(self):
+        store = ArrayStore(self.base)
+        for dtype in (torch.float16, torch.bfloat16, torch.float64):
+            with self.subTest(dtype=dtype), self.assertRaisesRegex(ValueError, "FP32"):
+                PagedExperts(store, 0, [0], rank=2, alpha=4, device="cuda:0", dtype=dtype)
+        self.assertEqual(store.reads, 0)
+
     def test_invalid_dispatch_and_plans_fail_before_reads(self):
         store = ArrayStore(self.base)
         for ids in ([True], [-1], [4], [0, 0]):

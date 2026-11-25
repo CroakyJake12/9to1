@@ -115,7 +115,7 @@ class CaptureTests(unittest.TestCase):
         self.assertIsNot(result, self.profiler)
         self.assertEqual(self.profiler.to_record(), before_profile)
         self.assertEqual(self.row, before_row)
-        self.assertEqual(permits, ["permitted", "permitted"])
+        self.assertEqual(permits, ["permitted"] * 3)
         self.assertEqual(result.source_dataset, self.dataset.identity)
         self.assertEqual(result.purpose, "software_test_only")
         self.assertEqual(result.to_record()["purpose"], "software_test_only")
@@ -159,6 +159,21 @@ class CaptureTests(unittest.TestCase):
                 profile_row(self.model, self.dataset, self.row, self.profiler, before_compute=refuse)
             tensor.assert_not_called()
         self.assertEqual(self.model.calls, 0)
+        self.assertEqual(self.profiler.to_record(), before)
+        self.assertEqual(self.modes(), modes)
+        self.assertEqual(self.hooks(), hooks)
+
+    def test_dispatch_capture_honours_stop_without_committing_observations(self):
+        before, modes, hooks = self.profiler.to_record(), self.modes(), self.hooks()
+        calls = []
+        def permit():
+            calls.append(1)
+            if len(calls) == 3:
+                raise RuntimeError("stop before dispatch capture")
+        with self.assertRaisesRegex(RuntimeError, "stop before dispatch capture"):
+            profile_row(self.model, self.dataset, self.row, self.profiler, before_compute=permit)
+        self.assertEqual(self.model.calls, 1)
+        self.assertEqual(len(calls), 3)
         self.assertEqual(self.profiler.to_record(), before)
         self.assertEqual(self.modes(), modes)
         self.assertEqual(self.hooks(), hooks)

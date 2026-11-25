@@ -14,6 +14,8 @@ from torch import nn
 from torch.nn import functional as F
 from torch.autograd.function import once_differentiable
 
+from .compute import check_compute, compute_scope, current_compute_callback
+
 _FLOAT_DTYPES = frozenset((torch.float16, torch.bfloat16, torch.float32, torch.float64))
 
 
@@ -56,6 +58,7 @@ def _array_tensor(array, shape, *, device, dtype):
     maximum = torch.finfo(dtype).max
     if maximum < float(np.finfo(np.float32).max) and array.size and np.any(np.abs(array) > maximum):
         raise ValueError("Frozen values cannot be represented by the selected compute dtype.")
+    check_compute(device=device)
     return torch.from_numpy(array).to(device=device, dtype=dtype)
 
 
@@ -68,6 +71,8 @@ def _input(x, *, width=None, device=None, dtype=None):
             or x.ndim < 1 or x.device.type == "meta"):
         raise ValueError("Paged linear input must be a materialized strided tensor.")
     _dtype(x.dtype)
+    if x.device.type == "cuda" and x.dtype != torch.float32:
+        raise ValueError("The supervised single-CUDA candidate supports only FP32.")
     if width is not None and x.shape[-1] != width:
         raise ValueError("Paged linear input width differs from the frozen matrix.")
     if device is not None and x.device != device:
@@ -80,6 +85,8 @@ class _FrozenLinear(torch.autograd.Function):
     @staticmethod
     def forward(ctx, x, store, ref):
         _input(x, width=_shape(ref)[1])
+        ctx.callback = current_compute_callback()
+        check_compute(device=x.device)
         ctx.store = store
         ctx.ref = ref
         ctx.input_dtype = x.dtype
@@ -87,14 +94,18 @@ class _FrozenLinear(torch.autograd.Function):
         weight = _materialize(store, ref, device=x.device, dtype=x.dtype)
         # Custom Function.forward records no internal autograd operations. Neither
         # x nor this temporary decoded weight is saved for the backward pass.
+        check_compute(device=x.device)
         return F.linear(x, weight)
 
     @staticmethod
     @once_differentiable
     def backward(ctx, grad_output):
-        weight = _materialize(ctx.store, ctx.ref,
-                              device=ctx.input_device, dtype=ctx.input_dtype)
-        grad_input = torch.matmul(grad_output.to(dtype=ctx.input_dtype), weight)
+        with compute_scope(ctx.callback, device=ctx.input_device):
+            check_compute(device=ctx.input_device)
+            weight = _materialize(ctx.store, ctx.ref,
+                                  device=ctx.input_device, dtype=ctx.input_dtype)
+            check_compute(device=ctx.input_device)
+            grad_input = torch.matmul(grad_output.to(dtype=ctx.input_dtype), weight)
         return grad_input, None, None
 
 
@@ -119,6 +130,8 @@ class PagedLinear(nn.Module):
         if type(chunk_rows) is not int or chunk_rows <= 0:
             raise ValueError("chunk_rows must be a positive integer.")
         dtype, device = _dtype(dtype), _device(device)
+        if device.type == "cuda" and dtype != torch.float32:
+            raise ValueError("The supervised single-CUDA candidate supports only FP32.")
         info = store.tensor_info(name)
         shape = info.get("shape") if type(info) is dict else None
         if (not isinstance(shape, tuple) or len(shape) not in (2, 3)
@@ -141,6 +154,7 @@ class PagedLinear(nn.Module):
             refs.append(ref)
         self.store, self.tensor_name, self.expert = store, name, expert
         self.chunk_rows, self._refs = chunk_rows, tuple(refs)
+        check_compute(device=device)
         self.register_buffer("_anchor", torch.empty(0, device=device, dtype=dtype), persistent=False)
 
     @property
@@ -165,6 +179,8 @@ class PagedEmbedding(nn.Module):
         if type(name) is not str or not name:
             raise ValueError("Paged embedding requires a tensor name.")
         dtype, device = _dtype(dtype), _device(device)
+        if device.type == "cuda" and dtype != torch.float32:
+            raise ValueError("The supervised single-CUDA candidate supports only FP32.")
         info = store.tensor_info(name)
         shape = info.get("shape") if type(info) is dict else None
         if (not isinstance(shape, tuple) or len(shape) != 2
@@ -172,6 +188,7 @@ class PagedEmbedding(nn.Module):
             raise ValueError("Paged embedding requires a positive two-dimensional table.")
         self.num_embeddings, self.embedding_dim = shape
         self.store, self.tensor_name = store, name
+        check_compute(device=device)
         self.register_buffer("_anchor", torch.empty(0, device=device, dtype=dtype), persistent=False)
 
     @property
@@ -188,6 +205,7 @@ class PagedEmbedding(nn.Module):
                 or indices.dtype not in (torch.int32, torch.int64)
                 or indices.device != self.device):
             raise ValueError("Embedding IDs must be integer tensors on the module's admitted device.")
+        check_compute(device=self.device)
         shape = tuple(indices.shape) + (self.embedding_dim,)
         if indices.numel() == 0:
             return self._anchor.new_empty(shape)
