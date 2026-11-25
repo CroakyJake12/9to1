@@ -56,13 +56,13 @@ public sealed record PlayMatch(Guid MatchID, Guid DefinitionID, int DefinitionRe
     public static PlayMatch Open(Guid matchID, GameDefinition definition, IEnumerable<PlayMatchRound> rounds)
     {
         var def = definition.Capture();
-        return new PlayMatch(matchID, def.DefinitionID, def.Revision, 1, PlayMatchPhase.Running, rounds.ToArray()).Capture();
+        return (new PlayMatch(matchID, def.DefinitionID, def.Revision, 1, PlayMatchPhase.Running, rounds.ToArray())).Capture();
     }
 
     private PlayMatch Next(int expectedRevision, PlayMatchPhase phase, IReadOnlyList<PlayMatchRound> rounds)
     {
         if (Revision != expectedRevision) throw new InvalidOperationException("PlayMatchRevisionConflict");
-        return new PlayMatch(MatchID, DefinitionID, DefinitionRevision, checked(Revision + 1), phase, rounds).Capture();
+        return (new PlayMatch(MatchID, DefinitionID, DefinitionRevision, checked(Revision + 1), phase, rounds)).Capture();
     }
 
     /// <summary>Host-authorised pause freezes progress; it never retracts already-revealed information.</summary>
