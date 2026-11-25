@@ -187,7 +187,7 @@ public sealed record ScheduledTaskConditionResult(bool ConditionMet, string Repo
 /// </summary>
 public interface IAutomationDueRunOwner
 {
-    Task<bool> TryAcquireDueLeaseAsync(AutomationDefinition observed, DateTimeOffset dueAt, string leaseToken,
+    Task<bool> TryAcquireDueLeaseAsync(AutomationDefinition observed, DateTimeOffset dueAt, DateTimeOffset claimingAt, string leaseToken,
         DateTimeOffset leaseUntil, CancellationToken cancellationToken);
     Task CompleteDueRunAsync(AutomationDefinition observed, AutomationRun run, DateTimeOffset? nextRunAt,
         CancellationToken cancellationToken);
@@ -221,8 +221,11 @@ public sealed class ScheduledTaskRunner(
             if (!task.IsEnabled || !Enum.IsDefined(task.ScheduleKind) || task.ScheduleKind == AutomationScheduleKind.Unscheduled ||
                 CanonicalAutomationGraphReferenceCodec.IsReference(task.Instruction))
             { skipped++; continue; } // No lease, Run record, model request or fallback for an unconfigured canonical graph.
+            // Keep the eligible batch frozen at the scan, but give each row a full lease
+            // starting when it is actually claimed, after earlier items have finished.
+            var claimingAt = DateTimeOffset.UtcNow;
             var leaseToken = Guid.NewGuid().ToString("N");
-            if (!await dueOwner.TryAcquireDueLeaseAsync(task, now, leaseToken, now.AddMinutes(15), cancellationToken).ConfigureAwait(false))
+            if (!await dueOwner.TryAcquireDueLeaseAsync(task, now, claimingAt, leaseToken, claimingAt.AddMinutes(15), cancellationToken).ConfigureAwait(false))
             {
                 skipped++;
                 continue;

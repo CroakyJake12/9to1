@@ -117,7 +117,7 @@ public sealed class ScheduledTaskRuntimeTests
         Assert.Equal("original completed", run.Result);
         Assert.Equal(original.NextRunAt, run.ScheduledFor);
         Assert.True(await repo.TryAcquireDueLeaseAsync(replacement, replacement.NextRunAt!.Value,
-            "new-occurrence", replacement.NextRunAt.Value.AddMinutes(15), ct));
+            replacement.NextRunAt.Value, "new-occurrence", replacement.NextRunAt.Value.AddMinutes(15), ct));
     }
 
     [Fact]
@@ -157,10 +157,70 @@ public sealed class ScheduledTaskRuntimeTests
         var b = Assert.Single(await right.GetDueAsync(now, ct));
 
         var receipts = await Task.WhenAll(
-            left.TryAcquireDueLeaseAsync(a, now, "left", now.AddMinutes(15), ct),
-            right.TryAcquireDueLeaseAsync(b, now, "right", now.AddMinutes(15), ct));
+            left.TryAcquireDueLeaseAsync(a, now, now, "left", now.AddMinutes(15), ct),
+            right.TryAcquireDueLeaseAsync(b, now, now, "right", now.AddMinutes(15), ct));
 
         Assert.Single(receipts, claimed => claimed);
+    }
+
+    [Fact]
+    public async Task Slow_batch_gives_the_claimed_occurrence_a_fresh_lease_without_expanding_the_due_set()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        using var paths = new ScheduledPaths();
+        var database = new SqliteDatabase(paths);
+        await database.InitializeAsync(ct);
+        var owner = new AutomationRepository(database);
+        var competitor = new AutomationRepository(database);
+        // Reuse the same early batch admission bound after 20 minutes would have passed.
+        // A separate worker uses its current clock while the first worker is in flight.
+        var claimAt = DateTimeOffset.UtcNow;
+        var scannedAt = claimAt.AddMinutes(-20);
+        var original = Definition(AutomationScheduleKind.Daily, enabled: true) with { NextRunAt = scannedAt.AddMinutes(-1) };
+        var becameDue = Definition(AutomationScheduleKind.Daily, enabled: true) with { NextRunAt = scannedAt.AddMinutes(5) };
+        await owner.UpsertAsync(original, ct);
+        await owner.UpsertAsync(becameDue, ct);
+        IReadOnlyList<AutomationDefinition>? competingDue = null;
+        bool? duplicateClaim = null;
+        var model = new FakeModelClient("ran once")
+        {
+            BeforeCompletion = async () =>
+            {
+                competingDue = await competitor.GetDueAsync(claimAt, ct);
+                // An earlier observation for this row must not win the SQLite race either.
+                duplicateClaim = await competitor.TryAcquireDueLeaseAsync(original, claimAt, claimAt,
+                    "competing-worker", claimAt.AddMinutes(15), ct);
+            }
+        };
+        var runner = new ScheduledTaskRunner(owner, model, new ScheduledTaskScheduleCalculator(TimeZoneInfo.Utc));
+
+        Assert.Equal(new ScheduledTaskBatchResult(1, 1, 1, 0, 0), await runner.RunDueAsync(scannedAt, ct));
+        Assert.Equal(becameDue.Id, Assert.Single(competingDue!).Id);
+        Assert.False(duplicateClaim);
+        Assert.Equal(1, model.CompleteCount);
+        Assert.Equal(original.NextRunAt, Assert.Single(await owner.GetRunsAsync(original.Id, 5, ct)).ScheduledFor);
+        Assert.Empty(await owner.GetRunsAsync(becameDue.Id, 5, ct));
+    }
+
+    [Fact]
+    public async Task Atomic_claim_refuses_an_already_expired_lease_or_an_occurrence_now_in_the_future()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        using var paths = new ScheduledPaths();
+        var database = new SqliteDatabase(paths);
+        await database.InitializeAsync(ct);
+        var repository = new AutomationRepository(database);
+        var scanned = DateTimeOffset.UtcNow;
+        var scheduledFor = scanned.AddMinutes(-1);
+        var task = Definition(AutomationScheduleKind.Daily, enabled: true) with { NextRunAt = scheduledFor };
+        await repository.UpsertAsync(task, ct);
+
+        Assert.False(await repository.TryAcquireDueLeaseAsync(task, scanned, scanned.AddMinutes(20),
+            "expired", scanned.AddMinutes(15), ct));
+        Assert.False(await repository.TryAcquireDueLeaseAsync(task, scanned, scheduledFor.AddSeconds(-1),
+            "clock-rolled-back", scanned.AddMinutes(15), ct));
+        Assert.Equal(task, Assert.Single(await repository.GetDueAsync(scanned, ct)));
+        Assert.Empty(await repository.GetRunsAsync(task.Id, 5, ct));
     }
 
     private sealed class ScheduledPaths : IAppPaths, IDisposable
@@ -188,8 +248,8 @@ public sealed class ScheduledTaskRuntimeTests
         public Task DeleteAsync(Guid id, CancellationToken token) => actual.DeleteAsync(id, token);
         public Task<bool> TryAcquireLeaseAsync(Guid id, string leaseToken, DateTimeOffset expires, CancellationToken token) =>
             actual.TryAcquireLeaseAsync(id, leaseToken, expires, token);
-        public Task<bool> TryAcquireDueLeaseAsync(AutomationDefinition observed, DateTimeOffset dueAt, string leaseToken,
-            DateTimeOffset expires, CancellationToken token) => actual.TryAcquireDueLeaseAsync(observed, dueAt, leaseToken, expires, token);
+        public Task<bool> TryAcquireDueLeaseAsync(AutomationDefinition observed, DateTimeOffset dueAt, DateTimeOffset claimingAt, string leaseToken,
+            DateTimeOffset expires, CancellationToken token) => actual.TryAcquireDueLeaseAsync(observed, dueAt, claimingAt, leaseToken, expires, token);
         public Task CompleteRunAsync(AutomationRun run, DateTimeOffset? next, CancellationToken token) => actual.CompleteRunAsync(run, next, token);
         public Task CompleteDueRunAsync(AutomationDefinition observed, AutomationRun run, DateTimeOffset? next, CancellationToken token) =>
             actual.CompleteDueRunAsync(observed, run, next, token);

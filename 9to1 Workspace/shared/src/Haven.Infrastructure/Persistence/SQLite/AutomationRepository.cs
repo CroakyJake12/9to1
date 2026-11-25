@@ -130,24 +130,26 @@ public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAu
         command.Parameters.AddWithValue("$observedContainer", (object?)observed.ContainerId?.ToString() ?? DBNull.Value);
     }
 
-    public async Task<bool> TryAcquireDueLeaseAsync(AutomationDefinition observed, DateTimeOffset dueAt, string leaseToken,
+    public async Task<bool> TryAcquireDueLeaseAsync(AutomationDefinition observed, DateTimeOffset dueAt, DateTimeOffset claimingAt, string leaseToken,
         DateTimeOffset leaseUntil, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(observed);
-        if (!observed.IsEnabled || observed.NextRunAt is not { } scheduled || scheduled > dueAt || leaseUntil <= dueAt)
+        if (!observed.IsEnabled || observed.NextRunAt is not { } scheduled || scheduled > dueAt ||
+            scheduled > claimingAt || leaseUntil <= claimingAt)
             return false;
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var command = connection.CreateCommand();
         command.CommandText = $"""
             UPDATE automations SET lease_token=$leaseToken, lease_until=$leaseUntil
-            WHERE id=$id AND (lease_until IS NULL OR lease_until < $dueAt)
-              AND next_run_at <= $dueAt AND {DueFingerprint};
+            WHERE id=$id AND (lease_until IS NULL OR lease_until < $claimingAt)
+              AND next_run_at <= $dueAt AND next_run_at <= $claimingAt AND {DueFingerprint};
             """;
         BindDueFingerprint(command, observed);
         command.Parameters.AddWithValue("$leaseToken", leaseToken);
         command.Parameters.AddWithValue("$leaseUntil", leaseUntil.ToUniversalTime().ToString("O"));
         command.Parameters.AddWithValue("$id", observed.Id.ToString());
         command.Parameters.AddWithValue("$dueAt", dueAt.ToUniversalTime().ToString("O"));
+        command.Parameters.AddWithValue("$claimingAt", claimingAt.ToUniversalTime().ToString("O"));
         return await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) == 1;
     }
 
