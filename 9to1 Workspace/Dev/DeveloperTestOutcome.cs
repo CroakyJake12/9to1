@@ -36,7 +36,7 @@ public sealed record DeveloperTestRunSummary(IReadOnlyList<DeveloperTestOutcome>
         return this with { Outcomes = Array.AsReadOnly(outcomes) };
     }
 
-    public static DeveloperTestRunSummary From(IEnumerable<DeveloperTestOutcome> outcomes) => new((outcomes ?? Array.Empty<DeveloperTestOutcome>()).ToArray()).Capture();
+    public static DeveloperTestRunSummary From(IEnumerable<DeveloperTestOutcome> outcomes) => (new DeveloperTestRunSummary((outcomes ?? Array.Empty<DeveloperTestOutcome>()).ToArray())).Capture();
 
     private int Count(DeveloperTestOutcomeState state) => Capture().Outcomes.Count(o => o.State == state);
     public int PassedCount => Count(DeveloperTestOutcomeState.Passed);
