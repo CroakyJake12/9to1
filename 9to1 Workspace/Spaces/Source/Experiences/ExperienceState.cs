@@ -4,7 +4,8 @@ namespace HavenOS.Apps.Spaces.Experiences;
 
 /// <summary>
 /// Canonical structured state for an Experience. Conversation prose is deliberately not used as
-/// the authoritative source for these values.
+/// the authoritative source for these values. Scene and in-world time are public; callers must
+/// classify sensitive entry values and payloads with their actual visibility policy.
 /// </summary>
 public sealed record ExperienceStateDocument(
     string Scene,
@@ -32,21 +33,31 @@ public sealed record ExperienceRelationship(
     Guid SubjectActorId,
     Guid TargetActorId,
     string Kind,
-    string ValueJson);
+    string ValueJson,
+    ExperienceVisibility Visibility = ExperienceVisibility.Public,
+    IReadOnlyList<Guid>? VisibleToActorIds = null);
 
 public sealed record ExperienceInventoryItem(
     Guid ItemId,
     string Name,
     string ValueJson,
-    Guid? OwnerActorId);
+    Guid? OwnerActorId,
+    ExperienceVisibility Visibility = ExperienceVisibility.Public,
+    IReadOnlyList<Guid>? VisibleToActorIds = null);
 
 public sealed record ExperienceObjective(
     Guid ObjectiveId,
     string Title,
     string Status,
-    Guid? OwnerActorId);
+    Guid? OwnerActorId,
+    ExperienceVisibility Visibility = ExperienceVisibility.Public,
+    IReadOnlyList<Guid>? VisibleToActorIds = null);
 
-public sealed record ExperienceFlag(string Key, string ValueJson);
+public sealed record ExperienceFlag(
+    string Key,
+    string ValueJson,
+    ExperienceVisibility Visibility = ExperienceVisibility.Public,
+    IReadOnlyList<Guid>? VisibleToActorIds = null);
 
 /// <summary>A committed typed event. Narrative text may describe it but does not replace it.</summary>
 public sealed record ExperienceEvent(
@@ -54,11 +65,13 @@ public sealed record ExperienceEvent(
     string Kind,
     Guid? ActorId,
     string PayloadJson,
-    DateTimeOffset RecordedAt);
+    DateTimeOffset RecordedAt,
+    ExperienceVisibility Visibility = ExperienceVisibility.Public,
+    IReadOnlyList<Guid>? VisibleToActorIds = null);
 
 /// <summary>
-/// State visible only to its explicitly listed actors. An empty audience means the fact is
-/// private to the experience owner and is not included in actor projections.
+/// Visibility controls the fact's audience. OwnerOnly facts belong to the experience owner and
+/// are not included in actor projections; SelectedActors facts require an explicit audience.
 /// </summary>
 public sealed record ExperiencePrivateFact(
     Guid FactId,
@@ -70,6 +83,8 @@ public sealed record ExperiencePrivateFact(
 public enum ExperienceVisibility
 {
     Public = 0,
+    // Actor entries use their actor; relationships use the subject; owned items/objectives use
+    // their owner and events their actor. Without such an actor, OwnerOnly is private to the user.
     OwnerOnly = 1,
     SelectedActors = 2
 }
@@ -81,7 +96,11 @@ public sealed record ExperienceStateRevision(
     Guid? ParentRevisionId,
     ExperienceStateDocument State,
     string Transition,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    Guid? ActionId = null);
+
+/// <summary>The durable revision created by an action, including when an identical request is replayed.</summary>
+public sealed record ExperienceActionCommit(ExperienceStateRevision Revision, bool WasReplay);
 
 /// <summary>
 /// A real externally executed action remains in this history when simulated state is branched
@@ -110,6 +129,7 @@ public sealed record ExperienceTimeline(
         Revisions.Single(revision => revision.RevisionId == ActiveRevisionId);
 }
 
+/// <summary>A redacted read-only projection, not an editable replacement for canonical state.</summary>
 public sealed record ExperienceVisibleState(
     Guid ExperienceId,
     Guid ConversationBranchId,

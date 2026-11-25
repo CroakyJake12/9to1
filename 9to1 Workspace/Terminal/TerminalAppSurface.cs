@@ -35,7 +35,18 @@ public sealed record TerminalAppCommandResult(
     TerminalAppCommandState State,
     string Command,
     string Message,
-    TerminalSessionCommandResult? SessionResult = null);
+    TerminalSessionCommandResult? SessionResult = null,
+    TerminalAppApproval? Approval = null);
+
+/// <summary>
+/// An ephemeral review snapshot. Command is the exact, potentially sensitive input; it must not
+/// be written to history or logs. The caller must show this target and command before approval.
+/// </summary>
+public sealed record TerminalAppApproval(
+    Guid Id,
+    string Command,
+    TerminalSessionMetadata Target,
+    int? ProcessId);
 
 /// <summary>
 /// Owns one live Terminal app session while delegating all shell execution to the host-provided
@@ -48,8 +59,10 @@ public sealed class TerminalAppSurface : IDisposable
     private readonly TerminalAppHostCapabilities _host;
     private readonly string _initialDirectory;
     private readonly List<string> _history = [];
+    private readonly SemaphoreSlim _operationGate = new(1, 1);
+    private readonly object _pendingGate = new();
     private ITerminalSession? _session;
-    private string? _pendingCommand;
+    private PendingApproval? _pending;
     private bool _disposed;
 
     public TerminalAppSurface(TerminalAppHostCapabilities host, string? initialDirectory = null)
@@ -74,7 +87,7 @@ public sealed class TerminalAppSurface : IDisposable
     public TerminalAppAvailability Availability { get; private set; }
     public string? UnavailableReason { get; private set; }
     public bool IsAvailable => Availability == TerminalAppAvailability.Available && _session is not null;
-    public bool HasPendingApproval => _pendingCommand is not null;
+    public bool HasPendingApproval { get { lock (_pendingGate) return _pending is not null; } }
     public IReadOnlyList<string> History => _history;
     public TerminalSessionMetadata? SessionMetadata => _session?.Metadata;
     public string WorkingDirectory => _session?.Metadata.CurrentWorkingDirectory ?? _initialDirectory;
@@ -92,74 +105,130 @@ public sealed class TerminalAppSurface : IDisposable
             return new(TerminalAppCommandState.Failed, string.Empty, "Enter a command to run.");
 
         var safeCommand = SensitiveTextRedactor.Redact(value, 8_000);
-        _history.Add(safeCommand);
+        if (cancellationToken.IsCancellationRequested)
+            return new(TerminalAppCommandState.Cancelled, safeCommand, "Command cancelled before submission.");
+        if (!_operationGate.Wait(0))
+            return new(TerminalAppCommandState.Failed, safeCommand, "Another Terminal operation is in progress.");
 
-        if (IsTranscriptClearCommand(value))
+        try
         {
-            _pendingCommand = null;
-            TranscriptClearRequested?.Invoke(this, EventArgs.Empty);
-            return new(TerminalAppCommandState.Succeeded, safeCommand, "Transcript clear requested.");
+            ThrowIfDisposed();
+            lock (_pendingGate)
+            {
+                if (_pending is not null)
+                    return new(TerminalAppCommandState.Failed, safeCommand, "Resolve the existing command approval first.");
+            }
+            _history.Add(safeCommand);
+
+            if (IsTranscriptClearCommand(value))
+            {
+                TranscriptClearRequested?.Invoke(this, EventArgs.Empty);
+                return new(TerminalAppCommandState.Succeeded, safeCommand, "Transcript clear requested.");
+            }
+
+            if (!TryGetExecutionHost(out var session, out var permission))
+                return Unavailable(safeCommand);
+
+            var policy = TerminalCommandPolicy.Evaluate(permission());
+            if (policy.Decision == TerminalPermissionDecision.Denied)
+                return new(TerminalAppCommandState.Denied, safeCommand, policy.Reason);
+
+            if (policy.Decision == TerminalPermissionDecision.RequiresApproval)
+            {
+                var metadata = session.Metadata;
+                if (!CanReview(metadata))
+                    return new(TerminalAppCommandState.Unavailable, safeCommand, "The shell or its working directory is not ready for review.");
+
+                var approval = new TerminalAppApproval(Guid.NewGuid(), value, metadata, session.ProcessId);
+                lock (_pendingGate)
+                {
+                    _pending = new PendingApproval(session, approval);
+                    // Recheck under the event lock so a metadata change during capture is not lost.
+                    if (!MatchesTarget(_pending, session.Metadata))
+                        _pending.Invalidated = true;
+                }
+                return new(TerminalAppCommandState.RequiresApproval, safeCommand, policy.Reason, Approval: approval);
+            }
+
+            return await ExecuteCoreAsync(session, value, safeCommand, cancellationToken).ConfigureAwait(false);
         }
-
-        if (!TryGetExecutionHost(out var session, out var permission))
-            return Unavailable(safeCommand);
-
-        var policy = TerminalCommandPolicy.Evaluate(permission());
-        if (policy.Decision == TerminalPermissionDecision.Denied)
+        finally
         {
-            _pendingCommand = null;
-            return new(TerminalAppCommandState.Denied, safeCommand, policy.Reason);
+            _operationGate.Release();
         }
-
-        if (policy.Decision == TerminalPermissionDecision.RequiresApproval)
-        {
-            _pendingCommand = value;
-            return new(TerminalAppCommandState.RequiresApproval, safeCommand, policy.Reason);
-        }
-
-        _pendingCommand = null;
-        return await ExecuteCoreAsync(session, value, safeCommand, cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<TerminalAppCommandResult> ApprovePendingAsync(CancellationToken cancellationToken = default)
+    public async Task<TerminalAppCommandResult> ApprovePendingAsync(Guid approvalId, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
-        if (_pendingCommand is null)
-            return new(TerminalAppCommandState.Failed, string.Empty, "There is no command awaiting approval.");
+        if (cancellationToken.IsCancellationRequested)
+            return new(TerminalAppCommandState.Cancelled, string.Empty, "Approval cancelled before submission.");
+        if (!_operationGate.Wait(0))
+            return new(TerminalAppCommandState.Failed, string.Empty, "Another Terminal operation is in progress.");
 
-        var command = _pendingCommand;
-        var safeCommand = SensitiveTextRedactor.Redact(command, 8_000);
-        _pendingCommand = null;
+        try
+        {
+            ThrowIfDisposed();
+            PendingApproval pending;
+            lock (_pendingGate)
+            {
+                if (_pending is null || _pending.Review.Id != approvalId)
+                    return new(TerminalAppCommandState.Failed, string.Empty, "This command approval is no longer pending.");
+                pending = _pending;
+                _pending = null; // Consume before dispatch; repeated activation cannot run it again.
+            }
 
-        if (!TryGetExecutionHost(out var session, out var permission))
-            return Unavailable(safeCommand);
+            var safeCommand = SensitiveTextRedactor.Redact(pending.Review.Command, 8_000);
+            if (!TryGetExecutionHost(out var session, out var permission))
+                return Unavailable(safeCommand);
+            if (pending.Invalidated || !ReferenceEquals(session, pending.Session) || !MatchesTarget(pending, session.Metadata))
+                return new(TerminalAppCommandState.Denied, safeCommand, "The reviewed shell or target changed. Submit the command for a new review.");
 
-        var policy = TerminalCommandPolicy.Evaluate(permission(), approvedOnce: true);
-        if (policy.Decision != TerminalPermissionDecision.Allowed)
-            return new(TerminalAppCommandState.Denied, safeCommand, policy.Reason);
+            var currentPermission = permission();
+            var policy = TerminalCommandPolicy.Evaluate(currentPermission);
+            if (policy.Decision == TerminalPermissionDecision.Denied)
+                return new(TerminalAppCommandState.Denied, safeCommand, policy.Reason);
+            policy = TerminalCommandPolicy.Evaluate(currentPermission, approvedOnce: true);
+            if (policy.Decision != TerminalPermissionDecision.Allowed)
+                return new(TerminalAppCommandState.Denied, safeCommand, policy.Reason);
 
-        return await ExecuteCoreAsync(session, command, safeCommand, cancellationToken).ConfigureAwait(false);
+            return await ExecuteCoreAsync(session, pending.Review.Command, safeCommand, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            _operationGate.Release();
+        }
     }
 
-    public TerminalAppCommandResult DenyPending()
+    public TerminalAppCommandResult DenyPending(Guid approvalId)
     {
         ThrowIfDisposed();
-        if (_pendingCommand is null)
-            return new(TerminalAppCommandState.Failed, string.Empty, "There is no command awaiting approval.");
-
-        var safeCommand = SensitiveTextRedactor.Redact(_pendingCommand, 8_000);
-        _pendingCommand = null;
-        return new(TerminalAppCommandState.Denied, safeCommand, "Command denied by user.");
+        lock (_pendingGate)
+        {
+            if (_pending is null || _pending.Review.Id != approvalId)
+                return new(TerminalAppCommandState.Failed, string.Empty, "This command approval is no longer pending.");
+            var safeCommand = SensitiveTextRedactor.Redact(_pending.Review.Command, 8_000);
+            _pending = null;
+            return new(TerminalAppCommandState.Denied, safeCommand, "Command denied by user.");
+        }
     }
 
     public async Task<bool> SetWorkingDirectoryAsync(string path, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
-        if (!IsAvailable || _session is null || string.IsNullOrWhiteSpace(path) || !Directory.Exists(path))
+        if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path) || !_operationGate.Wait(0))
             return false;
 
         try
         {
+            ThrowIfDisposed();
+            if (!IsAvailable || _session is null)
+                return false;
+            lock (_pendingGate)
+            {
+                if (_pending is not null)
+                    _pending.Invalidated = true;
+            }
             await _session.SetWorkingDirectoryAsync(Path.GetFullPath(path), cancellationToken).ConfigureAwait(false);
             return true;
         }
@@ -171,10 +240,19 @@ public sealed class TerminalAppSurface : IDisposable
         {
             return false;
         }
+        finally
+        {
+            _operationGate.Release();
+        }
     }
 
     public bool NewSession()
     {
+        ThrowIfDisposed();
+        if (!_operationGate.Wait(0))
+            return false;
+        try
+        {
         ThrowIfDisposed();
         if (_host.SessionFactory is null || _host.CommandPermission is null)
         {
@@ -199,11 +277,16 @@ public sealed class TerminalAppSurface : IDisposable
         _session = replacement;
         Attach(replacement);
         previous?.Dispose();
-        _pendingCommand = null;
+        lock (_pendingGate) _pending = null;
         _history.Clear();
         Availability = TerminalAppAvailability.Available;
         UnavailableReason = null;
         return true;
+        }
+        finally
+        {
+            _operationGate.Release();
+        }
     }
 
     public async Task InterruptAsync(CancellationToken cancellationToken = default)
@@ -282,7 +365,7 @@ public sealed class TerminalAppSurface : IDisposable
         Detach(_session);
         _session?.Dispose();
         _session = null;
-        _pendingCommand = null;
+        lock (_pendingGate) _pending = null;
         Availability = TerminalAppAvailability.HostCapabilityUnavailable;
         UnavailableReason = reason;
     }
@@ -302,7 +385,15 @@ public sealed class TerminalAppSurface : IDisposable
     }
 
     private void OnOutputReceived(object? sender, TerminalSessionOutput output) => OutputReceived?.Invoke(this, output);
-    private void OnMetadataChanged(object? sender, TerminalSessionMetadata metadata) => MetadataChanged?.Invoke(this, metadata);
+    private void OnMetadataChanged(object? sender, TerminalSessionMetadata metadata)
+    {
+        lock (_pendingGate)
+        {
+            if (_pending is not null && (!ReferenceEquals(sender, _pending.Session) || !MatchesTarget(_pending, metadata)))
+                _pending.Invalidated = true;
+        }
+        MetadataChanged?.Invoke(this, metadata);
+    }
     private void OnActivityPublished(object? sender, TerminalCommandActivity activity)
     {
         if (activity.Origin == TerminalCommandOrigin.Agent)
@@ -311,6 +402,35 @@ public sealed class TerminalAppSurface : IDisposable
 
     private static bool IsTranscriptClearCommand(string command) =>
         command.Equals("clear", StringComparison.OrdinalIgnoreCase) || command.Equals("cls", StringComparison.OrdinalIgnoreCase);
+
+    private static bool CanReview(TerminalSessionMetadata metadata) =>
+        metadata.SessionId != Guid.Empty
+        && metadata.State == TerminalSessionLifecycleState.Ready
+        && !string.IsNullOrWhiteSpace(metadata.ShellRuntime)
+        && !string.IsNullOrWhiteSpace(metadata.CurrentWorkingDirectory);
+
+    private static bool MatchesTarget(PendingApproval pending, TerminalSessionMetadata current)
+    {
+        var reviewed = pending.Review.Target;
+        return CanReview(current)
+            && current.SessionId == reviewed.SessionId
+            && current.EnvironmentId == reviewed.EnvironmentId
+            && current.ShellProfileId == reviewed.ShellProfileId
+            && current.ShellRuntime == reviewed.ShellRuntime
+            && current.CurrentWorkingDirectory == reviewed.CurrentWorkingDirectory
+            && current.Generation == reviewed.Generation
+            && current.Revision == reviewed.Revision
+            && current.IsElevated == reviewed.IsElevated
+            && current.Mode == reviewed.Mode
+            && pending.Session.ProcessId == pending.Review.ProcessId;
+    }
+
+    private sealed class PendingApproval(ITerminalSession session, TerminalAppApproval review)
+    {
+        public ITerminalSession Session { get; } = session;
+        public TerminalAppApproval Review { get; } = review;
+        public bool Invalidated { get; set; }
+    }
 
     private static string ResolveStartDirectory(string? path)
     {
@@ -337,7 +457,7 @@ public sealed class TerminalAppSurface : IDisposable
         Detach(_session);
         _session?.Dispose();
         _session = null;
-        _pendingCommand = null;
+        lock (_pendingGate) _pending = null;
         Availability = TerminalAppAvailability.Disposed;
     }
 }

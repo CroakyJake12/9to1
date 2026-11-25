@@ -4,14 +4,14 @@ using Haven.Application;
 namespace HavenOS.Apps.Spaces.Experiences;
 
 /// <summary>
-/// Persists canonical Experience state in the Home-provided versioned settings store. Register as
-/// a singleton so a single repository serializes read/modify/write operations for its state key.
+/// Persists canonical Experience state in the Home-provided versioned settings store. Stores that
+/// support compare-exchange protect concurrent repository instances; other stores require a singleton.
 /// The repository never edits conversation records or executes external actions.
 /// </summary>
 public sealed class ExperienceStateRepository
 {
     private const string SettingsKey = "spaces.experiences.state";
-    private const int CurrentSchemaVersion = 1;
+    private const int CurrentSchemaVersion = 2;
     private readonly IVersionedSettingsStore _settings;
     private readonly Func<DateTimeOffset> _clock;
     private readonly SemaphoreSlim _gate = new(1, 1);
@@ -41,6 +41,8 @@ public sealed class ExperienceStateRepository
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
         var state = initialState ?? ExperienceStateDocument.Empty;
         Validate(state);
+        state = CloneState(state);
+        Validate(state);
 
         return await MutateAsync(snapshot =>
         {
@@ -51,13 +53,14 @@ public sealed class ExperienceStateRepository
 
             var now = _clock();
             var revision = new ExperienceStateRevision(
-                Guid.NewGuid(), 1, conversationBranchId, null, CloneState(state), "Experience created", now);
+                Guid.NewGuid(), 1, conversationBranchId, null, state, "Experience created", now);
             var timeline = new ExperienceTimeline(
                 Guid.NewGuid(), spaceId, conversationId, title.Trim(), [revision], revision.RevisionId, [], now, now);
             return (snapshot with { Experiences = [.. snapshot.Experiences, timeline] }, timeline);
         }, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>Reads the full owner state. Actor-facing consumers must use GetVisibleStateAsync.</summary>
     public async Task<ExperienceTimeline?> GetAsync(Guid experienceId, CancellationToken cancellationToken = default)
     {
         RequireId(experienceId, nameof(experienceId));
@@ -79,6 +82,8 @@ public sealed class ExperienceStateRepository
         ArgumentNullException.ThrowIfNull(nextState);
         ArgumentException.ThrowIfNullOrWhiteSpace(transition);
         Validate(nextState);
+        nextState = CloneState(nextState);
+        Validate(nextState);
 
         return await MutateAsync(snapshot =>
         {
@@ -87,7 +92,7 @@ public sealed class ExperienceStateRepository
             RequireExpectedRevision(timeline, conversationBranchId, expectedRevisionId);
             var revision = new ExperienceStateRevision(
                 Guid.NewGuid(), checked(timeline.Revisions.Max(item => item.RevisionNumber) + 1),
-                conversationBranchId, current.RevisionId, CloneState(nextState), transition.Trim(), _clock());
+                conversationBranchId, current.RevisionId, nextState, transition.Trim(), _clock());
             var updated = timeline with
             {
                 Revisions = [.. timeline.Revisions, revision],
@@ -95,6 +100,62 @@ public sealed class ExperienceStateRepository
                 UpdatedAt = revision.CreatedAt
             };
             return (Replace(snapshot, updated), updated);
+        }, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Commits one already-validated action proposal. Replaying the same action ID and exact proposal
+    /// returns its original revision, even after another action or branch selection. This does not
+    /// validate scenario rules or execute the action; those remain the caller's responsibility.
+    /// </summary>
+    public async Task<ExperienceActionCommit> CommitActionAsync(
+        Guid experienceId,
+        Guid conversationBranchId,
+        Guid expectedRevisionId,
+        Guid actionId,
+        ExperienceStateDocument nextState,
+        string transition,
+        CancellationToken cancellationToken = default)
+    {
+        RequireId(experienceId, nameof(experienceId));
+        RequireId(conversationBranchId, nameof(conversationBranchId));
+        RequireId(expectedRevisionId, nameof(expectedRevisionId));
+        RequireId(actionId, nameof(actionId));
+        ArgumentNullException.ThrowIfNull(nextState);
+        ArgumentException.ThrowIfNullOrWhiteSpace(transition);
+        Validate(nextState);
+        nextState = CloneState(nextState);
+        Validate(nextState);
+        var description = transition.Trim();
+        var proposalJson = JsonSerializer.Serialize(nextState);
+
+        return await MutateAsync(snapshot =>
+        {
+            var timeline = Find(snapshot, experienceId);
+            var previous = timeline.Revisions.SingleOrDefault(item => item.ActionId == actionId);
+            if (previous is not null)
+            {
+                if (previous.ConversationBranchId != conversationBranchId ||
+                    previous.ParentRevisionId != expectedRevisionId ||
+                    previous.Transition != description ||
+                    JsonSerializer.Serialize(previous.State) != proposalJson)
+                    throw new ExperienceStateException(
+                        ExperienceStateErrorCode.RevisionConflict,
+                        $"Experience action ID '{actionId}' is already committed with a different proposal.");
+                return (snapshot, new ExperienceActionCommit(previous, true));
+            }
+
+            RequireExpectedRevision(timeline, conversationBranchId, expectedRevisionId);
+            var revision = new ExperienceStateRevision(
+                Guid.NewGuid(), checked(timeline.Revisions.Max(item => item.RevisionNumber) + 1),
+                conversationBranchId, expectedRevisionId, nextState, description, _clock(), actionId);
+            var updated = timeline with
+            {
+                Revisions = [.. timeline.Revisions, revision],
+                ActiveRevisionId = revision.RevisionId,
+                UpdatedAt = revision.CreatedAt
+            };
+            return (Replace(snapshot, updated), new ExperienceActionCommit(revision, false));
         }, cancellationToken).ConfigureAwait(false);
     }
 
@@ -205,7 +266,10 @@ public sealed class ExperienceStateRepository
         }, cancellationToken).ConfigureAwait(false);
     }
 
-    /// <summary>Returns only state allowed by the Experience's actor visibility policy.</summary>
+    /// <summary>
+    /// Returns the state permitted to the supplied actor. The caller must authorize that actor
+    /// identity; this projection does not authenticate the requester or sanitize public payloads.
+    /// </summary>
     public async Task<ExperienceVisibleState> GetVisibleStateAsync(
         Guid experienceId,
         Guid actorId,
@@ -231,13 +295,28 @@ public sealed class ExperienceStateRepository
             active.RevisionId,
             state.Scene,
             state.InWorldTime,
-            state.Actors.Where(item => visibleActorIds.Contains(item.ActorId)).ToArray(),
-            state.Relationships.Where(item => visibleActorIds.Contains(item.SubjectActorId) && visibleActorIds.Contains(item.TargetActorId)).ToArray(),
-            state.Inventory.Where(item => item.OwnerActorId is null || visibleActorIds.Contains(item.OwnerActorId.Value)).ToArray(),
-            state.Objectives.Where(item => item.OwnerActorId is null || visibleActorIds.Contains(item.OwnerActorId.Value)).ToArray(),
-            state.Flags,
-            state.Events.Where(item => item.ActorId is null || visibleActorIds.Contains(item.ActorId.Value)).ToArray(),
-            state.PrivateFacts.Where(item => IsVisible(item.Visibility, item.VisibleToActorIds, Guid.Empty, actorId)).ToArray());
+            state.Actors.Where(item => visibleActorIds.Contains(item.ActorId))
+                .Select(item => item with { VisibleToActorIds = ProjectAudience(item.Visibility, actorId) }).ToArray(),
+            state.Relationships.Where(item =>
+                    visibleActorIds.Contains(item.SubjectActorId) && visibleActorIds.Contains(item.TargetActorId) &&
+                    IsVisible(item.Visibility, item.VisibleToActorIds, item.SubjectActorId, actorId))
+                .Select(item => item with { VisibleToActorIds = ProjectAudience(item.Visibility, actorId) }).ToArray(),
+            state.Inventory.Where(item =>
+                    (item.OwnerActorId is null || visibleActorIds.Contains(item.OwnerActorId.Value)) &&
+                    IsVisible(item.Visibility, item.VisibleToActorIds, item.OwnerActorId ?? Guid.Empty, actorId))
+                .Select(item => item with { VisibleToActorIds = ProjectAudience(item.Visibility, actorId) }).ToArray(),
+            state.Objectives.Where(item =>
+                    (item.OwnerActorId is null || visibleActorIds.Contains(item.OwnerActorId.Value)) &&
+                    IsVisible(item.Visibility, item.VisibleToActorIds, item.OwnerActorId ?? Guid.Empty, actorId))
+                .Select(item => item with { VisibleToActorIds = ProjectAudience(item.Visibility, actorId) }).ToArray(),
+            state.Flags.Where(item => IsVisible(item.Visibility, item.VisibleToActorIds, Guid.Empty, actorId))
+                .Select(item => item with { VisibleToActorIds = ProjectAudience(item.Visibility, actorId) }).ToArray(),
+            state.Events.Where(item =>
+                    (item.ActorId is null || visibleActorIds.Contains(item.ActorId.Value)) &&
+                    IsVisible(item.Visibility, item.VisibleToActorIds, item.ActorId ?? Guid.Empty, actorId))
+                .Select(item => item with { VisibleToActorIds = ProjectAudience(item.Visibility, actorId) }).ToArray(),
+            state.PrivateFacts.Where(item => IsVisible(item.Visibility, item.VisibleToActorIds, Guid.Empty, actorId))
+                .Select(item => item with { VisibleToActorIds = ProjectAudience(item.Visibility, actorId) }).ToArray());
     }
 
     private async Task<TResult> MutateAsync<TResult>(
@@ -247,15 +326,50 @@ public sealed class ExperienceStateRepository
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            var current = await ReadCoreAsync(cancellationToken).ConfigureAwait(false);
-            var (next, result) = mutation(current);
-            if (!ReferenceEquals(current, next))
-                await _settings.SetAsync(SettingsKey, CloneSnapshot(next), cancellationToken).ConfigureAwait(false);
-            return result switch
+            for (var attempt = 0; attempt < 16; attempt++)
             {
-                ExperienceTimeline timeline => (TResult)(object)CloneTimeline(timeline),
-                _ => result
-            };
+                string? originalJson = null;
+                ExperienceStateSnapshot current;
+                if (_settings is IVersionedSettingsCompareExchange)
+                {
+                    var manifest = await _settings.ExportAsync(cancellationToken).ConfigureAwait(false);
+                    manifest.Settings.TryGetValue(SettingsKey, out originalJson);
+                    current = ReadSnapshotJson(originalJson);
+                }
+                else
+                {
+                    current = await ReadCoreAsync(cancellationToken).ConfigureAwait(false);
+                }
+
+                var (next, result) = mutation(current);
+                if (!ReferenceEquals(current, next))
+                {
+                    // V1 had no entry-level privacy or action identity. Upgrading on write prevents
+                    // older readers from silently dropping those fields and exposing private data.
+                    next = next with { Version = CurrentSchemaVersion };
+                    if (_settings is IVersionedSettingsCompareExchange compareExchange)
+                    {
+                        var exchange = await compareExchange.CompareExchangeAsync(
+                            SettingsKey, originalJson, JsonSerializer.Serialize(next), cancellationToken).ConfigureAwait(false);
+                        if (!exchange.Exchanged) continue;
+                    }
+                    else
+                    {
+                        await _settings.SetAsync(SettingsKey, CloneSnapshot(next), cancellationToken).ConfigureAwait(false);
+                    }
+                }
+                return result switch
+                {
+                    ExperienceTimeline timeline => (TResult)(object)CloneTimeline(timeline),
+                    ExperienceActionCommit commit => (TResult)(object)(commit with
+                    {
+                        Revision = commit.Revision with { State = CloneState(commit.Revision.State) }
+                    }),
+                    _ => result
+                };
+            }
+            throw new ExperienceStateException(ExperienceStateErrorCode.RevisionConflict,
+                "Experience state changed repeatedly while saving; retry against the current state.");
         }
         finally
         {
@@ -274,9 +388,28 @@ public sealed class ExperienceStateRepository
     {
         var snapshot = await _settings.GetAsync<ExperienceStateSnapshot>(SettingsKey, cancellationToken).ConfigureAwait(false)
             ?? ExperienceStateSnapshot.Empty;
-        if (snapshot.Version != CurrentSchemaVersion)
+        return ValidateStoredSnapshot(snapshot);
+    }
+
+    private static ExperienceStateSnapshot ReadSnapshotJson(string? json)
+    {
+        if (json is null) return ExperienceStateSnapshot.Empty;
+        try
+        {
+            return ValidateStoredSnapshot(JsonSerializer.Deserialize<ExperienceStateSnapshot>(json)
+                ?? throw new InvalidDataException("Stored Experience state is null."));
+        }
+        catch (JsonException exception)
+        {
+            throw new InvalidDataException("Stored Experience state is invalid.", exception);
+        }
+    }
+
+    private static ExperienceStateSnapshot ValidateStoredSnapshot(ExperienceStateSnapshot snapshot)
+    {
+        if (snapshot.Version is not (1 or CurrentSchemaVersion))
             throw new InvalidDataException(
-                $"Unsupported Experience state schema version {snapshot.Version}; expected {CurrentSchemaVersion}.");
+                $"Unsupported Experience state schema version {snapshot.Version}; supported versions are 1 and {CurrentSchemaVersion}.");
         if (snapshot.Experiences is null)
             throw new InvalidDataException("Experience state storage has no experience collection.");
         try
@@ -310,11 +443,11 @@ public sealed class ExperienceStateRepository
     private static ExperienceStateDocument CloneState(ExperienceStateDocument state) => state with
     {
         Actors = state.Actors.Select(actor => actor with { VisibleToActorIds = actor.VisibleToActorIds.ToArray() }).ToArray(),
-        Relationships = state.Relationships.ToArray(),
-        Inventory = state.Inventory.ToArray(),
-        Objectives = state.Objectives.ToArray(),
-        Flags = state.Flags.ToArray(),
-        Events = state.Events.ToArray(),
+        Relationships = state.Relationships.Select(item => item with { VisibleToActorIds = item.VisibleToActorIds?.ToArray() }).ToArray(),
+        Inventory = state.Inventory.Select(item => item with { VisibleToActorIds = item.VisibleToActorIds?.ToArray() }).ToArray(),
+        Objectives = state.Objectives.Select(item => item with { VisibleToActorIds = item.VisibleToActorIds?.ToArray() }).ToArray(),
+        Flags = state.Flags.Select(item => item with { VisibleToActorIds = item.VisibleToActorIds?.ToArray() }).ToArray(),
+        Events = state.Events.Select(item => item with { VisibleToActorIds = item.VisibleToActorIds?.ToArray() }).ToArray(),
         PrivateFacts = state.PrivateFacts.Select(fact => fact with { VisibleToActorIds = fact.VisibleToActorIds.ToArray() }).ToArray()
     };
 
@@ -335,12 +468,16 @@ public sealed class ExperienceStateRepository
                 throw Invalid("Stored Experience timeline has missing collections.");
             var revisionIds = new HashSet<Guid>();
             var branchIds = new HashSet<Guid>();
+            var actionIds = new HashSet<Guid>();
             foreach (var revision in timeline.Revisions)
             {
                 RequireId(revision.RevisionId, nameof(revision.RevisionId));
                 RequireId(revision.ConversationBranchId, nameof(revision.ConversationBranchId));
                 if (revision.RevisionNumber < 1 || !revisionIds.Add(revision.RevisionId))
                     throw Invalid("Stored Experience revisions have invalid or duplicate IDs/numbers.");
+                if (revision.ActionId is { } actionId &&
+                    (actionId == Guid.Empty || revision.ParentRevisionId is null || !actionIds.Add(actionId)))
+                    throw Invalid("Stored Experience action IDs must be non-empty and unique on committed revisions.");
                 branchIds.Add(revision.ConversationBranchId);
                 Validate(revision.State);
             }
@@ -377,15 +514,19 @@ public sealed class ExperienceStateRepository
 
     private static bool IsVisible(
         ExperienceVisibility visibility,
-        IReadOnlyList<Guid> visibleToActorIds,
+        IReadOnlyList<Guid>? visibleToActorIds,
         Guid ownerActorId,
         Guid requestingActorId) => visibility switch
         {
             ExperienceVisibility.Public => true,
             ExperienceVisibility.OwnerOnly => ownerActorId == requestingActorId,
-            ExperienceVisibility.SelectedActors => visibleToActorIds.Contains(requestingActorId),
+            ExperienceVisibility.SelectedActors => visibleToActorIds?.Contains(requestingActorId) == true,
             _ => false
         };
+
+    // An audience is policy metadata, not a list of other characters the viewer may discover.
+    private static IReadOnlyList<Guid> ProjectAudience(ExperienceVisibility visibility, Guid actorId) =>
+        visibility == ExperienceVisibility.SelectedActors ? [actorId] : [];
 
     private static void Validate(ExperienceStateDocument state)
     {
@@ -413,6 +554,7 @@ public sealed class ExperienceStateRepository
             RequireActor(actorIds, relationship.TargetActorId);
             ArgumentException.ThrowIfNullOrWhiteSpace(relationship.Kind);
             ValidateJson(relationship.ValueJson, "relationship value");
+            ValidateEntryVisibility(relationship.Visibility, relationship.VisibleToActorIds, actorIds);
         }
         foreach (var item in state.Inventory)
         {
@@ -420,6 +562,7 @@ public sealed class ExperienceStateRepository
             ArgumentException.ThrowIfNullOrWhiteSpace(item.Name);
             ValidateJson(item.ValueJson, "inventory value");
             if (item.OwnerActorId is { } owner) RequireActor(actorIds, owner);
+            ValidateEntryVisibility(item.Visibility, item.VisibleToActorIds, actorIds);
         }
         foreach (var objective in state.Objectives)
         {
@@ -427,16 +570,22 @@ public sealed class ExperienceStateRepository
             ArgumentException.ThrowIfNullOrWhiteSpace(objective.Title);
             ArgumentException.ThrowIfNullOrWhiteSpace(objective.Status);
             if (objective.OwnerActorId is { } owner) RequireActor(actorIds, owner);
+            ValidateEntryVisibility(objective.Visibility, objective.VisibleToActorIds, actorIds);
         }
         if (state.Flags.Any(item => string.IsNullOrWhiteSpace(item.Key)))
             throw Invalid("Experience flag keys cannot be empty.");
-        foreach (var flag in state.Flags) ValidateJson(flag.ValueJson, "flag value");
+        foreach (var flag in state.Flags)
+        {
+            ValidateJson(flag.ValueJson, "flag value");
+            ValidateEntryVisibility(flag.Visibility, flag.VisibleToActorIds, actorIds);
+        }
         foreach (var item in state.Events)
         {
             RequireId(item.EventId, nameof(item.EventId));
             ArgumentException.ThrowIfNullOrWhiteSpace(item.Kind);
             if (item.ActorId is { } actorId) RequireActor(actorIds, actorId);
             ValidateJson(item.PayloadJson, "event payload");
+            ValidateEntryVisibility(item.Visibility, item.VisibleToActorIds, actorIds);
         }
         foreach (var fact in state.PrivateFacts)
         {
@@ -447,6 +596,15 @@ public sealed class ExperienceStateRepository
             if (fact.VisibleToActorIds.Any(id => !actorIds.Contains(id)))
                 throw Invalid($"Private fact '{fact.Key}' references an unknown actor.");
         }
+    }
+
+    private static void ValidateEntryVisibility(
+        ExperienceVisibility visibility, IReadOnlyList<Guid>? allowedActorIds, HashSet<Guid> actorIds)
+    {
+        var audience = allowedActorIds ?? [];
+        ValidateVisibility(visibility, audience);
+        if (audience.Any(id => !actorIds.Contains(id)))
+            throw Invalid("Experience state references an unknown visibility audience.");
     }
 
     private static void ValidateVisibility(ExperienceVisibility visibility, IReadOnlyList<Guid> allowedActorIds)

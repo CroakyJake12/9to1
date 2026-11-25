@@ -461,6 +461,67 @@ public sealed class ChatSpaceConcurrencyAcceptanceTests
         finally { release.TrySetResult(attachment); await importing; }
     }
 
+    [Fact]
+    public async Task Cancelling_a_correction_restores_the_unsent_draft_without_changing_history()
+    {
+        var backend = new ControlledBackend(); var id = backend.Seed("Chat", withBranch: true);
+        var message = new ChatMessage(Guid.NewGuid(), id, MessageRole.User, "Submitted text", null, null, null, DateTimeOffset.UtcNow);
+        backend.Data[id] = backend.Data[id] with { Messages = [message] };
+        var controller = new ChatSpaceController(backend); await controller.OpenChatAsync(id);
+        controller.UpdateDraft("Unsent question");
+        controller.StartEditMessage(message.Id);
+        controller.UpdateDraft("Proposed correction");
+        controller.StartEditMessage(message.Id);
+        Assert.Equal("Proposed correction", controller.State.Composer.Draft);
+        await controller.SaveDraftAsync();
+        Assert.Equal("Unsent question", backend.Data[id].Draft?.Content);
+        controller.CancelEdit();
+        Assert.Equal("Unsent question", controller.State.Composer.Draft);
+        Assert.False(controller.State.Composer.IsEditing);
+        Assert.Equal("Submitted text", Assert.Single(backend.Data[id].Messages).Content);
+        controller.CancelEdit();
+        Assert.Equal("Unsent question", controller.State.Composer.Draft);
+    }
+
+    [Fact]
+    public async Task Navigating_away_and_back_keeps_the_correction_separate_from_the_saved_draft()
+    {
+        var backend = new ControlledBackend(); var first = backend.Seed("First", withBranch: true); var second = backend.Seed("Second");
+        var message = new ChatMessage(Guid.NewGuid(), first, MessageRole.User, "Submitted", null, null, null, DateTimeOffset.UtcNow);
+        backend.Data[first] = backend.Data[first] with { Messages = [message] };
+        var controller = new ChatSpaceController(backend); await controller.OpenChatAsync(first);
+        controller.UpdateDraft("First unsent draft"); controller.StartEditMessage(message.Id);
+        controller.UpdateDraft("Correction in progress");
+        await controller.OpenChatAsync(second);
+        controller.UpdateDraft("Second unsent draft");
+        Assert.Equal("First unsent draft", backend.Data[first].Draft?.Content);
+        await controller.OpenChatAsync(first);
+        Assert.True(controller.State.Composer.IsEditing);
+        Assert.Equal("Correction in progress", controller.State.Composer.Draft);
+        controller.CancelEdit();
+        Assert.Equal("First unsent draft", controller.State.Composer.Draft);
+        await controller.OpenChatAsync(second);
+        Assert.Equal("Second unsent draft", controller.State.Composer.Draft);
+    }
+
+    [Fact]
+    public async Task Failed_correction_retains_the_proposal_and_the_original_draft()
+    {
+        var backend = new ControlledBackend(); var id = backend.Seed("Chat", withBranch: true);
+        var message = new ChatMessage(Guid.NewGuid(), id, MessageRole.User, "Submitted", null, null, null, DateTimeOffset.UtcNow);
+        backend.Data[id] = backend.Data[id] with { Messages = [message] };
+        var controller = new ChatSpaceController(backend); await controller.OpenChatAsync(id);
+        controller.UpdateDraft("Unsent draft"); controller.StartEditMessage(message.Id);
+        controller.UpdateDraft("Correction");
+        await controller.SendAsync();
+        Assert.Equal(ChatSpaceStatusTone.Error, controller.State.Status.Tone);
+        Assert.Equal("Correction", controller.State.Composer.Draft);
+        Assert.True(controller.State.Composer.IsEditing);
+        Assert.Equal("Unsent draft", backend.Data[id].Draft?.Content);
+        controller.CancelEdit();
+        Assert.Equal("Unsent draft", controller.State.Composer.Draft);
+    }
+
     private static TaskCompletionSource Signal() => new(TaskCreationOptions.RunContinuationsAsynchronously);
     private static ConversationSafetySnapshot Active(Guid id) => new(id, 0, ConversationSafetyState.Active, null, 0);
 
