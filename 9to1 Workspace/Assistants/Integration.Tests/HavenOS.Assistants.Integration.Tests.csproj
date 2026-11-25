@@ -9,6 +9,7 @@
   <ItemGroup>
     <Compile Include="AssistantsPersistentIdentityIntegrationTests.cs" />
     <Compile Include="AssistantsPersistentIdentityIntegrationTests.MembershipSource.cs" />
+    <Compile Include="AssistantsPersistentIdentityIntegrationTests.MainConversations.cs" />
     <ProjectReference Include="../HavenOS.Assistants.Core.csproj" />
     <ProjectReference Include="../../shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />

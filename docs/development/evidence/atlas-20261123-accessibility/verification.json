@@ -1,0 +1,26 @@
+{
+  "branch": "codex/overnight-haven-shell",
+  "productCommit": "295b19d7c674c4f356640ca091e5fcf3adebe736",
+  "finalBuild": {
+    "host": "Linux x64",
+    "framework": "net10.0",
+    "configuration": "Release",
+    "warnings": 0,
+    "errors": 0,
+    "logSha256": "27fe42e2e646e90dca7bb33be566b103792adbe1807ba7f3492e65c775081e74",
+    "Haven.dllSha256": "8a7c3cae36ac098bc34cb74e703343136a4e26a665a4b76593a1a7b88e9d49d6"
+  },
+  "finalFocusedChecks": {
+    "renderer": "Avalonia Headless with Skia",
+    "passed": 4,
+    "failed": 0,
+    "cases": [
+      "Haven.Desktop.Tests.UnifiedHomeContentTests.Layout_interface_scale_focuses_the_selector_and_accessibility_uses_existing_preferences(width: 720, height: 520)",
+      "Haven.Desktop.Tests.UnifiedHomeContentTests.Layout_interface_scale_focuses_the_selector_and_accessibility_uses_existing_preferences(width: 1440, height: 900)",
+      "Haven.Desktop.Tests.UnifiedHomeContentTests.New_Tab_shortcuts_icon_preview_and_reset_keep_registered_identity_and_peer_edits(width: 720, height: 520)",
+      "Haven.Desktop.Tests.UnifiedHomeContentTests.New_Tab_shortcuts_icon_preview_and_reset_keep_registered_identity_and_peer_edits(width: 1440, height: 900)"
+    ],
+    "logSha256": "f67d4ec5944ffaed7afe57df9bc5d1a4b2cc2d758bcb015da82960de4659cd49"
+  },
+  "earlierCandidate": "The prior seven-case run passed five cases and failed the High contrast readback in both viewports. Both failing cases passed against the final source. The previous evidence remains available in the checkout handoff."
+}

@@ -49,20 +49,13 @@ public sealed class CuiThemeScope
         if (string.IsNullOrWhiteSpace(themeName))
             return globalDefault;
 
-        return themeName.Trim() switch
-        {
-            "Default" or "default" or "user_preference" or "USER_PREFERENCE" => globalDefault,
-            "Glow" or "glow" => CuiTheme.Glow,
-            "Bubble" or "bubble" => CuiTheme.Bubble,
-            "Retro" or "retro" => CuiTheme.Retro,
-            "Playful" or "playful" => CuiTheme.Playful,
-            "Cinematic" or "cinematic" => CuiTheme.Cinematic,
-            "Professional" or "professional" => CuiTheme.Professional,
-            "Frosted Glass" or "frosted glass" or "FrostedGlass" or "frostedglass" => CuiTheme.FrostedGlass,
-            "Metallic" or "metallic" => CuiTheme.Metallic,
-            "Western" or "western" => CuiTheme.Western,
-            _ => CuiTheme.Professional
-        };
+        var name = themeName.Trim();
+        if (name.Equals("Default", StringComparison.OrdinalIgnoreCase) ||
+            name.Equals("user_preference", StringComparison.OrdinalIgnoreCase))
+            return globalDefault;
+        if (name.Equals("FrostedGlass", StringComparison.OrdinalIgnoreCase))
+            return CuiTheme.FrostedGlass;
+        return CuiThemeCatalog.FindBuiltIn(name)?.Theme ?? CuiTheme.Professional;
     }
 
     /// <summary>Full scope resolution, including custom rules and explicit fallback diagnosis.</summary>

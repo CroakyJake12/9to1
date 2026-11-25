@@ -178,6 +178,40 @@ public sealed class HomeThemePreferenceServiceTests
         Assert.Equal("PermissionDenied",(await service.SetAsync(Device,"Glow",new(),5)).Code);
         Assert.Equal(before,backend.Value);
     }
+    [Fact]
+    public async Task Exact_legacy_Comic_identity_is_preserved_after_an_authorised_display_write_and_theme_switch()
+    {
+        var original = HomeThemePreference.Default(Device) with
+        {
+            ThemeName = "CiNeMaTiC", Revision = 3, Appearance = "Dark", Display = new(HomeDisplayMode.Dark),
+            Accent = new(HomeThemeAccentOverrideMode.AllApps, "#355BA8")
+        };
+        var backend = new Backend { Value = original, CloneReceipt = true };
+        using var service = new HomeThemePreferenceService(backend, new Authority(), new ComicCatalog());
+        var read = await service.GetAsync(Device);
+        Assert.Equal("Comic", read.Value!.EffectiveThemeName);
+        Assert.Equal(original, backend.Value);
+
+        var changed = await service.SetDisplayAsync(original, new(HomeDisplayMode.Light, 54, 46), "Bright");
+        Assert.True(changed.Succeeded);
+        var migration = new HomeThemeIdentityMigration("CiNeMaTiC", "comic");
+        Assert.Equal(migration, changed.Value!.Preference.ThemeMigration);
+        Assert.Equal("Comic", changed.Value.Preference.ThemeName);
+        Assert.Equal(original.Accent, changed.Value.Preference.Accent);
+        var further = await service.SetAsync(Device, "Glow", new(), changed.Value.Preference.Revision);
+        Assert.True(further.Succeeded);
+        Assert.Equal(migration, further.Value!.Preference.ThemeMigration);
+    }
+
+    private sealed class ComicCatalog : IHomeThemeCatalog
+    {
+        public bool TryResolve(string name, out string canonicalName)
+        {
+            canonicalName = name.Equals("Cinematic", StringComparison.OrdinalIgnoreCase) ? "Comic" : name;
+            return canonicalName is "Comic" or "Glow" or "Professional";
+        }
+    }
+
     private sealed class CustomCatalog(string validLibrary):IHomeCustomThemeCatalog
     {
         public bool TryResolve(string name,out string canonicalName) {canonicalName=name;return name is "Professional" or "Glow";}

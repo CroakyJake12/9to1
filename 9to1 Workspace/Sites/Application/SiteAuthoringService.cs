@@ -1,5 +1,6 @@
 using System.Text.Json;
 using HavenOS.Apps.Sites.Domain;
+using HavenOS.Apps.Sites.Runtime;
 
 namespace HavenOS.Apps.Sites.Application;
 
@@ -84,12 +85,22 @@ public sealed class SiteAuthoringService(SiteProjectService projects)
         IReadOnlyDictionary<string,JsonElement>? snapshot;
         try{snapshot=patch is null?null:SnapshotProperties(patch);}
         catch(SiteOperationException error){return Task.FromResult(SiteApiResult<SiteProject>.Failure(error.Error));}
-        return UpdateComponentAsync(siteID,revision,componentID, component=>
+        return projects.UpdateProjectAsync(siteID, revision, project =>
         {
-            var overrides=component.Layout.BreakpointOverrides.ToDictionary(p=>p.Key,p=>p.Value);
-            if(snapshot is null) overrides.Remove(breakpoint); else overrides[breakpoint]=new(snapshot);
-            return component with { Layout=component.Layout with { BreakpointOverrides=overrides } };
-        },ct);
+            if (string.IsNullOrWhiteSpace(breakpoint) || !project.DesignSystem.Breakpoints.TryGetValue(breakpoint, out var width) || width <= 0)
+                throw Invalid("Choose an existing responsive breakpoint in this project.");
+            if (snapshot is not null && snapshot.Any(property => !SiteDocumentRenderer.IsSupportedStyle(property.Key, property.Value)))
+                throw Invalid("The responsive override contains unsupported or unsafe layout values.");
+            var component = project.Components.SingleOrDefault(candidate => candidate.ComponentId == componentID)
+                ?? throw Invalid("Component not found.");
+            var overrides = component.Layout.BreakpointOverrides.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
+            if (snapshot is null || snapshot.Count == 0) overrides.Remove(breakpoint);
+            else overrides[breakpoint] = new(snapshot);
+            var updated = component with { Layout = component.Layout with { BreakpointOverrides = overrides },
+                Revision = checked(component.Revision + 1) };
+            return project with { Components = project.Components.Select(candidate => candidate.ComponentId == componentID
+                ? updated : candidate).ToArray() };
+        }, ct);
     }
     internal static HashSet<Guid> Reachable(SiteProject project,IEnumerable<Guid> roots)
     {

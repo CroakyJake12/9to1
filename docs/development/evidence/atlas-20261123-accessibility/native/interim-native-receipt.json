@@ -1,0 +1,284 @@
+{
+  "atlas": {
+    "path": "atlas/atlas-rendered-receipt.json",
+    "sha256": "7e7f90168e25890b1073c6b8e504c8e4d5f79af59af605aca01b6c1103629446"
+  },
+  "old_release": {
+    "Haven.dll": "49a7cafa0edbd161accfc1dce5f0c7e79a4c9b0ed429db6718443e046efc6091",
+    "observed": "Genuine Accessibility section had Reduce motion and High contrast alone. Actual New Tab Edit Boards had label/address/move/remove and no Change icon.",
+    "frames": [
+      {
+        "path": "baseline/03-accessibility-old-wide.png",
+        "sha256": "21efbe78c69fdf1b32cf110ad2cebeb3dd9e82175519561c609195d45f196abd",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      {
+        "path": "baseline/04-accessibility-old-narrow.png",
+        "sha256": "ec0f23f0ff076b735ae0c28d65e9a97b21f88a8621d4136c34c1bc70132200a9",
+        "dimensions": [
+          720,
+          520
+        ]
+      },
+      {
+        "path": "baseline-icon/00-registered-boards-destination-icon-wide.png",
+        "sha256": "8cf5eedce86eac1a8782a3778bc3857c52b06fbca55ea266568f88a1549ffd84",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      {
+        "path": "baseline-icon/02-real-edit-without-change-icon.png",
+        "sha256": "59bad60a487f122f78d5bcb25484d0f875d96ad5fb19bb7d2984add14afb4345",
+        "dimensions": [
+          1440,
+          900
+        ]
+      }
+    ],
+    "normal_exits": [
+      0,
+      0
+    ]
+  },
+  "first_combined_candidate": {
+    "assemblies": {
+      "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+      "Haven.dll": "9822c50c707165b50ee3fa295b00368c430e1463b0d0b1b69afee6157d8c3af0",
+      "HavenOS.Home.dll": "f1fb8ccfe1c9ef3e807ed6497ff668ace7d31b7a2279b793d9a18045a9de9e29",
+      "HavenOS.Apps.Browse.NativeUI.dll": "2543661f43f23d4ca6414b152250935e5ed1049c7fc098d100715f4579c6f95e",
+      "HavenOS.Apps.Browse.Core.dll": "a4fc7eed39a0f90b0e8760696e34665de4756641a7c813082bcc1c57a1609243",
+      "Haven.Infrastructure.dll": "5f8cdd7835b725872fee0afd7ebe10d2741aca29ff9b1ec861225d1db099d827",
+      "CakeOS.Cui.Runtime.dll": "f6572521d598979663b65209a636546e4d39869c79e8c4018e73a92d92bc0c3d",
+      "CakeOS.Cui.Themes.dll": "6bf459092d7faee6d7f2af4ec0c801d8c825b43b3b816e5537dd3583878210c8",
+      "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+      "UI/Home.cui": "4a172563f0d4e279e0835ec797892444661b4d204c5ff9153eb5d4bc97340a49"
+    },
+    "observed_failure": "Home Settings materialization and retained cleanup both rejected generated duplicate CUI identities (CUI029). Both app processes refused ordinary WM_DELETE_WINDOW. Following review the coordinator approved TERM on only the two matching disposable PIDs, with recorded exit 143. Profiles and logs retained.",
+    "icon_partial": "Actual Edit Boards > Change icon shows six approved options. Bookmark preview did not write. First immediate physical Escape after pointer choice did not close; a second later Escape closed the sub-editor and returned focus to Change icon. Use icon committed only Boards IconKey and incremented revision; launch was not accepted for a normal restart because of the retained Settings error.",
+    "frames": [
+      {
+        "path": "scale-candidate/00-settled-private-app.png",
+        "sha256": "2d073c032e98ce2f39b7cc830d7457eb2ef623da2da9aecfefb28a2466422f63",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      {
+        "path": "scale-candidate/01-home-gear-settings-failed.png",
+        "sha256": "e80ebc606e0523ce6f3275ca1d12369f8b5d757dc7aca4db395da079aaa1acf4",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      {
+        "path": "scale-candidate/99-normal-close-veto-before-isolated-recovery.png",
+        "sha256": "71a9f1d88973355d2d9f681d9981dff85cbe2c082d7affb31b235187ca60b21b",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      {
+        "path": "icon-candidate/03-bookmark-preview-before-apply-wide.png",
+        "sha256": "1c69ad7ed24451058d3d9ca520cf8b867ebb1a7a749dce6dfdc74b9e11d54a04",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      {
+        "path": "icon-candidate/04-bookmark-preview-escape-stays-open.png",
+        "sha256": "1c69ad7ed24451058d3d9ca520cf8b867ebb1a7a749dce6dfdc74b9e11d54a04",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      {
+        "path": "icon-candidate/05-bookmark-preview-second-escape.png",
+        "sha256": "67f12711a1dcaad47fa3bbd9abb45a0ca7eb1f3e087667428b11a38dcf6da875",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      {
+        "path": "icon-candidate/08-bookmark-saved-edit-stays-open.png",
+        "sha256": "15db5e878e96cca5fa4dd240afb1518b84cd3845aae65153feaffa34b02d1ba8",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      {
+        "path": "icon-candidate/99-normal-close-veto-before-isolated-recovery.png",
+        "sha256": "dbddb2cd8eeeb955373ff7d4e2effa43258f4aa8e85cb25857332f0ecd77088a",
+        "dimensions": [
+          1440,
+          900
+        ]
+      }
+    ],
+    "recovery_exits": [
+      143,
+      143
+    ]
+  },
+  "desktop3_scale": {
+    "assemblies": {
+      "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+      "Haven.dll": "3209515caa40d15dac3a92eee458cdb6554602064df57c079a7b76039c7b877d",
+      "HavenOS.Home.dll": "f1fb8ccfe1c9ef3e807ed6497ff668ace7d31b7a2279b793d9a18045a9de9e29",
+      "HavenOS.Apps.Browse.NativeUI.dll": "2543661f43f23d4ca6414b152250935e5ed1049c7fc098d100715f4579c6f95e",
+      "HavenOS.Apps.Browse.Core.dll": "a4fc7eed39a0f90b0e8760696e34665de4756641a7c813082bcc1c57a1609243",
+      "Haven.Infrastructure.dll": "5f8cdd7835b725872fee0afd7ebe10d2741aca29ff9b1ec861225d1db099d827",
+      "CakeOS.Cui.Runtime.dll": "f6572521d598979663b65209a636546e4d39869c79e8c4018e73a92d92bc0c3d",
+      "CakeOS.Cui.Themes.dll": "6bf459092d7faee6d7f2af4ec0c801d8c825b43b3b816e5537dd3583878210c8",
+      "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+      "UI/Home.cui": "4a172563f0d4e279e0835ec797892444661b4d204c5ff9153eb5d4bc97340a49"
+    },
+    "readback": {
+      "saved": 1.25,
+      "revision": 2,
+      "theme": "Professional",
+      "appearance": "Dark"
+    },
+    "facts": [
+      "An in-progress capture labeled Accessibility initially showed the old Home Apps scene. It was overwritten during correction before being pinned; the incorrect image remains visible in the original tool output. The later documents in this receipt were independently visually validated.",
+      "The Settings selector initially displays native default 100%. The genuine pinned Atlas selector shows fixture 125% and offers 100%, 125%, 150%, 175%.",
+      "At 720\u00d7520 native 175% made the shared chrome larger, compacted the model chip, and left Settings content blank below the rail. A wheel or immediate Tab did not reach Apply or Revert. Escape eventually returned to saved 100%. Native readback was unchanged throughout preview.",
+      "At 1440\u00d7900 native 125% preview showed Revert and Apply. A real primary Apply persisted canonical 1.25 and revision 2 with Professional Dark, unchanged motion/contrast and unset font overrides.",
+      "After ordinary exit and same-profile startup, true scaled native New Tab rendered at 1440\u00d7900. Canonical address browse://home/settings/settings-accessibility opened Accessibility and selector displayed 125%. Persisted readback byte-identical."
+    ],
+    "frames": [
+      {
+        "path": "scale-desktop3/01-accessibility-100-1440x900.png",
+        "sha256": "bf365980629e0bb0ae9e8312dc32c95ca02c42c69b34349336b54b44b989daff",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      {
+        "path": "scale-desktop3/02-accessibility-100-720x520.png",
+        "sha256": "114e2538dfad33d1956c4f8cd3ca157ca095f3d472969566607604827902a9b9",
+        "dimensions": [
+          720,
+          520
+        ]
+      },
+      {
+        "path": "scale-desktop3/07-accessibility-175-compact-confirm-controls.png",
+        "sha256": "0f83a46100308dce1082c3fc65e9380229cb5e2e49113589bd60bd7b6ab698f1",
+        "dimensions": [
+          720,
+          520
+        ]
+      },
+      {
+        "path": "scale-desktop3/08-accessibility-175-compact-tab-focus.png",
+        "sha256": "ed4b9160d365c64c925ed7906622856511188ec36b6b83f18ac36f6ca8eeb647",
+        "dimensions": [
+          720,
+          520
+        ]
+      },
+      {
+        "path": "scale-desktop3/12-accessibility-125-actual-preview-wide.png",
+        "sha256": "d3a5560dd85d32a82b3401a689171c1f03b4319895772db759a6213fd2089cab",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      {
+        "path": "scale-desktop3/13-accessibility-125-after-apply-wide.png",
+        "sha256": "01c1654f6ce1fc097c18da676879be016c8e9e6d1df290345c4a2e680e6a3232",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      {
+        "path": "scale-desktop3/19-persisted-125-new-tab-rail-after-relaunch-wide.png",
+        "sha256": "6466590e8b47e09768d371d12738691bb8a99ce7150acacc589c55cd3074f221",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      {
+        "path": "scale-desktop3/20-accessibility-125-same-profile-relaunch.png",
+        "sha256": "c5f0fb901f22db99cf431b8e382071bff15dd1d34e8289851efffe3d3b264022",
+        "dimensions": [
+          1440,
+          900
+        ]
+      }
+    ],
+    "comparisons": [
+      {
+        "path": "comparison-scale-desktop3-professional-dark-(100%)-720x520.png",
+        "sha256": "7df98bab0454ae328dbc7bb3c353e6f75c1c15f2fd5ce73aa6c6690f7b02c6c0",
+        "dimensions": [
+          1494,
+          590
+        ]
+      },
+      {
+        "path": "comparison-scale-desktop3-professional-dark-(125%)-1440x900.png",
+        "sha256": "8efa6ebb02122dfbbff1002c0fb9135fdb7362f6f0090325225cfec74185a5fa",
+        "dimensions": [
+          2934,
+          970
+        ]
+      }
+    ],
+    "normal_exits": [
+      0,
+      0
+    ]
+  },
+  "single_pointer_gear": {
+    "runtime": "Desktop3 exact same 3209515c apphost; fresh normal X11 profile. Sign-in and model download skipped through actual onboarding controls.",
+    "input": "One physical primary down/up at client x53 y870, 0.2s hold, without any intervening key or click; time and exact resulting settled frames retained.",
+    "observed": "Fresh previously settled Home/Apps opened Appearance in the pinned tab. Two and four seconds after screenshots are identical. Ordinary close exit 0.",
+    "timing": {
+      "path": "gear-pointer-smoke/gear-pointer-event-time.txt",
+      "sha256": "1d5fe00a2f05fabf51309305c996748a87d37ca461e2973cc29e16c29778923f"
+    },
+    "frames": [
+      {
+        "path": "gear-pointer-smoke/03-settled-apps-before-gear-pointer.png",
+        "sha256": "c8ef10f31b7d4d208fafe3c290b014545a47b54a23a0c1be08dc57df6a46ca51",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      {
+        "path": "gear-pointer-smoke/04-two-seconds-after-gear-pointer.png",
+        "sha256": "b6c88e30f30210a3979d0d9bd908b33235630e5bdbab8b5da61333c387c858c8",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      {
+        "path": "gear-pointer-smoke/05-four-seconds-after-gear-pointer.png",
+        "sha256": "b6c88e30f30210a3979d0d9bd908b33235630e5bdbab8b5da61333c387c858c8",
+        "dimensions": [
+          1440,
+          900
+        ]
+      }
+    ]
+  }
+}

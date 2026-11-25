@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Runtime.ExceptionServices;
 using System.Text;
@@ -134,7 +135,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         WorkflowTemplateRuntime workflowTemplate,
         CustomTemplateRuntime customTemplate,
         IMessageAttachmentService? messageAttachments = null,
-        IConversationProductionRepository? conversationProduction = null)
+        IConversationProductionRepository? conversationProduction = null,
+        bool enableFreshChatTemporaryLifecycle = false)
     {
         _bus = bus;
         _conversations = conversations;
@@ -159,7 +161,9 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         _assessmentTemplate = assessmentTemplate;
         _workflowTemplate = workflowTemplate;
         _customTemplate = customTemplate;
+        _enableFreshChatTemporaryLifecycle = enableFreshChatTemporaryLifecycle;
         _conversation = CreateConversation(HavenMode.Chat);
+        TrackUnpublishedFreshChat(_conversation);
 
         _scene = new ChatHavenScene(_genUiNativeResolver);
         AutomationProperties.SetAutomationId(this, "HavenNativeChatPage");
@@ -245,7 +249,9 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     internal bool IsAssistantCatalogueOpen => !_disposed && !_originalWork.IsRetiring && _scene.IsAssistantCatalogueOpen;
     internal long AssistantCatalogueRequestGeneration => _scene.AssistantCatalogueRequestGeneration;
     public bool IsTemporary => _conversation.IsTemporary;
-    public bool HasStarted => _messages.Count > 0;
+    internal bool HasSavedConversationRoute =>
+        !_conversation.IsTemporary && !_unpublishedFreshChat.ContainsKey(_conversation.Id);
+    public bool HasStarted => _messages.Count > 0 || _startedTemporaryLifecycle.ContainsKey(_conversation.Id);
     public string ActiveAgentName => _activeAgent?.Name ?? "No Agent (Default)";
     public ChatActionMode EffectiveChatActionMode => _chatActionModeOverride ?? ChatActionMode.AllowBasicActions;
     public bool IsSending => _isSending || LiveNativeTaskResume() is not null;
@@ -301,6 +307,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         _modeDefinition = mode;
         _isTaskMode = false;
         _conversation = CreateConversation(mode.BaseMode);
+        TrackUnpublishedFreshChat(_conversation);
         RecordOriginalConversationTransition();
         _chatActionModeOverride = null;
         _chatGenerativeUiResponseModeOverride = null;
@@ -644,6 +651,11 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     private void StartFreshConversationOriginalTarget(Guid? chatGroupId = null)
     {
         DemandOriginalChatCurrent();
+        if (_enableFreshChatTemporaryLifecycle && (_modeDefinition?.BaseMode ?? HavenMode.Chat) == HavenMode.Chat)
+        {
+            _ = StartFreshConversationAsync(chatGroupId);
+            return;
+        }
         ResetToFreshConversation(_modeDefinition?.BaseMode ?? HavenMode.Chat, chatGroupId, null);
         _ = PersistFreshConversationAsync(_conversation);
         NotifyFreshConversationReady();
@@ -662,7 +674,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             ClearOriginalComposerDraft();
         ResetToFreshConversation(_modeDefinition?.BaseMode ?? HavenMode.Chat, chatGroupId, null);
         CommitOriginalDraftTransitionOwnership(_conversation, outgoing);
-        await AwaitChatOriginalAsync(_conversations.UpsertConversationAsync(_conversation, RequireChatOriginal().Token));
+        if (!_unpublishedFreshChat.ContainsKey(_conversation.Id))
+            await AwaitChatOriginalAsync(_conversations.UpsertConversationAsync(_conversation, RequireChatOriginal().Token));
         NotifyFreshConversationReady();
     }
 
@@ -677,7 +690,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             ClearOriginalComposerDraft();
         ResetToFreshConversation(mode, containerId, lessonId, spaceId);
         CommitOriginalDraftTransitionOwnership(_conversation, outgoing);
-        await AwaitChatOriginalAsync(_conversations.UpsertConversationAsync(_conversation, RequireChatOriginal().Token));
+        if (!_unpublishedFreshChat.ContainsKey(_conversation.Id))
+            await AwaitChatOriginalAsync(_conversations.UpsertConversationAsync(_conversation, RequireChatOriginal().Token));
         NotifyFreshConversationReady();
     }
 
@@ -998,10 +1012,18 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
     public string? GetLastAssistantResponse() => _messages.LastOrDefault(message => message.Role == MessageRole.Assistant)?.Content;
 
+    private bool MayOrganizeSavedChat(string action)
+    {
+        if (!_conversation.IsTemporary) return true;
+        SetProjectionStatus($"Save this Temporary Chat locally before you {action}.");
+        return false;
+    }
+
     public Task TogglePinAsync() => RunChatOriginalAsync(() => TogglePinOriginalBodyAsync());
 
     private async Task TogglePinOriginalBodyAsync()
     {
+        if (!MayOrganizeSavedChat("pin it")) return;
         _conversation = _conversation with { IsPinned = !_conversation.IsPinned, UpdatedAt = DateTimeOffset.UtcNow };
         await AwaitChatOriginalAsync(_conversations.UpsertConversationAsync(_conversation, RequireChatOriginal().Token));
         SetProjectionStatus(_conversation.IsPinned ? "Chat pinned." : "Chat unpinned.");
@@ -1011,6 +1033,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
     private async Task ArchiveOriginalBodyAsync()
     {
+        if (!MayOrganizeSavedChat("archive it")) return;
         if (_messages.Count > 0)
         {
             _conversation = _conversation with { IsArchived = true, UpdatedAt = DateTimeOffset.UtcNow };
@@ -1023,13 +1046,25 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
     private async Task DeleteConversationOriginalBodyAsync()
     {
-        if (_messages.Count > 0) await AwaitChatOriginalAsync(_conversations.DeleteConversationAsync(_conversation.Id, RequireChatOriginal().Token));
-        StartFreshConversation();
+        var id = _conversation.Id;
+        if (!_conversation.IsTemporary && _messages.Count > 0)
+            await AwaitChatOriginalAsync(_conversations.DeleteConversationAsync(id, RequireChatOriginal().Token));
+        await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() =>
+        {
+            if (_conversation.Id != id) return;
+            // Discard/Delete never flushes an outgoing draft back into storage.
+            _unpublishedFreshChat.TryRemove(id, out _);
+            ClearOriginalComposerDraft();
+            ResetToFreshConversation(_modeDefinition?.BaseMode ?? HavenMode.Chat, null, null);
+            if (!_unpublishedFreshChat.ContainsKey(_conversation.Id)) _ = PersistFreshConversationAsync(_conversation);
+            NotifyFreshConversationReady();
+        }));
     }
 
     public void ShowRenameFlyout()
     {
         DemandOriginalChatCurrent();
+        if (!MayOrganizeSavedChat("rename it")) return;
         _scene.ShowTextPrompt(
             "Rename chat",
             "Give this conversation a clear title.",
@@ -1037,6 +1072,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             "Rename chat",
             title => RunChatOriginalAsync(async () =>
             {
+                if (!MayOrganizeSavedChat("rename it")) return;
                 _conversation = _conversation with { Title = title.Trim(), UpdatedAt = DateTimeOffset.UtcNow };
                 await AwaitChatOriginalAsync(_conversations.UpsertConversationAsync(_conversation, RequireChatOriginal().Token));
                 ConversationStateChanged?.Invoke(this, EventArgs.Empty);
@@ -1047,41 +1083,172 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     {
         DemandOriginalChatCurrent();
         _scene.ShowChoicePrompt(
-            "Delete this chat?",
-            "This permanently deletes the saved conversation and its messages.",
+            _conversation.IsTemporary ? "Discard this Temporary Chat?" : "Delete this chat?",
+            _conversation.IsTemporary ? "Discard the current session and its messages."
+                : "This permanently deletes the saved conversation and its messages.",
             [("Delete chat", () => _ = DeleteConversationAsync())]);
     }
 
-    public void SetTemporary(bool isTemporary)
+    private readonly bool _enableFreshChatTemporaryLifecycle;
+    private enum FreshChatOwnership { Eligible, PublishingRegularDraft, Temporary }
+    private readonly ConcurrentDictionary<Guid, FreshChatOwnership> _unpublishedFreshChat = new();
+
+    private void TrackUnpublishedFreshChat(Conversation conversation)
     {
-        DemandOriginalChatCurrent();
-        _conversation = _conversation with { IsTemporary = isTemporary, UpdatedAt = DateTimeOffset.UtcNow };
+        if (_enableFreshChatTemporaryLifecycle && conversation.Mode == HavenMode.Chat && conversation.Kind == ConversationKind.Chat)
+            _unpublishedFreshChat.TryAdd(conversation.Id, FreshChatOwnership.Eligible);
     }
 
-    public Task ToggleTemporaryAsync() => RunChatOriginalAsync(() => ToggleTemporaryOriginalBodyAsync());
+    private readonly ConcurrentDictionary<Guid, byte> _startedTemporaryLifecycle = new();
+    private readonly ConcurrentDictionary<Guid, byte> _temporaryAttachmentUse = new();
+    private int _temporarySaveInProgress;
 
-    private async Task ToggleTemporaryOriginalBodyAsync()
+    public Task SetTemporaryAsync(bool isTemporary) =>
+        RunChatOriginalAsync(() => SetTemporaryOriginalBodyAsync(isTemporary));
+
+    public Task ToggleTemporaryAsync() =>
+        RunChatOriginalAsync(() => SetTemporaryOriginalBodyAsync(!_conversation.IsTemporary));
+
+    private bool HasAdmittedOriginalSend()
     {
-        if (!await AwaitChatOriginalAsync(EnsureConversationMayActAsync("chat.temporary-toggle"))) return;
-        _conversation = _conversation with
+        lock (_originalSendGate) return _originalSend is { IsCompleted: false };
+    }
+
+    private async Task SetTemporaryOriginalBodyAsync(bool isTemporary)
+    {
+        if (_conversation.IsTemporary == isTemporary || _conversation.Mode != HavenMode.Chat ||
+            _conversation.Kind != ConversationKind.Chat) return;
+        if (IsSending || HasAdmittedOriginalSend() || Volatile.Read(ref _temporarySaveInProgress) != 0)
         {
-            IsTemporary = !_conversation.IsTemporary,
-            UpdatedAt = DateTimeOffset.UtcNow
-        };
-        await AwaitChatOriginalAsync(_conversations.UpsertConversationAsync(_conversation, RequireChatOriginal().Token));
-        if (!_conversation.IsTemporary)
-            foreach (var message in _messages)
-                await AwaitChatOriginalAsync(_conversations.AddMessageAsync(message, RequireChatOriginal().Token));
-        SetProjectionStatus(_conversation.IsTemporary
-            ? "Temporary chat is on. New messages remain only in this session."
-            : "Temporary chat is off. This conversation is saved locally.");
-        ConversationStateChanged?.Invoke(this, EventArgs.Empty);
+            SetProjectionStatus("Wait for the current message or save to finish.");
+            return;
+        }
+        if (!await AwaitChatOriginalAsync(EnsureConversationMayActAsync("chat.temporary-toggle"))) return;
+        var id = _conversation.Id;
+        var generation = _originalPresentationGeneration;
+        var unpublished = _unpublishedFreshChat.ContainsKey(id);
+        var started = _startedTemporaryLifecycle.ContainsKey(id) || _messages.Count != 0;
+        // An existing regular record might have had all visible messages undone,
+        // branched away or removed on a previous page instance. Unknown history
+        // is not evidence that retroactive Temporary conversion is safe.
+        if (isTemporary && (started || await AwaitChatOriginalAsync(
+                _conversations.GetAsync(id, RequireChatOriginal().Token)) is not null))
+        {
+            await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() =>
+            {
+                SetProjectionStatus("A saved chat cannot become Temporary. Start a separate new chat to use Temporary.");
+            }));
+            return;
+        }
+        await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() =>
+        {
+            if (_conversation.Id != id || _originalPresentationGeneration != generation || IsSending ||
+                HasAdmittedOriginalSend() || Volatile.Read(ref _temporarySaveInProgress) != 0) return;
+            if (!isTemporary && (started || _startedTemporaryLifecycle.ContainsKey(id)))
+            {
+                _scene.ShowChoicePrompt("Save this Temporary Chat?",
+                    "Keep this chat as durable local history. Your ordinary memory, personalisation and learning settings will apply. Saving does not enable tools or transfer the chat.",
+                    [("Save locally", () => _ = RunChatOriginalAsync(() => SaveTemporaryOriginalAsync(id, generation)))]);
+                return;
+            }
+            if (unpublished && !_unpublishedFreshChat.TryUpdate(id,
+                    isTemporary ? FreshChatOwnership.Temporary : FreshChatOwnership.Eligible,
+                    isTemporary ? FreshChatOwnership.Eligible : FreshChatOwnership.Temporary))
+            {
+                SetProjectionStatus("The ordinary draft is being saved. Start a separate new chat to use Temporary.");
+                return;
+            }
+            // The new unsent chat retains its identity, draft and attachments.
+            // Only its in-memory lifecycle changes, not storage or navigation.
+            _conversation = _conversation with { IsTemporary = isTemporary, UpdatedAt = DateTimeOffset.UtcNow };
+            if (OriginalDraftInputOwner.Id == id) _originalDraftInputOwner = _conversation;
+            SetProjectionStatus(isTemporary ? "Temporary chat is on. New messages remain only in this session."
+                : "Temporary chat is off for this unsent chat.");
+            ConversationStateChanged?.Invoke(this, EventArgs.Empty);
+        }));
+    }
+
+    private async Task SaveTemporaryOriginalAsync(Guid id, long generation)
+    {
+        if (_conversation.Id != id || _originalPresentationGeneration != generation || !_conversation.IsTemporary ||
+            IsSending || HasAdmittedOriginalSend() || Interlocked.CompareExchange(ref _temporarySaveInProgress, 1, 0) != 0) return;
+        var acknowledged = false;
+        try
+        {
+            if (!await AwaitChatOriginalAsync(EnsureConversationMayActAsync("chat.save-temporary"))) return;
+            TemporaryChatSaveRequest? request = null;
+            await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() =>
+            {
+                if (_conversation.Id != id || _originalPresentationGeneration != generation || !_conversation.IsTemporary || IsSending) return;
+                if (_temporaryAttachmentUse.ContainsKey(id) || _pendingAttachmentIds.Count != 0 ||
+                    _persistedAttachments.Count != 0 || _attachedImages.Count != 0 ||
+                    _attachedContext.Count != 0 || !_taskAttachments.IsEmpty)
+                {
+                    SetProjectionStatus("This chat has attachments that cannot yet be safely converted. Your Temporary Chat is unchanged.");
+                    return;
+                }
+                if (!_messages.Any(message => message.Role == MessageRole.User))
+                {
+                    SetProjectionStatus("No original user message is visible to save. Restore the message and retry; this chat remains Temporary.");
+                    return;
+                }
+                if (OriginalDraftInputOwner.Id != id)
+                {
+                    SetProjectionStatus("Return to this chat's own draft before retrying Save.");
+                    return;
+                }
+                request = new(_conversation, _messages.ToArray(),
+                    CaptureUnsentDraftText(_composerInput.Text, _scene.QueuedComposerMessages), []);
+                SetProjectionStatus("Saving this Temporary Chat locally…");
+            }));
+            if (request is null) return;
+            if (_conversations is not ITemporaryChatSaveRepository owner)
+            {
+                await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() =>
+                    SetProjectionStatus("Atomic local save is unavailable. This chat remains Temporary.")));
+                return;
+            }
+            var receipt = await AwaitChatOriginalAsync(owner.SaveTemporaryChatAsync(request, RequireChatOriginal().Token));
+            acknowledged = true;
+            if (receipt.BranchId == Guid.Empty ||
+                receipt.Conversation != (request.Original with { IsTemporary = false, UpdatedAt = receipt.Conversation.UpdatedAt }))
+                throw new InvalidOperationException("The save receipt does not match the confirmed chat.");
+            await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() =>
+            {
+                if (_conversation.Id != id || _originalPresentationGeneration != generation) return;
+                _conversation = receipt.Conversation;
+                _unpublishedFreshChat.TryRemove(id, out _);
+                RememberOriginalDraftBranch(id, receipt.BranchId);
+                if (OriginalDraftInputOwner.Id == id)
+                {
+                    _originalDraftInputOwner = receipt.Conversation;
+                    var latestDraft = CaptureUnsentDraftText(_composerInput.Text, _scene.QueuedComposerMessages);
+                    if (!string.Equals(latestDraft, request.DraftText, StringComparison.Ordinal))
+                        _ = EnqueueOriginalDraftMutationAsync(CaptureOriginalDraftMutation(_conversation, latestDraft, _pendingAttachmentIds));
+                }
+                SetProjectionStatus("This chat is saved locally.");
+                ConversationStateChanged?.Invoke(this, EventArgs.Empty);
+            }));
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or ArgumentException or IOException or System.Data.Common.DbException)
+        {
+            RetainHandledOriginalChatCause(exception);
+            await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() => SetProjectionStatus(acknowledged
+                ? "Local storage acknowledged Save, but the view could not refresh. Reopen the chat to see its actual saved state."
+                : "Local save could not be completed. This chat remains Temporary; choose Save again to retry.")));
+        }
+        finally { Volatile.Write(ref _temporarySaveInProgress, 0); }
     }
 
     private Task<bool> EnsureConversationMayActAsync(string operation) => RunChatNestedOriginalAsync(() => EnsureConversationMayActOriginalBodyAsync(operation));
 
     private async Task<bool> EnsureConversationMayActOriginalBodyAsync(string operation)
     {
+        if (Volatile.Read(ref _temporarySaveInProgress) != 0 && operation != "chat.save-temporary")
+        {
+            SetProjectionStatus("Wait for the current local save to finish.");
+            return false;
+        }
         try
         {
             await AwaitChatOriginalAsync(_safety.EnsureMayActAsync(_conversation.Id, operation, RequireChatOriginal().Token));
@@ -1122,6 +1289,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         _dual = null;
 
         _scene.SendRequested += (_, _) => _ = SubmitCurrentInstructionAsync();
+        _scene.TemporaryToggleRequested += (_, _) => _ = ToggleTemporaryAsync();
         // The shared composer's direct send path returns the SAME admitted send task the page runs,
         // instead of discarding SubmitCurrentInstructionAsync through the legacy event.
         _scene.ComposerDirectSend = _ => new ValueTask(SubmitCurrentInstructionAsync());
@@ -1318,7 +1486,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         RequireChatOriginal().AllowsSourceContextTransition = false;
         RequireChatOriginal().BindPublicationGuard(() => _conversation.Id == originalConversation.Id && _originalPresentationGeneration == originalGeneration);
         DemandOriginalChatPublication();
-        if (_isSending || string.IsNullOrWhiteSpace(instruction)) return;
+        if (_isSending || Volatile.Read(ref _temporarySaveInProgress) != 0 || string.IsNullOrWhiteSpace(instruction)) return;
         if (CanonicalPermissionWaiting is { } pausedPermission)
         {
             SetProjectionStatus(FormatCanonicalPermissionObservation(pausedPermission));
@@ -1339,6 +1507,11 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
         if (_dual is { IsActive: true })
         {
+            if (originalConversation.IsTemporary)
+            {
+                SetProjectionStatus("Temporary Chat comparison is unavailable. Turn off comparison to send privately.");
+                return;
+            }
             if (originalConversation.Mode == HavenMode.Tasks)
             {
                 SetProjectionStatus("Canonical Tasks dual comparison is unavailable. Choose one configured task provider.");
@@ -1370,6 +1543,9 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         // mis-associated with an older user message.
         var acceptedSend = CaptureOriginalAcceptedSend(draftOwner, sendRevision,
             _composerInput.Text, _pendingAttachmentIds);
+        if (originalConversation.IsTemporary && (_attachedImages.Count != 0 || _attachedContext.Count != 0 ||
+            _pendingAttachmentIds.Count != 0 || !_taskAttachments.IsEmpty))
+            _temporaryAttachmentUse.TryAdd(originalConversation.Id, 0);
         void RestoreUnsentOriginalInstructionIfUnchanged()
         {
             // A refused/aborted admission must not lose the text, but newer typing wins — and the
@@ -1536,12 +1712,27 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                                availableCapabilities: ActiveCapabilitiesForCurrentChat(),
                                taskExecutionIntent: originalConversation.Mode == HavenMode.Tasks
                                    ? TaskRunExecutionIntent.CanonicalAgenticTask : TaskRunExecutionIntent.OrdinaryConversation,
-                               userInputCommitted: (committedInput, _) =>                               {
+                               userInputCommitted: async (committedInput, commitToken) =>
+                               {
                                    // Genuine acceptance from the real owner of the actual writes:
                                    // retire exactly the consumed draft identity (a newer draft
                                    // typed or attached since is preserved) and record the message.
                                    committedUserMessageId = committedInput.Id;
-                                   return RetireCommittedSendDraftAsync(acceptedSend);
+                                   var becameDurable = _unpublishedFreshChat.TryRemove(committedInput.ConversationId, out _);
+                                   _startedTemporaryLifecycle.TryAdd(committedInput.ConversationId, 0);
+                                   await RetireCommittedSendDraftAsync(acceptedSend);
+                                   if (becameDurable)
+                                   {
+                                       // The visible UserMessage is earlier than storage. Publish a
+                                       // restorable route only after this real committed-input receipt.
+                                       var owner = RequireChatOriginal();
+                                       await owner.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+                                           owner.RunAcceptedPublicationCallback(() =>
+                                           {
+                                               if (_conversation.Id == committedInput.ConversationId)
+                                                   ConversationStateChanged?.Invoke(this, EventArgs.Empty);
+                                           })).GetTask());
+                                   }
                                }), PublishOriginalStreamEventAsync).ConfigureAwait(false);
             }
             if (!_originalWork.IsRetiring)
@@ -1786,6 +1977,10 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         switch (streamEvent.Kind)
         {
             case ChatStreamEventKind.UserMessage when streamEvent.Message is not null:
+                // For Temporary, this page owns the in-memory acceptance;
+                // no durable committed-input callback is expected.
+                if (_conversation.IsTemporary && streamEvent.Message.ConversationId == _conversation.Id)
+                    _startedTemporaryLifecycle.TryAdd(_conversation.Id, 0);
                 UpsertMessage(streamEvent.Message);
                 RefreshMessages();
                 break;
@@ -2347,6 +2542,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
     private async Task RegenerateResponseOriginalBodyAsync(ChatMessage message, ResponseRegenerationMode requestedMode)
     {
+        if (!MayOrganizeSavedChat("regenerate a saved response")) return;
         if (!await AwaitChatOriginalAsync(EnsureConversationMayActAsync("chat.regenerate"))) return;
         try
         {
@@ -2384,6 +2580,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             RefreshMessages();
             return;
         }
+        if (!MayOrganizeSavedChat("save a message edit")) return;
         try
         {
             if (message.Role == MessageRole.User)
@@ -2419,6 +2616,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
     private async Task BranchIntoNewChatOriginalBodyAsync(ChatMessage throughMessage)
     {
+        if (!MayOrganizeSavedChat("branch it into another chat")) return;
         if (!await AwaitChatOriginalAsync(EnsureConversationMayActAsync("chat.branch"))) return;
         await AwaitChatOriginalAsync(SavePendingAttachmentDraftAsync());
         var index = _messages.FindIndex(message => message.Id == throughMessage.Id);
@@ -2449,9 +2647,10 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
     private async Task ShowExistingChatPickerOriginalBodyAsync(ChatMessage sourceMessage)
     {
+        if (!MayOrganizeSavedChat("continue it in another chat")) return;
         if (!await AwaitChatOriginalAsync(EnsureConversationMayActAsync("chat.branch-existing"))) return;
         var recent = (await AwaitChatOriginalAsync(_conversations.GetRecentAsync(_conversation.Mode, 12, RequireChatOriginal().Token)))
-            .Where(item => item.Id != _conversation.Id && !item.IsArchived)
+            .Where(item => item.Id != _conversation.Id && !item.IsArchived && !item.IsTemporary)
             .ToArray();
         var choices = recent
             .Select<Conversation, (string Label, Action Action)>(conversation =>
@@ -2470,8 +2669,11 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
     private async Task ContinueInExistingChatOriginalBodyAsync(Conversation target, ChatMessage sourceMessage)
     {
+        if (!MayOrganizeSavedChat("continue it in another chat") || target.IsTemporary ||
+            sourceMessage.ConversationId != _conversation.Id) return;
         if (!await AwaitChatOriginalAsync(EnsureConversationMayActAsync("chat.branch-existing"))) return;
         await AwaitChatOriginalAsync(SavePendingAttachmentDraftAsync());
+        if (sourceMessage.ConversationId != _conversation.Id || !MayOrganizeSavedChat("continue it in another chat")) return;
         await AwaitChatOriginalAsync(LoadConversationAsync(target));
         SetDraft(sourceMessage.Content);
         ConversationStateChanged?.Invoke(this, EventArgs.Empty);
@@ -2483,7 +2685,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     {
         try
         {
-            await AwaitChatOriginalAsync(_conversations.DeleteMessageAsync(_conversation.Id, message.Id, RequireChatOriginal().Token));
+            if (!_conversation.IsTemporary)
+                await AwaitChatOriginalAsync(_conversations.DeleteMessageAsync(_conversation.Id, message.Id, RequireChatOriginal().Token));
             _messages.RemoveAll(item => item.Id == message.Id);
             RefreshMessages();
         }
@@ -2501,6 +2704,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         DemandOriginalChatCurrent();
         ++_originalPresentationGeneration;
         _conversation = CreateConversation(mode, containerId, lessonId, spaceId);
+        TrackUnpublishedFreshChat(_conversation);
         // The brand-new conversation owns the composer from here; a caller that flushed an
         // outgoing snapshot commits the real outgoing/incoming ownership explicitly afterwards.
         _originalDraftInputOwner = null;
@@ -2771,6 +2975,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     private void PublishProjectionState()
     {
         DemandOriginalChatCurrent();
+        _scene.SetTemporaryControl(_conversation.Mode == HavenMode.Chat && _conversation.Kind == ConversationKind.Chat,
+            _conversation.IsTemporary);
         // Rebuilding the projection snapshots every message on each stream delta.
         // Mark dirty and defer that work until a consumer observes the state.
         _projectionDirty = true;

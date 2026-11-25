@@ -16,6 +16,7 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
     private readonly Action<Action> _publish;
     private readonly Func<bool> _isCurrent;
     private AssistantsWorkspaceSnapshot _snapshot = AssistantsWorkspaceSnapshot.Empty;
+    private readonly HashSet<AssistantIdentity> _openAssistantWorkspaces = [];
     private AssistantConfigurationDraft? _draft;
     private AssistantModelChoice? _selectedModel;
     private string _prompt = "";
@@ -293,6 +294,12 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
 
     public bool? IsActionAvailable(string command) => !_unavailable && Current && !_snapshot.IsRetiring && (command switch
     {
+        "assistants.conversation.archive.toggle" => _route == "work" && _snapshot.SelectedAssistant is { } activeAssistant &&
+            _openAssistantWorkspaces.Contains(activeAssistant.Identity) && !Busy && !_streaming && HasSecondaryConversationArchiveOwner,
+        "assistants.workspace.close" => VisibleWorkspaceIdentity is not null,
+        "assistants.navigation.open" => _compactWork && WorkRouteIdentity is not null && !IsAssistantNavigationOpen,
+        "assistants.navigation.close" => IsAssistantNavigationOpen,
+        "assistants.workspace.toggle" => _route == "work" && _snapshot.SelectedAssistant is not null,
         "assistants.project.newtask" => CanNewConversation && !_projectBusy,
         "assistants.development.open" => _hasDevelopmentRoute && _snapshot.ConversationBinding is not null && _snapshot.Work?.Controls?.CanonicalTaskContext is not null && !Busy && !_projectBusy,
         "assistants.project.choose" => !_hasPendingProjectSubmission && _projectChooserVisible && _projectRows.Count != 0 &&
@@ -355,6 +362,40 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
         if (!IsCurrentOriginalRepeatAction(command, parameter)) return ValueTask.CompletedTask;
         if (IsActionAvailable(command) != true)
             return ValueTask.FromException(new InvalidOperationException("This Assistant action is unavailable."));
+        if (command is "assistants.workspace.toggle" or "assistants.workspace.close"
+            or "assistants.navigation.open" or "assistants.navigation.close")
+        {
+            if (parameter is AssistantIdentity identity && identity == WorkRouteIdentity)
+                _publish(() =>
+                {
+                    if (cancellationToken.IsCancellationRequested ||
+                        IsActionAvailable(command) != true || WorkRouteIdentity != identity) return;
+                    var focus = AssistantWorkFocus.WorkspaceToggle;
+                    switch (command)
+                    {
+                        case "assistants.workspace.toggle":
+                            _compactNavigationIdentity = null;
+                            if (_openAssistantWorkspaces.Add(identity)) focus = AssistantWorkFocus.WorkspaceClose;
+                            else _openAssistantWorkspaces.Remove(identity);
+                            break;
+                        case "assistants.workspace.close":
+                            _openAssistantWorkspaces.Remove(identity);
+                            break;
+                        case "assistants.navigation.open":
+                            _openAssistantWorkspaces.Remove(identity);
+                            _compactNavigationIdentity = identity;
+                            focus = AssistantWorkFocus.NavigationClose;
+                            break;
+                        case "assistants.navigation.close":
+                            _compactNavigationIdentity = null;
+                            focus = AssistantWorkFocus.NavigationToggle;
+                            break;
+                    }
+                    PublishAssistantWorkspace();
+                    WorkDisclosureChanged?.Invoke(identity, focus);
+                });
+            return ValueTask.CompletedTask;
+        }
         return _dispatch(command, parameter, cancellationToken);
     }
 
@@ -378,6 +419,58 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
         _publish(() => { if (Current) _values.Set(key, value); });
     }
 
+    internal bool HasSecondaryConversationArchiveOwner { get; set; }
+
+    internal enum AssistantWorkFocus { WorkspaceToggle, WorkspaceClose, NavigationToggle, NavigationClose, Home }
+    private bool _compactWork;
+    private AssistantIdentity? _compactNavigationIdentity;
+    internal event Action<AssistantIdentity, AssistantWorkFocus>? WorkDisclosureChanged;
+
+    internal bool IsAssistantNavigationOpen => _compactWork && WorkRouteIdentity is { } identity &&
+        _compactNavigationIdentity == identity;
+    internal AssistantIdentity? VisibleWorkspaceIdentity => WorkRouteIdentity is { } identity &&
+        _openAssistantWorkspaces.Contains(identity) ? identity : null;
+    internal AssistantIdentity? WorkRouteIdentity => _route == "work" && Current && !_unavailable && !_snapshot.IsRetiring
+        ? _snapshot.SelectedAssistant?.Identity : null;
+
+    internal void SetAssistantWorkCompact(bool compact)
+    {
+        if (_compactWork == compact) return;
+        var closing = IsAssistantNavigationOpen && !compact ? WorkRouteIdentity : null;
+        _compactWork = compact;
+        if (!compact) _compactNavigationIdentity = null;
+        PublishAssistantWorkspace();
+        if (closing is not null) WorkDisclosureChanged?.Invoke(closing, AssistantWorkFocus.Home);
+    }
+
+    internal void DismissAssistantNavigationAfterOpen()
+    {
+        if (_compactNavigationIdentity is null) return;
+        _compactNavigationIdentity = null;
+        PublishAssistantWorkspace();
+    }
+
+    private void PublishAssistantWorkspace()
+    {
+        if (_compactNavigationIdentity != WorkRouteIdentity) _compactNavigationIdentity = null;
+        var identity = WorkRouteIdentity;
+        var canToggle = IsActionAvailable("assistants.workspace.toggle") == true;
+        var open = VisibleWorkspaceIdentity is not null;
+        var navigation = IsAssistantNavigationOpen;
+        Set("WorkspaceAssistantIdentity", identity);
+        Set("CanToggleAssistantWorkspace", canToggle);
+        Set("CanOpenAssistantNavigation", IsActionAvailable("assistants.navigation.open") == true);
+        Set("CanOpenAssistantHome", IsActionAvailable("assistants.home") == true);
+        Set("ShowAssistantNavigationToggle", _compactWork && canToggle);
+        Set("ShowAssistantHomeShortcut", !_compactWork);
+        // Publish the old panel inactive before publishing the replacement active.
+        if (navigation) Set("ShowAssistantWorkspace", false);
+        Set("ShowAssistantNavigation", navigation);
+        if (!navigation) Set("ShowAssistantWorkspace", open);
+        Set("ShowAssistantWorkPane", open || navigation);
+        Set("AssistantWorkspaceToggleLabel", open ? "Close workspace" : "Workspace");
+    }
+
     private void Refresh()
     {
         RefreshTaskProgress();
@@ -389,17 +482,29 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
         Set("CanInspectMemory", IsActionAvailable("assistants.memory.open") == true); Set("ShowMemory", _route == "memory"); Set("ShowMiniComputer", _route == "mini-computer");
         Set("ShowLegacyMigration", _route == "migration");
         Set("ShowHome", _route == "home"); Set("ShowConfiguration", _route == "configuration"); Set("ShowWork", _route == "work");
+        PublishAssistantWorkspace();
         Set("Assistants", _snapshot.Assistants.Select(definition => new AssistantRow(definition.Identity,
             $"{Uri.EscapeDataString(definition.Identity.DenId)}/{Uri.EscapeDataString(definition.Identity.NamespaceId)}/{Uri.EscapeDataString(definition.Identity.DefinitionId)}", definition.Configuration.Name, definition.Configuration.Description,
             definition.Configuration.Archived ? "Archived" : definition.Configuration.Enabled ? "Enabled" : "Disabled", usable && !Busy, definition.Configuration.IconResourceId)).ToArray());
         Set("HasAssistants", _snapshot.Assistants.Count != 0);
-        Set("RecentConversations", _snapshot.Conversations.OrderByDescending(conversation => conversation.IsMain).ThenByDescending(conversation => conversation.UpdatedAt).Take(8).Select(conversation => new ConversationRow(
+        Set("RecentConversations", _snapshot.Conversations.Where(conversation => !conversation.IsArchived || conversation.IsMain).OrderByDescending(conversation => conversation.IsMain).ThenByDescending(conversation => conversation.UpdatedAt).Take(8).Select(conversation => new ConversationRow(
             conversation.ConversationId, conversation.IsMain ? "Main · protected" : conversation.Title, selected?.Configuration.Name ?? "",
             conversation.UpdatedAt.ToLocalTime().ToString("g"), usable && !Busy, conversation.IsMain)).ToArray());
-        Set("HasRecentConversations", _snapshot.Conversations.Count != 0);
-        Set("SelectedConversations", _snapshot.Conversations.OrderByDescending(conversation => conversation.IsMain).ThenByDescending(conversation => conversation.UpdatedAt).Select(conversation => new ConversationRow(
-            conversation.ConversationId, conversation.IsMain ? "Main · protected" : conversation.Title, selected?.Configuration.Name ?? "",
-            conversation.UpdatedAt.ToLocalTime().ToString("g"), usable && !Busy, conversation.IsMain)).ToArray());
+        Set("HasRecentConversations", _snapshot.Conversations.Any(conversation => !conversation.IsArchived || conversation.IsMain));
+        Set("SelectedConversations", _snapshot.Conversations.OrderByDescending(conversation => conversation.IsMain)
+            .ThenBy(conversation => conversation.IsArchived).ThenByDescending(conversation => conversation.UpdatedAt)
+            .Select(conversation => new ConversationRow(
+                conversation.ConversationId, conversation.IsMain ? "Main · protected" :
+                    conversation.IsArchived ? conversation.Title + " · Archived" : conversation.Title,
+                selected?.Configuration.Name ?? "", conversation.UpdatedAt.ToLocalTime().ToString("g"),
+                usable && !Busy && (!conversation.IsArchived || conversation.IsMain), conversation.IsMain)
+            {
+                ArchiveIdentity = selected?.Identity,
+                IsArchived = conversation.IsArchived,
+                CanToggleArchive = HasSecondaryConversationArchiveOwner && usable && !Busy && !_streaming &&
+                    !conversation.IsMain && conversation.IsOrdinarySecondary &&
+                    _snapshot.ConversationBinding?.Conversation.Id != conversation.ConversationId
+            }).ToArray());
         Set("HasSelectedConversations", _snapshot.Conversations.Count != 0);
         var work = _snapshot.Work?.CanonicalTask;
         var active = work?.State is TaskExecutionLifecycle.Running or TaskExecutionLifecycle.WaitingSafeBoundary or TaskExecutionLifecycle.Blocked or TaskExecutionLifecycle.Suspended;
@@ -551,6 +656,10 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
         // a future supported thread command uses this observation and canonical guard.
         public bool CanRemove => false; // No genuine deletion effect owner is composed for any row.
         public bool IsProtected => IsMain;
+        internal AssistantIdentity? ArchiveIdentity { get; init; }
+        internal bool IsArchived { get; init; }
+        internal bool CanToggleArchive { get; init; }
+        internal string ArchiveLabel => IsArchived ? "Restore" : "Archive";
     }
     public sealed record WorkRow(Guid Id, string Title, string StatusLabel, bool CanOpen);
     public sealed record SettingRow(string Id, string Category, string ChoiceLabel, string AvailabilityLabel, bool CanChoose);

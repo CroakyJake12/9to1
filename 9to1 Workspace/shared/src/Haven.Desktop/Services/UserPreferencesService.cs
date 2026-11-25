@@ -20,6 +20,7 @@ using Haven.Core;
 using Haven.Desktop.Controls;
 using Haven.Desktop.HavenUI.Tokens;
 using Haven.Desktop.Services;
+using Haven.Desktop.Views.Shell;
 namespace Haven.Desktop;
 
 /// <summary>
@@ -106,7 +107,6 @@ public sealed partial class UserPreferencesService
     public UserPreferencesService(IAppPaths paths)
     {
         _path = Path.Combine(paths.DataDirectory, "preferences.json");
-        var hasExistingPreferences = File.Exists(_path);
         var loadFailed = false;
         try
         {
@@ -117,17 +117,17 @@ public sealed partial class UserPreferencesService
             var migrated = _preferences.HavenUiAppearanceVersion < currentAppearanceVersion;
             if (migrated)
             {
-                var previousTheme = hasExistingPreferences && _preferences.HavenUiAppearanceVersion == 0
+                var previousTheme = _preferences.HavenUiAppearanceVersion == 0 &&
+                    !_preferenceBaseline.ContainsKey("havenUiAppearance") &&
+                    _preferenceBaseline.ContainsKey("themeId")
                     ? BuiltInThemes.FirstOrDefault(item =>
                         item.Id.Equals(_preferences.ThemeId, StringComparison.OrdinalIgnoreCase))
                     : null;
                 _preferences = _preferences with
                 {
-                    // Migration preserves an existing explicit appearance. It does not
-                    // replace the user's selection with a release-specific default.
                     HavenUiAppearance = previousTheme is not null
                         ? previousTheme.Light ? HavenUiAppearance.Bright : HavenUiAppearance.SuperDark
-                        : hasExistingPreferences ? _preferences.HavenUiAppearance : HavenUiAppearance.SuperDark,
+                        : _preferences.HavenUiAppearance,
                     HavenUiAppearanceVersion = currentAppearanceVersion,
                     ThemeId = "haven-ui"
                 };
@@ -192,7 +192,8 @@ public sealed partial class UserPreferencesService
             ThemeId = "haven-ui"
         };
 
-        ApplyCore(appearance, save);
+        if (save) Save(writeAppearance: true);
+        ApplyCore(appearance, save: false);
     }
 
     /// <summary>
@@ -259,9 +260,8 @@ public sealed partial class UserPreferencesService
             AccentColourName = parsed is null ? null : AccentColourCatalog.Name(parsed.Value)
         };
 
-        // CUI accent state is published by ApplyCore after successful persistence.
-
-        ApplyCore(_preferences.HavenUiAppearance, save);
+        if (save) Save(writeAccent: true);
+        ApplyCore(_preferences.HavenUiAppearance, save: false);
     }
 
     /// <summary>Selects the global UI font family; null or Montserrat restores the bundled default.</summary>
@@ -872,9 +872,21 @@ public sealed partial class UserPreferencesService
         return _preferenceBaseline.Deserialize<Preferences>(JsonOptions) ?? Preferences.Default;
     }
 
-    private void Save()
+    private void Save(bool writeAppearance = false, bool writeAccent = false)
     {
         var proposed = JsonSerializer.SerializeToNode(_preferences, JsonOptions)!.AsObject();
+        // The native record can carry display and accent settings without legacy fields.
+        // Preserve them when a legacy save would otherwise serialize unset defaults.
+        if (_preferenceBaseline[HomeNativePreferenceFile.ThemeKey] is not null)
+        {
+            if (!writeAppearance && !_preferenceBaseline.ContainsKey("havenUiAppearance"))
+                proposed.Remove("havenUiAppearance");
+            if (!writeAccent && !_preferenceBaseline.ContainsKey("overrideAccentColour") && !_preferenceBaseline.ContainsKey("accentColourName"))
+            {
+                proposed.Remove("overrideAccentColour");
+                proposed.Remove("accentColourName");
+            }
+        }
         try
         {
             var committed = HomeNativePreferenceFile.MergeLegacy(_path, _preferenceBaseline, proposed, ProjectLegacyHomeTheme);
@@ -922,7 +934,7 @@ public sealed partial class UserPreferencesService
         /// </summary>
         public string ThemeId { get; init; } = "system";
         /// <summary>Gets the canonical four-position HavenUI appearance.</summary>
-        public HavenUiAppearance HavenUiAppearance { get; init; } = HavenUiAppearance.SuperDark;
+        public HavenUiAppearance HavenUiAppearance { get; init; } = HavenStartupExperiencePolicy.Appearance;
         /// <summary>Distinguishes migrated preference files from theme-only legacy files.</summary>
         public int HavenUiAppearanceVersion { get; init; }
         /// <summary>Saved theme identity; unsupported names are preserved and Home resolves an explicit Professional fallback.</summary>

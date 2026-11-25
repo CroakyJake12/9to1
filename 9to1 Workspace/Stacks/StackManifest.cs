@@ -92,6 +92,8 @@ public sealed partial class JsonFileStackProjectStore : IStackOriginalSourceProj
     }
 
     public string ProjectDirectory { get; }
+    private string ManifestPath => Path.Combine(ProjectDirectory, ManifestRelativePath);
+    private string RootsPath => Path.Combine(ProjectDirectory, RootsRelativePath);
 
     public async Task CreateAsync(StackManifest manifest, CancellationToken cancellationToken = default)
     {

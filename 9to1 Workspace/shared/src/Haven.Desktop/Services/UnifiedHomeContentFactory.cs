@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Threading;
+using CakeOS.Cui.Themes;
 using Haven.Application;
 using Haven.Browser;
 using Haven.Core;
@@ -16,23 +17,32 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
     private readonly Func<NewDashboardPage> _dashboard;
     private readonly Func<HomeDiscoverPage> _discover;
     private readonly Func<BrowseNavigationIntent, Task, bool> _queue;
-    private readonly Func<string, CancellationToken, Task<AppContentAddress>> _prepareAiDraft;
+    private readonly Func<BrowseAppContentRequest, string, CancellationToken, Task<AppContentAddress>> _prepareAiDraft;
     private readonly Func<BrowseAppContentRequest, CancellationToken, Task> _admit;
     private readonly Func<bool> _hostIsCurrent;
     private readonly CancellationToken _hostLifetime;
     private readonly bool _aiAvailable;
+    private readonly bool _assistantsAvailable;
+    private readonly Func<ModeDefinition, bool>? _shortcutAppAvailable;
+    private readonly CuiThemePreferenceContext? _interfaceTheme;
     private readonly Func<BrowseAppContentRequest, HomeEventsDestinationPage>? _events;
     private readonly Func<BrowseAppContentRequest, HomeSettingsDestinationPage>? _settings;
     private readonly Func<BrowseAppContentRequest, HomeLibraryDestinationPage>? _library;
+    private readonly Func<BrowseAppContentRequest, NewTabLayoutPreferences>? _newTabLayout;
+    private readonly Func<BrowseAppContentRequest, NewTabWidgetSources>? _newTabWidgets;
 
     internal UnifiedHomeContentFactory(IModeRegistry modes, Func<NewDashboardPage> dashboard,
         Func<HomeDiscoverPage> discover, Func<BrowseNavigationIntent, Task, bool> queue,
-        Func<string, CancellationToken, Task<AppContentAddress>> prepareAiDraft,
+        Func<BrowseAppContentRequest, string, CancellationToken, Task<AppContentAddress>> prepareAiDraft,
         Func<BrowseAppContentRequest, CancellationToken, Task> admit,
         Func<bool> hostIsCurrent, CancellationToken hostLifetime, bool aiAvailable = true,
         Func<BrowseAppContentRequest, HomeEventsDestinationPage>? events = null,
         Func<BrowseAppContentRequest, HomeSettingsDestinationPage>? settings = null,
-        Func<BrowseAppContentRequest, HomeLibraryDestinationPage>? library = null)
+        Func<BrowseAppContentRequest, HomeLibraryDestinationPage>? library = null,
+        Func<BrowseAppContentRequest, NewTabLayoutPreferences>? newTabLayout = null,
+        Func<BrowseAppContentRequest, NewTabWidgetSources>? newTabWidgets = null,
+        bool assistantsAvailable = false, Func<ModeDefinition, bool>? shortcutAppAvailable = null,
+        CuiThemePreferenceContext? interfaceTheme = null)
     {
         _modes = modes ?? throw new ArgumentNullException(nameof(modes));
         _dashboard = dashboard ?? throw new ArgumentNullException(nameof(dashboard));
@@ -43,7 +53,16 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         _hostIsCurrent = hostIsCurrent ?? throw new ArgumentNullException(nameof(hostIsCurrent));
         if (!hostLifetime.CanBeCanceled) throw new ArgumentException("Retain the original host lifetime.", nameof(hostLifetime));
         _hostLifetime = hostLifetime; _aiAvailable = aiAvailable; _events = events; _settings = settings; _library = library;
+        _newTabLayout = newTabLayout;
+        _newTabWidgets = newTabWidgets;
+        _assistantsAvailable = assistantsAvailable;
+        _shortcutAppAvailable = shortcutAppAvailable;
+        _interfaceTheme = interfaceTheme;
     }
+
+    public bool RecognizesNestedCanvas(AppContentAddress address) =>
+        _settings is not null && HomeSettingsCatalog.IsSettingsAddress(address) ||
+        _newTabLayout is not null && HomeSettingsCatalog.IsNewTabCustomisationAddress(address);
 
     public IBrowseAppContentSession CreateSession(BrowseAppContentRequest request)
     {
@@ -59,9 +78,9 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         var admissibleSegments = segments.Count == 0 ||
             (isHome && _library is not null && BrowseOmniboxSearchRoute.TryParse(request.Address, out _, out _)) ||
             (isHome && _library is not null && segments.SequenceEqual(new[] { "library", "boards" }, StringComparer.Ordinal)) ||
-            (isHome && segments.Count == 1 && (segments[0].Equals("models", StringComparison.Ordinal) ||
+            RecognizesNestedCanvas(request.Address) ||
+            (isHome && segments.Count == 1 && (segments[0] is "dashboard" or "models" ||
                 _events is not null && segments[0].Equals("events", StringComparison.Ordinal) ||
-                _settings is not null && segments[0].Equals("settings", StringComparison.Ordinal) ||
                 _library is not null && segments[0].Equals("library", StringComparison.Ordinal)));
         if (!admissibleSegments)
             throw new NotSupportedException("This Home destination is unavailable or belongs to another authority.");
@@ -72,8 +91,17 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         return new Session(this, request);
     }
 
-    private sealed class Session : IBrowseNativeAppContentSession, IOriginalTabTransientPresentationOwner
+    private HomeSettingsDestinationPage CreateSettings(BrowseAppContentRequest request, BrowsePageCommandSlot commands)
     {
+        var page = _settings!(request);
+        page.AttachPageCommands(commands);
+        page.NewTabCustomisationAvailable = _newTabLayout is not null;
+        return page;
+    }
+
+    private sealed class Session : IBrowseNativePageCommandSource, IOriginalTabTransientPresentationOwner
+    {
+        public BrowsePageCommandSlot PageCommandSlot { get; } = new();
         private OriginalTabTransientPresentation? _transientPresentation;
         public OriginalTabTransientPresentation TransientPresentation => _transientPresentation
             ?? throw new InvalidOperationException("The original tab presentation has not initialized.");
@@ -85,6 +113,7 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         private Task? _initialization;
         private Task<bool>? _preparation;
         private volatile bool _published;
+        private volatile string? _settingsTitle;
 
         internal Session(UnifiedHomeContentFactory owner, BrowseAppContentRequest request)
         {
@@ -92,7 +121,12 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
             _work = new(StopAsync, CleanupAsync);
         }
         public AppContentAddress Address => _request.Address;
-        public string Title => Address.Authority == "home" ? "Home" : "New Tab";
+        public string Title => _settingsTitle ?? (Address.Authority switch
+        {
+            "home" when Address.ResourceSegments is ["dashboard"] => "Dashboard",
+            "home" => "Home",
+            _ => "New Tab"
+        });
         public string IconKey => "home";
         public event EventHandler? StateChanged;
         public Task? OriginalInitialization { get { lock (_gate) return _initialization; } }
@@ -130,10 +164,14 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
                                 (_request.Address.ResourceSegments.SequenceEqual(new[] { "library", "boards" }, StringComparer.Ordinal) ||
                                     BrowseOmniboxSearchRoute.TryParse(_request.Address, out _, out _))
                                     ? _request with { Address = AppContentAddress.Parse("browse://home/library") } : _request, _owner._modes, _owner._dashboard,
-                                _owner._discover, _owner._queue, _owner._prepareAiDraft, _owner._aiAvailable,
+                                _owner._discover, _owner._queue, (text, token) => _owner._prepareAiDraft(_request, text, token), _owner._aiAvailable,
                                 _owner._events is null ? null : () => _owner._events(_request),
-                                _owner._settings is null ? null : () => _owner._settings(_request),
-                            _owner._library is null ? null : () => _owner._library(_request)));
+                                _owner._settings is null ? null : () => _owner.CreateSettings(_request, PageCommandSlot),
+                                _owner._library is null ? null : () => _owner._library(_request),
+                                newTabLayout: _request.Address.Authority == "newtab" ? _owner._newTabLayout?.Invoke(_request) : null,
+                                newTabWidgets: _request.Address.Authority == "newtab" ? _owner._newTabWidgets?.Invoke(_request) : null,
+                                assistantsAvailable: _owner._assistantsAvailable, shortcutAppAvailable: _owner._shortcutAppAvailable,
+                                interfaceTheme: _owner._interfaceTheme));
                         DemandCurrent();
                         var page = _page ?? throw new InvalidOperationException("The original Home page was not acquired.");
                         await original.AwaitAsync(page.InitializeAsync(linked.Token));
@@ -142,13 +180,29 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
                         await original.AwaitAsync(CloudflareOriginalExecutionGuard.InvokeOriginal(this,
                             () => _owner._admit(_request, linked.Token)));
                         DemandCurrent(); linked.Token.ThrowIfCancellationRequested();
+                        _settingsTitle = page.SettingsTitle;
+                        page.SettingsTitleChanged += OnSettingsTitleChanged;
                         _published = true;
                         try { CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { StateChanged?.Invoke(this, EventArgs.Empty); return true; }); }
-                        catch { _published = false; throw; }
+                        catch
+                        {
+                            _published = false;
+                            page.SettingsTitleChanged -= OnSettingsTitleChanged;
+                            throw;
+                        }
                     })).ConfigureAwait(false);
                 }, task => _initialization = task);
             }
         }
+        private void OnSettingsTitleChanged(object? sender, EventArgs args)
+        {
+            if (sender is not UnifiedHomePage page || !IsPublicationCurrent) return;
+            var title = page.SettingsTitle;
+            if (_settingsTitle == title) return;
+            _settingsTitle = title;
+            CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { StateChanged?.Invoke(this, EventArgs.Empty); return true; });
+        }
+
         public Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken = default)
         {
             DemandExternalJoin();
@@ -187,7 +241,11 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         {
             using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
             _published = false;
-            if (_page is { } page) await CloudflareOriginalExecutionGuard.InvokeOriginal(this, page.CloseAndDrainAsync);
+            if (_page is { } page)
+            {
+                page.SettingsTitleChanged -= OnSettingsTitleChanged;
+                await CloudflareOriginalExecutionGuard.InvokeOriginal(this, page.CloseAndDrainAsync);
+            }
         });
         private Task CleanupAsync() => OnUiAsync(async () =>
         {

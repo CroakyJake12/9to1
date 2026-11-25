@@ -11,6 +11,14 @@ public sealed partial class ConversationRepository
         if (original.Id == Guid.Empty) throw new ArgumentException("A canonical conversation identity is required.", nameof(original));
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        var created = await InsertConversationIfMissingAsync(connection, transaction, original, cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return created;
+    }
+
+    internal static async Task<bool> InsertConversationIfMissingAsync(SqliteConnection connection, SqliteTransaction transaction,
+        Conversation original, CancellationToken cancellationToken)
+    {
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
         command.CommandText = """
@@ -34,7 +42,6 @@ public sealed partial class ConversationRepository
         command.Parameters.AddWithValue("$spaceId", (object?)original.SpaceId?.ToString() ?? DBNull.Value);
         var changed = await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         if (changed is not (0 or 1)) throw new InvalidDataException("The original create-only write returned an unexpected affected-row count.");
-        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
         return changed == 1;
     }
 }

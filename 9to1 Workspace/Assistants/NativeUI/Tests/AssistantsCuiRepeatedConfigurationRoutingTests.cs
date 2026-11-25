@@ -1,7 +1,11 @@
 using System.Collections;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Interactivity;
+using Avalonia.Input.Raw;
+using Avalonia.Input;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
@@ -18,6 +22,323 @@ namespace HavenOS.Apps.Assistants.NativeUI.Tests;
 [Collection("Assistants native UI")]
 public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
 {
+    [Fact]
+    public async Task Workspace_overlay_resizes_and_owns_only_its_exact_input_and_focus()
+    {
+        using var lifetime = new CancellationTokenSource();
+        await using var native = HeadlessUnitTestSession.StartNew(typeof(AssistantsTestApplication));
+        Assert.True(await native.Dispatch<bool>(async () =>
+        {
+            var bindings = Bindings([]);
+            var assistant = Definition();
+            bindings.ShowWork();
+            var main = new AssistantConversationSummary(Guid.NewGuid(), "Main", DateTimeOffset.UtcNow, false, null) { IsMain = true };
+            bindings.ApplySnapshot(AssistantsWorkspaceSnapshot.Empty with
+            { Revision = 1, SelectedAssistant = assistant, Conversations = [main] });
+            var registry = AssistantsNativeCuiSurface.CreateAvatarRegistry();
+            var composer = new TextBox { Text = "Unsent draft" };
+            registry.RegisterObjectRenderer("AssistantConversation", _ => composer);
+            using var loader = new CuiControlLoader(registry);
+            loader.SetBindingContext(bindings); loader.SetActionDispatcher(bindings);
+            var window = new Window { Width = 940, Height = 660 };
+            try
+            {
+                var (tree, diagnostics) = loader.LoadMarkup(AssistantsCuiScenes.ReadSource(AssistantsCuiScene.Work));
+                Assert.Empty(diagnostics);
+                var root = Assert.IsAssignableFrom<Control>(tree);
+                loader.WireBindings(root);
+                using var keyboard = new AssistantWorkspaceKeyboard(root, bindings);
+                window.Content = root; window.Show(); window.UpdateLayout();
+                Button Button(string name) => Assert.Single(root.GetVisualDescendants().OfType<Button>(), b => b.Name == name);
+                var toggle = Button("assistant-workspace-toggle");
+                toggle.RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await loader.WhenActionsIdleAsync();
+                await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+                var close = Button("assistant-workspace-close");
+                Assert.True(close.IsFocused);
+                Assert.True(composer.Focus());
+                var unrelated = new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Escape };
+                composer.RaiseEvent(unrelated);
+                Assert.Equal(assistant.Identity, bindings.VisibleWorkspaceIdentity);
+                var pane = Assert.Single(root.GetVisualDescendants().OfType<CuiContainerControl>(), c => c.Name == "assistant-work-pane");
+                var primary = Assert.Single(root.GetVisualDescendants().OfType<CuiContainerControl>(), c => c.Name == "assistant-work-main");
+                Assert.Equal(1, Grid.GetColumn(pane));
+                Assert.True(primary.IsEffectivelyEnabled);
+                window.Width = 500;
+                await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+                Assert.Equal(0, Grid.GetColumn(pane));
+                Assert.Equal(360, pane.Bounds.Width);
+                Assert.False(primary.IsEffectivelyEnabled);
+                Assert.False(primary.IsHitTestVisible);
+                Assert.Same(window, TopLevel.GetTopLevel(composer));
+                Assert.True(close.IsFocused);
+                var reachedAnotherControl = false;
+                for (var i = 0; i < 5; i++)
+                {
+                    window.KeyPressQwerty(PhysicalKey.Tab, RawInputModifiers.None);
+                    window.KeyReleaseQwerty(PhysicalKey.Tab, RawInputModifiers.None);
+                    Assert.True(pane.IsKeyboardFocusWithin);
+                    reachedAnotherControl |= !close.IsFocused;
+                }
+                Assert.True(reachedAnotherControl);
+                close.Focus();
+                var escape = new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Escape };
+                close.RaiseEvent(escape);
+                await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+                Assert.True(escape.Handled);
+                Assert.Null(bindings.VisibleWorkspaceIdentity);
+                Assert.True(toggle.IsFocused);
+                Assert.True(primary.IsEffectivelyEnabled);
+                Assert.True(primary.IsHitTestVisible);
+                Assert.Same(window, TopLevel.GetTopLevel(composer));
+                Assert.Equal("Unsent draft", composer.Text);
+                // Open again at the compact width, then let the same pane become docked.
+                toggle.RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await loader.WhenActionsIdleAsync();
+                await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+                Assert.True(close.IsFocused);
+                Assert.False(primary.IsEffectivelyEnabled);
+                var backdrop = Assert.Single(root.GetVisualDescendants().OfType<CuiContainerControl>(), c => c.Name == "assistant-workspace-backdrop");
+                var target = backdrop.TranslatePoint(new Point(20, 30), window)!.Value;
+                var releaseAway = backdrop.TranslatePoint(new Point(110, 150), window)!.Value;
+                window.MouseDown(target, MouseButton.Left);
+                window.MouseMove(releaseAway);
+                window.MouseUp(releaseAway, MouseButton.Left);
+                Assert.Equal(assistant.Identity, bindings.VisibleWorkspaceIdentity);
+                var tapTarget = backdrop.TranslatePoint(new Point(70, 210), window)!.Value;
+                Assert.True(backdrop.IsEffectivelyVisible);
+                Assert.NotNull(backdrop.Background);
+                var hit = Assert.IsAssignableFrom<Visual>(window.InputHitTest(tapTarget));
+                Assert.Contains(backdrop, hit.GetSelfAndVisualAncestors());
+                window.MouseMove(tapTarget);
+                window.MouseDown(tapTarget, MouseButton.Left);
+                window.MouseUp(tapTarget, MouseButton.Left);
+                await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+                Assert.Null(bindings.VisibleWorkspaceIdentity);
+                Assert.True(toggle.IsFocused);
+                toggle.RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await loader.WhenActionsIdleAsync();
+                await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+                window.Width = 940;
+                await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+                Assert.Equal(1, Grid.GetColumn(pane));
+                Assert.True(primary.IsEffectivelyEnabled);
+                Assert.Equal("Unsent draft", composer.Text);
+            }
+            finally { loader.Dispose(); await loader.WhenActionsIdleAsync(); window.Close(); }
+            return true;
+        }, lifetime.Token));
+    }
+
+    [Fact]
+    public async Task Compact_navigation_and_workspace_exchange_one_pane_and_use_the_original_assistant_row()
+    {
+        using var lifetime = new CancellationTokenSource();
+        await using var native = HeadlessUnitTestSession.StartNew(typeof(AssistantsTestApplication));
+        Assert.True(await native.Dispatch<bool>(async () =>
+        {
+            var calls = new List<(string Command, object? Parameter)>();
+            var bindings = Bindings(calls);
+            var assistant = Definition();
+            var other = assistant with
+            {
+                Identity = new("fixture-den", "personal", "second-assistant"),
+                Configuration = assistant.Configuration with { Name = "Second Assistant" }
+            };
+            var snapshot = AssistantsWorkspaceSnapshot.Empty with
+            { Revision = 1, SelectedAssistant = assistant, Assistants = [assistant, other] };
+            bindings.ShowWork(); bindings.ApplySnapshot(snapshot);
+            var composer = new TextBox { Text = "Retain this conversation draft" };
+            var registry = AssistantsNativeCuiSurface.CreateAvatarRegistry();
+            registry.RegisterObjectRenderer("AssistantConversation", _ => composer);
+            using var loader = new CuiControlLoader(registry);
+            loader.SetBindingContext(bindings); loader.SetActionDispatcher(bindings);
+            var window = new Window { Width = 500, Height = 650 };
+            try
+            {
+                var (tree, diagnostics) = loader.LoadMarkup(AssistantsCuiScenes.ReadSource(AssistantsCuiScene.Work));
+                Assert.Empty(diagnostics);
+                var root = Assert.IsAssignableFrom<Control>(tree);
+                loader.WireBindings(root);
+                using var keyboard = new AssistantWorkspaceKeyboard(root, bindings);
+                window.Content = root; window.Show();
+                Button? Visible(string name) => root.GetVisualDescendants().OfType<Button>()
+                    .SingleOrDefault(b => b.Name == name && b.IsEffectivelyVisible);
+                async Task Layout()
+                {
+                    await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+                    await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+                }
+                async Task Click(string id)
+                {
+                    Assert.IsType<Button>(Visible(id)).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    await loader.WhenActionsIdleAsync();
+                    await Layout();
+                }
+
+                await Layout();
+                await Click("assistant-workspace-toggle");
+                Assert.True(Visible("assistant-workspace-close")!.IsFocused);
+                Assert.Null(Visible("assistant-navigation-close"));
+                await Click("assistant-workspace-to-navigation");
+                Assert.True(Visible("assistant-navigation-close")!.IsFocused);
+                Assert.Null(Visible("assistant-workspace-close"));
+                Assert.Null(bindings.VisibleWorkspaceIdentity);
+                Assert.True(bindings.IsAssistantNavigationOpen);
+                Assert.Same(window, TopLevel.GetTopLevel(composer));
+                Assert.False(composer.IsEffectivelyEnabled);
+
+                await Click("assistant-navigation-to-workspace");
+                Assert.True(Visible("assistant-workspace-close")!.IsFocused);
+                Assert.Null(Visible("assistant-navigation-close"));
+                Assert.False(bindings.IsAssistantNavigationOpen);
+                await Click("assistant-workspace-to-navigation");
+                var close = Assert.IsType<Button>(Visible("assistant-navigation-close"));
+                var escape = new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Escape };
+                close.RaiseEvent(escape);
+                await Layout();
+                Assert.True(escape.Handled);
+                Assert.True(Visible("assistant-navigation-toggle")!.IsFocused);
+                Assert.Empty(calls);
+                Assert.True(composer.IsEffectivelyEnabled);
+
+                await Click("assistant-navigation-toggle");
+                var row = Assert.Single(root.GetVisualDescendants().OfType<Button>(), b =>
+                    b.IsEffectivelyVisible && b.Tag as string == "OpenAssistant" && Equals(b.Content, "Second Assistant"));
+                row.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await loader.WhenActionsIdleAsync();
+                var invoked = Assert.Single(calls);
+                Assert.Equal("assistants.open", invoked.Command);
+                Assert.Equal(other.Identity, Assert.IsType<AssistantsCuiBindings.AssistantRow>(invoked.Parameter).Identity);
+                bindings.ApplySnapshot(snapshot with { Revision = 2, Assistants = [assistant] });
+                await bindings.DispatchAsync(invoked.Command, invoked.Parameter, lifetime.Token);
+                Assert.Single(calls);
+
+                window.Width = 940;
+                await Layout();
+                Assert.False(bindings.IsAssistantNavigationOpen);
+                Assert.Null(Visible("assistant-navigation-toggle"));
+                Assert.True(Visible("work-home")!.IsFocused);
+                Assert.Same(window, TopLevel.GetTopLevel(composer));
+                Assert.Equal("Retain this conversation draft", composer.Text);
+            }
+            finally { loader.Dispose(); await loader.WhenActionsIdleAsync(); window.Close(); }
+            return true;
+        }, lifetime.Token));
+    }
+
+    [Fact]
+    public async Task Only_the_real_secondary_workspace_row_exposes_archive_and_restore()
+    {
+        using var lifetime = new CancellationTokenSource();
+        await using var native = HeadlessUnitTestSession.StartNew(typeof(AssistantsTestApplication));
+        Assert.True(await native.Dispatch<bool>(async () =>
+        {
+            var calls = new List<(string Command, object? Parameter)>();
+            var bindings = Bindings(calls); bindings.HasSecondaryConversationArchiveOwner = true;
+            var assistant = Definition();
+            var main = new AssistantConversationSummary(Guid.NewGuid(), "Main", DateTimeOffset.UtcNow, false, null) { IsMain = true };
+            var history = new AssistantConversationSummary(Guid.NewGuid(), "Secondary", DateTimeOffset.UtcNow, false, null) { IsOrdinarySecondary = true };
+            var snapshot = AssistantsWorkspaceSnapshot.Empty with
+            { Revision = 1, SelectedAssistant = assistant, Conversations = [main, history] };
+            bindings.ShowWork(); bindings.ApplySnapshot(snapshot);
+            await bindings.DispatchAsync("assistants.workspace.toggle", assistant.Identity, lifetime.Token);
+            var registry = AssistantsNativeCuiSurface.CreateAvatarRegistry();
+            registry.RegisterObjectRenderer("AssistantConversation", _ => new Panel());
+            using var loader = new CuiControlLoader(registry);
+            loader.SetBindingContext(bindings); loader.SetActionDispatcher(bindings);
+            var window = new Window { Width = 900, Height = 700 };
+            try
+            {
+                var (tree, diagnostics) = loader.LoadMarkup(AssistantsCuiScenes.ReadSource(AssistantsCuiScene.Work));
+                Assert.Empty(diagnostics);
+                var root = Assert.IsAssignableFrom<Control>(tree);
+                loader.WireBindings(root); window.Content = root; window.Show(); window.UpdateLayout();
+                Button VisibleArchive() => Assert.Single(root.GetVisualDescendants().OfType<Button>(),
+                    b => b.Tag as string == "ToggleConversationArchive" && b.IsEffectivelyVisible);
+                Assert.Equal("Archive", VisibleArchive().Content);
+                VisibleArchive().RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await loader.WhenActionsIdleAsync();
+                var click = Assert.Single(calls);
+                Assert.Equal("assistants.conversation.archive.toggle", click.Command);
+                Assert.Equal(history.ConversationId, Assert.IsType<AssistantsCuiBindings.ConversationRow>(click.Parameter).Id);
+
+                bindings.ApplySnapshot(snapshot with { Revision = 2, Conversations = [main, history with { IsArchived = true }] });
+                window.UpdateLayout();
+                Assert.Equal("Restore", VisibleArchive().Content);
+                await bindings.DispatchAsync(click.Command, click.Parameter, lifetime.Token);
+                Assert.Single(calls); // Stale previous row no longer has current canonical authority.
+            }
+            finally { loader.Dispose(); await loader.WhenActionsIdleAsync(); window.Close(); }
+            return true;
+        }, lifetime.Token));
+    }
+
+    [Fact]
+    public async Task Workspace_remembers_each_canonical_assistant_without_touching_the_draft_or_routing()
+    {
+        using var lifetime = new CancellationTokenSource();
+        await using var native = HeadlessUnitTestSession.StartNew(typeof(AssistantsTestApplication));
+        Assert.True(await native.Dispatch<bool>(async () =>
+        {
+            var calls = new List<(string Command, object? Parameter)>();
+            var bindings = Bindings(calls);
+            var first = Definition();
+            // The same visible ID in another namespace must not share this preference.
+            var second = first with { Identity = first.Identity with { NamespaceId = "another-owner" } };
+            var snapshot = AssistantsWorkspaceSnapshot.Empty with
+            { Revision = 1, SelectedAssistant = first, Assistants = [first, second] };
+            bindings.ShowWork();
+            bindings.ApplySnapshot(snapshot);
+            Assert.True(bindings.TrySetValue("Prompt", "Unsent draft"));
+            var registry = AssistantsNativeCuiSurface.CreateAvatarRegistry();
+            var composer = new Panel();
+            registry.RegisterObjectRenderer("AssistantConversation", _ => composer);
+            using var loader = new CuiControlLoader(registry);
+            loader.SetBindingContext(bindings); loader.SetActionDispatcher(bindings);
+            var window = new Window { Width = 900, Height = 700 };
+            try
+            {
+                var (tree, diagnostics) = loader.LoadMarkup(AssistantsCuiScenes.ReadSource(AssistantsCuiScene.Work));
+                Assert.Empty(diagnostics);
+                var root = Assert.IsAssignableFrom<Control>(tree);
+                loader.WireBindings(root);
+                window.Content = root; window.Show(); window.UpdateLayout();
+                bool Open() => bindings.TryGetValue("ShowAssistantWorkspace", out var result) && result is true;
+                Button Toggle() => Assert.Single(root.GetVisualDescendants().OfType<Button>(),
+                    b => b.Tag as string == "ToggleAssistantWorkspace");
+                Task Click()
+                {
+                    Toggle().RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    return loader.WhenActionsIdleAsync();
+                }
+
+                Assert.False(Open());
+                await Click();
+                Assert.True(Open());
+                Assert.Equal("Close workspace", Toggle().Content);
+                Assert.True(composer.IsEffectivelyVisible);
+                Assert.Equal("Unsent draft", bindings.Prompt);
+
+                bindings.ApplySnapshot(snapshot with { Revision = 2, SelectedAssistant = second });
+                Assert.False(Open());
+                await bindings.DispatchAsync("assistants.workspace.toggle", first.Identity, lifetime.Token);
+                Assert.False(Open());
+                bindings.ApplySnapshot(snapshot with { Revision = 3,
+                    SelectedAssistant = first with { Revision = first.Revision + 1 } });
+                Assert.True(Open());
+                Assert.True(composer.IsEffectivelyVisible);
+                await Click();
+                Assert.False(Open());
+                Assert.True(composer.IsEffectivelyVisible);
+                Assert.Equal("Unsent draft", bindings.Prompt);
+                Assert.Empty(calls); // Disclosure issues no canonical work/action/store command.
+            }
+            finally { loader.Dispose(); await loader.WhenActionsIdleAsync(); window.Close(); }
+            return true;
+        }, lifetime.Token));
+    }
+
     [Fact]
     public async Task Authored_configuration_renders_typed_tool_connected_project_and_effort_rows_and_routes_the_same_second_row()
     {

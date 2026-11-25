@@ -67,15 +67,9 @@ public sealed class SiteDocumentRenderer
                     "main"=>"main","superscript"=>"sup","subscript"=>"sub","inline-text"=>"span","strong"=>"strong","emphasis"=>"em","line-break"=>"br","figure"=>"figure","caption"=>"figcaption","quote"=>"blockquote","separator"=>"hr","container" or "card" or "grid" or "stack"=>"div", _=>null };
                 if(tag is null){diagnostics.Add(new("UnsupportedVisualConstruct","Code-defined component requires its registered runtime provider.",pageID,id,true));return "";}
                 var selector="[data-site-component=\""+id.ToString("N")+"\"]";
-                var layout=new Dictionary<string,JsonElement>(node.Layout.Properties);
-                if(node.Layout.Mode != SiteLayoutMode.Flow)
-                    layout.TryAdd("display",JsonSerializer.SerializeToElement(node.Layout.Mode == SiteLayoutMode.Grid ? "grid" : "flex"));
-                AppendStyle(css,selector,layout,diagnostics,pageID,id);
-                // Wider max-width rules must precede narrower ones so phone overrides
-                // inherit tablet properties and win independently of persisted map order.
-                foreach(var responsive in node.Layout.BreakpointOverrides
-                    .OrderByDescending(pair => project.DesignSystem.Breakpoints.GetValueOrDefault(pair.Key))
-                    .ThenBy(pair => pair.Key, StringComparer.Ordinal))
+                AppendStyle(css,selector,SiteResponsiveLayout.BaseProperties(node.Layout),diagnostics,pageID,id);
+                // Inspect and render share this ordering; narrower rules override wider ones.
+                foreach(var responsive in SiteResponsiveLayout.OrderedOverrides(project.DesignSystem, node.Layout))
                 {
                     if(!project.DesignSystem.Breakpoints.TryGetValue(responsive.Key,out var width)||width<=0)
                     {diagnostics.Add(new("BreakpointUnknown","Responsive override references an undefined breakpoint.",pageID,id,true));continue;}
@@ -135,13 +129,16 @@ public sealed class SiteDocumentRenderer
     private static bool SafeCssValue(string value)=>value.Length<=512&&!value.Any(c=>c is '<' or '>' or '{' or '}' or ';' or '\\')&&!value.Contains("url(",StringComparison.OrdinalIgnoreCase)&&!value.Contains("expression",StringComparison.OrdinalIgnoreCase);
     private static bool SafeUrl(string value)=>!value.StartsWith("//",StringComparison.Ordinal)&&!value.Contains('\\')&&(value.StartsWith('/')||value.StartsWith('#')||
         Uri.TryCreate(value,UriKind.Absolute,out var uri)&&uri.Scheme is "https" or "http" or "mailto");
+    internal static bool IsSupportedStyle(string property, JsonElement value) =>
+        CssProperties.Contains(property) && value.ValueKind is JsonValueKind.String or JsonValueKind.Number &&
+        SafeCssValue(value.ValueKind == JsonValueKind.String ? value.GetString()! : value.ToString());
     private static void AppendStyle(StringBuilder css,string selector,IReadOnlyDictionary<string,JsonElement> properties,List<SiteDiagnostic> diagnostics,Guid pageID,Guid componentID)
     {
         css.Append(selector).Append('{');
         foreach(var prop in properties)
         {
             var value=prop.Value.ValueKind==JsonValueKind.String?prop.Value.GetString()!:prop.Value.ToString();
-            if(!CssProperties.Contains(prop.Key)||!SafeCssValue(value)){diagnostics.Add(new("StyleInvalid","Unsupported or unsafe style property: "+prop.Key,pageID,componentID,true));continue;}
+            if(!IsSupportedStyle(prop.Key,prop.Value)){diagnostics.Add(new("StyleInvalid","Unsupported or unsafe style property: "+prop.Key,pageID,componentID,true));continue;}
             css.Append(prop.Key).Append(':').Append(value).Append(';');
         }
         css.Append('}');

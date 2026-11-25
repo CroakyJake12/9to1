@@ -259,6 +259,10 @@
           <Button id="dev-open-build-problem" action="dev.open-build-problem" content="{Binding problem.Label}" accessible-name="{Binding problem.AccessibleName}" Interactive="{Binding problem.CanOpen}" horizontal-content-alignment="Left" />
         </Repeat>
       </Container>
+      <Text text="Recorded test outcomes" font-size="18" />
+      <Button id="dev-inspect-saved-test-report" action="dev.inspect-saved-test-report" content="Inspect open test report" Interactive="{Binding CanInspectSavedTestReport}" />
+      <Text text="{Binding SavedTestReportStatus}" text-wrapping="Wrap" accessible-name="Saved test report provenance and outcomes" />
+      <Object type="ReadOnlyText" id="dev-saved-test-report-details" text="{Binding SavedTestReportDetails}" font-family="monospace" max-height="240" accessible-name="Individual recorded test outcomes" />
       <Object type="ReadOnlyText" id="dev-terminal-output" text="{Binding ProcessOutput}" font-family="monospace" min-height="180" accessible-name="Actual standard output and error" />
       <Text text="{Binding Status}" text-wrapping="Wrap" accessible-name="Development operation status" />
     </Container>

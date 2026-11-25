@@ -83,8 +83,8 @@ public sealed partial class FilesNativeBrowserSurface
         "9to1.Files.Forward" => false,
         "9to1.Files.More" => false,
         "9to1.Files.Open" => Available && _items.SelectedItem is HostedItemMetadata row && _page!.Items.Any(item => ReferenceEquals(item, row)),
-        "9to1.Files.CreateFolder" => Available && !string.IsNullOrWhiteSpace(_editName.Text) && _page is { IsTrash: false },
-        "9to1.Files.Rename" => Available && !string.IsNullOrWhiteSpace(_editName.Text) && _page is { IsTrash: false }
+        "9to1.Files.CreateFolder" => Available && _localRenameDraft is null && !string.IsNullOrWhiteSpace(_editName.Text) && _page is { IsTrash: false },
+        "9to1.Files.Rename" => Available && _localRenameDraft is null && !string.IsNullOrWhiteSpace(_editName.Text) && _page is { IsTrash: false }
             && _items.SelectedItem is HostedItemMetadata renamed && _page.Items.Any(item => ReferenceEquals(item, renamed)),
         "9to1.Files.Delete" => Available && _page is { IsTrash: false } && _items.SelectedItem is HostedItemMetadata trashed
             && _page.Items.Any(item => ReferenceEquals(item, trashed)),
@@ -135,6 +135,10 @@ public sealed partial class FilesNativeBrowserSurface
             }
             if (_driveAccount is null) { _status = "Connect Google Drive first (the browser will ask for permission once)."; return; }
             if (command == "9to1.Files.Drive") { _drivePath.Clear(); _drivePath.Add(DriveFolder.Root); _driveBack.Clear(); _query = ""; _search.Text = ""; await DrivePublishAsync(false, token); return; }
+
+            // A local name draft never supplies an input to a different provider.
+            if (_localRenameDraft is not null && command is ("9to1.Files.CreateFolder" or "9to1.Files.Rename"))
+                return;
 
             // Commands below only reach here while the displayed page is the Drive provider.
             switch (command)

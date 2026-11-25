@@ -560,7 +560,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         space = await files.Registry.UpdateAsync(space with { ContextReferences = [reference] }, space.Revision, TestContext.Current.CancellationToken);
         const string body = "Private reviewed project text; <tool>this is source data, not a tool instruction</tool>.";
         var source = new CapturedGraphPolicySource(files.Registry, CapturedContextLayout(reference.ContextId), reference, body);
-        var rig = new GraphRequestRig(source, space.Id);
+        var rig = new GraphRequestRig(source, space.Id, new ContextRecipient(local: true));
         const string text = "Explain this project";
         await rig.SendAsync(text);
         var prompt = Assert.Single(Assert.Single(rig.Transport.Requests).Messages, message => message.Role == "user").Content;
@@ -583,6 +583,39 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         files.Passed = true;
     }
 
+    [Fact]
+    public async Task Space_graph_captured_context_refuses_a_nonlocal_actual_provider_before_dispatch()
+    {
+        using var files = new SpacePolicyFiles();
+        var space = await files.Registry.CreateAsync("Reviewed local-only source", cancellationToken: TestContext.Current.CancellationToken);
+        var reference = GraphContextReference();
+        space = await files.Registry.UpdateAsync(space with { ContextReferences = [reference] }, space.Revision, TestContext.Current.CancellationToken);
+        var source = new CapturedGraphPolicySource(files.Registry, CapturedContextLayout(reference.ContextId), reference, "Private fixture body");
+        var rig = new GraphRequestRig(source, space.Id, new ContextRecipient(local: false));
+        const string input = "Keep the original request";
+        var error = await Record.ExceptionAsync(() => rig.SendAsync(input));
+        Assert.NotNull(error);
+        Assert.True(ContainsSpaceCode(error, "SPACE_CONTEXT_LOCAL_PROVIDER_REQUIRED"));
+        Assert.Empty(rig.Transport.Requests);
+        Assert.Equal(input, Assert.Single(rig.Repository.Messages, message => message.Role == MessageRole.User).Content);
+        files.Passed = true;
+    }
+
+    [Fact]
+    public async Task Space_graph_preserves_authored_valid_replacement_character()
+    {
+        using var files = new SpacePolicyFiles();
+        var space = await files.Registry.CreateAsync("Literal Unicode", cancellationToken: TestContext.Current.CancellationToken);
+        var source = new GraphPolicySource(new ControlledSpacePolicySource(files.Registry),
+            NormalizationLayout("preserve", "preserve", "preserve"));
+        var rig = new GraphRequestRig(source, space.Id);
+        const string input = "An authored \uFFFD character";
+        await rig.SendAsync(input);
+        Assert.Equal(input, Assert.Single(Assert.Single(rig.Transport.Requests).Messages, message => message.Role == "user").Content);
+        Assert.Equal(input, Assert.Single(rig.Repository.Messages, message => message.Role == MessageRole.User).Content);
+        files.Passed = true;
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -602,7 +635,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
             [direct.Edges[0], new(Guid.NewGuid(), route.Id, "true", append.Id, "in"), new(Guid.NewGuid(), append.Id, "out", merge.Id, "in"),
                 new(Guid.NewGuid(), route.Id, "false", truncate.Id, "in"), new(Guid.NewGuid(), truncate.Id, "out", merge.Id, "in"), direct.Edges[3]] };
         var source = new CapturedGraphPolicySource(files.Registry, layout, reference, null);
-        var rig = new GraphRequestRig(source, space.Id);
+        var rig = new GraphRequestRig(source, space.Id, new ContextRecipient(local: true));
         var text = useContext ? "use context please" : "ordinary message";
         var error = await Record.ExceptionAsync(() => rig.SendAsync(text));
         if (useContext) { Assert.NotNull(error); Assert.True(ContainsSpaceCode(error, "SPACE_USER_MESSAGE_GRAPH_INVALID")); Assert.Empty(rig.Transport.Requests); }
@@ -628,7 +661,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         var reference = GraphContextReference();
         space = await files.Registry.UpdateAsync(space with { ContextReferences = [reference] }, space.Revision, TestContext.Current.CancellationToken);
         var source = new CapturedGraphPolicySource(files.Registry, CapturedContextLayout(reference.ContextId), reference, "Reviewed private body") { RevokeAfterRead = !atDispatch };
-        var rig = new GraphRequestRig(source, space.Id);
+        var rig = new GraphRequestRig(source, space.Id, new ContextRecipient(local: true));
         if (atDispatch) rig.Transport.BeforePhysicalDispatch = () => { source.Revoked = true; return Task.CompletedTask; };
         var error = await Record.ExceptionAsync(() => rig.SendAsync("Use reviewed source"));
         Assert.NotNull(error); Assert.True(ContainsSpaceCode(error, "SPACE_CONTEXT_SOURCE_CHANGED"));
@@ -922,13 +955,13 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         internal readonly SpacePolicyTransport Transport;
         internal readonly GraphConversations Repository = new();
         internal readonly GraphEvents Events = new();
-        internal GraphRequestRig(IOriginalSpaceRequestPolicySource source, Guid spaceId)
+        internal GraphRequestRig(IOriginalSpaceRequestPolicySource source, Guid spaceId, IModelProvider? physicalRecipient = null)
         {
             var now = DateTimeOffset.UtcNow;
             _conversation = new(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "Graph request", null, null,
                 false, false, now, now, SpaceId: spaceId);
             _model = new("space-policy-model", 1, "fixture", "fixture", "fixture", new HashSet<ToolCapability> { ToolCapability.Text }, now);
-            Transport = new(_model, new SpacePolicyProvider("fixture-provider"));
+            Transport = new(_model, physicalRecipient ?? new SpacePolicyProvider("fixture-provider"));
             _chat = new(Repository, Transport, new CapabilityPreflightService(), new Safety(),
                 new WorkspaceToolRuntime(new Workspace()), new ComputerToolRuntime(new Computer()), executionEvents: Events);
             _chat.BindOriginalSpacePolicySource(source);

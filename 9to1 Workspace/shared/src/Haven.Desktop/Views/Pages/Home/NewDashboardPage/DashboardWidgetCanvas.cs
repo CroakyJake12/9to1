@@ -9,6 +9,7 @@ using Haven.Desktop.Controls;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Desktop.Views.Pages.Home;
 
 namespace Haven.Desktop.Dashboard;
@@ -205,8 +206,10 @@ internal static class DashboardWidgetLayoutEngine
 
 internal sealed class DashboardWidgetCanvas : Canvas, IDisposable
 {
-    private const double Gap = 12;
-    private const double RowHeight = 118;
+    private double Gap => 12 * InterfaceScale;
+    private double RowHeight => 118 * InterfaceScale;
+    private readonly CuiThemePreferenceContext? _interfaceTheme;
+    internal double InterfaceScale { get; private set; } = 1;
     private readonly Dictionary<string, DashboardWidgetViewState> _views = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Control> _frames = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<CuiControlLoader> _cardLoaders = [];
@@ -216,8 +219,9 @@ internal sealed class DashboardWidgetCanvas : Canvas, IDisposable
     private bool _isCustomizing;
     private string? _layoutIdentity;
 
-    public DashboardWidgetCanvas()
+    public DashboardWidgetCanvas(CuiThemePreferenceContext? interfaceTheme = null)
     {
+        _interfaceTheme = interfaceTheme;
         HorizontalAlignment = HorizontalAlignment.Stretch;
         ClipToBounds = false;
         SizeChanged += (_, _) => ApplyGeometry();
@@ -225,6 +229,12 @@ internal sealed class DashboardWidgetCanvas : Canvas, IDisposable
 
     public event Action<IReadOnlyList<DashboardWidgetPlacement>>? LayoutChanged;
     public event Action<string>? OpenRequested;
+
+    internal void SetInterfaceScale(double scale)
+    {
+        InterfaceScale = scale;
+        ApplyGeometry();
+    }
 
     public IReadOnlyList<DashboardWidgetPlacement> Placements => _placements;
     public bool CanUndo => _undo.Count > 0;
@@ -357,7 +367,7 @@ internal sealed class DashboardWidgetCanvas : Canvas, IDisposable
         values.Set("HideName", "Hide " + view.Definition.Title);
         values.On("OpenWidget", _ => OpenRequested?.Invoke(view.Definition.ActionKey));
         values.On("HideWidget", _ => HideWidget(key));
-        var loader = new CuiControlLoader();
+        var loader = DashboardCuiDocument.CreateLoader(_interfaceTheme);
         _cardLoaders.Add(loader);
         loader.SetBindingContext(values); loader.SetActionDispatcher(values);
         Control? header = null, resize = null;
@@ -509,14 +519,14 @@ internal sealed class DashboardWidgetCanvas : Canvas, IDisposable
     }
 
     // Pixel adaptation never rewrites the user's canonical six-column layout.
-    private bool IsNarrow => Bounds.Width is > 0 and < 720;
+    private bool IsNarrow => CuiInterfaceScale.LogicalWidth(Bounds.Width, InterfaceScale) is > 0 and < 720;
 
     private double CellWidth
     {
         get
         {
-            var available = Bounds.Width > 0 ? Bounds.Width : 960;
-            return Math.Max(110, (available - Gap * (DashboardWidgetLayoutEngine.Columns - 1)) / DashboardWidgetLayoutEngine.Columns);
+            var available = Bounds.Width > 0 ? Bounds.Width : 960 * InterfaceScale;
+            return Math.Max(110 * InterfaceScale, (available - Gap * (DashboardWidgetLayoutEngine.Columns - 1)) / DashboardWidgetLayoutEngine.Columns);
         }
     }
 

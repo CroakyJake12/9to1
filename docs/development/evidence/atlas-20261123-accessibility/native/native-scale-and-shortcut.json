@@ -1,0 +1,324 @@
+{
+  "reference_atlas_sha256": "612a9aa9fdc01b1c8a71e82532b191614992e1a6b78602fe5100aee9fa8bf4d2",
+  "exact_scale_comparison_assemblies": {
+    "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+    "Haven.dll": "ea72e78830297990f2bc2612b1feb50911547dc3e5a8c3a0af5e252db333dd57",
+    "HavenOS.Home.dll": "f1fb8ccfe1c9ef3e807ed6497ff668ace7d31b7a2279b793d9a18045a9de9e29",
+    "HavenOS.Apps.Browse.NativeUI.dll": "2543661f43f23d4ca6414b152250935e5ed1049c7fc098d100715f4579c6f95e",
+    "HavenOS.Apps.Browse.Core.dll": "a4fc7eed39a0f90b0e8760696e34665de4756641a7c813082bcc1c57a1609243",
+    "Haven.Infrastructure.dll": "5f8cdd7835b725872fee0afd7ebe10d2741aca29ff9b1ec861225d1db099d827",
+    "CakeOS.Cui.Runtime.dll": "f6572521d598979663b65209a636546e4d39869c79e8c4018e73a92d92bc0c3d",
+    "CakeOS.Cui.Themes.dll": "6bf459092d7faee6d7f2af4ec0c801d8c825b43b3b816e5537dd3583878210c8",
+    "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+    "UI/Home.cui": "4a172563f0d4e279e0835ec797892444661b4d204c5ff9153eb5d4bc97340a49"
+  },
+  "exact_earlier_icon_assemblies": {
+    "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+    "Haven.dll": "9822c50c707165b50ee3fa295b00368c430e1463b0d0b1b69afee6157d8c3af0",
+    "HavenOS.Home.dll": "f1fb8ccfe1c9ef3e807ed6497ff668ace7d31b7a2279b793d9a18045a9de9e29",
+    "HavenOS.Apps.Browse.NativeUI.dll": "2543661f43f23d4ca6414b152250935e5ed1049c7fc098d100715f4579c6f95e",
+    "HavenOS.Apps.Browse.Core.dll": "a4fc7eed39a0f90b0e8760696e34665de4756641a7c813082bcc1c57a1609243",
+    "Haven.Infrastructure.dll": "5f8cdd7835b725872fee0afd7ebe10d2741aca29ff9b1ec861225d1db099d827",
+    "CakeOS.Cui.Runtime.dll": "f6572521d598979663b65209a636546e4d39869c79e8c4018e73a92d92bc0c3d",
+    "CakeOS.Cui.Themes.dll": "6bf459092d7faee6d7f2af4ec0c801d8c825b43b3b816e5537dd3583878210c8",
+    "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+    "UI/Home.cui": "4a172563f0d4e279e0835ec797892444661b4d204c5ff9153eb5d4bc97340a49"
+  },
+  "matching_same_viewport_comparisons": [
+    {
+      "route": "settings-layout",
+      "viewport": "1440x900",
+      "atlas_raw": {
+        "file": "atlas-final-references/atlas-settings-layout-1440x900.png",
+        "sha256": "05a520176a647429633a9101450894e71e40f0b07fefe2cf6e099f5176fad17f",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      "native_raw": {
+        "file": "scale-final/02-layout-125-1440x900.png",
+        "sha256": "4851972b9f01424c772912b7ef8c2409c73bc110cc316921f0112f4b6e7e7670",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      "comparison": {
+        "file": "final-portable/settings-layout-1440x900.png",
+        "sha256": "992d3ceb32577bb634a970179bef7485256ebd25a4a9c1e18e8a1f9c7d806b50",
+        "dimensions": [
+          2934,
+          966
+        ]
+      }
+    },
+    {
+      "route": "settings-layout",
+      "viewport": "720x520",
+      "atlas_raw": {
+        "file": "atlas-final-references/atlas-settings-layout-720x520.png",
+        "sha256": "4c702f99fff18496c63474e06981914682dd66acba9b3ebaa714490a19bd6b29",
+        "dimensions": [
+          720,
+          520
+        ]
+      },
+      "native_raw": {
+        "file": "scale-final/05-layout-125-720x520.png",
+        "sha256": "3b3e18179c916d8cc60ce67470c0412d263811b9b8b3c8a7b0b39df9b2d6889e",
+        "dimensions": [
+          720,
+          520
+        ]
+      },
+      "comparison": {
+        "file": "final-portable/settings-layout-720x520.png",
+        "sha256": "ab3cbe02fe93591a2263a2ed61a59f0bae557c34dc23751508e198fae71801bb",
+        "dimensions": [
+          1494,
+          586
+        ]
+      }
+    },
+    {
+      "route": "settings-accessibility",
+      "viewport": "1440x900",
+      "atlas_raw": {
+        "file": "atlas-final-references/atlas-settings-accessibility-1440x900.png",
+        "sha256": "f184fd0f16a8c580fbe449750c844b63fd299d49752d051a16f29e620aba079c",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      "native_raw": {
+        "file": "scale-final/03-accessibility-from-layout-125-1440x900.png",
+        "sha256": "04f45c6d35d2df82eb1ac4892de22392bd7795c0dde2c3b4b8f0f4188d261a23",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      "comparison": {
+        "file": "final-portable/settings-accessibility-1440x900.png",
+        "sha256": "bbfe986a92ce111c5eb59a1de962f6c6be0a47225b96e39675cc619086312beb",
+        "dimensions": [
+          2934,
+          966
+        ]
+      }
+    },
+    {
+      "route": "settings-accessibility",
+      "viewport": "720x520",
+      "atlas_raw": {
+        "file": "atlas-final-references/atlas-settings-accessibility-720x520.png",
+        "sha256": "011ab3161a4c09fe7a1e444232ee0cc1f13c19b189549c963820d8ecca3bae75",
+        "dimensions": [
+          720,
+          520
+        ]
+      },
+      "native_raw": {
+        "file": "scale-final/04-accessibility-125-720x520-top.png",
+        "sha256": "fb2ebf3a9d3d7ebf7da30e45630d316c42a9309563f6ec99cd0b4c5fb34b1e11",
+        "dimensions": [
+          720,
+          520
+        ]
+      },
+      "comparison": {
+        "file": "final-portable/settings-accessibility-720x520.png",
+        "sha256": "c2d870b5e9ceeff49b7f2623c8f81d18312398768fa8799c93d8ed1aae690cfd",
+        "dimensions": [
+          1494,
+          586
+        ]
+      }
+    }
+  ],
+  "additional_verified_native_frames": [
+    {
+      "raw": {
+        "file": "scale-final/07-layout-interface-scale-row-720x520.png",
+        "sha256": "67b954a4a19e81e9ec3318ce3dc28488a8365e8019077595d1ac1cf8082471a2",
+        "dimensions": [
+          720,
+          520
+        ]
+      },
+      "portable": {
+        "file": "final-portable/layout-scale-entry-narrow.png",
+        "sha256": "67b954a4a19e81e9ec3318ce3dc28488a8365e8019077595d1ac1cf8082471a2",
+        "dimensions": [
+          720,
+          520
+        ]
+      }
+    },
+    {
+      "raw": {
+        "file": "scale-final/09-accessibility-125-compact-scale-and-reading.png",
+        "sha256": "f731b7f3b2bfbf36b11eeb37a1f8bbed136a77ad26d89a353a4a4d62d3dc8f83",
+        "dimensions": [
+          720,
+          520
+        ]
+      },
+      "portable": {
+        "file": "final-portable/accessibility-scale-entry-narrow.png",
+        "sha256": "f731b7f3b2bfbf36b11eeb37a1f8bbed136a77ad26d89a353a4a4d62d3dc8f83",
+        "dimensions": [
+          720,
+          520
+        ]
+      }
+    },
+    {
+      "raw": {
+        "file": "scale-final/12-accessibility-175-compact-preview-settled.png",
+        "sha256": "d4649307fe28477b05ee3a6e27613c41586ce68121c2562fda55453c61e18b45",
+        "dimensions": [
+          720,
+          520
+        ]
+      },
+      "portable": {
+        "file": "final-portable/scale-175-native-selector.png",
+        "sha256": "d4649307fe28477b05ee3a6e27613c41586ce68121c2562fda55453c61e18b45",
+        "dimensions": [
+          720,
+          520
+        ]
+      }
+    },
+    {
+      "raw": {
+        "file": "scale-final/13-accessibility-175-compact-revert-focused.png",
+        "sha256": "85901b4a77efa79fb3d7f6daad199fe4faf5bd6909243d2049fddf041a6dc0fc",
+        "dimensions": [
+          720,
+          520
+        ]
+      },
+      "portable": {
+        "file": "final-portable/scale-175-focus-revert.png",
+        "sha256": "85901b4a77efa79fb3d7f6daad199fe4faf5bd6909243d2049fddf041a6dc0fc",
+        "dimensions": [
+          720,
+          520
+        ]
+      }
+    },
+    {
+      "raw": {
+        "file": "scale-final/14-accessibility-175-compact-apply-focused.png",
+        "sha256": "8b1df31052873ebc22e04eec9979a723136a48e5da9f13a5175fefaf6cead83d",
+        "dimensions": [
+          720,
+          520
+        ]
+      },
+      "portable": {
+        "file": "final-portable/scale-175-focus-apply.png",
+        "sha256": "8b1df31052873ebc22e04eec9979a723136a48e5da9f13a5175fefaf6cead83d",
+        "dimensions": [
+          720,
+          520
+        ]
+      }
+    },
+    {
+      "raw": {
+        "file": "icon-candidate/02-choose-shortcut-icon-wide.png",
+        "sha256": "d1ae5bb91aea0784bb02ce37879e061703882ce65266b805ba486eb4932a4f41",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      "portable": {
+        "file": "final-portable/icon-choices-earlier-build.png",
+        "sha256": "d1ae5bb91aea0784bb02ce37879e061703882ce65266b805ba486eb4932a4f41",
+        "dimensions": [
+          1440,
+          900
+        ]
+      }
+    },
+    {
+      "raw": {
+        "file": "icon-candidate/03-bookmark-preview-before-apply-wide.png",
+        "sha256": "1c69ad7ed24451058d3d9ca520cf8b867ebb1a7a749dce6dfdc74b9e11d54a04",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      "portable": {
+        "file": "final-portable/icon-bookmark-preview-earlier-build.png",
+        "sha256": "1c69ad7ed24451058d3d9ca520cf8b867ebb1a7a749dce6dfdc74b9e11d54a04",
+        "dimensions": [
+          1440,
+          900
+        ]
+      }
+    },
+    {
+      "raw": {
+        "file": "icon-candidate/04-bookmark-preview-escape-stays-open.png",
+        "sha256": "1c69ad7ed24451058d3d9ca520cf8b867ebb1a7a749dce6dfdc74b9e11d54a04",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      "portable": {
+        "file": "final-portable/icon-immediate-escape-earlier-build-failure.png",
+        "sha256": "1c69ad7ed24451058d3d9ca520cf8b867ebb1a7a749dce6dfdc74b9e11d54a04",
+        "dimensions": [
+          1440,
+          900
+        ]
+      }
+    },
+    {
+      "raw": {
+        "file": "icon-candidate/08-bookmark-saved-edit-stays-open.png",
+        "sha256": "15db5e878e96cca5fa4dd240afb1518b84cd3845aae65153feaffa34b02d1ba8",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      "portable": {
+        "file": "final-portable/icon-bookmark-saved-earlier-build.png",
+        "sha256": "15db5e878e96cca5fa4dd240afb1518b84cd3845aae65153feaffa34b02d1ba8",
+        "dimensions": [
+          1440,
+          900
+        ]
+      }
+    }
+  ],
+  "scale": {
+    "verified": "At 1440\u00d7900 and 720\u00d7520 actual Settings Layout \u2192 Interface scale \u2192 Open moved to real Accessibility. Initial 125% was restored from a private profile. At 720\u00d7520 opened genuine ComboBox and keyboard selected 175%; selector stayed visible. Subsequent separate scroll position showed both full Revert and Apply actions, focused sequentially by actual Tab input. 175% remained a preview.",
+    "limitations": "No additional Apply, Revert, Escape or restart was attempted after stop. The already-verified normal 125% save/restart and single mouse gear journey are in interim-native-receipt.json. The Atlas narrow capture keeps a fixed 1440 CSS canvas, so its right-hand control can be offscreen.",
+    "during_preview_readback": {
+      "saved": 1.25,
+      "revision": 2,
+      "theme": "Professional",
+      "appearance": "Dark",
+      "identical_to_before": true
+    }
+  },
+  "icon": {
+    "verified": "On the earlier actual runtime, entered Edit Boards from New Tab Customise, rendered real icon choices, previewed Bookmark without a profile write, and then committed through Use icon. Only IconKey and revision changed (4 to 5); unchanged Boards canonical target and registered AppId.",
+    "limitations": "The earlier build immediate pointer-to-Escape defect and retained CUI029 shutdown failure are documented in interim-native-receipt.json. The later fixed icon/context-menu runtime did not receive a native session before owner stop. No ordinary icon relaunch or context-menu success is claimed. The pinned Atlas has New Tab SVG app icons but no actual Change icon editor counterpart."
+  },
+  "prior_native_receipt": {
+    "file": "interim-native-receipt.json",
+    "sha256": "42beee48a0c7649357275952ab24bbd9f2681e18feda7f0c4188be295e7cc966"
+  }
+}

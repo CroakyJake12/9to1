@@ -70,7 +70,7 @@ internal static class AppearanceSettingsChecks
         using (var connectedCreator = new BrowserAppearanceSettings(empty, empty, modes, () => opened = true))
             await connectedCreator.DispatchAsync("CreateTheme", null);
         Demand(opened, "Connected Create Theme action did not open the real host callback");
-        var expectedNames = new[] { "Professional", "Glow", "Playful", "Frosted Glass", "Bubble", "Metallic", "Retro", "Western" };
+        var expectedNames = new[] { "Professional", "Glow", "Playful", "Frosted Glass", "Bubble", "Metallic", "Retro", "Western", "Comic" };
         Demand(Names().SequenceEqual(expectedNames), "Home picker does not expose the requested available built-in themes in order");
         foreach(var name in expectedNames)
         {
@@ -88,7 +88,26 @@ internal static class AppearanceSettingsChecks
         await appearanceSettings.DispatchAsync("AppearanceSelectTheme","9to1 Draft Theme Preview");
         Demand(modes.Writes==beforeStaleChoice,"Missing/private preview theme was written as a durable choice");
         await modes.SetAsync("Cinematic");
-        Demand(Names().Contains("Cinematic"),"Existing Cinematic preference became inaccessible");
+        Demand(Names().SequenceEqual(expectedNames) && appearanceSettings.TryGetValue("AppearanceThemeName", out var migrated)
+            && (string?)migrated == "Comic", "A legacy built-in must render as Comic without adding a chooser row");
+        var exactCustom = CuiCustomThemeContract.CreateDefault("Cinematic");
+        modes.Catalog.UpsertCustomTheme(exactCustom);
+        Demand(appearanceSettings.TryGetValue("AppearanceThemeName", out var savedIdentity) &&
+            (string?)savedIdentity == "Cinematic", "An exact saved custom theme must not migrate");
+        modes.Catalog.RemoveCustomTheme(exactCustom.Id);
+        var legacyComic = CuiCustomThemeContract.CreateDefault("Comic");
+        modes.Catalog.UpsertCustomTheme(legacyComic);
+        await modes.SetAsync(legacyComic.Name);
+        Demand(Names().Contains("Comic (custom)"), "The saved custom Comic name is ambiguous beside the built-in");
+        var builtInKey = CuiThemeCatalog.ComicSelectionKey([legacyComic.Name]);
+        await appearanceSettings.DispatchAsync("AppearanceSelectTheme", builtInKey);
+        Demand(modes.Current.Name == builtInKey && modes.Catalog.Resolve(builtInKey).CustomTheme is null,
+            "The built-in Comic chooser selected the old custom theme");
+        await appearanceSettings.DispatchAsync("AppearanceSelectTheme", legacyComic.Name);
+        Demand(modes.Catalog.Resolve(modes.Current.Name).CustomTheme?.Id == legacyComic.Id, "The old custom Comic theme was lost");
+        await appearanceSettings.DispatchAsync("ThemeCinematic", null);
+        Demand(modes.Current.Name == builtInKey, "An authored legacy built-in action was redirected to a custom theme");
+        modes.Catalog.RemoveCustomTheme(legacyComic.Id);
         await appearanceSettings.DispatchAsync("AppearanceSelectTheme","Professional");
         Demand(!Names().Contains("Cinematic"),"Legacy-only theme displaced the requested choices");
         var unavailableCustom=await ((IBrowserHomeThemePreferences)modes).SaveCustomThemeAsync(custom,modes.Current);

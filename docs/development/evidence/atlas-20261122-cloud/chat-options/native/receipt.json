@@ -1,0 +1,81 @@
+{
+  "source_revision": "67fcebaaabe8bf7b915d965453fafb9ac6f21285",
+  "renderer": "native Linux Haven apphost on X11 (Xvfb/Openbox)",
+  "profile": "isolated Professional Dark and Blue #4E86FF",
+  "apphost": {
+    "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+    "Haven.dll": "48091c50b31791d014134b88bb92b92ee4848c470703b9f7512442375b76af23",
+    "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f"
+  },
+  "normal_close": "Normal WM_DELETE_WINDOW requested, exact scoped main window disappeared, owning apphost exit code 0",
+  "chrome_comparison": [
+    "720x520: shared chrome pixel changes = None; first Options body row y = 168",
+    "1180x760: shared chrome pixel changes = None; first Options body row y = 231"
+  ],
+  "atlas_reference": [
+    "/tmp/9to1-atlas-spaces-permissions-1180x760.png {",
+    "  target: 'spaces-permissions',",
+    "  ready: true,",
+    "  routes: [],",
+    "  panel: {",
+    "    x: 186.8125,",
+    "    y: 112,",
+    "    width: 440,",
+    "    height: 636,",
+    "    top: 112,",
+    "    right: 626.8125,",
+    "    bottom: 748,",
+    "    left: 186.8125",
+    "  },",
+    "  viewport: [ 1180, 760 ]",
+    "}",
+    "/tmp/9to1-atlas-spaces-permissions-720x520.png {",
+    "  target: 'spaces-permissions',",
+    "  ready: true,",
+    "  routes: [],",
+    "  panel: {",
+    "    x: 186.8125,",
+    "    y: 112,",
+    "    width: 440,",
+    "    height: 396,",
+    "    top: 112,",
+    "    right: 626.8125,",
+    "    bottom: 508,",
+    "    left: 186.8125",
+    "  },",
+    "  viewport: [ 720, 520 ]",
+    "}"
+  ],
+  "captures": [
+    {
+      "file": "01-chat-before-narrow.png",
+      "width": 720,
+      "height": 520,
+      "sha256": "6cb21b4f2a5b844c0dfc9f727fef3f83873343ff4847ab90e07086f93e018f1c"
+    },
+    {
+      "file": "02-chat-options-open-narrow.png",
+      "width": 720,
+      "height": 520,
+      "sha256": "379245b338d65f127f3951ac6093383dcf09ca102ce7cb5120487eb4fb069958"
+    },
+    {
+      "file": "03-chat-options-bottom-narrow.png",
+      "width": 720,
+      "height": 520,
+      "sha256": "604ff8bf3f63bbf4542aef578530f97aeb31627f6edeb79462de32e14e0caa35"
+    },
+    {
+      "file": "04-chat-options-escape-draft-focus-narrow.png",
+      "width": 720,
+      "height": 520,
+      "sha256": "ba87712877a2eb0d54e48e34f7418c3edaa104cb6604e56a0319e2a6794fe803"
+    },
+    {
+      "file": "06-chat-options-resize-open-wide.png",
+      "width": 1180,
+      "height": 760,
+      "sha256": "2d3c550e618c47c27102d55ad5710152892b636120428c3ad1070f88f995f574"
+    }
+  ]
+}

@@ -490,18 +490,21 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         var result = await f.Dev.GitAsync(f.Reference, f.Context(), DeveloperGitOperation.Status, cancellationToken: OriginalTestBodyToken);
         Assert.True(result.Succeeded); Assert.Equal(1, f.Tools.ProcessCalls);
         var request = Assert.IsType<ProcessRequest>(f.Tools.LastProcessRequest);
+        const string inspection = "'git' '--no-pager' '--no-optional-locks' '-c' 'core.fsmonitor=false' '-C' ";
+        const string status = " 'status' '--porcelain=v1' '--branch'";
         if (OperatingSystem.IsWindows())
         {
             Assert.Equal("powershell.exe", request.FileName);
             var encoded = request.Arguments.Split(' ').Last();
             var command = System.Text.Encoding.Unicode.GetString(Convert.FromBase64String(encoded));
-            Assert.StartsWith("& 'git' '--no-pager' '-C' ", command);
+            Assert.StartsWith("& " + inspection, command);
+            Assert.EndsWith(status, command);
         }
         else
         {
             Assert.Equal("/bin/sh", request.FileName); Assert.Equal("", request.Arguments);
-            Assert.Equal("-c", request.ArgumentList![0]); Assert.StartsWith("'git' '--no-pager' '-C' ", request.ArgumentList[1]);
-            Assert.Contains("'status' '--porcelain=v1' '--branch'", request.ArgumentList[1]);
+            Assert.Equal("-c", request.ArgumentList![0]); Assert.StartsWith(inspection, request.ArgumentList[1]);
+            Assert.EndsWith(status, request.ArgumentList[1]);
         }
         await f.Dev.CloseAndDrainAsync();
     }

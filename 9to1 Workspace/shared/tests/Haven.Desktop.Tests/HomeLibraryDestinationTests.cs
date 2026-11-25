@@ -322,7 +322,7 @@ public sealed class HomeLibraryDestinationTests
         UnifiedHomeContentFactory Factory(bool composed) => new(new Registry(),
             () => throw new InvalidOperationException("Library cannot create Dashboard."),
             () => throw new InvalidOperationException("Library cannot create Models."), (_, _) => true,
-            (_, _) => throw new InvalidOperationException("Library cannot create an AI draft."),
+            (_, _, _) => throw new InvalidOperationException("Library cannot create an AI draft."),
             (_, _) => Task.CompletedTask, () => true, lifetime.Token, false,
             library: composed ? _ => Page(new Index(1), new(), (_, _) => true) : null);
         BrowseAppContentRequest Request(string address) => new(Guid.NewGuid(), AppContentAddress.Parse(address), "fixture-profile", BrowserTabPrivacy.Standard);

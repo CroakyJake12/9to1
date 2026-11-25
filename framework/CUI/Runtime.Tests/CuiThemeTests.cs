@@ -691,8 +691,73 @@ public sealed class CuiThemeTests
         Assert.Equal("Bubble", CuiThemeCatalog.Name(CuiTheme.Bubble));
         Assert.Equal("Retro", CuiThemeCatalog.Name(CuiTheme.Retro));
         Assert.Equal("Playful", CuiThemeCatalog.Name(CuiTheme.Playful));
-        Assert.Equal("Cinematic", CuiThemeCatalog.Name(CuiTheme.Cinematic));
+        Assert.Equal("Comic", CuiThemeCatalog.Name(CuiTheme.Cinematic));
         Assert.Equal("Professional", CuiThemeCatalog.Name(CuiTheme.Professional));
+    }
+
+    [Fact]
+    public void Comic_replaces_the_builtin_alias_and_retains_custom_theme_identities()
+    {
+        Assert.Equal(9, CuiThemeCatalog.All.Count);
+        Assert.Single(CuiThemeCatalog.All, theme => theme.DisplayName == "Comic");
+        Assert.DoesNotContain(CuiThemeCatalog.All, theme => theme.DisplayName == "Cinematic");
+        Assert.Equal(4, (int)CuiThemeCatalog.Parse("comic"));
+        Assert.Equal(CuiTheme.Professional, CuiThemeCatalog.Parse("cine matic"));
+
+        var definitions = new CuiThemeDefinitionCatalog();
+        var legacy = CuiThemeScope.Resolve("cInEmAtIc", definitions);
+        Assert.Equal("Comic", legacy.Theme.Name);
+        Assert.False(legacy.UsedFallback);
+        Assert.Equal(new CuiThemeIdentityMigration("cInEmAtIc", "comic"), legacy.Migration);
+
+        definitions.Add(new("Document presentation", "Cinematic", []));
+        Assert.Equal(CuiTheme.Cinematic, definitions.Resolve("Document presentation").BaseTheme);
+        var exact = CuiCustomThemeContract.CreateDefault("Cinematic");
+        var named = CuiCustomThemeContract.CreateDefault("Cinematic workshop");
+        definitions.UpsertCustomTheme(exact);
+        definitions.UpsertCustomTheme(named);
+        var custom = CuiThemeScope.Resolve("Cinematic", definitions);
+        Assert.Null(custom.Migration);
+        Assert.Equal(exact.Id, custom.Theme.CustomTheme!.Id);
+        Assert.Equal(named.Id, definitions.Resolve(named.Name).CustomTheme!.Id);
+
+        var sharedCaption = CuiCustomThemeContract.CreateDefault("Comic");
+        var occupiedKey = CuiCustomThemeContract.CreateDefault("builtin:comic:0");
+        var library = CuiCustomThemeContract.DeserializeLibrary(CuiCustomThemeContract.SerializeLibrary([sharedCaption, occupiedKey]));
+        foreach (var theme in library) definitions.UpsertCustomTheme(theme);
+        Assert.Equal(sharedCaption.Id, definitions.Resolve("Comic").CustomTheme!.Id);
+        var builtInKey = CuiThemeCatalog.ComicSelectionKey(library.Select(item => item.Name));
+        var builtIn = definitions.Resolve(builtInKey);
+        Assert.Equal("Comic", builtIn.Name);
+        Assert.Null(builtIn.CustomTheme);
+        Assert.Equal("builtin:comic:1", builtInKey);
+    }
+
+    [Theory]
+    [InlineData(CuiAppearance.Bright)]
+    [InlineData(CuiAppearance.Dark)]
+    public void Comic_paints_distinct_readable_controls_at_each_appearance(CuiAppearance appearance)
+    {
+        var resources = new Avalonia.Controls.ResourceDictionary();
+        var palette = CuiSurfacePaletteCatalog.For("Home", appearance, CuiTheme.Cinematic, null);
+        CuiThemeResourceApplier.ApplyToResources(resources, palette, new() { ReduceMotion = true });
+        Color Colour(string key) => Assert.IsType<SolidColorBrush>(resources[key]).Color;
+        Assert.Equal(Color.Parse("#FFF12A"), Colour("CuiAccentPrimaryBrush"));
+        Assert.Equal(palette.Button, Colour("CuiAccentSecondaryBrush"));
+        Assert.NotEqual(Colour("CuiAccentPrimaryBrush"), Colour("CuiComicDisabledBrush"));
+        Assert.True(CuiContrast.Ratio(Colour("CuiComicDisabledBrush"), Colour("CuiComicDisabledForegroundBrush")) >= 4.5);
+        Assert.NotEqual(palette.Panel2, palette.Panel3);
+        Assert.True(CuiContrast.Ratio(Colour("CuiAccentPrimaryBrush"), Colour("CuiAccentPrimaryForegroundBrush")) >= 4.5);
+        var rest = Assert.IsType<BoxShadows>(resources["CuiComicPrimaryShadow"]);
+        Assert.NotEqual(rest, Assert.IsType<BoxShadows>(resources["CuiComicPrimaryPressedShadow"]));
+        Assert.Equal(TimeSpan.Zero, resources["CuiButtonMotionDuration"]);
+
+        var scoped = CuiSurfacePaletteCatalog.For("Write", appearance, CuiTheme.Cinematic, "#3575C4", "app.write");
+        CuiThemeResourceApplier.ApplyToResources(resources, scoped, new());
+        Assert.Equal(Color.Parse("#3575C4"), Colour("CuiAccentPrimaryBrush"));
+        CuiThemeResourceApplier.ApplyToResources(resources, palette, new() { HighContrast = true });
+        Assert.True(CuiContrast.Ratio(Colour("CuiAccentPrimaryBrush"), Colour("CuiAccentPrimaryForegroundBrush")) >= 7);
+        Assert.Equal(new BoxShadows(), resources["CuiComicPrimaryShadow"]);
     }
 
     [Fact]

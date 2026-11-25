@@ -4,26 +4,22 @@ using CakeOS.Cui.Runtime;
 
 namespace Haven.Desktop.Views.Pages.Home;
 
-/// <summary>
-/// CUI binding owner for the icon-only Home/NewTab rail in <c>UnifiedHome.cui</c>.
-///
-/// The authored rail only reads selected-state booleans. This class projects the current in-page
-/// section (Apps / Dashboard / Models / New Tab) so the authored rail can carry the theme-owned
-/// Selected state without hardcoding selection in C#. Nothing here owns navigation: every rail
-/// action still dispatches through the Home page (ICuiActionDispatcher), exactly as before.
-/// </summary>
+/// <summary>Projects Home's current destination and available space into the authored rail.</summary>
 internal sealed class HomeRailCuiBindings : ICuiWritableBindingContext, INotifyPropertyChanged
 {
     private readonly Func<string> _section;
-    private readonly Func<bool> _settingsHasSidebar;
     private readonly CuiViewModel _values = new();
     private long _revision;
+    private bool _showLabels;
 
-    public HomeRailCuiBindings(Func<string> section, Func<bool>? settingsHasSidebar=null)
+    public HomeRailCuiBindings(Func<string> section, bool settingsAvailable, bool libraryAvailable, bool assistantsAvailable)
     {
         _section = section ?? throw new ArgumentNullException(nameof(section));
-        _settingsHasSidebar=settingsHasSidebar??(()=>false);
+        _values.Set("rail.settingsAvailable", settingsAvailable);
+        _values.Set("rail.libraryAvailable", libraryAvailable);
+        _values.Set("rail.assistantsAvailable", assistantsAvailable);
         _values.PropertyChanged += (_, args) => PropertyChanged?.Invoke(this, args);
+        SetViewportWidth(0);
         Refresh();
     }
 
@@ -31,30 +27,57 @@ internal sealed class HomeRailCuiBindings : ICuiWritableBindingContext, INotifyP
 
     public void Refresh()
     {
+        UpdateRailDimensions();
         _values.Set("Revision", _revision++);
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+    }
+
+    public void SetViewportWidth(double width)
+    {
+        _showLabels = width >= 840;
+        _values.Set("rail.showLabels", _showLabels);
+        UpdateRailDimensions();
+        _values.Set("newTab.contentPadding", _showLabels ? "34 26 34 24" : "12 16 12 16");
+        _values.Set("newTab.showActionLabels", width >= 470);
+    }
+
+    private void UpdateRailDimensions()
+    {
+        _values.Set("rail.itemWidth", _showLabels ? 210d : 44d);
+        _values.Set("rail.brandWidth", _showLabels ? 122d : 44d);
+        _values.Set("rail.sidebarPadding", _showLabels ? "12 8 11 8" : "5 8 5 8");
     }
 
     public bool TryGetValue(string path, out object? value)
     {
         var section = _section();
+        // Keep the original full idle hit surface. An outline belongs to the selected row only.
+        if (path.StartsWith("rail.", StringComparison.Ordinal) && path.EndsWith("BorderWidth", StringComparison.Ordinal))
+        {
+            value = path.AsSpan(5, path.Length - 5 - "BorderWidth".Length).SequenceEqual(section) ? "1.5" : "0";
+            return true;
+        }
         value = path switch
         {
-            "rail.visible" => section != "settings" || !_settingsHasSidebar(),
-            "rail.pagePadding" => section == "settings" && _settingsHasSidebar() ? "0" : "16",
             "rail.appsSelected" => section == "apps",
             "rail.dashboardSelected" => section == "dashboard",
             "rail.modelsSelected" => section == "models",
             "rail.settingsSelected" => section == "settings",
+            "rail.homeVisible" => section != "settings",
+            "rail.pageGap" => section is "settings" or "newtab" ? 0d : 8d,
+            "rail.roundedCanvas" => section is "dashboard" or "newtab",
+            "rail.pagePadding" => section is "settings" or "newtab" ? "0" : "16",
             "rail.eventsSelected" => section == "events",
             "rail.librarySelected" => section == "library",
             "rail.newtabSelected" => section == "newtab",
             _ => Unresolved
         };
-        return !ReferenceEquals(value, Unresolved);
+        return !ReferenceEquals(value, Unresolved) || _values.TryGetValue(path, out value);
     }
 
     public bool TrySetValue(string path, object? value) => false;
+
+    internal void SetNewTabShortcut(string key, object? value) => _values.Set("newTab.shortcut." + key, value);
 
     private static readonly object Unresolved = new();
 }

@@ -92,13 +92,19 @@ public sealed class CuiOwnedTemplateTests
             Assert.Equal(Colors.Transparent, Assert.IsAssignableFrom<ISolidColorBrush>(resources["CuiPopupBorderBrush"]).Color);
             Assert.Equal(palette.TideColour, Assert.IsAssignableFrom<ISolidColorBrush>(resources["CuiWorkspaceBrush"]).Color);
             Assert.Equal(palette.TideBase, Assert.IsType<SolidColorBrush>(resources["CuiShellBrush"]).Color);
+            Assert.Equal(palette.Panel, Assert.IsType<SolidColorBrush>(resources["CuiChromeMaterial"]).Color);
+            Assert.Equal(palette.Panel, Assert.IsType<CuiMaterialBrush>(resources["CuiSurfaceMaterial"]).Tint);
             Assert.NotEqual(palette.TideBase, palette.TideColour);
             Assert.True(CuiContrast.Ratio(palette.Text, palette.Panel) >= 4.5);
             Assert.True(CuiContrast.Ratio(palette.TextSoft, palette.Panel) >= 4.5);
+            if (appearance == CuiAppearance.Dark)
+                Assert.True(CuiContrast.Ratio(palette.Muted2, palette.Panel2) >= 4.5);
             Assert.True(CuiContrast.Ratio(palette.Focus, palette.TideColour) >= 3);
             Assert.True(CuiContrast.Ratio(Assert.IsAssignableFrom<ISolidColorBrush>(resources["CuiChoiceBorderBrush"]).Color, palette.Panel) >= 3);
-            foreach (var neutral in new[] { palette.Panel, palette.Panel2, palette.PanelHover, palette.ButtonHover, palette.ButtonPressed })
+            foreach (var neutral in new[] { palette.Panel, palette.PanelHover, palette.ButtonHover, palette.ButtonPressed })
                 Assert.True(Math.Max(neutral.R, Math.Max(neutral.G, neutral.B)) - Math.Min(neutral.R, Math.Min(neutral.G, neutral.B)) <= 8);
+            Assert.True(Math.Max(palette.Panel2.R, Math.Max(palette.Panel2.G, palette.Panel2.B)) -
+                Math.Min(palette.Panel2.R, Math.Min(palette.Panel2.G, palette.Panel2.B)) <= (appearance == CuiAppearance.Dark ? 10 : 8));
             CuiThemeResourceApplier.ApplyToResources(resources, palette, new CuiAccessibilitySettings { HighContrast = true });
             Assert.Equal(255, Assert.IsAssignableFrom<ISolidColorBrush>(resources["CuiControlBorderBrush"]).Color.A);
             Assert.Equal(255, Assert.IsAssignableFrom<ISolidColorBrush>(resources["CuiPopupBorderBrush"]).Color.A);

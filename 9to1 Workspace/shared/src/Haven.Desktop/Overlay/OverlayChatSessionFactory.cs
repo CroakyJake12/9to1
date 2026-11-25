@@ -24,6 +24,12 @@ internal sealed class OverlayChatSessionFactory(
     public Task<NewChatPage> CreateNewAsync(CancellationToken cancellationToken) =>
         CreatePageAsync(page => page.StartFreshConversationAsync(), cancellationToken);
 
+    /// <summary>Creates a Space-scoped Chat without writing a blank history row.
+    /// Scope and the eligible Temporary lifecycle are admitted by the same transition.</summary>
+    internal Task<NewChatPage> CreateNewScopedChatAsync(Guid spaceId, CancellationToken cancellationToken) =>
+        CreatePageAsync(page => page.StartFreshConversationAsync(HavenMode.Chat, null, spaceId: spaceId),
+            cancellationToken, enableFreshChatTemporaryLifecycle: true);
+
     /// <summary>Creates the same real production page but joins the caller's own observation of
     /// the construction discovery AFTER that exact original settles and BEFORE Fresh replaces the
     /// initial conversation target. The two real steps stay unchanged; an owner that must observe
@@ -49,7 +55,8 @@ internal sealed class OverlayChatSessionFactory(
     private async Task<NewChatPage> CreatePageAsync(
         Func<NewChatPage, Task> selectConversation,
         CancellationToken cancellationToken,
-        Func<NewChatPage, Task>? joinConstruction = null)
+        Func<NewChatPage, Task>? joinConstruction = null,
+        bool enableFreshChatTemporaryLifecycle = false)
     {
         Dispatcher.UIThread.VerifyAccess();
         cancellationToken.ThrowIfCancellationRequested();
@@ -58,7 +65,9 @@ internal sealed class OverlayChatSessionFactory(
         // transport. Inject it explicitly so NewChatPage's IOllamaClient slot binds to the
         // routed source instead of resolving the raw Ollama registration in the container.
         var routed = services.GetRequiredService<IProviderModelClient>();
-        var page = ActivatorUtilities.CreateInstance<NewChatPage>(services, routed);
+        var page = enableFreshChatTemporaryLifecycle
+            ? ActivatorUtilities.CreateInstance<NewChatPage>(services, routed, enableFreshChatTemporaryLifecycle)
+            : ActivatorUtilities.CreateInstance<NewChatPage>(services, routed);
         try
         {
             if (WireHost is not null) WireHost(page);

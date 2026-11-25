@@ -1,3 +1,4 @@
+using CakeOS.Cui.Themes;
 using Haven.Core;
 
 namespace Haven.Desktop.HavenUI.Tokens;
@@ -52,9 +53,9 @@ internal static class HavenThemeCatalog
             "Tactile tonal shapes with springy, friendly feedback.",
             1.5, 1.35, 1.3, 0.9, 0.9, 1.1),
         new(
-            HavenUiTheme.Cinematic, "Cinematic",
-            "Immersive layered depth with contextual light and smooth fades.",
-            1.0, 1.05, 1.1, 1.25, 1.7, 0.95)
+            HavenUiTheme.Cinematic, CuiThemeCatalog.ComicName,
+            "Ink panels, cyan and plum highlights, and bold yellow action plates.",
+            .55, .68, .58, .65, 1.6, 1.25)
     ];
 
     /// <summary>
@@ -71,7 +72,9 @@ internal static class HavenThemeCatalog
 
     /// <summary>Parses a persisted theme name safely, falling back to Glow.</summary>
     internal static HavenUiTheme Parse(string? value) =>
-        Enum.TryParse<HavenUiTheme>(value, ignoreCase: true, out var parsed) ? parsed : HavenUiTheme.Glow;
+        CuiThemeCatalog.FindBuiltIn(value)?.Theme == CuiTheme.Cinematic
+            ? HavenUiTheme.Cinematic
+            : Enum.TryParse<HavenUiTheme>(value, ignoreCase: true, out var parsed) ? parsed : HavenUiTheme.Glow;
 
     /// <summary>Returns the canonical persisted name for a theme.</summary>
     internal static string Name(HavenUiTheme theme) =>

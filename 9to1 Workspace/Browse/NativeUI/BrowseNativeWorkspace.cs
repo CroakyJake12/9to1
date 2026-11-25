@@ -57,9 +57,12 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     private string _groupName = "Research";
     private string _address, _find = string.Empty, _historyQuery = string.Empty, _status;
     private bool _addressDraft, _busy, _ready, _disposed, _toolsOpen, _profileMenuOpen, _manageUsersOpen;
+    private bool _wideHostChrome;
+    private (Color Text, Color SecondaryText, Color SelectedSurface, Color SelectedText)? _hostTabColours;
     private volatile bool _retiring;
     private Task? _originalCommand, _originalClose, _originalChromeClose, _pendingCloseAttempt;
     private readonly List<Task> _closeAttempts = [];
+    internal Func<Guid?, Action<Guid?>?>? CaptureTabTransitionFocus { get; set; }
     public event PropertyChangedEventHandler? PropertyChanged;
     public BrowseChromeSnapshot State => _snapshot;
     public bool IsOriginalPublicationCurrent => !_retiring && !_disposed && _chrome.OriginalClose is null;
@@ -86,7 +89,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         _hostContext = sharedContext;
         _chrome = originalChrome ?? throw new ArgumentNullException(nameof(originalChrome));
         _originalActionAvailability = originalActionAvailability ?? throw new ArgumentNullException(nameof(originalActionAvailability));
-        _snapshot = _chrome.State; _address = _snapshot.SelectedTab.Address.ToString(); _status = _snapshot.Status;
+        _snapshot = _chrome.State; _observedPageTab = _snapshot.SelectedTabId; _address = _snapshot.SelectedTab.Address.ToString(); _status = _snapshot.Status;
         _omniboxMode = sharedContext?.IsEmbedded == true ? OmniboxMode.Home : OmniboxMode.Web;
         ApplyOmniboxLocation(_snapshot.SelectedTab);
         IssueCurrentRows(); IssueGroupRows(); IssueSavedEntryRows(); IssuePendingDownloadRows(); _chrome.StateChanged += OnChromeStateChanged;
@@ -121,7 +124,16 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         var model = _hostContext?.ModelInfo;
         value = path switch
         {
+            "PageCommandTarget" => _pageCommand,
+            "PageCommandLabel" => _pageCommand?.Command.Label ?? string.Empty,
+            "PageCommandIcon" => _pageCommand?.Command.IconSource,
+            "PageCommandHasIcon" => _pageCommand?.Command.IconSource is not null,
+            "PageCommandInBar" => _pageCommand is not null && _pageCommandFits,
+            "PageCommandInOverflow" => _pageCommand is not null && !_pageCommandFits,
             "Tabs" => _tabRows,
+            "Browse.TabStripMinimumHeight" => _wideHostChrome ? 48d : 38d,
+            "Browse.TabControlHeight" => _wideHostChrome ? 36d : 32d,
+            "Browse.NavigationMinimumHeight" => _wideHostChrome ? 52d : 42d,
             "TabGroups" => _tabGroupRows,
             "GroupName" => _groupName,
             "CanManageTabGroups" => _chrome.CanManageTabGroups,
@@ -187,11 +199,14 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "HasHistoryQuery" => _historyQuery.Length > 0,
             "HistoryResultSummary" => $"Showing {_historyRows.Length.ToString("N0", CultureInfo.CurrentCulture)} of {_snapshot.History.Count.ToString("N0", CultureInfo.CurrentCulture)} visits",
             "Downloads" => _downloadRows,
-            "Haven.Embedded" => _hostContext?.IsEmbedded == true,
+            "Haven.Embedded" => IsEmbeddedHost,
+            "Haven.ModelDetailsVisible" => _wideHostChrome,
+            "Haven.HostMarkVisible" => _wideHostChrome,
             "Haven.ModelAvailable" => _hostContext?.ModelSupported == true,
             "Haven.NotificationsAvailable" => _hostContext?.NotificationsSupported == true,
             "Haven.ProfileAvailable" => _hostContext?.ProfileSupported == true,
             "Haven.ModelName" => model?.Name ?? string.Empty,
+            "Haven.ModelDisplayName" => string.IsNullOrWhiteSpace(model?.Name) ? "Choose model" : model.Name,
             "Haven.EffortLabel" => ModelDisplayPercent(model),
             "Haven.EffortPercent" => ModelDisplayPercent(model),
             "Haven.EffortKnown" => !string.IsNullOrEmpty(ModelDisplayPercent(model)),
@@ -356,6 +371,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 "9to1.Browse.EnableTabRestore" or "9to1.Browse.DisableTabRestore" => true,
             "9to1.Browse.DiscardAddress" => _addressDraft,
             "9to1.Browse.ToggleTools" => true,
+            "9to1.Browse.RunPageCommand" => CanRunPageCommand(_pageCommand),
             "9to1.Browse.CloseTools" => _toolsOpen,
             "9to1.Browse.ToggleProfileMenu" => true,
             "9to1.Browse.CloseProfileMenu" => HasOpenTransientMenu,
@@ -370,13 +386,14 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     {
         Dispatcher.UIThread.VerifyAccess(); token.ThrowIfCancellationRequested();
         if (IsActionAvailable(command) != true) return ValueTask.CompletedTask;
+        if (command == "9to1.Browse.RunPageCommand" && !CanRunPageCommand(parameter)) return ValueTask.CompletedTask;
         if (command is "9to1.Browse.SearchHome" or "9to1.Browse.SearchFiles" or "9to1.Browse.SearchWeb")
         {
             _omniboxMode = command == "9to1.Browse.SearchHome" ? OmniboxMode.Home :
                 command == "9to1.Browse.SearchFiles" ? OmniboxMode.Files : OmniboxMode.Web;
             Changed(); return ValueTask.CompletedTask;
         }
-        if (IsHavenSharedCommand(command))
+        if (IsHavenSharedCommand(command) || command == "9to1.Browse.RunPageCommand")
         {
             DismissTransientMenus();
             // Shared rail opens are genuine retained operations: reserve admission before
@@ -389,7 +406,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             var sharedStart = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             var sharedPrior = LogicalDriver.Value;
             var sharedInvocation = new CommandInvocation(this, sharedPrior);
-            var sharedOriginal = RunSharedOpenAsync(sharedStart.Task, command, token, sharedInvocation);
+            var sharedOriginal = RunSharedOpenAsync(sharedStart.Task, command, parameter, token, sharedInvocation);
             sharedInvocation.Self = sharedOriginal;
             lock (_sourceGate) Retain(_originalOperations, sharedOriginal);
             sharedStart.SetResult();
@@ -426,11 +443,20 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         if (!ValidateOriginalDownloadAdmission(command, parameter))
         { _status = "The download or Files folder changed. Select its current row again."; Changed(); return ValueTask.CompletedTask; }
         lock (_sourceGate) CheckAdmission(_originalCommands);
+        var closingTab = command switch
+        {
+            "9to1.Browse.CloseTab" => _snapshot.SelectedTabId,
+            "9to1.Browse.CloseTabRow" => ((TabSelection)parameter!).TabId,
+            _ => (Guid?)null
+        };
+        // Capture focus before the command disables controls or retires the originating row.
+        var restoreTabFocus = closingTab.HasValue || command == "9to1.Browse.ReopenClosedTab"
+            ? CaptureTabTransitionFocus?.Invoke(closingTab) : null;
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         _busy = true;
         var prior = LogicalDriver.Value;
         var invocation = new CommandInvocation(this, prior);
-        var original = RunAsync(start.Task, command, parameter, token, invocation);
+        var original = RunAsync(start.Task, command, parameter, token, invocation, closingTab, restoreTabFocus);
         invocation.Self = original;
         _originalCommand = original;
         lock (_sourceGate) Retain(_originalCommands, original);
@@ -440,14 +466,16 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         return new(original);
     }
     private async Task RunAsync(Task start, string command, object? parameter, CancellationToken token,
-        CommandInvocation invocation)
+        CommandInvocation invocation, Guid? closingTab, Action<Guid?>? restoreTabFocus)
     {
         var prior = LogicalDriver.Value; LogicalDriver.Value = invocation;
         var failures = new List<Exception>();
+        Guid? tabFocusTarget = null;
         try
         {
             await start; token.ThrowIfCancellationRequested();
             var tabId = _snapshot.SelectedTabId;
+            BrowseChromeSnapshot? tabTransition = null;
             if (command is "9to1.Browse.OpenHistoryPage" or "9to1.Browse.OpenBookmarksPage" or
                 "9to1.Browse.OpenDownloadsPage" or "9to1.Browse.OpenSettingsPage" or
                 "9to1.Browse.SelectTab" or "9to1.Browse.NewTab" or "9to1.Browse.NewPrivateTab" or
@@ -467,15 +495,19 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 case "9to1.Browse.Stop": await Operation(() => _chrome.StopAsync(token)); break;
                 case "9to1.Browse.NewTab": await Operation(() => _chrome.NewTabAsync(false, token)); _addressDraft = false; break;
                 case "9to1.Browse.NewPrivateTab": await Operation(() => _chrome.NewTabAsync(true, token)); _addressDraft = false; break;
-                case "9to1.Browse.CloseTab": await Operation(() => _chrome.CloseTabAsync(tabId, token)); _addressDraft = false; break;
+                case "9to1.Browse.CloseTab":
+                    tabTransition = await Operation(() => _chrome.CloseTabAsync(tabId, token));
+                    _addressDraft = false; break;
                 case "9to1.Browse.CloseTabRow":
                     if (!IsCurrentTabTarget(parameter)) { _status = "The tab row changed before closing; use its current close control."; break; }
                     var closingTarget = (TabSelection)parameter!;
                     if (!_chrome.State.Tabs.Any(tab => tab.Id == closingTarget.TabId && tab.IsCloseable)) break;
-                    await Operation(() => _chrome.CloseTabAsync(closingTarget.TabId, token));
+                    tabTransition = await Operation(() => _chrome.CloseTabAsync(closingTarget.TabId, token));
                     if (closingTarget.TabId == tabId) _addressDraft = false;
                     break;
-                case "9to1.Browse.ReopenClosedTab": await Operation(() => _chrome.ReopenClosedTabAsync(token)); _addressDraft = false; break;
+                case "9to1.Browse.ReopenClosedTab":
+                    tabTransition = await Operation(() => _chrome.ReopenClosedTabAsync(token));
+                    _addressDraft = false; break;
                 case "9to1.Browse.ToggleSplitView": await Operation(() => _chrome.ToggleSplitViewAsync(token)); break;
                 case "9to1.Browse.ToggleSplitOrientation": await Operation(() => _chrome.ToggleSplitOrientationAsync(token)); break;
                 case "9to1.Browse.WidenPrimaryPane": await Operation(() => _chrome.AdjustPrimaryPaneAsync(1, token)); break;
@@ -608,6 +640,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 default: throw new ArgumentOutOfRangeException(nameof(command));
             }
             if (IsOriginalPublicationCurrent) { ApplySnapshot(_chrome.State); _status = _snapshot.Status; }
+            if (restoreTabFocus is not null && tabTransition is { } transition &&
+                (closingTab is { } closedId ? transition.Tabs.All(tab => tab.Id != closedId) : transition.SelectedTabId != tabId))
+                tabFocusTarget = transition.SelectedTabId;
         }
         catch (Exception failure)
         {
@@ -619,12 +654,18 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         {
             _busy = false;
             try { Changed(); } catch (Exception failure) { failures.Add(failure); }
+            try
+            {
+                restoreTabFocus?.Invoke(failures.Count == 0 && IsReady && _snapshot.SelectedTabId == tabFocusTarget
+                    ? tabFocusTarget : null);
+            }
+            catch (Exception failure) { failures.Add(failure); }
             invocation.Active = false; LogicalDriver.Value = prior;
         }
         if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
         if (failures.Count > 1) throw new AggregateException("Browse retained operation and observer failures.", failures);
     }
-    private async Task Operation(Func<Task<BrowseChromeSnapshot>> start)
+    private async Task<BrowseChromeSnapshot> Operation(Func<Task<BrowseChromeSnapshot>> start)
     {
         lock (_sourceGate) CheckAdmission(_originalOperations);
         var original = start() ?? throw new InvalidOperationException("Browse did not produce its original operation task.");
@@ -634,7 +675,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         // an admission's propagation chain; a source that merely overlapped in time cannot.
         if (LogicalDriver.Value is { } invocation && invocation.Self is { } action)
             _chrome.LinkAdmissionPropagation(action, original);
-        await original;
+        return await original;
     }
     private void OnChromeRetirementStarted(object? sender, EventArgs args)
     {
@@ -643,12 +684,13 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         _retiring = true;
         _originalClose ??= _pendingCloseAttempt;
         _originalChromeClose = _chrome.OriginalClose;
-        var original = Dispatcher.UIThread.InvokeAsync(Changed).GetTask();
+        var original = Dispatcher.UIThread.InvokeAsync(() => { ObservePageCommand(); Changed(); }).GetTask();
         lock (_sourceGate) Retain(_originalUiOperations, original);
     }
     private void OnChromeStateChanged(object? sender, BrowseChromeSnapshot snapshot)
     {
         if (!IsOriginalPublicationCurrent) return;
+        ObservePageVisit(snapshot.SelectedTabId);
         lock (_sourceGate) CheckAdmission(_originalNotifications);
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var original = NotifyAsync(start.Task, snapshot);
@@ -674,7 +716,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             _snapshot.SelectedTab.Address != snapshot.SelectedTab.Address ||
             _snapshot.SelectedTab.NativePage != snapshot.SelectedTab.NativePage)
         { _profileMenuOpen = false; _manageUsersOpen = false; }
-        _snapshot = snapshot; IssueCurrentRows(); IssueGroupRows(); IssueSavedEntryRows(); IssuePendingDownloadRows();
+        _snapshot = snapshot; ObservePageCommand(); IssueCurrentRows(); IssueGroupRows(); IssueSavedEntryRows(); IssuePendingDownloadRows();
         if (!_addressDraft) ApplyOmniboxLocation(snapshot.SelectedTab);
         _status = snapshot.Status; Changed();
     }
@@ -1038,8 +1080,40 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
 
     public sealed record UsageWindowRow(string Key, string Label, double UsedUnits, double LimitUnits);
     public bool TrySetItemValue(object item, string path, object? value) => false;
-    private static (Color Background, Color Foreground, Color CloseForeground) TabAppearance(bool selected)
+    internal bool IsEmbeddedHost => _hostContext?.IsEmbedded == true;
+
+    internal void SetHostChromeWidth(double width)
     {
+        var wide = IsEmbeddedHost && width >= 640;
+        var mounted = width > 0;
+        var pageCommandFits = width >= 800;
+        if (_wideHostChrome == wide && _toolbarMounted == mounted && _pageCommandFits == pageCommandFits) return;
+        _wideHostChrome = wide;
+        _toolbarMounted = mounted;
+        _pageCommandFits = pageCommandFits;
+        ObservePageCommand();
+        Changed();
+    }
+
+    internal void SetHostTabColours(Color chrome, Color text, Color secondary, bool highContrast)
+    {
+        var channel = (byte)Math.Max(230, (text.R + text.G + text.B) / 3);
+        var neutral = Color.FromRgb(channel, channel, channel);
+        var surface = CuiContrast.EnsureForegroundContrast(neutral, chrome, highContrast ? 3 : 1.35);
+        var ink = CuiContrast.Ratio(Colors.Black, surface) >= (highContrast ? 7 : 4.5) ? Colors.Black : Colors.White;
+        if (highContrast) surface = CuiContrast.EnsureForegroundContrast(surface, ink, 7);
+        var colours = (text, secondary, surface, ink);
+        if (_hostTabColours == colours) return;
+        _hostTabColours = colours;
+        IssueCurrentRows();
+        Changed();
+    }
+
+    private (Color Background, Color Foreground, Color CloseForeground) TabAppearance(bool selected)
+    {
+        if (_hostTabColours is { } host)
+            return selected ? (host.SelectedSurface, host.SelectedText, host.SelectedText) :
+                (Colors.Transparent, host.Text, host.SecondaryText);
         var appearance = Application.Current?.ActualThemeVariant == ThemeVariant.Dark ||
             Application.Current?.RequestedThemeVariant == ThemeVariant.Dark ? CuiAppearance.SuperDark : CuiAppearance.SuperBright;
         var palette = CuiSurfacePaletteCatalog.For("Browse", appearance, CuiSurfacePaletteCatalog.ActiveTheme);

@@ -133,6 +133,11 @@ function requireFile(file, expected) {
   return file;
 }
 
+export function exactNameQuery(parent, name) {
+  const escaped = name.replaceAll('\\', '\\\\').replaceAll("'", "\\'");
+  return "'" + parent + "' in parents and name = '" + escaped + "' and trashed = false";
+}
+
 function firstParent(file) {
   return file.parents?.[0] ?? null;
 }
@@ -284,9 +289,16 @@ export class DriveProvider {
       return resultError(error, 'Mutate', null, this.#now(), true);
     }
     let writeMayHaveRun = false;
+    let claimed = false;
     try {
       const row = this.#store.claimOperation(intent.id, intent);
-      if (row.stage === 'committed' || row.stage === 'rejected') return row.result;
+      claimed = true;
+      if (row.stage === 'committed') {
+        writeMayHaveRun = true;
+        await this.#store.storage.sync();
+        return row.result;
+      }
+      if (row.stage === 'rejected') return row.result;
       writeMayHaveRun = row.stage === 'issuing';
       const token = await this.#oauth.getAccessToken({ signal });
       await this.#root(token, signal);
@@ -296,7 +308,19 @@ export class DriveProvider {
         ? await this.#createPlan(intent, row.provider_id, token, signal)
         : await this.#updatePlan(intent, token, signal);
       signal?.throwIfAborted();
-      this.#store.stageOperation(intent.id, 'issuing', plan.googleId);
+      this.#store.storage.transactionSync(() => {
+        const fresh = this.#store.operation(intent.id);
+        const createsFolder = intent.operation === 'CreateFolder';
+        const preparedProviderId = createsFolder ? plan.googleId : row.provider_id;
+        if (fresh?.stage !== 'prepared' || fresh.provider_id !== preparedProviderId) throw uncertain();
+        if (createsFolder) {
+          const prior = this.#store.previousFolderCreate(intent, 'committed');
+          if (this.#store.previousFolderCreate(intent, 'issuing') || (prior?.id ?? null) !== plan.priorCreateId) {
+            throw failure(409, 'NameConflict', 'Another Files operation changed this folder name. Check its status before trying again.');
+          }
+        }
+        this.#store.stageOperation(intent.id, 'issuing', plan.googleId);
+      });
       await this.#store.storage.sync();
       writeMayHaveRun = true;
       let result;
@@ -323,8 +347,15 @@ export class DriveProvider {
         return denied;
       }
       const file = plan.before ? patchAck(result.value, plan.before, plan.googleId) : requireFile(result.value, plan.googleId);
-      return this.#commit(intent, plan.googleId, file);
+      return await this.#commit(intent, plan.googleId, file);
     } catch (error) {
+      // Another handle may already have admitted this very intent. A stale
+      // plan cannot claim the operation was unissued even if this call did no I/O.
+      if (!writeMayHaveRun && claimed) {
+        try {
+          writeMayHaveRun = ['issuing', 'committed'].includes(this.#store.operation(intent.id)?.stage);
+        } catch { writeMayHaveRun = true; }
+      }
       return resultError(error, intent.operation, intent.itemId, this.#now(), !writeMayHaveRun, writeMayHaveRun);
     } finally {
       this.#active.delete(intent.id);
@@ -371,6 +402,23 @@ export class DriveProvider {
     const parent = remoteId(this.#store.googleId(intent.destinationParentId));
     const folder = await this.#folder(parent, token, signal);
     if (folder.capabilities?.canAddChildren !== true) throw capability('Google Drive does not allow creating items in that folder.');
+    if (parent === this.#store.get('googleRoot') && intent.destinationParentId !== null) {
+      throw failure(400, 'InvalidState', 'Use the canonical Google Drive root as the destination.');
+    }
+    if (this.#store.previousFolderCreate(intent, 'issuing')) {
+      throw failure(409, 'NameConflict', 'Another new folder with this name has an unconfirmed outcome. Check the original operation.');
+    }
+    const prior = this.#store.previousFolderCreate(intent, 'committed');
+    if (prior?.provider_id) {
+      // Search may lag a successful write. Verify the concrete provider identity.
+      let previousFile;
+      try { previousFile = await this.#file(prior.provider_id, token, signal); }
+      catch (error) { if (error?.code !== 'ItemNotFound') throw error; }
+      if (previousFile?.trashed === false && previousFile.name === intent.newName && firstParent(previousFile) === parent) {
+        throw failure(409, 'NameConflict', 'That Google Drive folder already contains an item with this name.');
+      }
+    }
+    await this.#assertDestinationNameAvailable(parent, intent.newName, null, token, signal);
     const mapping = this.#store.byId(intent.itemId);
     if (mapping && (mapping.google_id !== reserved || mapping.metadata !== null)) {
       throw failure(409, 'InvalidState', 'The folder identity is already in use.');
@@ -384,15 +432,40 @@ export class DriveProvider {
     // The folder can be listed while the POST reply is missing. Reserve its
     // local identity in the same transaction as the provider's generated ID.
     this.#store.storage.transactionSync(() => {
+      const fresh = this.#store.operation(intent.id);
+      if (fresh?.stage !== 'prepared' || (fresh.provider_id !== null && fresh.provider_id !== googleId)) throw uncertain();
       this.#store.ensureIdInTransaction(googleId, intent.itemId);
       this.#store.stageOperation(intent.id, 'prepared', googleId);
     });
     await this.#store.storage.sync();
     return {
-      googleId, method: 'POST', url: requestUrl('v3', 'files', { fields: DRIVE_FILE_FIELDS }),
+      googleId, priorCreateId: prior?.id ?? null, method: 'POST', url: requestUrl('v3', 'files', { fields: DRIVE_FILE_FIELDS }),
       body: { id: googleId, mimeType: FOLDER, name: intent.newName, parents: [parent],
         appProperties: { [OPERATION_PROPERTY]: intent.id } },
     };
+  }
+
+  async #assertDestinationNameAvailable(parentId, name, originId, token, signal) {
+    if (typeof name !== 'string' || name.length > 255 || /[\u0000-\u001f\u007f]/.test(name)) throw badMetadata();
+    let cursor = null;
+    const visited = new Set();
+    for (let page = 0; page < MAX_SCAN_PAGES; page++) {
+      const result = await this.#get('v3', 'files', {
+        q: exactNameQuery(remoteId(parentId), name), spaces: 'drive', pageSize: '2', pageToken: cursor,
+        fields: 'files(id),nextPageToken,incompleteSearch',
+      }, token, signal, 'list');
+      if (!Array.isArray(result?.files) || result.files.length > 2 || result.incompleteSearch === true) throw badMetadata();
+      const ids = result.files.map(file => remoteId(file?.id));
+      if (ids.some(id => id !== originId)) {
+        throw failure(409, 'NameConflict', 'That Google Drive folder already contains an item with this name. Choose another name or destination, or skip this change.');
+      }
+      cursor = result.nextPageToken ?? null;
+      if (cursor === null) return;
+      if (typeof cursor !== 'string' || !cursor || cursor.length > 16384 || visited.has(cursor)) throw badMetadata();
+      visited.add(cursor);
+    }
+    // A bounded or incomplete read is not evidence that the name is free.
+    throw badMetadata();
   }
 
   async #updatePlan(intent, token, signal) {
@@ -419,7 +492,10 @@ export class DriveProvider {
     const body = {};
     if (operation === 'Rename') body.title = intent.newName;
     if (operation === 'Delete' || operation === 'Restore') body.labels = { trashed: operation === 'Delete' };
-    if (operation === 'Restore') await this.#folder(expectedSource, token, signal);
+    if (operation === 'Restore') {
+      await this.#folder(expectedSource, token, signal);
+      await this.#assertDestinationNameAvailable(expectedSource, before.name, googleId, token, signal);
+    }
     if (operation === 'Move') {
       const destination = remoteId(this.#store.googleId(intent.destinationParentId));
       const source = await this.#folder(expectedSource, token, signal);
@@ -430,8 +506,12 @@ export class DriveProvider {
       if (source.capabilities?.canRemoveChildren !== true || target.capabilities?.canAddChildren !== true) {
         throw capability('Google Drive does not allow moving the item between these folders.');
       }
+      await this.#assertDestinationNameAvailable(destination, before.name, googleId, token, signal);
       params.addParents = destination;
       params.removeParents = expectedSource;
+    }
+    if (operation === 'Rename') {
+      await this.#assertDestinationNameAvailable(expectedSource, intent.newName, googleId, token, signal);
     }
     const path = 'files/' + googleId;
     const current = await this.#request(requestUrl('v2', path, { fields: DRIVE_V2_PATCH_FIELDS }), token, { kind: 'metadata', signal });
@@ -458,7 +538,7 @@ export class DriveProvider {
     return this.#commit(intent, id, file);
   }
 
-  #commit(intent, id, file) {
+  async #commit(intent, id, file) {
     const { operation } = intent;
     if (file.id !== id || file.appProperties?.[OPERATION_PROPERTY] !== intent.id) throw uncertain();
     const parent = this.#store.googleId(
@@ -466,14 +546,14 @@ export class DriveProvider {
     if (firstParent(file) !== parent || file.trashed !== (operation === 'Delete') ||
         (operation === 'Delete' && file.explicitlyTrashed !== true) ||
         (intent.newName !== null && file.name !== intent.newName) || (operation === 'CreateFolder' && file.mimeType !== FOLDER)) throw uncertain();
-    const metadata = this.#store.mapFile(file, intent.itemId);
-    const stored = this.#store.byId(intent.itemId);
-    if (!metadata.currentRevisionId || stored?.google_version !== String(file.version) ||
-        metadata.currentRevisionId.value === intent.baseRevisionId) throw uncertain();
-    return this.#store.storage.transactionSync(() => {
+    const committed = this.#store.storage.transactionSync(() => {
       const old = this.#store.operation(intent.id);
       if (old?.stage === 'committed') return old.result;
       if (old?.stage !== 'issuing') throw uncertain();
+      const metadata = this.#store.mapFileInTransaction(file, intent.itemId);
+      const stored = this.#store.byId(intent.itemId);
+      if (!metadata.currentRevisionId || stored?.google_version !== String(file.version) ||
+          metadata.currentRevisionId.value === intent.baseRevisionId) throw uncertain();
       const createdAt = new Date(old.created_at).toISOString();
       const updatedAt = new Date(this.#now()).toISOString();
       const baseRevisionId = wrap(intent.baseRevisionId);
@@ -491,5 +571,7 @@ export class DriveProvider {
       this.#store.stageOperation(intent.id, 'committed', id, result);
       return result;
     });
+    await this.#store.storage.sync();
+    return committed;
   }
 }

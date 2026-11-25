@@ -1,0 +1,91 @@
+{
+  "renderer": "Actual Linux Haven app on private X11 at 1:1, with disposable isolated profiles.",
+  "stage6": {
+    "assemblies": {
+      "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+      "Haven.dll": "044901a910f13bd8479ffda11b8dd389141744039c425808d74dd85e56efb19b",
+      "HavenOS.Home.dll": "54b600224eea449ef853ee72e1226473f481c8225a88dfbce7cd3325c92d180f",
+      "HavenOS.Apps.Browse.NativeUI.dll": "06bb0711a1e21245a60c20838cbad52bec937a2d65273e9f58e5e5a0d313d4b3",
+      "HavenOS.Apps.Browse.Core.dll": "a4fc7eed39a0f90b0e8760696e34665de4756641a7c813082bcc1c57a1609243",
+      "CakeOS.Cui.Runtime.dll": "9a78cea21e115f5530e8fbc66f241eb8ee598e87dd78898d1b1aaf939a6e7f0d",
+      "CakeOS.Cui.Themes.dll": "7a4d19f347d07f65b5ed331a670c995f264b1816387cad531a043b015ec1d269",
+      "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+      "UI/Home.cui": "254a60c8388c09f871190f901cc719bd9ea2ffa1346ac287fe1d1e173ebe22a2"
+    },
+    "settings": "Focused search result remained visible on the compact nested Settings rail.",
+    "customise": "The native Settings row launched the New Tab editor. Done was visible in the header at both sizes. Upload opened the real GTK file chooser. Physical Escape cancelled with no file selected and returned to the editor.",
+    "upload": "From the same real chooser a disposable scratch PNG was selected in a separate action. The preview changed the live canvas with no layout record. Physical Use background then saved the content-addressed selection.",
+    "preview_layout_key_count": 0,
+    "saved_layout": {
+      "Revision": 1,
+      "BackgroundImageId": "b730e0440afafb8f0a081224bad9c30e35ebd164727f678e9ce32d5684c712db",
+      "ShowCustomBackground": true
+    },
+    "widget_picker": "Physical Add did not show the overlay at either size on this candidate. Follow-up Stage7 re-routed the action.",
+    "shutdown": "Normal apphost exit 0."
+  },
+  "stage7": {
+    "assemblies": {
+      "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+      "Haven.dll": "c783622bdec11a64d887242d0272faec306b677f28b5ba10eeead7c8687cfe34",
+      "HavenOS.Home.dll": "54b600224eea449ef853ee72e1226473f481c8225a88dfbce7cd3325c92d180f",
+      "HavenOS.Apps.Browse.NativeUI.dll": "06bb0711a1e21245a60c20838cbad52bec937a2d65273e9f58e5e5a0d313d4b3",
+      "HavenOS.Apps.Browse.Core.dll": "a4fc7eed39a0f90b0e8760696e34665de4756641a7c813082bcc1c57a1609243",
+      "CakeOS.Cui.Runtime.dll": "9a78cea21e115f5530e8fbc66f241eb8ee598e87dd78898d1b1aaf939a6e7f0d",
+      "CakeOS.Cui.Themes.dll": "7a4d19f347d07f65b5ed331a670c995f264b1816387cad531a043b015ec1d269",
+      "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+      "UI/Home.cui": "254a60c8388c09f871190f901cc719bd9ea2ffa1346ac287fe1d1e173ebe22a2"
+    },
+    "widget_picker": "Both header and Widgets section Add actions opened the centered modal. It rendered three wide and two compact columns, searchable cards and visible native shell tabs/address. Physical Escape from the focused search restored focus to header Add and kept the existing unsent draft.",
+    "widget_placement": {
+      "revision": 1,
+      "placed": {
+        "Id": "focus-timer",
+        "SourceId": "timer:25",
+        "IsVisible": true,
+        "IsWide": false,
+        "IsPinned": false,
+        "IsLocked": false
+      }
+    },
+    "focus_gap": "After Add, the clicked card became disabled and no dialog focus remained visible. Physical Escape did not dismiss. The modal\u2019s visible close button worked. This is intermediate candidate evidence.",
+    "shutdown": "Normal apphost exit 0."
+  },
+  "images": {
+    "stage6-native-background-chooser.png": {
+      "size": [
+        1096,
+        822
+      ],
+      "sha256": "c337c8223b818579e736a87ccfdba230369c9c42cda88dd4d88e1784ac44e67f"
+    },
+    "stage6-background-preview.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "f1d3483b003582b576985fa58e006f6e280dd303847be5b9dc0ce02f61854cd0"
+    },
+    "stage6-background-applied.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "2a55fd7622207c6b8b66e3ba89e9918e60bbbfbb0ddbe77837ca3f97ae5eb925"
+    },
+    "stage7-widget-filter-narrow.png": {
+      "size": [
+        720,
+        520
+      ],
+      "sha256": "7afc77435c2f6f2ede1e7ae195147db210ba944b6add9b0daca604388024c6c5"
+    },
+    "stage7-widget-after-add-escape-focused-gap.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "046853b843a1addde68b4739f82dd5a66a2d8d3ee3535163cb9f3db108e9a4b6"
+    }
+  }
+}

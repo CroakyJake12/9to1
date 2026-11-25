@@ -41,6 +41,9 @@
   <!-- SAME native Home preference adapter and palette migration infrastructure used by
        Haven. These files author no controls, templates or application layout. -->
   <ItemGroup>
+    <Compile Include="../../../../apps/Web/Home/BrowserThemeCreator.cs" Link="Home/BrowserThemeCreator.cs" />
+    <Compile Include="../../../../9to1 Workspace/shared/src/Haven.Desktop/Services/NativeHomeThemeCreator.cs" Link="Home/NativeHomeThemeCreator.cs" />
+    <Compile Include="../../../../9to1 Workspace/shared/src/Haven.Desktop/Services/NativeHomeAccentEditor.cs" Link="Home/NativeHomeAccentEditor.cs" />
     <Compile Include="../../../../9to1 Workspace/shared/src/Haven.Desktop/Services/NativeHomeThemePreferences.cs" Link="Home/NativeHomeThemePreferences.cs" />
     <Compile Include="../../../../9to1 Workspace/shared/src/Haven.Desktop/Services/NativeHomeArtifactLibrarySource.cs" Link="Home/NativeHomeArtifactLibrarySource.cs" />
     <Compile Include="../../../../9to1 Workspace/shared/src/Haven.Desktop/Services/NativeHomeFilesLibrarySource.cs" Link="Home/NativeHomeFilesLibrarySource.cs" />

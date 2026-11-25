@@ -36,9 +36,13 @@ internal static class BrowserCanonicalIcons
             }) { Viewbox = new Rect(0, 0, 24, 24) };
         }
         if (!source.StartsWith("icon:", StringComparison.Ordinal)) return null;
-        var key = source[5..];
+        return ResolveCatalogIcon(source[5..], target);
+    }
+
+    internal static IImage ResolveCatalogIcon(string key, Control target)
+    {
         if (string.IsNullOrWhiteSpace(key) || key.Length > 64 || key.Any(character => !char.IsAsciiLetterOrDigit(character) && character != '-'))
-            throw new ArgumentException("A catalog icon requires a bounded symbolic key.", nameof(source));
+            throw new ArgumentException("A catalog icon requires a bounded symbolic key.", nameof(key));
         if (!target.Resources.TryGetResource("CuiTextBrush", null, out var resource) || resource is not IBrush brush)
             throw new InvalidOperationException("The icon's scoped CUI text brush is unavailable.");
         // The shared browser/Spaces host uses the canonical management glyph. Desktop may

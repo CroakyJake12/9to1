@@ -17,7 +17,7 @@ public enum CuiTheme
     Bubble = 1,
     Retro = 2,
     Playful = 3,
-    Cinematic = 4,
+    Cinematic = 4, // Persisted ordinal 4 represents the Comic built-in.
     Professional = 5,
     FrostedGlass = 6,
     Metallic = 7,

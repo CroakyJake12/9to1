@@ -38,15 +38,18 @@ public sealed class CuiThemeScopedTideBlendTests
     }
 
     [Theory]
-    [InlineData(CuiAppearance.SuperDark)]
-    [InlineData(CuiAppearance.Dark)]
-    public void Professional_tide_matches_the_documented_neutral_charcoal(CuiAppearance appearance)
+    [InlineData(CuiAppearance.SuperDark, "#FF090B0E", "#FF1C1C1E", "#FF232324", "#FFE5E5E7", "#FFC3C4C7")]
+    [InlineData(CuiAppearance.Dark, "#FF17181B", "#FF212329", "#FF2B2E35", "#FFF5F6FA", "#FFADB4C3")]
+    public void Professional_dark_appearances_keep_their_neutral_material_roles(
+        CuiAppearance appearance, string workspace, string panel, string elevated, string text, string supportingText)
     {
         var palette = CuiSurfacePaletteCatalog.For("Chat", appearance, CuiTheme.Professional);
 
-        Assert.Equal(
-            appearance == CuiAppearance.SuperDark ? Color.Parse("#FF090B0E") : Color.Parse("#FF111419"),
-            palette.TideColour);
+        Assert.Equal(Color.Parse(workspace), palette.TideColour);
+        Assert.Equal(Color.Parse(panel), palette.Panel);
+        Assert.Equal(Color.Parse(elevated), palette.Panel2);
+        Assert.Equal(Color.Parse(text), palette.Text);
+        Assert.Equal(Color.Parse(supportingText), palette.TextSoft);
     }
 
     [Fact]

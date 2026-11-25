@@ -1,0 +1,156 @@
+<Cui id="home.new-tab.widgets" version="1">
+  <Actions>
+    <Action name="PickWidget" command="home.newtab-widget-pick" parameter="{Binding entry.Id}" />
+    <Action name="WidgetOptions" command="home.newtab-widget-options" parameter="{Binding card.Id}" />
+    <Action name="ChooseWidgetSource" command="home.newtab-widget-source" parameter="{Binding choice.Id}" />
+    <Action name="OpenWidgetItem" command="home.newtab-widget-open" parameter="{Binding row.Key}" />
+    <Action name="CompleteWidgetTask" command="home.newtab-widget-complete" parameter="{Binding row.Key}" />
+    <Action name="RetryWidget" command="home.newtab-widget-retry" parameter="{Binding card.Id}" />
+  </Actions>
+  <Theme Name="user_preference">
+    <Page id="newtab-widgets-content-page" AccessibleName="New Tab widgets">
+      <Container id="newtab-widgets" Type="Vertical Stack" CellGap="12">
+        <Container Type="Grid" ColumnSizes="1fr Auto">
+          <Text Text="Widgets" FontSize="18" FontWeight="750" VerticalAlignment="Center" />
+          <Button id="newtab-widget-picker-open" Column="1" Action="home.newtab-widget-picker" Content="Add widget"
+                  IsEnabled="{Binding WidgetCanOpenEditor}" Chromeless="True" />
+        </Container>
+        <Text Text="{Binding WidgetNotice}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap"
+              IsVisible="{Binding WidgetHasNotice}" />
+        <Container id="newtab-widget-cards" Type="Grid" CellGap="16" ColumnSizes="{Binding WidgetGridColumns}" RowSizes="{Binding WidgetGridRows}">
+          <Repeat Source="{Binding WidgetCards}" As="card" Key="{Binding card.Id}"
+                  ItemRow="{Binding card.Row}" ItemColumn="{Binding card.Column}" ItemColumnSpan="{Binding card.Span}">
+            <Container id="newtab-widget-card" Type="Vertical Stack" CellGap="10" Padding="18"
+                       Background="{Resource CuiPanelBrush}" CornerRadius="18">
+              <Container Type="Grid" ColumnSizes="1fr Auto Auto" CellGap="8">
+                <Container Type="Vertical Stack" CellGap="4">
+                  <Text Text="{Binding card.Source}" FontSize="12" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
+                  <Text Text="{Binding card.Title}" FontSize="18" FontWeight="750" TextWrapping="Wrap" />
+                </Container>
+                <Container Type="Vertical Stack" Column="1" IsEnabled="{Binding WidgetCanOpenEditor}">
+                  <Button id="newtab-widget-drag" Action="WidgetOptions"
+                          AccessibleName="{Binding card.DragName}" IsEnabled="{Binding card.CanDrag}"
+                          ToolTip="Drag to reorder. Press Enter for move options." Width="34" Chromeless="True">
+                    <Image id="newtab-widget-drag-grip" Source="icon:grip" Width="16" Height="16" IsHitTestVisible="False" />
+                  </Button>
+                </Container>
+                <Button id="newtab-widget-options" Column="2" Action="WidgetOptions" Content="Options"
+                        AccessibleName="{Binding card.OptionsName}" IsEnabled="{Binding WidgetCanOpenEditor}" Chromeless="True" />
+              </Container>
+              <Text Text="{Binding card.Status}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" IsVisible="{Binding card.HasStatus}" />
+              <Button id="newtab-widget-retry" Action="RetryWidget" Content="Refresh" IsVisible="{Binding card.CanRefresh}" IsEnabled="{Binding WidgetCanRead}"
+                      HorizontalAlignment="Left" />
+              <Repeat Source="{Binding card.Items}" As="row" Key="{Binding row.Key}">
+                <Container Type="Vertical Stack" CellGap="3">
+                  <Text Text="{Binding row.Title}" FontWeight="750" TextWrapping="Wrap" IsVisible="{Binding row.IsPlain}" />
+                  <Button id="newtab-widget-open-item" Action="OpenWidgetItem" Text="{Binding row.Title}" AccessibleName="{Binding row.OpenName}"
+                          IsVisible="{Binding row.CanOpen}" IsEnabled="{Binding WidgetCanRead}" HorizontalContentAlignment="Left" Chromeless="True" />
+                  <Text Text="{Binding row.Detail}" FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                  <Button id="newtab-widget-complete" Action="CompleteWidgetTask" Content="Complete task" AccessibleName="{Binding row.CompleteName}"
+                          IsVisible="{Binding row.CanComplete}" IsEnabled="{Binding WidgetCanRead}" HorizontalAlignment="Left" />
+                </Container>
+              </Repeat>
+              <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding card.IsTimer}">
+                <Text Text="{Binding WidgetTimerReadout}" FontSize="28" FontWeight="800" />
+                <Container Type="Wrap" CellGap="8">
+                  <Button id="newtab-widget-timer-toggle" Action="home.newtab-widget-timer-toggle" Text="{Binding WidgetTimerAction}" />
+                  <Button id="newtab-widget-timer-reset" Action="home.newtab-widget-timer-reset" Content="Reset timer" />
+                </Container>
+                <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding WidgetTimerConfirmReset}">
+                  <Text Text="Reset the running timer to its configured duration?" TextWrapping="Wrap" />
+                  <Container Type="Wrap" CellGap="8">
+                    <Button Action="home.newtab-widget-timer-reset-confirm" Content="Reset timer" AccentRole="Primary" />
+                    <Button Action="home.newtab-widget-timer-reset-cancel" Content="Cancel" />
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+          </Repeat>
+        </Container>
+        <Container id="newtab-widget-edit" Type="Vertical Stack" CellGap="10" Padding="16" CornerRadius="16"
+                   Background="{Resource CuiPanelBrush}" IsVisible="{Binding WidgetOptionsOpen}">
+          <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
+            <Text Text="{Binding WidgetOptionsTitle}" FontSize="18" FontWeight="750" VerticalAlignment="Center" TextWrapping="Wrap" />
+            <Button id="newtab-widget-options-close" Column="1" Action="home.newtab-widget-close" Content="Done" />
+          </Container>
+          <Container Type="Wrap" CellGap="8">
+            <Button Action="home.newtab-widget-move-up" Content="Move earlier" IsEnabled="{Binding WidgetCanMoveUp}" />
+            <Button Action="home.newtab-widget-move-down" Content="Move later" IsEnabled="{Binding WidgetCanMoveDown}" />
+            <Button Action="home.newtab-widget-width" Text="{Binding WidgetWidthLabel}" IsEnabled="{Binding WidgetCanReposition}" />
+            <Button Action="home.newtab-widget-pin" Text="{Binding WidgetPinLabel}" IsEnabled="{Binding WidgetCanReposition}" />
+            <Button Action="home.newtab-widget-lock" Text="{Binding WidgetLockLabel}" IsEnabled="{Binding WidgetCanEdit}" />
+            <Button Action="home.newtab-widget-hide" Content="Hide from Home" IsEnabled="{Binding WidgetCanEdit}" />
+            <Button Action="home.newtab-widget-remove" Content="Remove widget" IsEnabled="{Binding WidgetCanEdit}" />
+          </Container>
+          <Text Text="Source" FontWeight="750" />
+          <Text Text="{Binding WidgetSourceNotice}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          <Repeat Source="{Binding WidgetSourceChoices}" As="choice" Key="{Binding choice.Id}">
+            <Button Action="ChooseWidgetSource" Text="{Binding choice.Label}" Selected="{Binding choice.Selected}"
+                    IsEnabled="{Binding WidgetCanEdit}" HorizontalContentAlignment="Left" />
+          </Repeat>
+        </Container>
+      </Container>
+    </Page>
+    <Page id="newtab-widgets-picker-page" AccessibleName="Add widgets">
+      <Container id="newtab-widget-picker" Type="Grid" RowSizes="Auto Auto 1fr" CellGap="20"
+                 Padding="{Binding WidgetPickerPadding, fallback=18}" Background="{Resource CuiPanelBrush}" CornerRadius="22"
+                 role="dialog" accessible-name="Add widgets">
+        <Container id="newtab-widget-picker-header" Type="Grid" ColumnSizes="1fr Auto" CellGap="12">
+          <Text Text="Add widgets" FontSize="25" FontWeight="800" VerticalAlignment="Center" />
+          <Button id="newtab-widget-picker-close" Column="1" Action="home.newtab-widget-close" Content="×"
+                  AccessibleName="Close widgets" ToolTip="Close widgets" Width="36" Height="36" Padding="0"
+                  FontSize="20" Chromeless="True" />
+        </Container>
+        <Container id="newtab-widget-picker-search-row" Row="1" Type="Grid" ColumnSizes="Auto 1fr" CellGap="8"
+                   Padding="12 0 4 0" Background="{Resource CuiPanel2Brush}" CornerRadius="14">
+          <Image id="newtab-widget-picker-search-icon" Source="icon:search" Width="18" Height="18" VerticalAlignment="Center"
+                 IsHitTestVisible="False" />
+          <Input id="newtab-widget-search" Column="1" Type="Text" AccessibleName="Find a widget" PlaceholderText="Find a widget"
+                 Value="{Binding WidgetQuery, Mode=TwoWay}" Height="48" Background="{Resource CuiTransparentBrush}" CornerRadius="12"
+                 VerticalContentAlignment="Center" />
+        </Container>
+        <Container id="newtab-widget-picker-scroll" Row="2" Type="Vertical Stack" CellGap="8" VerticalScrolling="True" HorizontalScrolling="False">
+          <Text id="newtab-widget-picker-empty" Text="No widgets match this search." IsVisible="{Binding WidgetCatalogueEmpty}"
+                TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          <Container id="newtab-widget-picker-grid" Type="Grid" CellGap="12" ColumnSizes="{Binding WidgetPickerColumns}"
+                     RowSizes="{Binding WidgetPickerRows}">
+            <Repeat id="newtab-widget-picker-items" Source="{Binding WidgetCatalogue}" As="entry" Key="{Binding entry.Id}"
+                    ItemRow="{Binding entry.Row}" ItemColumn="{Binding entry.Column}">
+              <Button id="newtab-widget-add" Action="PickWidget" AccessibleName="{Binding entry.ActionName}" IsEnabled="{Binding entry.CanActivate}"
+                      HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Top"
+                      Background="{Resource CuiWorkspaceBrush}" BorderWidth="0" CornerRadius="15" Padding="12"
+                      MinHeight="188">
+                <Container id="newtab-widget-picker-card-face" Type="Vertical Stack" CellGap="9">
+                  <Container id="newtab-widget-picker-preview" Type="Overlay" MinHeight="104" CornerRadius="11">
+                    <Container id="newtab-widget-picker-preview-fill" Type="Overlay" Background="{Resource CuiAccentSoftBrush}"
+                               Opacity="0.42" IsHitTestVisible="False" CornerRadius="11" />
+                    <Container id="newtab-widget-picker-preview-content" Type="Vertical Stack" Padding="10" CellGap="5"
+                               IsHitTestVisible="False">
+                      <Image id="newtab-widget-picker-preview-icon" Source="{Binding entry.Icon}" Width="15" Height="15"
+                             HorizontalAlignment="Left" />
+                      <Text id="newtab-widget-picker-preview-label" Text="{Binding entry.Preview}" FontWeight="800"
+                            FontSize="{Binding entry.PreviewFontSize}" TextWrapping="Wrap" Foreground="{Resource CuiTextBrush}" />
+                      <Container id="newtab-widget-picker-preview-bar-long" Type="Overlay" Height="3" MaxWidth="112"
+                                 HorizontalAlignment="Left" Width="94" Opacity="0.26" CornerRadius="2" Background="{Resource CuiTextSoftBrush}" />
+                      <Container id="newtab-widget-picker-preview-bar-short" Type="Overlay" Height="3" MaxWidth="75"
+                                 HorizontalAlignment="Left" Width="60" Opacity="0.19" CornerRadius="2" Background="{Resource CuiTextSoftBrush}" />
+                    </Container>
+                  </Container>
+                  <Container id="newtab-widget-picker-card-label" Type="Grid" ColumnSizes="1fr Auto" CellGap="8" Padding="2 0">
+                    <Container id="newtab-widget-picker-card-text" Type="Vertical Stack" CellGap="3">
+                      <Text id="newtab-widget-picker-card-title" Text="{Binding entry.Title}" FontSize="14" FontWeight="750" TextWrapping="Wrap" />
+                      <Text id="newtab-widget-picker-card-source" Text="{Binding entry.Source}" FontSize="12" TextWrapping="Wrap"
+                            Foreground="{Resource CuiTextSoftBrush}" />
+                    </Container>
+                    <Image id="newtab-widget-picker-card-state" Column="1" Source="{Binding entry.StateIcon}"
+                           Width="15" Height="15" VerticalAlignment="Bottom" IsHitTestVisible="False" />
+                  </Container>
+                </Container>
+              </Button>
+            </Repeat>
+          </Container>
+        </Container>
+      </Container>
+    </Page>
+  </Theme>
+</Cui>

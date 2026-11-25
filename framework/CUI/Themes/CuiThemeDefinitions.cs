@@ -102,7 +102,7 @@ public sealed class CuiThemeDefinitionCatalog
         {
             var name = RequireName(definition.Name, nameof(definition.Name));
             var inherits = RequireName(definition.Inherits, nameof(definition.Inherits));
-            if (CuiThemeCatalog.All.Any(theme => string.Equals(theme.DisplayName, name, StringComparison.OrdinalIgnoreCase)))
+            if (CuiThemeCatalog.FindBuiltIn(name, acceptLegacyAlias: false) is { Theme: not CuiTheme.Cinematic })
                 throw new CuiThemeDefinitionException("CUI_THEME_BUILTIN_SHADOW", $"Custom theme '{name}' cannot shadow a built-in theme.");
             if (_definitions.ContainsKey(name) || _custom.Values.Any(theme => string.Equals(theme.Name, name, StringComparison.OrdinalIgnoreCase)))
                 throw new CuiThemeDefinitionException("CUI_THEME_DUPLICATE", $"Custom theme '{name}' is already defined.");
@@ -151,9 +151,8 @@ public sealed class CuiThemeDefinitionCatalog
 
     private CuiResolvedTheme ResolveCore(string name, HashSet<string> path)
     {
-        var builtIn = CuiThemeCatalog.All.FirstOrDefault(
-            candidate => string.Equals(candidate.DisplayName, name, StringComparison.OrdinalIgnoreCase));
-        if (builtIn is not null)
+        var builtIn = CuiThemeCatalog.FindBuiltIn(name, acceptLegacyAlias: false);
+        if (builtIn is { Theme: not CuiTheme.Cinematic })
             return new CuiResolvedTheme(builtIn.DisplayName, builtIn.Theme, builtIn, EmptyRules());
 
         var custom = _custom.Values.FirstOrDefault(item => string.Equals(item.Name, name, StringComparison.OrdinalIgnoreCase));
@@ -169,7 +168,11 @@ public sealed class CuiThemeDefinitionCatalog
         }
 
         if (!_definitions.TryGetValue(name, out var definition))
+        {
+            if (CuiThemeCatalog.FindBuiltIn(name) is { } comic)
+                return new CuiResolvedTheme(comic.DisplayName, comic.Theme, comic, EmptyRules());
             throw new CuiThemeDefinitionException("CUI_THEME_UNKNOWN_BASE", $"Theme '{name}' is not a built-in or declared custom theme.");
+        }
         if (!path.Add(definition.Name))
             throw new CuiThemeDefinitionException("CUI_THEME_INHERITANCE_CYCLE", $"Theme inheritance contains a cycle at '{definition.Name}'.");
 

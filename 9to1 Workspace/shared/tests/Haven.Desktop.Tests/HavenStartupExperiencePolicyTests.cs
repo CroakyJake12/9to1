@@ -9,6 +9,6 @@ public sealed class HavenStartupExperiencePolicyTests
     public void StartupAlwaysUsesTheSingleCurrentHavenExperience()
     {
         Assert.Equal(HavenShellEdition.New, HavenStartupExperiencePolicy.Edition);
-        Assert.Equal(HavenUiAppearance.SuperDark, HavenStartupExperiencePolicy.Appearance);
+        Assert.Equal(HavenUiAppearance.Dark, HavenStartupExperiencePolicy.Appearance);
     }
 }

@@ -35,13 +35,6 @@ public sealed partial class NewDashboardPage
         _dashboardBindings.Set("ModelStatus", "Loading recommendations…");
         _dashboardBindings.Set("ModelColumns", "1fr");
         _dashboardBindings.Set("RecommendedModels", Array.Empty<Dictionary<string, object?>>());
-        SizeChanged += (_, _) =>
-        {
-            var columns = Bounds.Width >= 1000 ? 3 : Bounds.Width >= 680 ? 2 : 1;
-            if (columns == _modelColumns) return;
-            _modelColumns = columns;
-            PublishRecommendedModelRows();
-        };
     }
 
     private Task RefreshDeviceModelsAsync(CancellationToken token)
@@ -138,6 +131,9 @@ public sealed partial class NewDashboardPage
                 "RefreshRecommendations" => new(owner.RunHomeWorkAsync(owner.RefreshDeviceModelsAsync, cancellationToken)),
                 "ReviewRecommendedModel" when parameter is string key => new(owner.RunHomeWorkAsync(token => owner.ReviewModelAsync(key, token), cancellationToken)),
                 "CloseModelReview" => CloseReview(),
+                "OpenBriefingLibrary" => owner.OpenBriefingDestination(DashboardBriefingDestination.Library),
+                "OpenBriefingTasks" => owner.OpenBriefingDestination(DashboardBriefingDestination.Tasks),
+                "OpenBriefingStudy" => owner.OpenBriefingDestination(DashboardBriefingDestination.Study),
                 _ => ValueTask.FromException(new InvalidOperationException("Unknown dashboard action."))
             };
         }

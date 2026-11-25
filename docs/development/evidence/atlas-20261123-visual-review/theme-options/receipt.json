@@ -1,0 +1,186 @@
+{
+  "source": {
+    "revision": "0d921b4cc3c15358af680adf4a196b0e7d95c2a7",
+    "parent_revision": "bc027a831",
+    "product_patch_sha256": "65619e5e27ef3da06d42a393e72ab715c77cf9d564b5e3b354d1c691cfe57df1"
+  },
+  "atlas": {
+    "source": "b1009894406d984dfb7c453b60a61f2422fc22b8",
+    "html_sha256": "612a9aa9fdc01b1c8a71e82532b191614992e1a6b78602fe5100aee9fa8bf4d2",
+    "mode": "Professional Dark",
+    "renderer": "Chromium"
+  },
+  "native": {
+    "renderer": "Linux X11 / Avalonia at 1:1 device scale",
+    "route": "browse://home, active Settings category Theme Options",
+    "mode": "Professional Dark",
+    "preferences": {
+      "legacy_theme": "Professional",
+      "legacy_mode": 2,
+      "legacy_override_active": false,
+      "canonical_theme": "Professional",
+      "canonical_mode": "Dark",
+      "display": {
+        "mode": 1,
+        "brightness": 50,
+        "colourContrast": 50
+      },
+      "accent": {
+        "mode": 0,
+        "allAppsColour": null,
+        "individualApps": {}
+      }
+    },
+    "assemblies": {
+      "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+      "Haven.dll": "0fd6ef326fd032ebaf27469ca0d777c86844bb394cf8b134b2ec26a3a54686f5",
+      "HavenOS.Apps.Browse.NativeUI.dll": "06bb0711a1e21245a60c20838cbad52bec937a2d65273e9f58e5e5a0d313d4b3",
+      "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+      "UI/Home.cui": "ee6eec9d989f29b9cc67522730c794b2c2662cd6783a004371a0fbbfe5e94b79"
+    },
+    "observed_interaction": {
+      "journey": "Physical pinned Home \u2192 gear \u2192 Appearance \u2192 Theme Options. The title updated in the live tab and address display.",
+      "wide_layout": "Compact Light / dark, Accent palette and Related settings rows. The shipped mode selector also offers Follow system. Atlas additionally renders an example Custom themes row and help chrome.",
+      "narrow_layout": "The 720\u00d7520 viewport places Settings categories above a separate scrolling content region. Wheel scroll brought the palette row into view. The Atlas fixture retained its 1440-pixel content width.",
+      "palette": "A physical click in the 720\u00d7520 view opened the existing native Appearance Accent panel.",
+      "accessibility": "A physical click at 1440\u00d7900 opened the existing native Accessibility controls and updated the active Settings title.",
+      "clipboard_before": "browse://home",
+      "unsent_address": "overnight-address-draft",
+      "clipboard_after_escape": "browse://home",
+      "address_submission": false,
+      "appearance_preferences_changed": false
+    },
+    "shutdown": [
+      "Window manager WM_DELETE_WINDOW",
+      "Haven apphost exit code 0"
+    ]
+  },
+  "comparisons": [
+    {
+      "viewport": [
+        1440,
+        900
+      ],
+      "atlas_render": {
+        "route": "settings-theme-options",
+        "heading": "Theme Options",
+        "selected_nodes": [
+          "Theme Options"
+        ],
+        "root_scroll_width": 1440,
+        "image": {
+          "file": "atlas-settings-theme-options-1440x900.png",
+          "size": [
+            1440,
+            900
+          ],
+          "sha256": "735b8bd1bdffbc417d92f496e9a2b901ecfea68417f3b0d32ce2518454fcdba2"
+        }
+      },
+      "native_raw": {
+        "file": "03-theme-options-professional-dark-wide.png",
+        "size": [
+          1440,
+          900
+        ],
+        "sha256": "2a360ba884813457e25a28589e9bd846c0479c6722bb178f6e2f1139a689544c"
+      },
+      "pair": {
+        "file": "comparison-theme-options-final-professional-dark-1440x900.png",
+        "size": [
+          2934,
+          970
+        ],
+        "sha256": "39dd1b5fec21683fe4b0f38bd16301a73d041fab32cefaef03b3f84b346076a8"
+      }
+    },
+    {
+      "viewport": [
+        720,
+        520
+      ],
+      "atlas_render": {
+        "route": "settings-theme-options",
+        "heading": "Theme Options",
+        "selected_nodes": [
+          "Theme Options"
+        ],
+        "root_scroll_width": 1440,
+        "image": {
+          "file": "atlas-settings-theme-options-720x520.png",
+          "size": [
+            720,
+            520
+          ],
+          "sha256": "7ccdc5a4f595d9456686206a02ba24e12f3848e3ff8d9fdca21f291c54059db3"
+        }
+      },
+      "native_raw": {
+        "file": "04-theme-options-professional-dark-narrow.png",
+        "size": [
+          720,
+          520
+        ],
+        "sha256": "fa1aceea8d71f4faf36a95f376624a354f415a6988c74e0eb4e45a3fccf5395f"
+      },
+      "pair": {
+        "file": "comparison-theme-options-final-professional-dark-720x520.png",
+        "size": [
+          1494,
+          590
+        ],
+        "sha256": "cb74116ba539fcd776e4c1ca1111e71c532e804c1067118dc35b1f57068a0f1c"
+      }
+    }
+  ],
+  "additional_native_images": [
+    {
+      "file": "05-theme-options-narrow-scrolled.png",
+      "size": [
+        720,
+        520
+      ],
+      "sha256": "7249ec207cadad8be353b40d598e6365d628bb1ff9d0a65152283e5fad9235f8"
+    },
+    {
+      "file": "06-native-palette-opened-from-theme-options.png",
+      "size": [
+        720,
+        520
+      ],
+      "sha256": "4e0a7cc75dc4dff63bc01cd1f0ea995a00d0d797b8d13ea4a8591bf005b54d6b"
+    },
+    {
+      "file": "07-theme-options-address-committed-before.png",
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "769fc6f9477b50385beb3ac2fb717e384402f15f7ac87f4465560c93188a45b9"
+    },
+    {
+      "file": "08-theme-options-address-unsent-draft.png",
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "083f7383b8b8f4ae64cd06070af5ae8f29f6804eaedbbee05c6179b7dabb7048"
+    },
+    {
+      "file": "09-theme-options-address-escape-restored.png",
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "afa4fed084890e360273d6578432d1606d21584cb701bec3ca33facc01ca4829"
+    },
+    {
+      "file": "10-native-accessibility-opened-from-theme-options.png",
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "c2eeeeb2e71e2cd303a8774aef212006b39e912770781a9d0e557ae5707318e5"
+    }
+  ]
+}

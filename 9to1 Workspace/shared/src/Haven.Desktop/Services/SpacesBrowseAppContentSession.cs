@@ -502,7 +502,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         _publishedTaskRoute = null;
         _routeEpoch++;
         _chatPage = chat;
-        _publishedChatRoute = new(chat, ConversationAddress(chat.CurrentConversation));
+        _publishedChatRoute = new(chat, ConversationAddress(chat));
         _address = _publishedChatRoute.Address;
         // Close the presentation-only manager only after the successful setter AND
         // current chat/route projection. StateChanged observers must see that same tuple.
@@ -636,16 +636,18 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             await OpenStudyWorkspaceAsync(Haven.Desktop.Views.Pages.Study.StudyWorkspaceRoute.Overview, null, token);
             return;
         }
-        var factory = NewChatSessionFactory();
-        var page = await factory.CreateNewAsync(token);
+        var page = await CreateFreshSpaceChatAsync(actualSpace, token);
         _ownedChats.Add(page);
         var published = false;
         try
         {
             token.ThrowIfCancellationRequested();
             DemandAlive();
-            if (actualSpace.Kind == SpaceKind.Tasks) page.ConfigureTaskMode();
-            await page.AssignSpaceAsync(spaceId);
+            if (actualSpace.Kind == SpaceKind.Tasks)
+            {
+                page.ConfigureTaskMode();
+                await page.AssignSpaceAsync(registeredSpaceId);
+            }
 #if !ANDROID
             await RetireAssistantPresentationOnUiAsync();
 #endif
@@ -894,13 +896,21 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         }
     }
 
-    private void ObserveSpacesSelectionChange()
+    private void ObserveSpacesConversationRefresh()
     {
         _ = Task.Run(async () =>
         {
             try { await RefreshSpacesConversationsAsync(_token).ConfigureAwait(false); }
             catch (Exception failure) when (failure is not OperationCanceledException)
             { System.Diagnostics.Trace.TraceError("Spaces sidebar conversation refresh failed: {0}", failure); }
+        });
+    }
+
+    private void ObserveSpacesSelectionChange()
+    {
+        ObserveSpacesConversationRefresh();
+        _ = Task.Run(async () =>
+        {
             // The extension-contributed projection reads only the selection the controller already
             // resolved, so it issues no extra Space-registry read and cannot change when a selection or
             // held route read settles. That is what makes it safe to refresh here.
@@ -1329,6 +1339,22 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     }
 #endif
 
+    private async Task<NewChatPage> CreateFreshSpaceChatAsync(SpaceDefinition space, CancellationToken token)
+    {
+        // Replacing the current page is an ordinary departure: preserve its exact non-empty
+        // draft through the existing owner, without ever persisting a Temporary draft.
+        var outgoing = _chatPage;
+        if (outgoing is not null) await outgoing.PrepareWorkspaceNavigationAsync();
+        token.ThrowIfCancellationRequested();
+        DemandAlive();
+        if (!ReferenceEquals(outgoing, _chatPage))
+            throw new SpacesWorkspaceActionRefusal("The current chat changed while saving its draft.");
+        var factory = NewChatSessionFactory();
+        return space.Kind == SpaceKind.Tasks
+            ? await factory.CreateNewAsync(token)
+            : await factory.CreateNewScopedChatAsync(space.Id, token);
+    }
+
     /// <summary>Starts a new conversation inside the selected Space from the contextual sidebar.
     /// It never creates another Space and never reuses an existing conversation.</summary>
     private async Task NewConversationOnUiAsync(Guid spaceId, CancellationToken token)
@@ -1344,15 +1370,18 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             await WithStudyNavigationPreparationAsync(() => StartStudySessionAsync(null, null, token), token);
             return;
         }
-        var page = await NewChatSessionFactory().CreateNewAsync(token);
+        var page = await CreateFreshSpaceChatAsync(space, token);
         _ownedChats.Add(page);
         var published = false;
         try
         {
             token.ThrowIfCancellationRequested();
             DemandAlive();
-            if (space.Kind == SpaceKind.Tasks) page.ConfigureTaskMode();
-            await page.AssignSpaceAsync(spaceId);
+            if (space.Kind == SpaceKind.Tasks)
+            {
+                page.ConfigureTaskMode();
+                await page.AssignSpaceAsync(spaceId);
+            }
 #if !ANDROID
             await RetireAssistantPresentationOnUiAsync();
 #endif

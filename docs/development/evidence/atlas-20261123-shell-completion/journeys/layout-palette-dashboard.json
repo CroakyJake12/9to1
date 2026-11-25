@@ -1,0 +1,165 @@
+{
+  "dashboard_commit": "e781c8c7acc5e6ee62912217e0e8b1d2d4e18496",
+  "dashboard_build_parent": "b5c3ff8657bbe7edf5d09f5d94505b8cd4be7f70",
+  "dashboard_assemblies": {
+    "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+    "Haven.dll": "8d8d2dadab70a8458f5a61dded201c442e824b83b10804a0680fe1d86ad3b3df",
+    "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+    "HavenOS.Apps.Browse.NativeUI.dll": "44b24e2946f8becac9741cfaf4283c5dcf74a519830a0f35b861aa06a29698ae",
+    "CakeOS.Cui.Runtime.dll": "822c755bc0cbb8c629831c4dbc1d6dbcc980eef3b92a457f1d250dc5afe366a7"
+  },
+  "dashboard_inputs": [
+    {
+      "filename": "action-customise.png",
+      "sha256": "4dde6c5ca5c9543d8d7488b13292b46e6520dc595ab5ecc4dde446a83d1ebf83",
+      "pixels": [
+        1440,
+        900
+      ],
+      "observed": "The visible Customise control still opens the actual Dashboard editor."
+    },
+    {
+      "filename": "action-view-files-settled.png",
+      "sha256": "1d3af83471b2e2b71a619a41be63100ef7581d92c8719e488cde5cefcf5585ef",
+      "pixels": [
+        1440,
+        900
+      ],
+      "observed": "View files opened the existing Home Library in a distinct tab with authorized search and honest empty results."
+    },
+    {
+      "filename": "action-library-return-settled.png",
+      "sha256": "dc9a91f7c99c4bf699e067db1bc3ab57ccc0a084960c9f7aa254c685fb79d806",
+      "pixels": [
+        1440,
+        900
+      ],
+      "observed": "The original Dashboard tab was selected again. The briefing and original tab persisted."
+    },
+    {
+      "filename": "action-open-tasks.png",
+      "sha256": "cfe23fc7449a3528950b5b49781f5457e723d7fda683ec9437904ce814f9f256",
+      "pixels": [
+        1440,
+        900
+      ],
+      "observed": "Open Tasks opened the actual Tasks Space with New task and Refresh tasks controls."
+    },
+    {
+      "filename": "action-view-progress.png",
+      "sha256": "e2615c0ecf5f6888ed7b535ee21f419bf884d92b657e351334dcf0f34a2aa3f0",
+      "pixels": [
+        1440,
+        900
+      ],
+      "observed": "View progress opened the actual Study owner with zero subjects and no recorded minutes in this profile."
+    },
+    {
+      "filename": "native-home-dashboard-720x520-study.png",
+      "sha256": "d689142afd51f17e3d7219b079d2f6bbed69bc68194797bf0b2eaf46d0c47a5e",
+      "pixels": [
+        720,
+        520
+      ],
+      "observed": "Scrolling reached the stacked Study card through the real compact scroll area."
+    }
+  ],
+  "dashboard_test": {
+    "filter": "FullyQualifiedName~HomeDashboardCuiRenderTests",
+    "passed": 20,
+    "log_sha256": "0c7fe57711e70946e2145e43325eb0388ce39de481377a5cdc13ce0c007c8973"
+  },
+  "layout_commit": "a76007798c7f94a5afc20c88168718f87ec68ae0",
+  "palette_commit": "b5c3ff8657bbe7edf5d09f5d94505b8cd4be7f70",
+  "settings_assemblies": {
+    "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+    "Haven.dll": "f139eaf123daf3137319292d4d382c86f2cabe09fb00b26113ede696d9aee131",
+    "HavenOS.Home.dll": "de629e6ee6beab7020184367fc39fd30ec64439c9951bf28b1f3cc3583726be8",
+    "HavenOS.Apps.Browse.NativeUI.dll": "44b24e2946f8becac9741cfaf4283c5dcf74a519830a0f35b861aa06a29698ae",
+    "HavenOS.Apps.Browse.Core.dll": "a4fc7eed39a0f90b0e8760696e34665de4756641a7c813082bcc1c57a1609243",
+    "Haven.Infrastructure.dll": "5f8cdd7835b725872fee0afd7ebe10d2741aca29ff9b1ec861225d1db099d827",
+    "CakeOS.Cui.Runtime.dll": "822c755bc0cbb8c629831c4dbc1d6dbcc980eef3b92a457f1d250dc5afe366a7",
+    "CakeOS.Cui.Themes.dll": "6bf459092d7faee6d7f2af4ec0c801d8c825b43b3b816e5537dd3583878210c8",
+    "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+    "UI/Home.cui": "f60b543764d73b7935bd0240e05bac8082ceae88230831cf70efe7a472d938d7"
+  },
+  "palette_save": {
+    "initial": {
+      "legacy_theme": "Professional",
+      "legacy_mode": 2,
+      "legacy_override_active": false,
+      "canonical_theme": null,
+      "canonical_mode": null,
+      "display": null,
+      "accent": null
+    },
+    "selected_while_off": {
+      "legacy_theme": "Professional",
+      "legacy_mode": 2,
+      "legacy_override_active": false,
+      "canonical_theme": "Professional",
+      "canonical_mode": "Dark",
+      "display": null,
+      "accent": {
+        "mode": 0,
+        "allAppsColour": "#00B89C",
+        "individualApps": {}
+      }
+    },
+    "enabled": {
+      "legacy_theme": "Professional",
+      "legacy_mode": 2,
+      "legacy_override_active": false,
+      "canonical_theme": "Professional",
+      "canonical_mode": "Dark",
+      "display": null,
+      "accent": {
+        "mode": 1,
+        "allAppsColour": "#00B89C",
+        "individualApps": {}
+      }
+    }
+  },
+  "settings_inputs": [
+    {
+      "filename": "04-layout-opened-existing-newtab-editor.png",
+      "sha256": "59d632d3efe4d04ac9345985e2e827cc5d37fa0da597f446aa75d76b0ebdb949",
+      "pixels": [
+        1440,
+        900
+      ]
+    },
+    {
+      "filename": "17-layout-narrow-opened-existing-newtab-editor.png",
+      "sha256": "aea226dc0a666cf5589d85f167bb2d3361733a6094c9fa19b15601dd0438b980",
+      "pixels": [
+        720,
+        520
+      ]
+    },
+    {
+      "filename": "15-layout-opened-existing-accessibility.png",
+      "sha256": "b8759590202080b54bc8ade4f9591a25863d53e69bbd7230c536be7d4cfdd590",
+      "pixels": [
+        1440,
+        900
+      ]
+    },
+    {
+      "filename": "10-palette-back-appearance.png",
+      "sha256": "67d8846709b668e595c3fdccea75dee839978d7e4c0c0ded70a14730668a0bae",
+      "pixels": [
+        1440,
+        900
+      ]
+    },
+    {
+      "filename": "13-palette-back-restored-rail-focus.png",
+      "sha256": "8177ff08602791b3b5c652ba8aef88432185bb3cb598cb4926fd02654098c845",
+      "pixels": [
+        1440,
+        900
+      ]
+    }
+  ]
+}

@@ -190,6 +190,30 @@ public sealed class CodeIntelligenceServiceTests : IDisposable
     }
 
     [Fact]
+    public void CapturedPointAtEndOfLineHasNoInventedRangeAndCutOffLinesNeverBecomeProblems()
+    {
+        const string point = "Point.cs(1,3): error PT: reported point";
+        const string cut = "Truncated.cs(1,1): warning TR: looks valid before more text arrives";
+        const int captureLimit = 2_000_100;
+        const int remainingInsideSecondRow = 40;
+        var prefix = Enumerable.Repeat(new string('x', 10_000) + "\n", 199);
+        var remaining = captureLimit - (10_001 * 199) - point.Length - 2 - remainingInsideSecondRow;
+        var output = string.Concat(prefix) + new string('y', remaining) + "\n" + point + "\n" + cut;
+        var report = ProductionCodeIntelligenceService.ParseCapturedBuildDiagnostics(output, _root);
+        var diagnostic = Assert.Single(report.Diagnostics);
+        Assert.Equal("PT", diagnostic.Code);
+        Assert.Equal(diagnostic.Range.Start, diagnostic.Range.End);
+        Assert.Equal(new CodePosition(0, 2), diagnostic.Range.Start);
+        Assert.True(report.Truncated);
+        Assert.Equal(1, report.RejectedLineCount);
+
+        var complete = ProductionCodeIntelligenceService.ParseCapturedBuildDiagnostics(
+            output[..(captureLimit - remainingInsideSecondRow)] + new string('z', remainingInsideSecondRow) + "\nmore", _root);
+        Assert.Single(complete.Diagnostics);
+        Assert.Equal(0, complete.RejectedLineCount);
+    }
+
+    [Fact]
     public void ExistingBuildServiceDecoderKeepsAllValidRowsWhileCapturedWorkbenchEntryIsBounded()
     {
         var rows = Enumerable.Range(0, 201).Select(index => $"src/{index}.cs(1,1): error TEST: reported").ToArray();

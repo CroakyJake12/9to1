@@ -13,6 +13,7 @@ using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
@@ -34,7 +35,7 @@ using HomeDiscoverPage = Haven.Desktop.Views.Pages.Home.HomeDiscoverPage;
 
 namespace Haven.Desktop.Tests;
 
-public sealed class UnifiedHomeContentTests
+public sealed partial class UnifiedHomeContentTests
 {
     private static BrowseAppContentRequest Request(string address = "browse://home") =>
         new(Guid.NewGuid(), AppContentAddress.Parse(address), "original-home-profile", BrowserTabPrivacy.Standard);
@@ -44,12 +45,14 @@ public sealed class UnifiedHomeContentTests
         Func<BrowseAppContentRequest, CancellationToken, Task>? admission = null, bool aiAvailable = true,
         Func<NewDashboardPage>? dashboard = null, Func<HomeDiscoverPage>? discover = null,
         Func<BrowseAppContentRequest, HomeEventsDestinationPage>? events = null,
-        Func<BrowseAppContentRequest, HomeSettingsDestinationPage>? settings = null) => new(source,
+        Func<BrowseAppContentRequest, HomeSettingsDestinationPage>? settings = null,
+        Func<BrowseAppContentRequest, string, CancellationToken, Task<AppContentAddress>>? prepareAiDraft = null,
+        Func<BrowseAppContentRequest, NewTabLayoutPreferences>? newTabLayout = null) => new(source,
             dashboard ?? (() => throw new InvalidOperationException("Apps must not construct an unused dashboard.")),
             discover ?? (() => throw new InvalidOperationException("Apps must not construct an unused model catalogue.")),
             navigation ?? ((_, _) => true),
-            (_, _) => throw new InvalidOperationException("Search must not implicitly invoke AI."),
-            admission ?? ((_, _) => Task.CompletedTask), () => true, lifetime, aiAvailable, events, settings);
+            prepareAiDraft ?? ((_, _, _) => throw new InvalidOperationException("Search must not implicitly invoke AI.")),
+            admission ?? ((_, _) => Task.CompletedTask), () => true, lifetime, aiAvailable, events, settings, newTabLayout: newTabLayout);
 
     // Merge inside the existing UnifiedHomeContentTests class. This is a component
     // control over the real Home/source-authority seam and real Browse retirement;
@@ -447,7 +450,7 @@ public sealed class UnifiedHomeContentTests
         var root = Path.Combine(Path.GetTempPath(), "home-settings-route-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         var file = Path.Combine(root, "preferences.json");
-        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\",\"defaultModel\":\"retained-model\"}");
+        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\",\"havenUiAppearance\":2,\"overrideAccentColour\":true,\"accentColourName\":\"Blue\",\"defaultModel\":\"retained-model\"}");
         var source = new NativeHomeThemePreferences(file, new(HomeDataScope.DeviceLocal, "original-home-profile"),
             UserPreferencesService.ProjectLegacyHomeTheme, _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
         using var lifetime = new CancellationTokenSource();
@@ -458,15 +461,33 @@ public sealed class UnifiedHomeContentTests
         try
         {
             await session.InitializeAsync();
+            var publishedTitles = new List<string>();
+            session.StateChanged += (_, _) => publishedTitles.Add(session.Title);
+            Assert.Equal("Home", session.Title);
             var page = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(session.OriginalNativeView).OriginalContent);
             window = Show(session.OriginalNativeView);
-            page.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "home-settings")
-                .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            var gear = HomeRailButton(page, "home-settings", "Settings");
+            ClickSettingsButton(window, gear);
             await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
             SettleFixtureLayout(window);
             Assert.NotNull(settings);
             Assert.Same(settings, Assert.Single(page.GetVisualDescendants().OfType<HomeSettingsDestinationPage>()));
-            Assert.Contains(settings!.GetVisualDescendants().OfType<Control>(), control => CuiRuntimeIdentity.GetStableId(control) == "id:home-appearance-settings");
+            Assert.Equal("Theme and accent preferences", session.Title);
+            Assert.Equal("browse://home", session.Address.Value);
+            var theme = SettingsControl<Button>(settings!, "home-settings-theme");
+            var appearance = SettingsControl<Button>(settings, "home-settings-appearance");
+            var fragment = SettingsControl<CuiContainerControl>(settings, "home-appearance-settings");
+            Assert.True(fragment.IsEffectivelyVisible);
+            Assert.True(theme.IsFocused);
+            Assert.True(SettingsCategorySelected(theme));
+            Assert.False(SettingsCategorySelected(appearance));
+            var cards = fragment.GetVisualDescendants().OfType<Button>()
+                .Where(button => button.Name == "home-theme-option").ToArray();
+            Assert.Equal(new[] { 5, 4 }, cards.GroupBy(button => Math.Round(button.TranslatePoint(default, window)!.Value.Y)).Select(row => row.Count()));
+            Assert.All(cards, card => Assert.True(card.Bounds.Height >= 136));
+            Assert.Contains(cards.SelectMany(card => card.GetVisualDescendants().OfType<TextBlock>()), label => label.Text == "Amber Console");
+            CaptureSettingsIfRequested(window, "appearance", source);
+
             AppearanceOption(settings, "Glow").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
             SettleFixtureLayout(window);
@@ -477,10 +498,84 @@ public sealed class UnifiedHomeContentTests
             Assert.Equal("Glow", HomeNativePreferenceFile.Resolve(saved,
                 new(HomeDataScope.DeviceLocal, "original-home-profile"), UserPreferencesService.ProjectLegacyHomeTheme).ThemeName);
             Assert.Single(Directory.EnumerateFiles(root, "*.json"));
-            await page.DispatchAsync("home.apps", null);
-            await page.DispatchAsync("home.settings", null);
+
+            var savedBytes = await File.ReadAllBytesAsync(file, testToken);
+            var brightness = SettingsControl<Slider>(settings, "home-brightness");
+            var savedBrightness = brightness.Value;
+            Assert.True(brightness.Focus());
+            PressSettingsKey(window, PhysicalKey.ArrowRight);
+            var draftBrightness = brightness.Value;
+            Assert.True(draftBrightness > savedBrightness);
+
+            var layout = SettingsControl<Button>(settings, "home-settings-layout");
+            var searchSettings = SettingsControl<TextBox>(settings, "home-settings-search");
+            Assert.True(searchSettings.Focus());
+            searchSettings.Text = "layout";
+            SettleFixtureLayout(window);
+            Assert.True(layout.IsEffectivelyVisible && appearance.IsEffectivelyVisible);
+            Assert.False(theme.IsEffectivelyVisible && theme.IsAttachedToVisualTree());
+            PressSettingsKey(window, PhysicalKey.Enter);
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
+            SettleFixtureLayout(window);
+            Assert.True(SettingsCategorySelected(layout));
+            Assert.Equal("Layout", session.Title);
+            Assert.False(SettingsCategorySelected(appearance));
+            Assert.True(SettingsControl<Button>(settings, "home-settings-open-dashboard").IsEffectivelyVisible);
+            Assert.True(SettingsControl<Button>(settings, "home-settings-reload-appearance").IsEffectivelyVisible);
+            Assert.True(layout.IsFocused);
+            PressSettingsKey(window, PhysicalKey.Escape);
+            SettleFixtureLayout(window);
+            Assert.True(searchSettings.IsFocused);
+            Assert.True(string.IsNullOrEmpty(searchSettings.Text));
+            theme = SettingsControl<Button>(settings, "home-settings-theme");
+            Assert.True(theme.IsEffectivelyVisible);
+            CaptureSettingsIfRequested(window, "layout", source);
+
+            ClickSettingsButton(window, appearance);
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
+            SettleFixtureLayout(window);
+            Assert.True(SettingsCategorySelected(appearance));
+            Assert.Equal("Appearance", session.Title);
+            Assert.True(SettingsControl<CuiContainerControl>(settings, "home-settings-appearance-overview").IsEffectivelyVisible);
+            ClickSettingsButton(window, theme);
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
+            SettleFixtureLayout(window);
+            Assert.Same(fragment, SettingsControl<CuiContainerControl>(settings, "home-appearance-settings"));
+            Assert.Equal(draftBrightness, brightness.Value);
+            Assert.Equal(savedBytes, await File.ReadAllBytesAsync(file, testToken));
+
+            ClickSettingsButton(window, SettingsControl<Button>(settings, "home-settings-back"));
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
+            SettleFixtureLayout(window);
+            Assert.DoesNotContain(page.GetVisualDescendants(), control => ReferenceEquals(control, settings));
+            Assert.True(gear.IsFocused);
+            Assert.True(SettingsCategorySelected(HomeRailButton(page, "home-apps", "9to1 Apps")));
+            Assert.Equal("Home", session.Title);
+            Assert.Equal("browse://home", session.Address.Value);
+            Assert.Equal(new[] { "Theme and accent preferences", "Layout", "Appearance", "Theme and accent preferences", "Home" },
+                publishedTitles);
+
+            PressSettingsKey(window, PhysicalKey.Enter);
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
             SettleFixtureLayout(window);
             Assert.Same(settings, Assert.Single(page.GetVisualDescendants().OfType<HomeSettingsDestinationPage>()));
+            Assert.True(theme.IsFocused);
+            Assert.Equal(draftBrightness, brightness.Value);
+            Assert.Equal("Theme and accent preferences", session.Title);
+
+            ClickSettingsButton(window, layout);
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
+            SettleFixtureLayout(window);
+            ClickSettingsButton(window, SettingsControl<Button>(settings, "home-settings-reload-appearance"));
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
+            SettleFixtureLayout(window);
+            ClickSettingsButton(window, appearance);
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
+            SettleFixtureLayout(window);
+            Assert.Equal(savedBrightness, brightness.Value);
+            Assert.Equal(savedBytes, await File.ReadAllBytesAsync(file, testToken));
+
             Assert.True(await session.TryPrepareToCloseAsync());
             await session.CloseAndDrainAsync();
             Assert.True(session.CanRetireOriginalView);
@@ -501,7 +596,7 @@ public sealed class UnifiedHomeContentTests
     {
         var root = Path.Combine(Path.GetTempPath(), "home-settings-short-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root); var file = Path.Combine(root, "preferences.json");
-        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\"}");
+        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\",\"havenUiAppearance\":2,\"overrideAccentColour\":true,\"accentColourName\":\"Orange\"}");
         var initial = await File.ReadAllBytesAsync(file);
         var source = new NativeHomeThemePreferences(file, new(HomeDataScope.DeviceLocal, "original-home-profile"),
             UserPreferencesService.ProjectLegacyHomeTheme, _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
@@ -516,10 +611,84 @@ public sealed class UnifiedHomeContentTests
             await session.InitializeAsync();
             window = new Window { Width = 520, Height = 520, Content = session.OriginalNativeView };
             window.Show(); Layout(); Assert.NotNull(settings);
-            var fragment = Assert.Single(settings!.GetVisualDescendants().OfType<CuiContainerControl>(),
-                control => CuiRuntimeIdentity.GetStableId(control) == "id:home-appearance-settings");
-            Assert.Equal("Vertical Stack", fragment.LayoutType);
-            var scroll = Assert.IsType<ScrollViewer>(fragment.Child);
+            var back = SettingsControl<Button>(settings!, "home-settings-back");
+            var backOrigin = back.TranslatePoint(default, window)!.Value;
+            var appearance = SettingsControl<Button>(settings, "home-settings-appearance");
+            var theme = SettingsControl<Button>(settings, "home-settings-theme");
+            var layout = SettingsControl<Button>(settings, "home-settings-layout");
+            Assert.True(appearance.Focus());
+            CaptureSettingsIfRequested(window, "appearance", source);
+            PressSettingsKey(window, PhysicalKey.Tab);
+            Assert.True(theme.IsFocused);
+            PressSettingsKey(window, PhysicalKey.ArrowDown);
+            Layout();
+            Assert.True(SettingsControl<Button>(settings, "home-settings-theme-options").IsFocused);
+            PressSettingsKey(window, PhysicalKey.ArrowDown);
+            Layout();
+            Assert.True(layout.IsFocused);
+            var nav = SettingsControl<CuiContainerControl>(settings, "home-settings-nav");
+            var categories = SettingsControl<CuiContainerControl>(settings, "home-settings-categories");
+            var navScroll = Assert.IsType<ScrollViewer>(categories.Child);
+            Assert.InRange(nav.Bounds.Height, 1, 176.5);
+            Assert.True(navScroll.Offset.Y > 0);
+            var categoriesOrigin = categories.TranslatePoint(default, window)!.Value;
+            Assert.True(backOrigin.Y >= 0 && backOrigin.Y + back.Bounds.Height <= categoriesOrigin.Y + .5);
+            Assert.False(SettingsCategorySelected(layout));
+            PressSettingsKey(window, PhysicalKey.Enter);
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            Layout();
+            Assert.True(SettingsCategorySelected(layout));
+            Assert.Equal(backOrigin, back.TranslatePoint(default, window)!.Value);
+            CaptureSettingsIfRequested(window, "layout", source);
+
+            var accessibility = SettingsControl<Button>(settings, "home-settings-accessibility");
+            PressSettingsKey(window, PhysicalKey.End);
+            Assert.True(SettingsControl<Button>(settings, "home-settings-apps").IsFocused);
+            PressSettingsKey(window, PhysicalKey.ArrowUp);
+            Assert.True(SettingsControl<Button>(settings, "home-settings-haven").IsFocused);
+            Assert.True(accessibility.Focus());
+            PressSettingsKey(window, PhysicalKey.Enter);
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            Layout();
+            Assert.True(SettingsCategorySelected(accessibility));
+            Assert.Equal(backOrigin, back.TranslatePoint(default, window)!.Value);
+            Assert.True(back.IsEffectivelyVisible && back.IsEnabled);
+            var accessibilityPage = SettingsControl<CuiContainerControl>(settings, "home-settings-accessibility-page");
+            Assert.True(accessibilityPage.IsEffectivelyVisible);
+            Assert.False(SettingsControl<CuiContainerControl>(settings, "home-appearance-settings").IsEffectivelyVisible);
+            var scroll = Assert.IsType<ScrollViewer>(accessibilityPage.Child);
+            var scale = SettingsControl<ComboBox>(settings, "home-settings-interface-scale");
+            Assert.True(scale.IsEffectivelyVisible);
+            Assert.True(scroll.Extent.Height > scroll.Viewport.Height);
+            Assert.InRange(scale.TranslatePoint(default, scroll)!.Value.Y, 0, scroll.Extent.Height);
+
+            PressSettingsKey(window, PhysicalKey.Home);
+            var global = SettingsControl<Button>(settings, "home-settings-global");
+            Assert.True(global.IsFocused);
+            PressSettingsKey(window, PhysicalKey.ArrowLeft);
+            Layout();
+            Assert.Equal("Collapsed", AutomationProperties.GetItemStatus(global));
+            Assert.DoesNotContain(settings.GetVisualDescendants(), control => ReferenceEquals(control, theme));
+            PressSettingsKey(window, PhysicalKey.ArrowRight);
+            Layout();
+            Assert.Equal("Expanded", AutomationProperties.GetItemStatus(global));
+            theme = SettingsControl<Button>(settings, "home-settings-theme");
+            Assert.True(theme.IsEffectivelyVisible);
+            PressSettingsKey(window, PhysicalKey.ArrowRight);
+            Assert.True(SettingsControl<Button>(settings, "home-settings-global-general").IsFocused);
+            PressSettingsKey(window, PhysicalKey.ArrowDown);
+            Assert.True(SettingsControl<Button>(settings, "home-settings-appearance").IsFocused);
+            appearance = SettingsControl<Button>(settings, "home-settings-appearance");
+            PressSettingsKey(window, PhysicalKey.Enter);
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            Layout();
+            Assert.True(SettingsCategorySelected(appearance));
+            PressSettingsKey(window, PhysicalKey.ArrowRight);
+            Assert.True(theme.IsFocused);
+            PressSettingsKey(window, PhysicalKey.Enter);
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            Layout();
+            Assert.True(SettingsCategorySelected(theme));
             Assert.Equal(global::Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled, scroll.HorizontalScrollBarVisibility);
             Assert.Equal(global::Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, scroll.VerticalScrollBarVisibility);
             Assert.True(scroll.Viewport.Height > 0 && scroll.Viewport.Height <= 520);
@@ -546,6 +715,178 @@ public sealed class UnifiedHomeContentTests
         }
     }
 
+    [AvaloniaTheory]
+    [InlineData(720)]
+    [InlineData(1180)]
+    public async Task Settings_Haven_group_keeps_source_settings_and_opens_existing_native_Browse_destinations(int width)
+    {
+        var limit = TimeSpan.FromSeconds(20);
+        using var lifetime = new CancellationTokenSource();
+        var paths = new LayoutPaths();
+        const string profile = "original-home-profile";
+        var file = Path.Combine(paths.DataDirectory, "preferences.json");
+        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\",\"havenUiAppearance\":2}");
+        var initial = await File.ReadAllBytesAsync(file);
+        var source = new NativeHomeThemePreferences(file, new(HomeDataScope.DeviceLocal, profile),
+            UserPreferencesService.ProjectLegacyHomeTheme, _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
+        BrowseNativeWorkspace? workspace = null;
+        Task? navigation = null;
+        BrowseNavigationIntent? intent = null;
+        var allow = true;
+        var home = Factory(new Registry(), lifetime.Token, navigation: (admitted, settlement) =>
+        {
+            intent = admitted;
+            return workspace!.TryQueueNavigationOriginal(admitted, settlement, out navigation);
+        }, settings: _ => new(source, _ => allow ? Task.CompletedTask : Task.FromException(new HomeSettingsAuthorityRefusal("Profile changed."))));
+        var chrome = await BrowseChrome.CreateAsync(paths, internalContentFactory: home,
+            homeProfileId: profile, cancellationToken: lifetime.Token);
+        workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new LayoutReadiness());
+        window.Width = width;
+        window.Height = 720;
+        try
+        {
+            RegisterProductionImageResolver(window);
+            window.Show();
+            await window.InitializeAsync(lifetime.Token).WaitAsync(limit);
+            await chrome.OpenContentAsync(AppContentAddress.Parse("browse://home/settings"), cancellationToken: lifetime.Token).WaitAsync(limit);
+            await RenderAsync();
+            var settingsTab = chrome.State.SelectedTab;
+            var settings = Assert.Single(window.GetVisualDescendants().OfType<HomeSettingsDestinationPage>());
+            var search = SettingsControl<TextBox>(settings, "home-settings-search");
+            var theme = SettingsControl<Button>(settings, "home-settings-theme");
+            var group = SettingsControl<Button>(settings, "home-settings-haven");
+            Assert.Equal("Collapsed", AutomationProperties.GetItemStatus(group));
+            Assert.True(theme.Focus());
+            PressSettingsKey(window, PhysicalKey.End);
+            Assert.True(SettingsControl<Button>(settings, "home-settings-apps").IsFocused);
+            PressSettingsKey(window, PhysicalKey.ArrowUp);
+            Assert.True(group.IsFocused);
+            PressSettingsKey(window, PhysicalKey.ArrowRight);
+            await RenderAsync();
+            Assert.Equal("Expanded", AutomationProperties.GetItemStatus(group));
+            PressSettingsKey(window, PhysicalKey.End);
+            PressSettingsKey(window, PhysicalKey.ArrowUp);
+            Assert.True(SettingsControl<Button>(settings, "home-settings-haven-storage-cache").IsFocused);
+            PressSettingsKey(window, PhysicalKey.ArrowLeft);
+            Assert.True(SettingsControl<Button>(settings, "home-settings-haven-performance").IsFocused);
+            PressSettingsKey(window, PhysicalKey.ArrowLeft);
+            Assert.True(group.IsFocused);
+            PressSettingsKey(window, PhysicalKey.ArrowLeft);
+            await RenderAsync();
+            Assert.Equal("Collapsed", AutomationProperties.GetItemStatus(group));
+            PressSettingsKey(window, PhysicalKey.Home);
+            Assert.True(SettingsControl<Button>(settings, "home-settings-global").IsFocused);
+
+            foreach (var (section, label, nativePage, control) in new[]
+            {
+                ("general", "General", BrowserNativePage.Settings, "BrowseSettingsPage"),
+                ("bookmarks", "Bookmarks", BrowserNativePage.Bookmarks, "BrowseBookmarksPage"),
+                ("history", "History", BrowserNativePage.History, "BrowseHistoryPage")
+            })
+            {
+                Assert.True(search.Focus());
+                var query = nativePage == BrowserNativePage.Settings ? "Browse engine" : label;
+                search.Text = query;
+                await RenderAsync();
+                PressSettingsKey(window, PhysicalKey.Enter);
+                await settings.WhenActionsIdleAsync().WaitAsync(limit);
+                await RenderAsync();
+                Assert.True(SettingsCategorySelected(SettingsControl<Button>(settings, "home-settings-haven-" + section)));
+                Assert.Equal(label, SettingsControl<TextBlock>(settings, "home-settings-haven-page-title").Text);
+                Assert.Equal(settingsTab.Id, chrome.State.SelectedTabId);
+                var open = SettingsControl<Button>(settings, "home-settings-open-browse-" + section);
+                if (nativePage == BrowserNativePage.Settings)
+                {
+                    allow = false;
+                    ClickSettingsButton(window, open);
+                    await settings.WhenActionsIdleAsync().WaitAsync(limit);
+                    Assert.Null(intent);
+                    Assert.Equal(settingsTab.Id, chrome.State.SelectedTabId);
+                    allow = true;
+                }
+                CaptureSettingsIfRequested(window, "haven-" + section, source);
+                ClickSettingsButton(window, open);
+                await settings.WhenActionsIdleAsync().WaitAsync(limit);
+                Assert.NotNull(navigation);
+                await navigation!.WaitAsync(limit);
+                await RenderAsync();
+                var address = AppContentAddress.Parse(BrowserNativePages.Address(nativePage).AbsoluteUri);
+                Assert.Equal(new BrowseNavigationIntent(settingsTab.Id, address, true), intent);
+                Assert.NotEqual(settingsTab.Id, chrome.State.SelectedTabId);
+                Assert.Equal(address, chrome.State.SelectedTab.Address);
+                Assert.Equal(BrowseEngineState.NativePage, chrome.State.SelectedTab.EngineState);
+                Assert.True(SettingsControl<CuiContainerControl>(window, control).IsEffectivelyVisible);
+                await chrome.SelectTabAsync(settingsTab.Id, lifetime.Token).WaitAsync(limit);
+                await RenderAsync();
+                Assert.Same(settings, Assert.Single(window.GetVisualDescendants().OfType<HomeSettingsDestinationPage>()));
+                Assert.Equal(query, search.Text);
+                Assert.True(SettingsCategorySelected(SettingsControl<Button>(settings, "home-settings-haven-" + section)));
+            }
+            Assert.Equal(initial, await File.ReadAllBytesAsync(file));
+        }
+        finally
+        {
+            try
+            {
+                window.Close();
+                if (window.OriginalClosePreparation is { } preparation) Assert.True(await preparation.WaitAsync(limit));
+                Dispatcher.UIThread.RunJobs();
+                Assert.NotNull(window.OriginalClose);
+                await window.OriginalClose!.WaitAsync(limit);
+            }
+            finally
+            {
+                await source.DisposeAsync();
+                Directory.Delete(paths.DataDirectory, recursive: true);
+            }
+        }
+
+        async Task RenderAsync()
+        {
+            await Task.WhenAll(workspace!.OriginalNotifications).WaitAsync(limit);
+            SettleFixtureLayout(window);
+        }
+    }
+
+    private static T SettingsControl<T>(Control root, string id) where T : Control
+    {
+        var directoryId = id.StartsWith("home-settings-", StringComparison.Ordinal)
+            ? HomeSettingsDestinationPage.DirectoryItemId(id["home-settings-".Length..])
+            : null;
+        return Assert.Single(root.GetVisualDescendants().OfType<T>(), control =>
+            CuiRuntimeIdentity.GetStableId(control) is { } stableId && (stableId == "id:" + id || stableId == directoryId));
+    }
+
+    private static bool SettingsCategorySelected(Button button) =>
+        Assert.IsType<bool>(CuiPropertyPresentation.For(button).Resolve("Selected").Value);
+
+    private static void ClickSettingsButton(Window window, Button button)
+    {
+        var center = button.TranslatePoint(new Rect(button.Bounds.Size).Center, window);
+        Assert.NotNull(center);
+        window.MouseMove(center.Value);
+        window.MouseDown(center.Value, MouseButton.Left);
+        window.MouseUp(center.Value, MouseButton.Left);
+    }
+
+    private static void PressSettingsKey(Window window, PhysicalKey key)
+    {
+        window.KeyPressQwerty(key, RawInputModifiers.None);
+        window.KeyReleaseQwerty(key, RawInputModifiers.None);
+    }
+
+    private static void CaptureSettingsIfRequested(Window window, string section, NativeHomeThemePreferences source)
+    {
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("HAVEN_UNIFIED_HOME_CAPTURES"))) return;
+        using var frame = window.CaptureRenderedFrame();
+        Assert.NotNull(frame);
+        var current = source.Context.Current;
+        var accent = current.EffectiveAccent.ResolveColour("app.home") ?? "Home default";
+        CaptureOptionalFrame(window, frame, $"home-settings-{section}-{frame.PixelSize.Width}x{frame.PixelSize.Height}",
+            $"UnifiedHome Settings route, isolated fixture theme {current.Theme.Name}, accent {accent}", current.Appearance);
+    }
+
     [AvaloniaFact]
     public async Task Configured_Home_Settings_has_one_strict_route_preserving_New_Tab_nested_and_private_refusals()
     {
@@ -562,6 +903,10 @@ public sealed class UnifiedHomeContentTests
             var actual = await chrome.NavigateAsync("browse://home/settings", lifetime.Token);
             Assert.Equal("browse://home/settings", actual.SelectedTab.Address.Value);
             Assert.Equal(BrowseEngineState.NativeApp, actual.SelectedTab.EngineState);
+            Assert.Equal("Theme and accent preferences", actual.SelectedTab.Title);
+            var pinnedHome = Assert.Single(actual.Tabs, tab => tab.IsHome);
+            Assert.False(pinnedHome.IsCloseable);
+            Assert.Equal("browse://home", pinnedHome.Address.Value);
             foreach (var invalid in new[] { "browse://newtab/settings", "browse://home/settings/nested" })
             {
                 var refused = await chrome.NavigateAsync(invalid, lifetime.Token);
@@ -921,6 +1266,100 @@ public sealed class UnifiedHomeContentTests
             Assert.Equal(CuiAppearance.Bright, reopened.Current.Appearance);
         }
         Directory.Delete(root, true);
+    }
+
+    [AvaloniaFact]
+    public async Task Settings_accent_controls_save_global_colour_while_off_and_retain_per_app_choices_after_reopen()
+    {
+        var directory = Directory.CreateTempSubdirectory("home-accent-");
+        var file = Path.Combine(directory.FullName, "preferences.json");
+        var scope = new HomeThemeScope(HomeDataScope.DeviceLocal, "accent-profile");
+        var token = TestContext.Current.CancellationToken;
+        await File.WriteAllTextAsync(file, """{"defaultModel":"retained-model"}""", token);
+        var existing = HomeThemePreference.Default(scope) with
+        {
+            Revision = 1, Appearance = "Dark", Display = new(HomeDisplayMode.Dark, 60, 40),
+            Accent = new(HomeThemeAccentOverrideMode.None, "#123ABC", new Dictionary<string, string> { ["app.write"] = "#11AA77" })
+        };
+        Assert.True((await HomeNativePreferenceFile.CompareExchangeAsync(file, scope, 0, existing,
+            UserPreferencesService.ProjectLegacyHomeTheme, _ => ValueTask.FromResult(true), token)).Succeeded);
+        NativeHomeThemePreferences OpenOwner() => new(file, scope, UserPreferencesService.ProjectLegacyHomeTheme,
+            _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
+        try
+        {
+            await using (var source = OpenOwner())
+            {
+                var settings = new HomeSettingsDestinationPage(source, _ => Task.CompletedTask);
+                Window? window = null;
+                try
+                {
+                    await settings.ActivateAsync(token);
+                    window = Show(settings);
+                    var fragment = SettingsControl<CuiContainerControl>(settings, "home-appearance-settings");
+                    var scroll = Assert.IsType<ScrollViewer>(fragment.Child);
+                    scroll.ScrollToEnd();
+                    SettleFixtureLayout(window);
+                    var panel = SettingsControl<CuiContainerControl>(settings, "home-accent-settings");
+                    // TestAppBuilder's fast drawing stub has no painted geometry for scrolled swatches.
+                    // The same controls always accept keyboard activation; Skia also exercises pointer targeting.
+                    var pointerRendering = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("HAVEN_VISUAL_CAPTURE_DIR"));
+                    Button Option(string name) => panel.GetVisualDescendants().OfType<Button>()
+                        .Single(button => AutomationProperties.GetName(button) == name);
+                    async Task<HomeThemePreference> Choose(string name, bool keyboard = false)
+                    {
+                        var button = Option(name);
+                        button.BringIntoView();
+                        SettleFixtureLayout(window);
+                        await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Render);
+                        if (keyboard || !pointerRendering)
+                        {
+                            Assert.True(button.Focus());
+                            PressSettingsKey(window, PhysicalKey.Enter);
+                        }
+                        else
+                        {
+                            var center = button.TranslatePoint(new Rect(button.Bounds.Size).Center, window)!.Value;
+                            window.MouseMove(center);
+                            var hit = window.InputHitTest(center) as Visual;
+                            Assert.True(hit == button || hit?.GetVisualAncestors().Contains(button) == true,
+                                $"Accent {name} at {center} hit {hit}; scroll {scroll.Offset}/{scroll.Extent}, viewport {scroll.Viewport}.");
+                            ClickSettingsButton(window, button);
+                        }
+                        await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), token);
+                        SettleFixtureLayout(window);
+                        Assert.True(SettingsCategorySelected(Option(name)),
+                            $"Accent {name} failed to select; last receipt {settings.LastWrite?.ConfirmedWrite?.Code ?? "none"}.");
+                        return settings.LastWrite!.ConfirmedWrite!.Value!.Preference;
+                    }
+                    Assert.True(SettingsCategorySelected(Option("Off")));
+                    Assert.Contains(panel.GetVisualDescendants().OfType<TextBlock>(), text => text.Text == "#123ABC");
+                    var off = await Choose("Iris");
+                    Assert.Equal(2, off.Revision);
+                    Assert.Equal(HomeThemeAccentOverrideMode.None, off.Accent!.Mode);
+                    Assert.Equal("#7145FF", off.Accent.AllAppsColour);
+                    Assert.Null(off.Accent.ResolveColour("app.write"));
+                    var on = await Choose("On", keyboard: true);
+                    Assert.Equal("#7145FF", on.Accent!.ResolveColour("app.write"));
+                    var individual = await Choose("On per app");
+                    Assert.Equal(4, individual.Revision);
+                    Assert.Equal("#11AA77", individual.Accent!.ResolveColour("app.write"));
+                    Assert.Null(individual.Accent.ResolveColour("app.present"));
+                    await source.RefreshAsync(token);
+                    SettleFixtureLayout(window);
+                    CaptureSettingsIfRequested(window, "accent", source);
+                }
+                finally { window?.Close(); await settings.CloseAndDrainAsync(); }
+            }
+            await using var reopened = OpenOwner();
+            await reopened.RefreshAsync(token);
+            Assert.Equal(CuiAccentOverrideMode.IndividualApps, reopened.Current.EffectiveAccent.Mode);
+            Assert.Equal("#7145FF", reopened.Current.EffectiveAccent.AllAppsColour);
+            Assert.Equal("#11AA77", reopened.Current.EffectiveAccent.IndividualApps["app.write"]);
+            var saved = HomeNativePreferenceFile.Read(file);
+            Assert.Equal("retained-model", saved["defaultModel"]!.GetValue<string>());
+            Assert.Equal(existing.Display, HomeNativePreferenceFile.Resolve(saved, scope, UserPreferencesService.ProjectLegacyHomeTheme).Display);
+        }
+        finally { directory.Delete(recursive: true); }
     }
 
     [AvaloniaFact]
@@ -1508,7 +1947,123 @@ public sealed class UnifiedHomeContentTests
     }
 
     [AvaloniaFact]
-    public async Task Unavailable_AI_retains_input_does_not_invoke_draft_and_keeps_Search_and_close_usable()
+    public async Task Dashboard_rail_opens_a_distinct_native_tab_and_preserves_the_New_Tab_draft()
+    {
+        using var lifetime = new CancellationTokenSource();
+        using var bus = new HavenEventBus();
+        var paths = new LayoutPaths();
+        var limit = TimeSpan.FromSeconds(20);
+        var settings = new EmptySettings();
+        BrowseNativeWorkspace? workspace = null;
+        Task? originalNavigation = null;
+        var home = Factory(new Registry(), lifetime.Token,
+            navigation: (intent, settlement) => workspace!.TryQueueNavigationOriginal(intent, settlement, out originalNavigation),
+            dashboard: () => new NewDashboardPage(bus, null!, null!, null!, null!, settings,
+                new EmptyDashboard(), new EmptyDashboardLayout(), []));
+        var chrome = await BrowseChrome.CreateAsync(paths, internalContentFactory: home,
+            homeProfileId: "dashboard-route-fixture", cancellationToken: lifetime.Token);
+        workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new LayoutReadiness());
+        try
+        {
+            RegisterProductionImageResolver(window);
+            window.Show();
+            await window.InitializeAsync(lifetime.Token).WaitAsync(limit);
+            await chrome.NewTabAsync(false, lifetime.Token).WaitAsync(limit);
+            await RenderPublishedStateAsync();
+
+            var newTab = chrome.State.SelectedTab;
+            Assert.Equal("browse://newtab", newTab.Address.Value);
+            Assert.Equal("New Tab", newTab.Title);
+            var newTabSession = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(
+                chrome.ObserveOriginalAppContent(newTab.Id));
+            var newTabPage = Assert.IsType<UnifiedHomePage>(
+                Assert.IsType<OriginalTabTransientPresentation>(newTabSession.OriginalNativeView).OriginalContent);
+            Assert.True(newTabPage.IsEffectivelyVisible);
+            var search = Assert.Single(newTabPage.GetVisualDescendants().OfType<TextBox>(), item => item.Name == "home-search");
+            Assert.True(search.IsEffectivelyVisible);
+            search.Text = "a search draft";
+            Capture("new-tab");
+
+            var dashboard = HomeRailButton(newTabPage, "home-dashboard", "Dashboard");
+            var center = dashboard.TranslatePoint(new Rect(dashboard.Bounds.Size).Center, window);
+            Assert.NotNull(center);
+            window.MouseMove(center.Value);
+            window.MouseDown(center.Value, MouseButton.Left);
+            window.MouseUp(center.Value, MouseButton.Left);
+            await newTabPage.WhenActionsIdleAsync().WaitAsync(limit);
+            Assert.NotNull(originalNavigation);
+            await originalNavigation!.WaitAsync(limit);
+            await RenderPublishedStateAsync();
+
+            var dashboardTab = chrome.State.SelectedTab;
+            Assert.Equal("browse://home/dashboard", dashboardTab.Address.Value);
+            Assert.Equal("Dashboard", dashboardTab.Title);
+            Assert.NotEqual(newTab.Id, dashboardTab.Id);
+            Assert.Equal(BrowseEngineState.NativeApp, dashboardTab.EngineState);
+            Assert.Same(newTabSession, chrome.ObserveOriginalAppContent(newTab.Id));
+            Assert.True(newTabSession.IsPublicationCurrent);
+            Assert.Single(window.GetVisualDescendants().OfType<NewDashboardPage>(), page => page.IsEffectivelyVisible);
+            Assert.DoesNotContain(window.GetVisualDescendants().OfType<TextBox>(),
+                item => item.Name == "home-search" && item.IsEffectivelyVisible);
+            Capture("dashboard");
+
+            foreach (var invalid in new[] { "browse://newtab/dashboard", "browse://home/dashboard/nested" })
+            {
+                var refused = await chrome.NavigateAsync(invalid, lifetime.Token).WaitAsync(limit);
+                Assert.Equal(dashboardTab.Id, refused.SelectedTabId);
+                Assert.Contains("not registered", refused.Status, StringComparison.Ordinal);
+            }
+            Assert.Throws<NotSupportedException>(() => home.CreateSession(
+                Request("browse://home/dashboard") with { Privacy = BrowserTabPrivacy.Private }));
+
+            await chrome.CloseTabAsync(dashboardTab.Id, lifetime.Token).WaitAsync(limit);
+            await RenderPublishedStateAsync();
+            Assert.Equal(newTab.Id, chrome.State.SelectedTabId);
+            Assert.Same(search, Assert.Single(window.GetVisualDescendants().OfType<TextBox>(),
+                item => item.Name == "home-search" && item.IsEffectivelyVisible));
+            Assert.Equal("a search draft", search.Text);
+            await chrome.ReopenClosedTabAsync(lifetime.Token).WaitAsync(limit);
+            await RenderPublishedStateAsync();
+            Assert.Equal(dashboardTab.Id, chrome.State.SelectedTabId);
+            Assert.Equal(dashboardTab.Address, chrome.State.SelectedTab.Address);
+            Assert.Equal("Dashboard", chrome.State.SelectedTab.Title);
+            Assert.Same(newTabSession, chrome.ObserveOriginalAppContent(newTab.Id));
+            Assert.Single(window.GetVisualDescendants().OfType<NewDashboardPage>(), page => page.IsEffectivelyVisible);
+        }
+        finally
+        {
+            window.Close();
+            if (window.OriginalClosePreparation is { } preparation) Assert.True(await preparation.WaitAsync(limit));
+            Dispatcher.UIThread.RunJobs();
+            Assert.NotNull(window.OriginalClose);
+            await window.OriginalClose!.WaitAsync(limit);
+            Directory.Delete(paths.DataDirectory, recursive: true);
+        }
+
+        async Task RenderPublishedStateAsync()
+        {
+            await Task.WhenAll(workspace!.OriginalNotifications).WaitAsync(limit);
+            SettleFixtureLayout(window);
+        }
+
+        void Capture(string route)
+        {
+            if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("HAVEN_UNIFIED_HOME_CAPTURES"))) return;
+            using var frame = window.CaptureRenderedFrame();
+            Assert.NotNull(frame);
+            CaptureOptionalFrame(window, frame, $"dashboard-route-{route}-{frame.PixelSize.Width}x{frame.PixelSize.Height}",
+                "Browse-hosted Home route fixture, isolated Dashboard sources");
+        }
+    }
+
+    [AvaloniaTheory]
+    [InlineData(360, 760, 1)]
+    [InlineData(430, 760, null)]
+    [InlineData(720, 520, 2)]
+    [InlineData(1180, 760, 3)]
+    public async Task Unavailable_AI_retains_input_does_not_invoke_draft_and_keeps_Search_and_close_usable(
+        int width, int height, int? expectedShortcutColumns)
     {
         using var lifetime = new CancellationTokenSource();
         using var bus = new HavenEventBus();
@@ -1519,27 +2074,227 @@ public sealed class UnifiedHomeContentTests
                 new EmptyDashboard(), new EmptyDashboardLayout(), [])).CreateSession(Request("browse://newtab")));
         await session.InitializeAsync();
         var page = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(session.OriginalNativeView).OriginalContent);
-        var window = Show(session.OriginalNativeView);
+        var window = new Window { Width = width, Height = height, Content = session.OriginalNativeView };
         try
         {
-            var mode = page.GetVisualDescendants().OfType<ComboBox>().Single(item => item.Name == "home-search-mode");
-            Assert.False(Assert.IsType<ComboBoxItem>(mode.Items.Cast<object>().ElementAt(1)).IsEnabled);
+            window.Show();
+            Assert.Equal("New Tab", session.Title);
+            window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+            var heading = SettingsControl<TextBlock>(page, "home-newtab-heading");
+            Assert.Equal("Home", heading.Text);
+            if (width >= 1180)
+            {
+                var rail = SettingsControl<CuiContainerControl>(page, "home-sidebar");
+                Assert.InRange(rail.Bounds.Width, 233, 235);
+                Assert.Equal(210, HomeRailButton(page, "home-newtab", "New Tab").Bounds.Width, 1);
+            }
+            var clock = SettingsControl<TextBlock>(page, "home-newtab-time");
+            var date = SettingsControl<TextBlock>(page, "home-newtab-date");
+            var now = DateTimeOffset.Now;
+            var previousMinute = now.AddMinutes(-1);
+            Assert.Contains(clock.Text, new[] { now.ToString("t"), previousMinute.ToString("t") });
+            Assert.Contains(date.Text, new[] { now.ToString("D"), previousMinute.ToString("D") });
+            var askAi = SettingsControl<Button>(page, "home-newtab-ask-ai");
+            var allApps = SettingsControl<Button>(page, "home-newtab-all-apps");
+            var help = SettingsControl<TextBlock>(page, "home-newtab-ai-unavailable");
+            Assert.False(askAi.IsEnabled);
+            Assert.True(help.IsEffectivelyVisible);
+            Assert.Equal("Ask AI requires an available Spaces destination.", help.Text);
+            Assert.Equal(false, page.IsActionAvailable("home.ask-ai"));
             var search = page.GetVisualDescendants().OfType<TextBox>().Single(item => item.Name == "home-search");
-            Assert.True(search.IsEffectivelyVisible);
+            var submit = page.GetVisualDescendants().OfType<Button>().Single(item => item.Name == "home-submit");
+            Assert.Equal("Go", AutomationProperties.GetName(submit));
+            Assert.False(submit.IsEnabled);
+            var searchEntry = SettingsControl<CuiContainerControl>(page, "home-search-entry");
+            Assert.Equal(68, searchEntry.Bounds.Height, 1);
+            Assert.InRange(searchEntry.Bounds.Width, 0, 780.5);
+            var searchOrigin = search.TranslatePoint(default, window)!.Value;
+            var submitOrigin = submit.TranslatePoint(default, window)!.Value;
+            var allAppsOrigin = allApps.TranslatePoint(default, window)!.Value;
+            Assert.True(date.TranslatePoint(new Point(0, date.Bounds.Height), window)!.Value.Y <= searchOrigin.Y);
+            Assert.True(searchOrigin.X + search.Bounds.Width <= submitOrigin.X + .5);
+            Assert.True(searchOrigin.Y + search.Bounds.Height <= allAppsOrigin.Y + .5);
+            Assert.True(search.Bounds.Width >= 150);
+            var shortcutsHeading = SettingsControl<TextBlock>(page, "home-newtab-shortcuts-heading");
+            Assert.Equal("Shortcuts", shortcutsHeading.Text);
+            var shortcutsHeadingOrigin = shortcutsHeading.TranslatePoint(default, window)!.Value;
+            Assert.True(allAppsOrigin.Y + allApps.Bounds.Height <= shortcutsHeadingOrigin.Y);
+            Assert.Equal(heading.TranslatePoint(default, window)!.Value.X, shortcutsHeadingOrigin.X, 1);
+            var shortcuts = SettingsControl<CuiContainerControl>(page, "home-newtab-shortcuts");
+            var shortcutButtons = shortcuts.GetVisualDescendants().OfType<Button>()
+                .Where(button => button.Name == "home-newtab-shortcut").ToArray();
+            Assert.Equal(new[] { "Apps", "Library", "Dashboard" }, shortcutButtons.Select(AutomationProperties.GetName));
+            var positions = shortcutButtons.Select(button => button.TranslatePoint(default, shortcuts)!.Value).ToArray();
+            if (expectedShortcutColumns is { } expected)
+                Assert.Equal(expected, positions.GroupBy(position => Math.Round(position.Y)).Max(row => row.Count()));
+            Assert.All(shortcutButtons.Zip(positions), pair =>
+            {
+                Assert.True(pair.First.IsEffectivelyVisible);
+                Assert.Equal(width >= 1180 ? 94 : 80, pair.First.Bounds.Height, 1);
+                Assert.InRange(pair.Second.X, -.5, shortcuts.Bounds.Width - pair.First.Bounds.Width + .5);
+            });
+            foreach (var control in new Control[] { search, allApps })
+            {
+                Assert.True(control.IsEffectivelyVisible && control.Focus());
+                var origin = control.TranslatePoint(default, window)!.Value;
+                Assert.InRange(origin.X, -.5, width - control.Bounds.Width + .5);
+                Assert.InRange(origin.Y, -.5, window.ClientSize.Height - control.Bounds.Height + .5);
+            }
+            if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("HAVEN_UNIFIED_HOME_CAPTURES")))
+            {
+                using var frame = window.CaptureRenderedFrame();
+                Assert.NotNull(frame);
+                CaptureOptionalFrame(window, frame, $"home-newtab-{width}", "UnifiedHome New Tab fixture with unavailable Ask AI");
+            }
             search.Text = "charging diagnosis";
-            mode.SelectedIndex = 1; // Programmatic/late action must also refuse harmlessly.
-            await page.DispatchAsync("home.submit", null);
+            SettleFixtureLayout(window);
+            Assert.True(submit.IsEnabled && submit.Focus());
+            ClickSettingsButton(window, askAi);
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
             Assert.Equal("charging diagnosis", search.Text);
             Assert.Null(navigation);
-            Assert.Contains(page.GetVisualDescendants().OfType<TextBlock>(), item => item.Text?.Contains("AI is unavailable") == true);
-            mode.SelectedIndex = 0;
-            await page.DispatchAsync("home.submit", null);
+            ClickSettingsButton(window, submit);
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
             Assert.NotNull(navigation);
             Assert.True(navigation.Address.IsWeb);
+            navigation = null;
+            Assert.True(search.Focus());
+            window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+            window.KeyReleaseQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+            Dispatcher.UIThread.RunJobs();
+            Assert.NotNull(navigation);
+            Assert.True(navigation.Address.IsWeb);
+
+            navigation = null;
+            var dashboard = shortcutButtons[^1];
+            ScrollViewer? contentScroll = null;
+            if (height == 520)
+            {
+                contentScroll = Assert.IsType<ScrollViewer>(SettingsControl<CuiContainerControl>(page, "home-search-row").Child);
+                Assert.True(contentScroll.Extent.Height > contentScroll.Viewport.Height);
+                contentScroll.ScrollToEnd();
+                SettleFixtureLayout(window);
+                Assert.True(contentScroll.Offset.Y > 0);
+                var dashboardOrigin = dashboard.TranslatePoint(default, contentScroll)!.Value;
+                Assert.InRange(dashboardOrigin.Y, -.5, contentScroll.Viewport.Height - dashboard.Bounds.Height + .5);
+            }
+            Assert.True(dashboard.Focus());
+            PressSettingsKey(window, PhysicalKey.Enter);
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            Assert.NotNull(navigation);
+            Assert.True(navigation.OpenInNewTab);
+            Assert.Equal("browse://home/dashboard", navigation.Address.Value);
+            Assert.Equal("charging diagnosis", search.Text);
+
+            contentScroll?.ScrollToHome();
+            SettleFixtureLayout(window);
+            ClickSettingsButton(window, allApps);
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            SettleFixtureLayout(window);
+            var appsHeading = SettingsControl<TextBlock>(page, "home-heading");
+            Assert.True(appsHeading.IsEffectivelyVisible);
+            Assert.Equal("Apps", appsHeading.Text);
+            Assert.True(SettingsControl<CuiContainerControl>(page, "home-apps-search-row").IsEffectivelyVisible);
+            Assert.False(search.IsAttachedToVisualTree() && search.IsEffectivelyVisible);
+            await page.DispatchAsync("home.newtab", null);
+            SettleFixtureLayout(window);
+            Assert.True(search.IsEffectivelyVisible);
+            Assert.Equal("charging diagnosis", search.Text);
             Assert.True(await session.TryPrepareToCloseAsync());
         }
         finally { await session.CloseAndDrainAsync(); window.Close(); }
         Assert.True(session.CanRetireOriginalView);
+    }
+
+    [AvaloniaFact]
+    public async Task New_Tab_Ask_AI_opens_the_prepared_unsent_Spaces_draft_and_reuses_it_on_Browse_retry()
+    {
+        using var lifetime = new CancellationTokenSource();
+        var limit = TimeSpan.FromSeconds(20);
+        var entered = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var prepared = new TaskCompletionSource<AppContentAddress>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var route = AppContentAddress.Parse("9to1://spaces/chat/" + Guid.NewGuid().ToString("D"));
+        var nextRoute = AppContentAddress.Parse($"9to1://spaces/selected/{Guid.NewGuid():D}/chat/{Guid.NewGuid():D}");
+        const string prompt = "  A draft for Spaces  ";
+        var navigation = new List<BrowseNavigationIntent>();
+        var request = Request("browse://newtab");
+        var preparations = 0;
+        var canNavigate = false;
+        var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Factory(new(), lifetime.Token,
+            (intent, _) => { navigation.Add(intent); return canNavigate; },
+            prepareAiDraft: (origin, query, token) =>
+            {
+                Assert.Equal(request, origin);
+                preparations++;
+                if (query == "Keep this text" && preparations == 3)
+                    throw new UnauthorizedAccessException("The test Space ceased to be available.");
+                entered.TrySetResult(query);
+                return preparations == 1 ? prepared.Task.WaitAsync(token) : Task.FromResult(nextRoute);
+            }).CreateSession(request));
+        await session.InitializeAsync();
+        var page = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(session.OriginalNativeView).OriginalContent);
+        var window = Show(session.OriginalNativeView);
+        try
+        {
+            var search = SettingsControl<TextBox>(page, "home-search");
+            var askAi = SettingsControl<Button>(page, "home-newtab-ask-ai");
+            Assert.False(askAi.IsEnabled);
+            search.Text = prompt;
+            SettleFixtureLayout(window);
+            Assert.True(askAi.IsEnabled);
+            Assert.Equal(0, preparations);
+            ClickSettingsButton(window, askAi);
+            Assert.Equal(prompt, await entered.Task.WaitAsync(limit));
+            Assert.False(askAi.IsEnabled);
+            await page.DispatchAsync("home.ask-ai", null);
+            Assert.Empty(navigation);
+            Assert.Equal(1, preparations);
+            prepared.TrySetResult(route);
+            await page.WhenActionsIdleAsync().WaitAsync(limit);
+            Assert.Equal(route, Assert.Single(navigation).Address);
+            Assert.Equal(prompt, search.Text);
+
+            canNavigate = true;
+            Assert.True(askAi.Focus());
+            PressSettingsKey(window, PhysicalKey.Enter);
+            await page.WhenActionsIdleAsync().WaitAsync(limit);
+            Assert.Equal(1, preparations);
+            Assert.Equal(2, navigation.Count);
+            Assert.Equal(new BrowseNavigationIntent(request.TabId, route, OpenInNewTab: true), navigation[^1]);
+            Assert.Equal(prompt, search.Text);
+            ClickSettingsButton(window, askAi);
+            await page.WhenActionsIdleAsync().WaitAsync(limit);
+            // Admission alone does not retire the source, as with a late Browse mount failure.
+            Assert.Equal(1, preparations);
+            Assert.Equal(3, navigation.Count);
+            Assert.Equal(route, navigation[^1].Address);
+
+            search.Text = "A different draft";
+            SettleFixtureLayout(window);
+            ClickSettingsButton(window, askAi);
+            await page.WhenActionsIdleAsync().WaitAsync(limit);
+            Assert.Equal(2, preparations);
+            Assert.Equal(4, navigation.Count);
+            Assert.Equal(nextRoute, navigation[^1].Address);
+
+            search.Text = "Keep this text";
+            SettleFixtureLayout(window);
+            ClickSettingsButton(window, askAi);
+            await page.WhenActionsIdleAsync().WaitAsync(limit);
+            Assert.Equal(4, navigation.Count);
+            Assert.Equal("Keep this text", search.Text);
+            Assert.Contains("Your text is still here", SettingsControl<TextBlock>(page, "home-status").Text);
+            Assert.True(askAi.IsEnabled);
+            ClickSettingsButton(window, askAi);
+            await page.WhenActionsIdleAsync().WaitAsync(limit);
+            Assert.Equal(5, navigation.Count);
+            Assert.True(navigation[^1].OpenInNewTab);
+        }
+        finally
+        {
+            prepared.TrySetCanceled();
+            try { await session.CloseAndDrainAsync(); } finally { window.Close(); }
+        }
     }
 
     [AvaloniaTheory]
@@ -1756,7 +2511,7 @@ public sealed class UnifiedHomeContentTests
             sourcePage = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(source.OriginalNativeView).OriginalContent);
             if (fromNewTab)
             {
-                HomeRailButton(sourcePage, "home-apps", "Apps").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                HomeRailButton(sourcePage, "home-apps", "9to1 Apps").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 await sourcePage.WhenActionsIdleAsync().WaitAsync(limit);
             }
             SettleFixtureLayout(window);
@@ -1829,7 +2584,7 @@ public sealed class UnifiedHomeContentTests
         await session.InitializeAsync();
         var page = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(session.OriginalNativeView).OriginalContent);
         var window = Show(session.OriginalNativeView);
-        var button = HomeRailButton(page, "home-apps", "Apps");
+        var button = HomeRailButton(page, "home-apps", "9to1 Apps");
         button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         await page.WhenActionsIdleAsync();
         Assert.Equal(2, source.Reads);
@@ -1921,9 +2676,8 @@ public sealed class UnifiedHomeContentTests
             // Preserve the actual frame/mode before checking the requested appearance.
             CaptureOptionalFrame(window, frame, $"home-apps-{width}-{appearance}", "UnifiedHome Apps layout fixture", appearance);
             Assert.Equal(appearance, CuiThemeScopeApplier.DetectAppearance());
-            foreach (var (id, label) in new[] { ("home-apps", "Apps"), ("home-models", "Models / Discover"), ("home-newtab", "New Tab") })
+            foreach (var (id, label) in new[] { ("home-apps", "9to1 Apps"), ("home-models", "Models"), ("home-newtab", "New Tab") })
             {
-                // Owner-refined icon-only rail: Content is an Image, not its accessible label.
                 var button = HomeRailButton(page, id, label);
                 Assert.True(button.Bounds.Width >= 44 && button.Bounds.Height >= 24);
                 var origin = button.TranslatePoint(default, window);
@@ -2099,19 +2853,25 @@ public sealed class UnifiedHomeContentTests
             var main = page.GetVisualDescendants().OfType<Control>().Single(item => item.Name == "home-main");
             var sideOrigin = sidebar.TranslatePoint(default, window)!.Value;
             var mainOrigin = main.TranslatePoint(default, window)!.Value;
-            // Canonical Home is seven scrolling icon destinations plus a pinned Settings footer.
-            // Profile/notifications/model remain on Haven's persistent topbar, not this rail.
+            // No Assistants owner is composed in this fixture. Existing destinations keep one scroll column.
             var nav = Assert.IsType<CuiContainerControl>(page.GetVisualDescendants().OfType<Control>()
                 .Single(item => item.Name == "home-rail-nav"));
             var footer = Assert.IsType<CuiContainerControl>(page.GetVisualDescendants().OfType<Control>()
                 .Single(item => item.Name == "home-rail-footer"));
             var scroll = Assert.IsType<ScrollViewer>(nav.Child);
-            var buttons = nav.AuthoredChildren.OfType<Button>().ToArray();
+            var buttons = nav.AuthoredChildren.OfType<Button>().Where(button => button.IsEffectivelyVisible && button.IsAttachedToVisualTree()).ToArray();
             Assert.Equal(7, buttons.Length);
-            Assert.Equal(new[] { "home-apps", "home-dashboard", "home-models", "home-newtab", "home-library", "home-events", "home-mesh" },
+            Assert.Equal(new[] { "home-dashboard", "home-newtab", "home-library", "home-events", "home-apps", "home-models", "home-mesh" },
                 buttons.Select(button => button.Name));
-            var settings = Assert.Single(footer.AuthoredChildren.OfType<Button>());
-            Assert.Same(settings, HomeRailButton(page, "home-settings", "Settings"));
+            Assert.Equal(new[] { "home-account", "home-settings" }, footer.AuthoredChildren.OfType<Button>().Select(button => button.Name));
+            var settings = HomeRailButton(page, "home-settings", "Settings");
+            var brand = HomeRailButton(page, "home-brand", "Home");
+            Assert.NotNull(Assert.Single(brand.GetVisualDescendants().OfType<Image>()).Source);
+            var groupHeadings = nav.GetVisualDescendants().OfType<TextBlock>()
+                .Where(text => text.Name is "home-rail-explore" or "home-rail-workspace" or "home-rail-discover")
+                .Select(text => text.Text);
+            if (width >= 840) Assert.Equal(new[] { "Explore", "Workspace", "Discover" }, groupHeadings);
+            else Assert.Empty(groupHeadings);
             Assert.Equal(global::Avalonia.Layout.Orientation.Vertical, Assert.IsType<StackPanel>(nav.Layout).Orientation);
             Assert.True(sideOrigin.X + sidebar.Bounds.Width <= mainOrigin.X + .5);
             double previousBottom = -1;
@@ -2122,7 +2882,13 @@ public sealed class UnifiedHomeContentTests
                 Assert.True(origin.X >= 0 && origin.X + button.Bounds.Width <= nav.Bounds.Width + .5,
                     $"{button.Name}: X={origin.X}, Width={button.Bounds.Width}, NavigationWidth={nav.Bounds.Width}, ViewportWidth={scroll.Viewport.Width}.");
                 previousBottom = origin.Y + button.Bounds.Height;
-                Assert.False(string.IsNullOrWhiteSpace(AutomationProperties.GetName(button)));
+                var label = Assert.IsType<string>(AutomationProperties.GetName(button));
+                var visibleLabels = button.GetVisualDescendants().OfType<TextBlock>()
+                    .Where(text => text.IsEffectivelyVisible && text.Text == label);
+                if (width >= 840)
+                    Assert.True(Assert.Single(visibleLabels).Bounds.Width > 0);
+                else
+                    Assert.Empty(visibleLabels);
                 var icon = Assert.Single(button.GetVisualDescendants().OfType<Image>());
                 Assert.NotNull(icon.Source);
                 Assert.True(icon.Bounds.Width > 0 && icon.Bounds.Height > 0);

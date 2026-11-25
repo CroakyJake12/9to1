@@ -19,8 +19,13 @@ function fixture(t, { limits, wait } = {}) {
   const db = new DatabaseSync(':memory:');
   t.after(() => db.close());
   let nesting = 0;
+  const behavior = {};
   const storage = {
-    sql: { exec(sql, ...args) { const rows = db.prepare(sql).all(...args); return { toArray: () => rows }; } },
+    sql: { exec(sql, ...args) {
+      if (behavior.failJournal && sql.startsWith('INSERT INTO files_changes')) throw new Error('Controlled journal fault');
+      const rows = db.prepare(sql).all(...args);
+      return { toArray: () => rows };
+    } },
     transactionSync(work) {
       if (nesting++ > 0) { try { return work(); } finally { nesting--; } }
       db.exec('BEGIN IMMEDIATE');
@@ -37,7 +42,6 @@ function fixture(t, { limits, wait } = {}) {
   const quota = new DriveQuota(storage, { now: clock, limits });
   const files = new Map();
   const calls = [];
-  const behavior = {};
   const oauth = { async getAccessToken() { return 'owner-token-test'; } };
   const google = new GoogleTransport(quota, {
     now: clock, onSafetyFault: async () => { behavior.safetyHeld = true; },
@@ -131,6 +135,49 @@ test('lost final PUT reply reconciles via metered status with no second data sub
   assert.equal((await f.quota.status()).uploadBytesPerDay.used, 3);
 });
 
+test('an upload commits canonical metadata, its transfer receipt and one resumable event together', async t => {
+  const f = fixture(t);
+  const input = intent();
+  const start = await f.transfer.beginUpload(input);
+  assert.deepEqual(f.store.changes(0), { items: [], nextPageToken: null });
+  const file = receipt(f.behavior.uploadMetadata, 3);
+  let sentBytes = 0;
+  let statusChecks = 0;
+  f.behavior.respond = (_path, _args, request) => {
+    if (request.method !== 'PUT') return;
+    if (request.headers['Content-Range'] === 'bytes */3') statusChecks++;
+    else {
+      sentBytes += request.body.byteLength;
+      f.files.set(newId, file);
+    }
+    return Response.json(file);
+  };
+
+  f.behavior.failJournal = true;
+  await assert.rejects(f.transfer.uploadChunk(start.transferId, 0, Uint8Array.of(1, 2, 3)),
+    { code: 'TransferInterrupted', notStarted: false });
+  assert.equal(f.store.byId(start.itemId).metadata, null);
+  assert.deepEqual(f.store.changes(0), { items: [], nextPageToken: null });
+  assert.equal(f.store.findTransfer(input.operationId).phase, 'sending');
+
+  f.behavior.failJournal = false;
+  const complete = await f.reopen().uploadStatus(start.transferId);
+  assert.deepEqual(complete, { ...start, state: 'Completed', uploadedBytes: 3 });
+  assert.deepEqual(await f.reopen().beginUpload(input), complete);
+  assert.deepEqual(await f.reopen().uploadStatus(start.transferId), complete);
+  const [{ cursor, ...event }] = f.store.changes(0, 1).items;
+  assert.deepEqual(cursor, { revision: 1 });
+  assert.deepEqual(event, {
+    actorId: '9to1-owner', eventId: input.operationId.value, operationId: input.operationId,
+    itemId: start.itemId, kind: 'FileContentCommitted', baseRevisionId: null,
+    resultRevisionId: { value: f.store.byId(start.itemId).revision_id }, occurredAt: at.replace('Z', '.000Z'),
+    metadata: JSON.parse(f.store.byId(start.itemId).metadata),
+  });
+  assert.deepEqual(f.store.changes(cursor.revision), { items: [], nextPageToken: null });
+  assert.equal(sentBytes, 3);
+  assert.equal(statusChecks, 1);
+});
+
 test('only Google range acknowledgement advances partial bytes, and local cancellation never deletes files', async t => {
   const f = fixture(t);
   const first = await f.transfer.beginUpload(intent(2 * 256 * 1024 + 2));
@@ -144,6 +191,20 @@ test('only Google range acknowledgement advances partial bytes, and local cancel
   assert.equal(removed.state, 'Cancelled');
   assert.ok(f.calls.every(c => c.request.method !== 'DELETE'));
   assert.equal(f.store.transfer(first.transferId).session, undefined);
+});
+
+test('cancelling a failed upload preserves its durable refusal', async t => {
+  const f = fixture(t);
+  const input = intent();
+  f.behavior.nameCollision = true;
+  await assert.rejects(f.transfer.beginUpload(input), { code: 'NameConflict' });
+  const failed = await f.transfer.findUpload(input.operationId);
+  assert.equal(failed.state, 'Failed');
+  const before = f.store.transfer(failed.transferId);
+  const providerCalls = f.calls.length;
+  assert.deepEqual(await f.reopen().cancelUpload(failed.transferId), failed);
+  assert.deepEqual(f.store.transfer(failed.transferId), before);
+  assert.equal(f.calls.length, providerCalls);
 });
 
 test('new uploads above the app file limit never dispatch and the exact size limit can start', async t => {
@@ -343,6 +404,47 @@ test('download ticket checks owner session, version and checksum for each range 
   assert.equal(checks, 4);
   assert.equal(f.store.transfer(ticket.transferId).state, 'Completed');
   await assert.rejects(f.reopen().downloadContent(ticket.transferId, sessionDigest, { confirmSession() {} }), { code: 'ItemNotFound' });
+});
+
+test('download admission consumes a ticket across concurrent adapters before provider work', async t => {
+  const f = fixture(t);
+  const bytes = new Uint8Array([1, 2, 3]);
+  const itemId = rangedFile(f, bytes);
+  f.behavior.respond = rangeResponder(bytes);
+  const ticket = await f.transfer.prepareDownload({ itemId }, sessionDigest);
+  let sessionChecks = 0;
+  const options = { async confirmSession() { sessionChecks++; } };
+  const admissions = await Promise.allSettled([
+    f.transfer.downloadContent(ticket.transferId, sessionDigest, options),
+    f.reopen().downloadContent(ticket.transferId, sessionDigest, options),
+  ]);
+  const accepted = admissions.filter(result => result.status === 'fulfilled');
+  const refused = admissions.filter(result => result.status === 'rejected');
+  assert.equal(accepted.length, 1);
+  assert.equal(refused.length, 1);
+  assert.equal(refused[0].reason.code, 'ItemNotFound');
+  assert.deepEqual(new Uint8Array(await accepted[0].value.arrayBuffer()), bytes);
+  assert.equal(f.calls.filter(call => call.searchParams.get('alt') === 'media').length, 1);
+  assert.equal(sessionChecks, 2);
+  assert.equal(f.store.transfer(ticket.transferId).state, 'Completed');
+});
+
+test('an already-aborted claim does not consume an unstarted download ticket', async t => {
+  const f = fixture(t);
+  const bytes = new Uint8Array([1, 2, 3]);
+  const itemId = rangedFile(f, bytes);
+  f.behavior.respond = rangeResponder(bytes);
+  const ticket = await f.transfer.prepareDownload({ itemId }, sessionDigest);
+  const cancelled = new AbortController();
+  cancelled.abort();
+  const providerCalls = f.calls.length;
+  await assert.rejects(f.transfer.downloadContent(ticket.transferId, sessionDigest, {
+    signal: cancelled.signal, confirmSession() { assert.fail('Do not start an aborted request'); },
+  }), { name: 'AbortError' });
+  assert.equal(f.store.transfer(ticket.transferId).state, 'Queued');
+  assert.equal(f.calls.length, providerCalls);
+  const live = await f.reopen().downloadContent(ticket.transferId, sessionDigest, { confirmSession() {} });
+  assert.deepEqual(new Uint8Array(await live.arrayBuffer()), bytes);
 });
 
 test('a two-range download waits through the app minute cap before sending its next range', async t => {

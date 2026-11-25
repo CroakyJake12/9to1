@@ -18,6 +18,7 @@ from .artifacts import (
 from .provenance import DatasetManifest, verify_dataset_files
 from .registered_runtime import BOOTSTRAP, RegisteredRuntime, RegisteredWorker
 from .resources import Admission, BudgetRefusal, HostObservation, Limits, OperatorPolicy, ResourceUse, admit, check_running
+from .topology import refuse_heterogeneous_on_local_executor
 from .windows_job import WindowsJob
 
 _POLL = 0.1
@@ -87,8 +88,10 @@ class ProcessSupervisor:
         observe: Callable[[int], ResourceUse], pause_requested: Callable[[], bool] = lambda: False,
         dataset: DatasetManifest | None = None, dataset_root: Path | str | None = None,
         prior_iterations: int = 0, cpu_rate_hundredths: int | None = None,
+        training_topology: object = None,
     ) -> Outcome:
         """Run a registered worker once. Request values are JSON data, never shell arguments."""
+        refuse_heterogeneous_on_local_executor(training_topology)
         if os.name != "nt":
             raise CustodyError("Windows Job Object ownership is required for this launcher.")
         if purpose not in {"software_test_only", "real_training"}:

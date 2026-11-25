@@ -25,6 +25,25 @@ public sealed class DeveloperBuildProblemNavigationTests
         using var cancelled = new CancellationTokenSource(); cancelled.Cancel();
         Assert.Throws<OperationCanceledException>(() => { _ = DeveloperBuildProblemNavigation.TryResolveCurrentSavedText(Problem("source.cs", 0, 1), text, out _, cancelled.Token); });
     }
+    [Fact]
+    public void ReportedSpanSelectsExactMultilineUtf16TextAndNeverFallsBackToAStalePoint()
+    {
+        const string text = "first\r\n😀value\nlast";
+        var range = Problem("source.cs", 1, 0) with { Range = new(new(1, 0), new(2, 2)) };
+        Assert.True(DeveloperBuildProblemNavigation.TryResolveCurrentSavedRange(range, text, out var start, out var length));
+        Assert.Equal("😀value\nla", text.Substring(start, length));
+
+        foreach (var end in new[] { new CodePosition(1, 1), new(2, 20), new(0, 0), new(50, 0) })
+        {
+            Assert.False(DeveloperBuildProblemNavigation.TryResolveCurrentSavedRange(
+                range with { Range = range.Range with { End = end } }, text, out start, out length));
+            Assert.Equal(0, start); Assert.Equal(0, length);
+        }
+        var point = Problem("source.cs", 2, 4);
+        Assert.True(DeveloperBuildProblemNavigation.TryResolveCurrentSavedRange(point, text, out start, out length));
+        Assert.Equal(text.Length, start); Assert.Equal(0, length);
+    }
+
     private static CodeDiagnostic Problem(string path, int line, int column) => new(path,
         new(new(line, column), new(line, column)), CodeDiagnosticSeverity.Error, "TEST", "dotnet build", "reported problem");
 }

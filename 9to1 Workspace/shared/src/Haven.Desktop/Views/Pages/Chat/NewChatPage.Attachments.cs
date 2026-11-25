@@ -208,6 +208,7 @@ public sealed partial class NewChatPage
     {
         // This is the destination of THIS mutation's actual canonical write, never a live
         // alias for whichever branch becomes current later. Access is under _originalDraftGate.
+        public bool PublishRegularOnDeparture { get; set; }
         public Guid? ResolvedBranchId { get; private set; } = BranchId;
         public void BindResolvedBranch(Guid branchId) => ResolvedBranchId = branchId;
 
@@ -309,6 +310,7 @@ public sealed partial class NewChatPage
     private Task FlushOriginalConversationDraftAsync(OriginalDraftTransition transition)
     {
         if (_originalSendInFlight) return Task.CompletedTask;
+        transition.Outgoing.PublishRegularOnDeparture = true;
         var acknowledgement = EnqueueOriginalDraftMutationAsync(transition.Outgoing);
         return acknowledgement ?? Task.CompletedTask;
     }
@@ -339,7 +341,9 @@ public sealed partial class NewChatPage
 
     private Task EnqueueOriginalDraftMutationAsync(OriginalDraftMutation mutation)
     {
-        if (_conversationProduction is null || mutation.Target.IsTemporary) return Task.CompletedTask;
+        if (_conversationProduction is null || mutation.Target.IsTemporary ||
+            (!mutation.PublishRegularOnDeparture && _unpublishedFreshChat.ContainsKey(mutation.Target.Id)))
+            return Task.CompletedTask;
         lock (_originalDraftGate)
         {
             if (_originalDraftQueued is { } queued && queued.SameAs(mutation))
@@ -440,9 +444,11 @@ public sealed partial class NewChatPage
         // than the live control: this retirement body runs on the background context where the
         // live TextBox may already be detached/closed, and the mirror survives teardown and is
         // kept current by every real edit and every programmatic publication.
-        await WriteOriginalDraftAsync(CaptureOriginalDraftMutation(
+        var final = CaptureOriginalDraftMutation(
             OriginalDraftInputOwner, CaptureUnsentDraftText(CaptureNativeTaskRetirementDraftText(), _scene.QueuedComposerMessages),
-            _pendingAttachmentIds)).ConfigureAwait(false);
+            _pendingAttachmentIds);
+        final.PublishRegularOnDeparture = true;
+        await WriteOriginalDraftAsync(final).ConfigureAwait(false);
     }
 
     /// <summary>The one canonical draft write. A durability write is a bounded local commit: it
@@ -454,6 +460,28 @@ public sealed partial class NewChatPage
     {
         var target = mutation.Target;
         if (_conversationProduction is null || target.IsTemporary) return;
+        if (_unpublishedFreshChat.TryGetValue(target.Id, out var fresh))
+        {
+            if (fresh != FreshChatOwnership.Eligible) return;
+            // This new identity remains eligible for a session-only lifecycle switch while
+            // composing. Only explicit ordinary departure with unsent input persists its
+            // draft. The same ordered chain owns eventual branch/draft acknowledgement.
+            if (!mutation.PublishRegularOnDeparture ||
+                (mutation.AttachmentIds.Length == 0 && string.IsNullOrWhiteSpace(mutation.Content))) return;
+            if (!_unpublishedFreshChat.TryUpdate(target.Id, FreshChatOwnership.PublishingRegularDraft, FreshChatOwnership.Eligible))
+                return; // The user changed the lifecycle before this storage command could own it.
+            try
+            {
+                if (await _conversations.GetAsync(target.Id, CancellationToken.None).ConfigureAwait(false) is null)
+                    await _conversations.UpsertConversationAsync(target, CancellationToken.None).ConfigureAwait(false);
+                _unpublishedFreshChat.TryRemove(target.Id, out _);
+            }
+            catch
+            {
+                _unpublishedFreshChat.TryUpdate(target.Id, FreshChatOwnership.Eligible, FreshChatOwnership.PublishingRegularDraft);
+                throw;
+            }
+        }
         var branchId = mutation.BranchId;
         if (branchId is null)
         {

@@ -199,6 +199,11 @@ public sealed record StackConflictProposal(
     DateTimeOffset CreatedAt,
     string ProposedBy);
 
+public sealed record StackConflictProposalReview(
+    StackConflict Conflict, StackConflictProposal Proposal, Guid? DomainHeadRevisionId, string? AcceptanceBlocker);
+
+public sealed record StackConflictProposalReviewOutcome(StackConflictProposalState? State, string? Refusal);
+
 public sealed record StackRoot(
     Guid Id,
     Guid OwnerDomainId,
@@ -231,7 +236,14 @@ public sealed record StackFreeze(
     string Reason,
     DateTimeOffset? ExpiresAt,
     string? ExpiryCondition,
-    StackFreezeState State);
+    StackFreezeState State,
+    Guid? CreatedAtRevisionId = null);
+
+public sealed record StackPromotionPath(string Path, string? RenameTo, StackMutationKind Kind,
+    IReadOnlyList<string> ReviewFlags);
+public sealed record StackPromotionPreview(Guid ProjectId, Guid SourceDomainId, string SourceName, Guid SourceRevisionId,
+    Guid TargetDomainId, string TargetName, Guid TargetRevisionId, int ExcludedWorkingChanges, int TotalCommittedChanges,
+    IReadOnlyList<StackPromotionPath> Paths);
 
 public sealed record StackAuditEntry(
     Guid Id,

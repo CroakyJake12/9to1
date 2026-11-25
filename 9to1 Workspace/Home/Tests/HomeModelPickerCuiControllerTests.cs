@@ -73,9 +73,36 @@ public sealed class HomeModelPickerCuiControllerTests
         var result = await controller.OpenAsync("User", "chat");
 
         Assert.True(result.Succeeded);
-        Assert.Equal(1, published);
+        Assert.Equal(2, published); // One publication for the routes and one for the authorised catalogue.
         Assert.True(surface.HasSnapshot);
         Assert.Equal("chat.active", surface.State.SelectedRouteId);
+    }
+
+    [Fact]
+    public async Task Returning_to_picker_keeps_the_route_draft_until_explicit_discard()
+    {
+        var route = new HomeModelRouteContract("chat.active", 7, "User", "chat", null, null,
+            [new("provider", "model", null, true, 0)], JsonSerializer.SerializeToElement(new { }));
+        var provider = new StubProvider(new HomeModelPickerSnapshot(7, "User", "chat", [route]));
+        var surface = new HomeModelPickerCuiSurface(new CuiRichParser().Parse("<Cui><Page/></Cui>"));
+        var controller = new HomeModelPickerCuiController(new HomeModelPickerRouteEditor(provider), surface);
+        Assert.True((await controller.OpenAsync("User", "chat")).Succeeded);
+
+        surface.SetSettingsOpen(true);
+        Assert.True((await controller.ExecuteAsync(new(HomeModelPickerAction.SetCandidateEnabled,
+            ProviderId: "provider", ModelId: "model", Enabled: false))).Succeeded);
+        var draft = surface.State;
+        surface.SetSettingsOpen(false);
+        surface.SetSettingsOpen(true);
+        Assert.Same(draft, surface.State);
+        Assert.True(Value<bool>(surface, "CanDiscardRoute"));
+        Assert.False(Assert.Single(surface.State.Candidates).Enabled);
+
+        Assert.True((await controller.ExecuteAsync(new(HomeModelPickerAction.DiscardRoute))).Succeeded);
+        Assert.True(Assert.Single(surface.State.Candidates).Enabled);
+        Assert.False(Value<bool>(surface, "CanDiscardRoute"));
+        Assert.Equal(7, provider.Snapshot.Revision);
+        Assert.Null(provider.LastEdit);
     }
 
     [Fact]

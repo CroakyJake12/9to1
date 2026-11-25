@@ -1,0 +1,111 @@
+{
+  "renderer": "Real Linux apphost, private X11, 1:1 device scale. Isolated profiles, no sign-in or model download.",
+  "candidate_scope": "Intermediate binaries. These observations describe only the recorded journeys of the fingerprinted build.",
+  "stage4": {
+    "base_at_snapshot": "42b2d83ba8c3a1cc1adf9be3af0b52660ac29c0c",
+    "assemblies": {
+      "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+      "Haven.dll": "5fbc8ba073c2c5d8fe0c9e97fc7b1de5772ff9957be02e45dc50b3bb94e0ce38",
+      "HavenOS.Home.dll": "54b600224eea449ef853ee72e1226473f481c8225a88dfbce7cd3325c92d180f",
+      "HavenOS.Apps.Browse.NativeUI.dll": "06bb0711a1e21245a60c20838cbad52bec937a2d65273e9f58e5e5a0d313d4b3",
+      "HavenOS.Apps.Browse.Core.dll": "a4fc7eed39a0f90b0e8760696e34665de4756641a7c813082bcc1c57a1609243",
+      "CakeOS.Cui.Runtime.dll": "9a78cea21e115f5530e8fbc66f241eb8ee598e87dd78898d1b1aaf939a6e7f0d",
+      "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+      "UI/Home.cui": "0beea47593bc6d3192c0b6884a94483558c9edfd9753de0e966176f2898071f4"
+    },
+    "gear": "Physical Home gear caused process exit 1. Retained native log: InvalidOperationException, Sequence contains no matching element, HomeSettingsDestinationPage.SelectCategory posted anchor callback.",
+    "new_tab": "Independent fresh profile rendered Planner and Boards defaults, filtered Focus timer in the inline picker, added it, restored the unsent search draft on Escape, and rendered the stopped 25:00 card at 720x520. The isolated real layout store recorded focus-timer as timer:25.",
+    "customise": "Physical Customise did not enter the editor. Ordinary shutdown exposed retained NewTabCustomisation.cui CUI029 stable-identity collisions. Native retry failed, then in-app Force quit recovery closed the failed private instance, exit 1."
+  },
+  "stage5": {
+    "base_at_snapshot": "d74b87ae36c8715cf06b62c94c06d217b52e9553",
+    "assemblies": {
+      "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+      "Haven.dll": "6af531d22a7736b3a9d87ff8571a9f2de747ef27b14406608d0d26c7b6738d46",
+      "HavenOS.Home.dll": "54b600224eea449ef853ee72e1226473f481c8225a88dfbce7cd3325c92d180f",
+      "HavenOS.Apps.Browse.NativeUI.dll": "06bb0711a1e21245a60c20838cbad52bec937a2d65273e9f58e5e5a0d313d4b3",
+      "HavenOS.Apps.Browse.Core.dll": "a4fc7eed39a0f90b0e8760696e34665de4756641a7c813082bcc1c57a1609243",
+      "CakeOS.Cui.Runtime.dll": "9a78cea21e115f5530e8fbc66f241eb8ee598e87dd78898d1b1aaf939a6e7f0d",
+      "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+      "UI/Home.cui": "0beea47593bc6d3192c0b6884a94483558c9edfd9753de0e966176f2898071f4"
+    },
+    "settings": "Physical Home gear reached Settings. Global General rendered existing-owner links. Typing New Tab and pressing Return selected the actual Haven category. Customise launched a separate native New Tab and opened its editor.",
+    "customise": "Physical Focus at 1440 and Horizon at 720 changed the actual New Tab. Done returned to the page. On reopen and relaunch both selections were retained; the isolated store reported Preset 0, Background 1, Revision 2. An unsent query remained after opening and dismissing Customise with Escape in the same session, confirmed through its private X11 clipboard.",
+    "creator_cancel": "Theme Options and Appearance both opened the real custom editor. An unsaved name and role preview were visible. Escape returned focus to Create theme and left the active appearance data identical.",
+    "creator_save": "In a separate fresh clone, typing Cloud Native Proof left preferences identical until the explicit native Save. Save created and activated the custom theme. Normal close and a full relaunch preserved the selected gallery card, complete library record, Dark mode, accent choice and revision 2.",
+    "termination": "Both Stage5 runs and both relaunches closed normally with apphost exit 0.",
+    "remaining_followup_at_this_snapshot": "Stage5 creator shared title still identifies the Theme page; picker visuals and compact editor treatment were undergoing further changes."
+  },
+  "images": {
+    "stage4-customise-shutdown-recovery.png": {
+      "size": [
+        720,
+        520
+      ],
+      "sha256": "fd06dd1f9fdd9df0b787ac6a23b012a2e261c3a6bb29d8484345edbc3d831685"
+    },
+    "stage4-widget-focus-timer.png": {
+      "size": [
+        720,
+        520
+      ],
+      "sha256": "ffd3dfdc287248a343e716bb6bc2178b1a74201a15ca6a09a64f0012bbdd1bca"
+    },
+    "stage5-settings-general-wide.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "b55787143a1227ef6a47ee3883f45b30515c9519a732bf06315ac0ee14712817"
+    },
+    "stage5-settings-new-tab-search.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "a983bc9e40778bba0872971c836e339a109e0b86124e0ca2c42293cc623eb833"
+    },
+    "stage5-customise-horizon-narrow.png": {
+      "size": [
+        720,
+        520
+      ],
+      "sha256": "cd5ef84602cc60193bd17ecfe1a639f0645ee57d5ef8cd06ce4dea0f7920dd75"
+    },
+    "stage5-new-tab-draft-after-escape.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "29de84bc87f8613f74680a4c2eabe60fd75f8029b040b95ee981401dca799a6c"
+    },
+    "stage5-new-tab-after-relaunch.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "6d27769b9bb17394ffbe10d8eb42d1d88e79f1244ddaa2d9eebefbb158167553"
+    },
+    "stage5-create-theme-preview.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "3dea9c727cb730569162207468d11fb49e1c90c426caf70a4d85263dfa80bad0"
+    },
+    "stage5-theme-cancel-focus.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "905c0a2ee144767e48bef8223711e6ec64d325fe49b74e8e76001aa4bc382647"
+    },
+    "stage5-theme-save-and-relaunch.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "8570652a1cb46c03363f29a9826f13aaad9edc5d5168b6ccc0f2cff7faadd703"
+    }
+  }
+}

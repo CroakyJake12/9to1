@@ -1,6 +1,7 @@
 using System.Text.Json;
 using HavenOS.Apps.Sites.Domain;
 using HavenOS.Apps.Sites.Infrastructure;
+using HavenOS.Apps.Sites.Runtime;
 
 namespace HavenOS.Apps.Sites.Application;
 
@@ -142,7 +143,7 @@ public sealed class SiteProjectService(FileSiteWorkspaceStore store)
         new Dictionary<string, string>(StringComparer.Ordinal),
         new Dictionary<string, string>(StringComparer.Ordinal),
         new Dictionary<string, string>(StringComparer.Ordinal),
-        new Dictionary<string, int>(StringComparer.Ordinal),
+        SiteResponsiveLayout.DefaultBreakpoints(),
         "system",
         1);
 

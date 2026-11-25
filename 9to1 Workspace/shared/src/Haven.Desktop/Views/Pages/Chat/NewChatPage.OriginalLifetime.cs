@@ -282,7 +282,11 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
         try { await observation.AwaitAsync(actualSend).ConfigureAwait(false); }
         catch (Exception error) { observation.Retain(error); }
         if (_originalWork.IsRetiring) return;
-        await observation.AwaitAsync(InvokeOriginalChatUiAsync(TrySubmitPendingInstruction)).ConfigureAwait(false);
+        // The completed send owns its result irrespective of whether this optional
+        // retry notification can still publish. Retirement may win while it is queued.
+        var publication = Dispatcher.UIThread.InvokeAsync(() =>
+            observation.RunAcceptedPublicationCallback(TrySubmitPendingInstruction)).GetTask();
+        await observation.AwaitAsync(publication).ConfigureAwait(false);
     }
 
     private async Task FinishOriginalSendAsync(CancellationTokenSource? actualCancellation)

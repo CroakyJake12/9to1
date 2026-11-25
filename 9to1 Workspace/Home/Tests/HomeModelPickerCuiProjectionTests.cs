@@ -303,15 +303,15 @@ public sealed class HomeModelPickerCuiProjectionTests
 
         // A retained review surfaces a strict boolean and keeps the exact request id for display.
         var loaded = HomeModelPickerCuiSurface.LoadDefault();
+        loaded.PendingApprovalRequestId = "req-1";
+        loaded.SetSettingsOpen(true);
         loaded.ApplyState(State([Route("chat.active")]));
-        var pending = new HomeModelPickerCuiProjection(loaded.State, loaded.Scope, loaded.Category,
-            null, null, null, null, null, "req-1");
-        Assert.True(pending.HasPendingApproval);
-        Assert.True(Value<bool>(pending, "HasPendingApproval"));
-        Assert.Equal("req-1", Value<string>(pending, "PendingApprovalRequestId"));
+        Assert.True(loaded.Projection.HasPendingApproval);
+        Assert.True(Value<bool>(loaded, "HasPendingApproval"));
+        Assert.Equal("req-1", Value<string>(loaded, "PendingApprovalRequestId"));
         // The authored picker document (including the <If condition="{Binding HasPendingApproval}">) walks
         // cleanly with a strict bool condition; no CUIR011-style non-bool condition is published.
-        Walk(loaded.Document.Components, pending);
+        Walk(loaded.Document.Components, loaded);
     }
 
     private static HomeModelPickerCuiSurface Surface() =>

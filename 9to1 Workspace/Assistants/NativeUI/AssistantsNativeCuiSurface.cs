@@ -44,6 +44,7 @@ public sealed partial class AssistantsNativeCuiSurface : UserControl, IDisposabl
     private Task? _close;
     private AssistantsCuiBindings? _bindings;
     private CuiSceneHost? _sceneHost;
+    private AssistantWorkspaceKeyboard? _workspaceKeyboard;
     private CuiControlRegistry? _registry;
     private Guid? _savedPromptConversation;
     private string _savedPrompt = "";
@@ -87,6 +88,7 @@ public sealed partial class AssistantsNativeCuiSurface : UserControl, IDisposabl
                 throw new InvalidOperationException("Mini Computer must borrow this SAME canonical Assistant bridge.");
             DemandCurrent();
             _bindings = new(DispatchAsync, PublishSynchronous, () => !IsRetiring, _developmentRoute is not null);
+            _bindings.HasSecondaryConversationArchiveOwner = _controller.HasSecondaryConversationArchiveOwner;
             _bindings.ConfigureOriginalCapabilityInitializationSource(_controller.HasOriginalConfiguredCapabilityInitializationSource);
             _migrationBindings = new(_migration is not null, _migrationUnavailableReason, DispatchMigrationAsync, PublishSynchronous, () => !IsRetiring);
             _memoryBindings = new(_memoryManagement is not null, _memoryUnavailableReason, DispatchMemoryAsync, PublishSynchronous, () => !IsRetiring);
@@ -163,6 +165,8 @@ public sealed partial class AssistantsNativeCuiSurface : UserControl, IDisposabl
                     var availability = await SourceAsync(() => _scenes[index].ShowAsync(scene, token));
                     if (availability.State != CuiSceneAvailabilityState.Ready)
                         throw new UnauthorizedAccessException(availability.Message);
+                    if (definitions[index] == AssistantsCuiScene.Work)
+                        _workspaceKeyboard = new(_scenes[index], Bindings);
                 }
                 PublishSynchronous(() => ApplySnapshot(_controller.Snapshot));
             }, actual => _initialization = actual);
@@ -370,8 +374,16 @@ public sealed partial class AssistantsNativeCuiSurface : UserControl, IDisposabl
             case "assistants.open" when parameter is AssistantsCuiBindings.AssistantRow assistant:
                 if (!await PrepareNavigationAsync(token)) return;
                 await SourceAsync(() => _controller.OpenAssistantAsync(assistant.Identity, token));
-                PublishSynchronous(Bindings.ShowWork);
+                PublishSynchronous(() =>
+                {
+                    Bindings.DismissAssistantNavigationAfterOpen();
+                    Bindings.ShowWork();
+                });
                 if (_controller.Snapshot.ConversationBinding is not null) await RefreshOriginalConversationModelsAsync(token);
+                break;
+            case "assistants.conversation.archive.toggle" when parameter is AssistantsCuiBindings.ConversationRow
+                { ArchiveIdentity: { } identity, CanToggleArchive: true } archive:
+                await SourceAsync(() => _controller.SetSecondaryConversationArchivedAsync(identity, archive.Id, archive.IsArchived, token));
                 break;
             case "assistants.conversation.open" when parameter is AssistantsCuiBindings.ConversationRow conversation:
                 if (!await PrepareNavigationAsync(token)) return;
@@ -764,6 +776,7 @@ public sealed partial class AssistantsNativeCuiSurface : UserControl, IDisposabl
         {
             using var physical = EnterPhysical();
             _controller.StateChanged -= OnStateChanged;
+            _workspaceKeyboard?.Dispose(); _workspaceKeyboard = null;
             Content = null;
             _binding = null; _conversation.Clear(); _projectTarget = null; _originalProjectChoice = null; _projectSubmission = null; _projectSubmissionTarget = null;
             _hostRetirement.Dispose(); _viewCancellation.Dispose();

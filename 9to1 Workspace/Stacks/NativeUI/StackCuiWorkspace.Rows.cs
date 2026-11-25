@@ -2,7 +2,10 @@ using Haven.Infrastructure;
 
 namespace HavenOS.Apps.Stacks.NativeUI;
 
-public sealed record StackNativeRow(string Key, string Label, object Target);
+public sealed record StackNativeRow(string Key, string Label, object Target)
+{
+    public string HierarchyMargin { get; init; } = "0";
+}
 public sealed record StackNativeDiffRow(string Key, string BeforeNumber, string AfterNumber,
     string BeforeText, string AfterText, string Change);
 
@@ -38,10 +41,11 @@ public sealed partial class StackCuiWorkspace
             var ordered = OrderedDomains(_tab.Domains);
             _tab.DomainPage = Math.Clamp(_tab.DomainPage, 0, Math.Max(0, (ordered.Count - 1) / PageSize));
             _domainRows = ordered.Skip(_tab.DomainPage * PageSize).Take(PageSize).Select(item => Issue(item.Domain.Id.ToString("D"),
-                $"{new string(' ', item.Depth * 2)}{item.Domain.Kind} · {item.Domain.Name}{(item.Domain.IsActive ? " · active" : "")}{(item.Domain.WorkingChanges.Count > 0 ? " ↑" : "")}",
-                new DomainTarget(this, _snapshot, _tab, item.Domain))).ToArray();
+                $"{item.Domain.Kind} · {item.Domain.Name}{(item.Domain.IsActive ? " · active" : "")}{(item.Domain.WorkingChanges.Count > 0 ? " ↑" : "")}",
+                new DomainTarget(this, _snapshot, _tab, item.Domain)) with
+            { HierarchyMargin = FormattableString.Invariant($"{item.Depth * 12},0,0,0") }).ToArray();
         }
-        PublishFileRows(); PublishDiffRows();
+        PublishFileRows(); PublishDiffRows(); PublishConflictRows();
     }
     private static IReadOnlyList<(StackDomainSnapshot Domain, int Depth)> OrderedDomains(IReadOnlyList<StackDomainSnapshot> domains)
     {
@@ -96,7 +100,7 @@ public sealed partial class StackCuiWorkspace
     {
         value = item switch
         {
-            StackNativeRow row => path switch { "Key" => row.Key, "Label" => row.Label, "Target" => row.Target, _ => null },
+            StackNativeRow row => path switch { "Key" => row.Key, "Label" => row.Label, "Target" => row.Target, "HierarchyMargin" => row.HierarchyMargin, _ => null },
             StackNativeDiffRow row => path switch { "Key" => row.Key, "BeforeNumber" => row.BeforeNumber, "AfterNumber" => row.AfterNumber,
                 "BeforeText" => row.BeforeText, "AfterText" => row.AfterText, "Change" => row.Change, _ => null }, _ => null
         };

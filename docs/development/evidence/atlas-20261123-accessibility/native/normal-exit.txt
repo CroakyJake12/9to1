@@ -1,0 +1,1 @@
+Only normal WM_DELETE_WINDOW after owner stop. Process exited 0 and saved 125% preference still matches pre-preview readback.

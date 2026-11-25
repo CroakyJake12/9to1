@@ -47,11 +47,11 @@ internal sealed class BrowserAppearanceSettings : ICuiWritableBindingContext, IC
         var name = CuiAccentCatalog.Name(colour);
         return new AccentChoice(name, $"#{anchor.R:X2}{anchor.G:X2}{anchor.B:X2}", $"Use {name} accent");
     }).ToArray();
-    private sealed record ThemeChoice(string Name) : ICuiBindingContext
+    private sealed record ThemeChoice(string Name, string Key) : ICuiBindingContext
     {
         public bool TryGetValue(string path, out object? value)
         {
-            value = path switch { "Name" => Name, "AccessibleName" => $"Use {Name} theme", _ => null };
+            value = path switch { "Name" => Name, "Key" => Key, "AccessibleName" => $"Use {Name} theme", _ => null };
             return value is not null;
         }
     }
@@ -59,19 +59,25 @@ internal sealed class BrowserAppearanceSettings : ICuiWritableBindingContext, IC
     {
         get
         {
-            var names = _preferences.Catalog.Names.Where(name => name != "9to1 Draft Theme Preview" &&
-                (!name.Equals("Cinematic", StringComparison.OrdinalIgnoreCase) || _preferences.Current.Name.Equals(name, StringComparison.OrdinalIgnoreCase))).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            string[] order = ["Professional", "Glow", "Playful", "Frosted Glass", "Bubble", "Metallic", "Retro", "Western"];
-            return order.Where(names.Contains).Concat(names.Except(order, StringComparer.OrdinalIgnoreCase).Order(StringComparer.OrdinalIgnoreCase))
-                .Select(name => new ThemeChoice(name)).ToArray();
+            var custom = _preferences.Catalog.Names.Skip(CuiThemeCatalog.All.Count)
+                .Where(name => name != "9to1 Draft Theme Preview").Order(StringComparer.OrdinalIgnoreCase).ToArray();
+            string[] order = ["Professional", "Glow", "Playful", "Frosted Glass", "Bubble", "Metallic", "Retro", "Western", CuiThemeCatalog.ComicName];
+            var comicKey = CuiThemeCatalog.ComicSelectionKey(custom);
+            return order.Select(name => new ThemeChoice(name, name == CuiThemeCatalog.ComicName ? comicKey : name))
+                .Concat(custom.Select(name => new ThemeChoice(
+                    string.Equals(name, CuiThemeCatalog.ComicName, StringComparison.OrdinalIgnoreCase) ? name + " (custom)" : name, name)))
+                .ToArray();
         }
     }
+    private string CurrentThemeName => _preferences.Catalog.TryResolve(_preferences.Current.Name, out var theme)
+        ? theme!.Name : _preferences.Current.Name;
     private string? _operationStatus;
     private Exception? _presentationFailure;
     private static readonly Dictionary<string, string> ThemeCommands = new(StringComparer.Ordinal)
     {
         ["ThemeProfessional"] = "Professional", ["ThemeGlow"] = "Glow", ["ThemePlayful"] = "Playful",
-        ["ThemeBubble"] = "Bubble", ["ThemeCinematic"] = "Cinematic"
+        ["ThemeBubble"] = "Bubble", ["ThemeComic"] = CuiThemeCatalog.ComicName,
+        ["ThemeCinematic"] = CuiThemeCatalog.ComicName
     };
     private static readonly Dictionary<string, CuiAppearance> AppearanceCommands = new(StringComparer.Ordinal)
     {
@@ -91,7 +97,7 @@ internal sealed class BrowserAppearanceSettings : ICuiWritableBindingContext, IC
         value = path switch
         {
             "ShowAppearanceSettings" => true,
-            "AppearanceThemeName" => _preferences.Current.Name,
+            "AppearanceThemeName" => CurrentThemeName,
             "AppearanceThemeChoices" => ThemeChoices,
             "AppearanceModeName" => EffectiveAppearance switch { CuiAppearance.SuperBright => "Super Bright", CuiAppearance.SuperDark => "Super Dark", var mode => mode.ToString() },
             "AppearanceScope" => _preferences.ScopeDescription,
@@ -110,7 +116,7 @@ internal sealed class BrowserAppearanceSettings : ICuiWritableBindingContext, IC
         if (value is not null) return true;
         if (path.StartsWith("AppearanceIs", StringComparison.Ordinal))
         {
-            value = _preferences.Current.Name.Equals(path[12..], StringComparison.OrdinalIgnoreCase);
+            value = CurrentThemeName.Equals(path[12..], StringComparison.OrdinalIgnoreCase);
             return true;
         }
         return _bindings.TryGetValue(path, out value);
@@ -165,9 +171,8 @@ internal sealed class BrowserAppearanceSettings : ICuiWritableBindingContext, IC
         if (command == "AppearanceSelectTheme")
         {
             selectedTheme = parameter as string;
-            if (selectedTheme is null || !ThemeChoices.Any(choice => choice.Name.Equals(selectedTheme, StringComparison.OrdinalIgnoreCase)) ||
-                !_preferences.Catalog.TryResolve(selectedTheme, out var resolved) || resolved is null) return;
-            selectedTheme = resolved.Name;
+            selectedTheme = ThemeChoices.FirstOrDefault(choice => choice.Key.Equals(selectedTheme, StringComparison.OrdinalIgnoreCase))?.Key;
+            if (selectedTheme is null || !_preferences.Catalog.TryResolve(selectedTheme, out _)) return;
         }
         _busy = true; _operationStatus = null; _presentationFailure = null; Publish();
         try
@@ -179,7 +184,10 @@ internal sealed class BrowserAppearanceSettings : ICuiWritableBindingContext, IC
             }
             else
             {
-                var name = selectedTheme ?? ThemeCommands.GetValueOrDefault(command) ?? _preferences.Current.Name;
+                var commandTheme = ThemeCommands.GetValueOrDefault(command);
+                if (commandTheme == CuiThemeCatalog.ComicName)
+                    commandTheme = ThemeChoices.Single(choice => choice.Name == CuiThemeCatalog.ComicName).Key;
+                var name = selectedTheme ?? commandTheme ?? _preferences.Current.Name;
                 var appearance = AppearanceCommands.TryGetValue(command, out var selected) ? selected : _preferences.Current.Appearance;
                 var accent = _preferences.Current.EffectiveAccent;
                 accent = command switch

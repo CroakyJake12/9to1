@@ -182,6 +182,18 @@ public sealed record ScheduledTaskBatchResult(int Due, int Started, int Succeede
 public sealed record ScheduledTaskConditionResult(bool ConditionMet, string Report);
 
 /// <summary>
+/// The automatic scheduler can only claim the exact still-enabled stored occurrence it read.
+/// Stores that cannot provide an atomic comparison must not fall back to an ID-only lease.
+/// </summary>
+public interface IAutomationDueRunOwner
+{
+    Task<bool> TryAcquireDueLeaseAsync(AutomationDefinition observed, DateTimeOffset dueAt, DateTimeOffset claimingAt, string leaseToken,
+        DateTimeOffset leaseUntil, CancellationToken cancellationToken);
+    Task CompleteDueRunAsync(AutomationDefinition observed, AutomationRun run, DateTimeOffset? nextRunAt,
+        CancellationToken cancellationToken);
+}
+
+/// <summary>
 /// Executes persisted scheduled Tasks on demand. It deliberately owns no timer,
 /// OS scheduler registration, worker process, or hidden background loop.
 /// </summary>
@@ -197,6 +209,8 @@ public sealed class ScheduledTaskRunner(
     public async Task<ScheduledTaskBatchResult> RunDueAsync(DateTimeOffset now, CancellationToken cancellationToken)
     {
         var due = await repository.GetDueAsync(now, cancellationToken).ConfigureAwait(false);
+        if (repository is not IAutomationDueRunOwner dueOwner)
+            return new ScheduledTaskBatchResult(due.Count, 0, 0, 0, due.Count);
         var started = 0;
         var succeeded = 0;
         var failed = 0;
@@ -207,14 +221,17 @@ public sealed class ScheduledTaskRunner(
             if (!task.IsEnabled || !Enum.IsDefined(task.ScheduleKind) || task.ScheduleKind == AutomationScheduleKind.Unscheduled ||
                 CanonicalAutomationGraphReferenceCodec.IsReference(task.Instruction))
             { skipped++; continue; } // No lease, Run record, model request or fallback for an unconfigured canonical graph.
+            // Keep the eligible batch frozen at the scan, but give each row a full lease
+            // starting when it is actually claimed, after earlier items have finished.
+            var claimingAt = DateTimeOffset.UtcNow;
             var leaseToken = Guid.NewGuid().ToString("N");
-            if (!await repository.TryAcquireLeaseAsync(task.Id, leaseToken, now.AddMinutes(15), cancellationToken).ConfigureAwait(false))
+            if (!await dueOwner.TryAcquireDueLeaseAsync(task, now, claimingAt, leaseToken, claimingAt.AddMinutes(15), cancellationToken).ConfigureAwait(false))
             {
                 skipped++;
                 continue;
             }
             started++;
-            var run = await CompleteLeasedRunAsync(task, leaseToken, task.NextRunAt ?? now, cancellationToken).ConfigureAwait(false);
+            var run = await CompleteLeasedRunAsync(task, leaseToken, task.NextRunAt ?? now, cancellationToken, dueOwner).ConfigureAwait(false);
             if (run.Status == AutomationRunStatus.Succeeded) succeeded++;
             else if (run.Status == AutomationRunStatus.Failed) failed++;
         }
@@ -240,29 +257,34 @@ public sealed class ScheduledTaskRunner(
         AutomationDefinition task,
         string leaseToken,
         DateTimeOffset scheduledFor,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IAutomationDueRunOwner? dueOwner = null)
     {
+        Task SettleAsync(AutomationRun run, DateTimeOffset completedAt, CancellationToken token) =>
+            dueOwner is null
+                ? repository.CompleteRunAsync(run, NextRun(task, completedAt), token)
+                : dueOwner.CompleteDueRunAsync(task, run, NextRun(task, completedAt), token);
         var startedAt = DateTimeOffset.UtcNow;
         try
         {
             var result = await ExecuteWithRetryAsync(task, cancellationToken).ConfigureAwait(false);
             var completedAt = DateTimeOffset.UtcNow;
             var run = new AutomationRun(Guid.NewGuid(), task.Id, AutomationRunStatus.Succeeded, scheduledFor, startedAt, completedAt, result, null, leaseToken);
-            await repository.CompleteRunAsync(run, NextRun(task, completedAt), cancellationToken).ConfigureAwait(false);
+            await SettleAsync(run, completedAt, cancellationToken).ConfigureAwait(false);
             return run;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             var completedAt = DateTimeOffset.UtcNow;
             var run = new AutomationRun(Guid.NewGuid(), task.Id, AutomationRunStatus.Cancelled, scheduledFor, startedAt, completedAt, null, "Cancelled.", leaseToken);
-            await repository.CompleteRunAsync(run, NextRun(task, completedAt), CancellationToken.None).ConfigureAwait(false);
+            await SettleAsync(run, completedAt, CancellationToken.None).ConfigureAwait(false);
             throw;
         }
         catch (Exception exception)
         {
             var completedAt = DateTimeOffset.UtcNow;
             var run = new AutomationRun(Guid.NewGuid(), task.Id, AutomationRunStatus.Failed, scheduledFor, startedAt, completedAt, null, exception.Message, leaseToken);
-            await repository.CompleteRunAsync(run, NextRun(task, completedAt), CancellationToken.None).ConfigureAwait(false);
+            await SettleAsync(run, completedAt, CancellationToken.None).ConfigureAwait(false);
             return run;
         }
     }

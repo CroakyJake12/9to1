@@ -8,6 +8,7 @@
  */
 
 using Haven.Application;
+using Haven.Application.Automations;
 using Haven.Core;
 
 namespace Haven.Infrastructure;
@@ -15,7 +16,7 @@ namespace Haven.Infrastructure;
 /// <summary>
 /// Represents automation repository and keeps its related state and behavior together.
 /// </summary>
-public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAutomationRepository, IAutomationRunContinuationStore
+public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAutomationRepository, IAutomationRunContinuationStore, IAutomationDueRunOwner
 {
     /// <summary>Exact maintained factory observation only; no READ, WRITE or scheduler authority.</summary>
     public bool HasOriginalSqliteFactory(ISqliteConnectionFactory sameActual) => ReferenceEquals(factory, sameActual);
@@ -107,10 +108,65 @@ public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAu
         return await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) == 1;
     }
 
-    /// <summary>
-    /// Performs complete run asynchronously so I/O does not block the caller's thread.
-    /// </summary>
-    public async Task CompleteRunAsync(AutomationRun run, DateTimeOffset? nextRunAt, CancellationToken cancellationToken)
+    // This is the maintained legacy table's complete stored execution fingerprint. It has
+    // no canonical definition-revision column, so timestamps alone are not trusted as a revision.
+    private const string DueFingerprint = """
+        is_enabled=1 AND next_run_at IS $observedNext AND updated_at=$observedUpdated
+        AND created_at=$observedCreated AND name=$observedName AND mode=$observedMode
+        AND instruction=$observedInstruction AND schedule_kind=$observedKind
+        AND schedule_json=$observedSchedule AND container_id IS $observedContainer
+        """;
+
+    private static void BindDueFingerprint(Microsoft.Data.Sqlite.SqliteCommand command, AutomationDefinition observed)
+    {
+        command.Parameters.AddWithValue("$observedNext", (object?)observed.NextRunAt?.ToUniversalTime().ToString("O") ?? DBNull.Value);
+        command.Parameters.AddWithValue("$observedUpdated", observed.UpdatedAt.ToUniversalTime().ToString("O"));
+        command.Parameters.AddWithValue("$observedCreated", observed.CreatedAt.ToUniversalTime().ToString("O"));
+        command.Parameters.AddWithValue("$observedName", observed.Name);
+        command.Parameters.AddWithValue("$observedMode", (int)observed.Mode);
+        command.Parameters.AddWithValue("$observedInstruction", observed.Instruction);
+        command.Parameters.AddWithValue("$observedKind", (int)observed.ScheduleKind);
+        command.Parameters.AddWithValue("$observedSchedule", observed.ScheduleJson);
+        command.Parameters.AddWithValue("$observedContainer", (object?)observed.ContainerId?.ToString() ?? DBNull.Value);
+    }
+
+    public async Task<bool> TryAcquireDueLeaseAsync(AutomationDefinition observed, DateTimeOffset dueAt, DateTimeOffset claimingAt, string leaseToken,
+        DateTimeOffset leaseUntil, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(observed);
+        if (!observed.IsEnabled || observed.NextRunAt is not { } scheduled || scheduled > dueAt ||
+            scheduled > claimingAt || leaseUntil <= claimingAt)
+            return false;
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"""
+            UPDATE automations SET lease_token=$leaseToken, lease_until=$leaseUntil
+            WHERE id=$id AND (lease_until IS NULL OR lease_until < $claimingAt)
+              AND next_run_at <= $dueAt AND next_run_at <= $claimingAt AND {DueFingerprint};
+            """;
+        BindDueFingerprint(command, observed);
+        command.Parameters.AddWithValue("$leaseToken", leaseToken);
+        command.Parameters.AddWithValue("$leaseUntil", leaseUntil.ToUniversalTime().ToString("O"));
+        command.Parameters.AddWithValue("$id", observed.Id.ToString());
+        command.Parameters.AddWithValue("$dueAt", dueAt.ToUniversalTime().ToString("O"));
+        command.Parameters.AddWithValue("$claimingAt", claimingAt.ToUniversalTime().ToString("O"));
+        return await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) == 1;
+    }
+
+    public Task CompleteDueRunAsync(AutomationDefinition observed, AutomationRun run, DateTimeOffset? nextRunAt,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(observed);
+        if (observed.Id != run.AutomationId || observed.NextRunAt != run.ScheduledFor || string.IsNullOrEmpty(run.LeaseToken))
+            throw new InvalidOperationException("The result does not belong to the leased scheduled occurrence.");
+        return CompleteRunCoreAsync(run, nextRunAt, observed, cancellationToken);
+    }
+
+    public Task CompleteRunAsync(AutomationRun run, DateTimeOffset? nextRunAt, CancellationToken cancellationToken)
+        => CompleteRunCoreAsync(run, nextRunAt, null, cancellationToken);
+
+    private async Task CompleteRunCoreAsync(AutomationRun run, DateTimeOffset? nextRunAt, AutomationDefinition? observed,
+        CancellationToken cancellationToken)
     {
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var transaction = (Microsoft.Data.Sqlite.SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
@@ -138,7 +194,21 @@ public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAu
         await using (var update = connection.CreateCommand())
         {
             update.Transaction = transaction;
-            update.CommandText = "UPDATE automations SET next_run_at=$nextRunAt, lease_token=NULL, lease_until=NULL, updated_at=$updatedAt WHERE id=$id AND lease_token=$leaseToken;";
+            if (observed is null)
+                update.CommandText = "UPDATE automations SET next_run_at=$nextRunAt, lease_token=NULL, lease_until=NULL, updated_at=$updatedAt WHERE id=$id AND lease_token=$leaseToken;";
+            else
+            {
+                // Record the actual old Run, but release only its lease and never overwrite a
+                // schedule edited or disabled while that already-admitted work was running.
+                update.CommandText = $"""
+                    UPDATE automations SET
+                      next_run_at=CASE WHEN {DueFingerprint} THEN $nextRunAt ELSE next_run_at END,
+                      updated_at=CASE WHEN {DueFingerprint} THEN $updatedAt ELSE updated_at END,
+                      lease_token=NULL, lease_until=NULL
+                    WHERE id=$id AND lease_token=$leaseToken;
+                    """;
+                BindDueFingerprint(update, observed);
+            }
             update.Parameters.AddWithValue("$nextRunAt", (object?)nextRunAt?.ToUniversalTime().ToString("O") ?? DBNull.Value);
             update.Parameters.AddWithValue("$updatedAt", DateTimeOffset.UtcNow.ToString("O"));
             update.Parameters.AddWithValue("$id", run.AutomationId.ToString());

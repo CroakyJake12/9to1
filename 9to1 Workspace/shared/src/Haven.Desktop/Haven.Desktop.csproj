@@ -97,6 +97,7 @@
     <PackageReference Include="KokoroSharp.CPU" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="../../../../apps/Web/Home/BrowserThemeCreator.cs" Link="Home/BrowserThemeCreator.cs" />
     <AvaloniaResource Include="Assets\**" />
     <EmbeddedResource Include="Prefabs\**\*.hui" />
     <EmbeddedResource Include="DynamicUI\**\*.hui" />
@@ -110,6 +111,11 @@
     <EmbeddedResource Include="Views/Pages/Home/Discover.cui" LogicalName="Haven.Desktop.Home.Discover.cui" />
     <EmbeddedResource Include="Views/Pages/Home/HuggingFace/HomeHuggingFace.cui" LogicalName="Haven.Desktop.Home.HuggingFace.cui" />
     <EmbeddedResource Include="Views/Pages/Home/UnifiedHome.cui" LogicalName="Haven.Desktop.Home.Unified.cui" />
+    <EmbeddedResource Include="Views/Pages/Home/NewTabCustomisation.cui" LogicalName="Haven.Desktop.Home.NewTabCustomisation.cui" />
+    <EmbeddedResource Include="Views/Pages/Home/NewTabShortcutPicker.cui" LogicalName="Haven.Desktop.Home.NewTabShortcutPicker.cui" />
+    <EmbeddedResource Include="Views/Pages/Home/NewTabWidgets.cui" LogicalName="Haven.Desktop.Home.NewTabWidgets.cui" />
+    <EmbeddedResource Include="Views/Pages/Home/HomeSettings.cui" LogicalName="Haven.Desktop.Home.Settings.cui" />
+    <EmbeddedResource Include="Views/Pages/Home/HomeSettingsKeyboard.cui" LogicalName="Haven.Desktop.Home.SettingsKeyboard.cui" />
     <EmbeddedResource Include="Views/Pages/Home/PreferenceRecovery.cui" LogicalName="Haven.Desktop.PreferenceRecovery.cui" />
     <EmbeddedResource Include="Views/Pages/Home/UnifiedHomeApps.cui" LogicalName="Haven.Desktop.Home.UnifiedApps.cui" />
     <!-- The shared-header shell and notifications documents are owned and compiled by the

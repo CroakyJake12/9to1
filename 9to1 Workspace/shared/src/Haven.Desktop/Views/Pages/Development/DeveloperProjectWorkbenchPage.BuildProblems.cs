@@ -81,13 +81,13 @@ public sealed partial class DeveloperProjectWorkbenchPage
             return;
         }
         var diagnostic = selected.Observation.Report.Diagnostics[selected.Index];
-        if (!DeveloperBuildProblemNavigation.TryResolveCurrentSavedText(diagnostic, text, out var offset))
+        if (!DeveloperBuildProblemNavigation.TryResolveCurrentSavedRange(diagnostic, text, out var offset, out var length))
         {
             _editorTextSelection = previousSelection;
-            _status = "Source opened. The reported location is not present in the current saved text.";
+            _status = "Source opened. The reported range no longer matches the current saved text; selection was kept.";
             return;
         }
-        _editorTextSelection = CuiTextSelection.ForText(checked(++_editorNavigationRequest), text, offset, 0);
-        _status = "Opened the reported location in current saved source. Content may have changed since the command ran.";
+        _editorTextSelection = CuiTextSelection.ForText(checked(++_editorNavigationRequest), text, offset, length);
+        _status = "Opened the reported range in current saved source. Content may have changed since the command ran.";
     }
 }

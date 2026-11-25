@@ -798,7 +798,7 @@ public sealed class CuiCompiler
 
     private void ValidateTheme(string theme, CuiSourceSpan span, CuiDiagnosticBag diagnostics)
     {
-        if (_declaredThemes.Contains(theme)) return;
+        if (_declaredThemes.Contains(theme) || CakeOS.Cui.Themes.CuiThemeCatalog.FindBuiltIn(theme) is not null) return;
         var supported = CakeOS.Cui.Themes.CuiThemeCatalog.All.Select(item => item.DisplayName)
             .Append("Default").Append("user_preference").ToHashSet(StringComparer.OrdinalIgnoreCase);
         if (!supported.Contains(theme))

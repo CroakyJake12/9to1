@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { CHUNK_BYTES, EXPORT_BYTES, JSON_BYTES } from './google-transport.mjs';
-import { DRIVE_FILE_FIELDS } from './provider.mjs';
+import { DRIVE_FILE_FIELDS, exactNameQuery } from './provider.mjs';
 import { API_PREFIX, FilesHttpError, guid } from './protocol.mjs';
 import { DRIVE_UNIT_COSTS, QuotaError } from './quota.mjs';
 
@@ -147,11 +147,6 @@ function uploadIntent(body = {}) {
 function progress(entry) {
   return { transferId: wrap(entry.transferId), itemId: wrap(entry.itemId), chunkBytes: CHUNK_BYTES,
     uploadedBytes: entry.uploadedBytes, totalBytes: entry.totalBytes, state: entry.state };
-}
-
-function exactNameQuery(parent, name) {
-  const escaped = name.replaceAll('\\', '\\\\').replaceAll("'", "\\'");
-  return "'" + parent + "' in parents and name = '" + escaped + "' and trashed = false";
 }
 
 function acknowledgedRange(headers, floor, ceiling, total) {
@@ -424,13 +419,38 @@ export class DriveTransfers {
 
   async #complete(entry, file) {
     if (!receiptMatches(file, entry)) throw unknown();
-    this.#store.mapFile(file, entry.itemId);
-    entry.uploadedBytes = entry.totalBytes;
-    entry.phase = 'complete';
-    entry.state = 'Completed';
-    delete entry.session;
-    delete entry.pendingEnd;
-    return this.#persist(entry);
+    let completed;
+    try {
+      completed = this.#store.storage.transactionSync(() => {
+        // A verified provider write only becomes an observable local completion
+        // when metadata, the resumable change and the transfer receipt agree.
+        const current = this.#upload(entry.transferId);
+        if (current.state === 'Completed') return current;
+        if (current.state !== 'Running' || !['creating', 'sending'].includes(current.phase) ||
+            !receiptMatches(file, current)) throw unknown();
+
+        const metadata = this.#store.mapFileInTransaction(file, current.itemId);
+        const mapped = this.#store.byId(current.itemId);
+        if (!metadata.currentRevisionId || mapped?.google_version !== String(file.version)) throw unknown();
+        this.#store.change({
+          eventId: current.operationId, operationId: wrap(current.operationId), itemId: wrap(current.itemId),
+          actorId: this.#store.ownerId, kind: 'FileContentCommitted', baseRevisionId: null,
+          resultRevisionId: metadata.currentRevisionId, occurredAt: new Date(this.#now()).toISOString(), metadata,
+        });
+
+        const done = { ...current, uploadedBytes: current.totalBytes, phase: 'complete', state: 'Completed' };
+        delete done.session;
+        delete done.pendingEnd;
+        this.#store.putTransfer(done, 'upload');
+        return done;
+      });
+      await this.#store.storage.sync();
+    } catch {
+      // The provider can already hold the full file. A retry must read status
+      // for the same upload instead of treating a local failure as unissued.
+      throw unknown();
+    }
+    return completed;
   }
 
   async findUpload(operationId) {
@@ -538,7 +558,7 @@ export class DriveTransfers {
         entry = await this.#checkUpload(entry, signal, { restartCreation: false });
         if (entry.phase === 'sending' || entry.phase === 'creating') throw unknown();
       }
-      if (entry.state === 'Completed' || entry.state === 'Cancelled') return progress(entry);
+      if (entry.state !== 'Running') return progress(entry);
       entry.phase = 'cancelled'; entry.state = 'Cancelled';
       delete entry.session; delete entry.pendingEnd;
       return progress(await this.#persist(entry));
@@ -589,14 +609,21 @@ export class DriveTransfers {
 
   async downloadContent(id, sessionDigest, { confirmSession, signal, registerChildSignal } = {}) {
     id = guid(id);
-    const entry = this.#store.transfer(id);
-    if (entry?.direction !== 'download' || entry.sessionDigest !== sessionDigest ||
-        entry.expires <= this.#now() || entry.state !== 'Queued' || this.#downloads.has(id)) throw missing();
-    if (typeof confirmSession !== 'function') throw invalid();
-    if (this.#downloads.size >= 2) throw failure(429, 'FilesBusy', 'Two downloads are already running. Try again shortly.');
+    // The single-use owner is the durable ticket, not this adapter's in-memory
+    // set. Claim the exact session/ticket before allowing any async admission.
+    const entry = this.#store.storage.transactionSync(() => {
+      const current = this.#store.transfer(id);
+      if (current?.direction !== 'download' || current.sessionDigest !== sessionDigest ||
+          current.expires <= this.#now() || current.state !== 'Queued' || this.#downloads.has(id)) throw missing();
+      if (typeof confirmSession !== 'function') throw invalid();
+      if (this.#downloads.size >= 2) throw failure(429, 'FilesBusy', 'Two downloads are already running. Try again shortly.');
+      signal?.throwIfAborted();
+      current.state = 'Running';
+      this.#store.putTransfer(current, 'download');
+      return current;
+    });
     const owner = new AbortController();
     const current = owner.signal;
-    registerChildSignal?.(current);
     this.#downloads.add(id);
     const hash = entry.hash ? createHash(entry.hash.name) : null;
     let finished = false;
@@ -670,12 +697,13 @@ export class DriveTransfers {
     };
     let first;
     try {
+      registerChildSignal?.(current);
       if (signal?.aborted) cancel();
+      current.throwIfAborted();
+      await this.#store.storage.sync();
       current.throwIfAborted();
       await this.#checkBudget(entry.size);
       current.throwIfAborted();
-      entry.state = 'Running';
-      await this.#persist(entry);
       first = await fetchChunk(0);
     } catch (error) { close('Failed'); throw error; }
     const headers = new Headers({ 'Content-Disposition': disposition(entry.name), 'Cache-Control': 'private, no-store',

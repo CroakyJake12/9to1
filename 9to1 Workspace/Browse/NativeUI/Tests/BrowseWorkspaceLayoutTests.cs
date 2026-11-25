@@ -109,10 +109,15 @@ public sealed partial class BrowseNativeUiTests
             var wheelPoint = viewport.TranslatePoint(new Point(viewport.Bounds.Width / 2, viewport.Bounds.Height / 2), window)!.Value;
             window.MouseWheel(wheelPoint, new Vector(0, 1)); Layout();
             Assert.True(scroll.Offset.X < offset);
-            right.Focus();
+            Assert.True(Find(window, "BrowseNewTabButton").Focus(NavigationMethod.Tab));
+            window.KeyPress(Key.Tab, RawInputModifiers.Shift, PhysicalKey.None, null);
+            window.KeyRelease(Key.Tab, RawInputModifiers.Shift, PhysicalKey.None, null); Layout();
+            Assert.True(right.IsFocused);
             window.KeyPress(Key.End, RawInputModifiers.None, PhysicalKey.None, null);
             window.KeyRelease(Key.End, RawInputModifiers.None, PhysicalKey.None, null); Layout();
-            Assert.False(right.IsEffectivelyVisible); Assert.True(left.IsEffectivelyVisible);
+            Assert.False(right.IsEffectivelyVisible); Assert.True(left.IsFocused);
+            Assert.Equal(ids[0], chrome.State.SelectedTabId);
+            CaptureTabDragIfRequested(window, "overflow-keyboard-end");
             Assert.Same(scroll, Assert.Single(viewport.GetVisualDescendants().OfType<ScrollViewer>()));
             var last = TabButton(window, workspace, ids[^1].ToString("D"));
             var originalOwner = chrome.ObserveOriginalEngine(ids[^1]);

@@ -42,6 +42,8 @@ public sealed record HomeDisplaySettings(HomeDisplayMode Mode, int Brightness = 
     }
 }
 
+public sealed record HomeThemeIdentityMigration(string OriginalName, string CanonicalId);
+
 public sealed record HomeThemePreference(int SchemaVersion, HomeThemeScope Scope, string ThemeName, long Revision, HomeThemeAccessibility Accessibility)
 {
     // Optional in the existing v1 envelope: old preferences keep the host default.
@@ -51,12 +53,17 @@ public sealed record HomeThemePreference(int SchemaVersion, HomeThemeScope Scope
     public HomeDisplaySettings EffectiveDisplay() => Display ?? new(HomeDisplaySettings.FromLegacy(Appearance));
     public string? CustomThemesJson { get; init; }
     public HomeThemeAccentPreference? Accent { get; init; }
+    public HomeThemeIdentityMigration? ThemeMigration { get; init; }
     public const int CurrentSchemaVersion = 1;
     public static HomeThemePreference Default(HomeThemeScope scope) => new(CurrentSchemaVersion,scope.Validate(),"Professional",0,new());
     public HomeThemePreference Validate()
     {
         ArgumentNullException.ThrowIfNull(Scope); ArgumentNullException.ThrowIfNull(Accessibility);
         Scope.Validate(); Accessibility.Validate(); Display?.Validate();
+        if (ThemeMigration is { } migration &&
+            (migration.OriginalName is not { Length: > 0 and <= 128 } original || original.Any(char.IsControl) ||
+             !original.Trim().Equals("Cinematic", StringComparison.OrdinalIgnoreCase) || migration.CanonicalId != "comic"))
+            throw new ArgumentException("Theme migration provenance is invalid.");
         if (CustomThemesJson is { } library)
         {
             if (library.Length > 1_048_576) throw new ArgumentException("Custom theme library exceeds its size limit.");
@@ -189,32 +196,37 @@ public sealed class HomeThemePreferenceService : IDisposable,IAsyncDisposable
         if(expectedRevision<0||string.IsNullOrWhiteSpace(themeName)) return new(false,"InvalidArgument",Diagnostic:"Choose a valid theme and revision.");
         if(!await _authority.CanAccessAsync(scope,true,token).ConfigureAwait(false)) return Denied();
         if(!_backend.Supports(scope)) return new(false,"ThemeScopeUnsupported",Diagnostic:"No preference provider supports this scope.");
-        // Legacy/theme-only callers must not erase additive choices. Read the same
-        // authority and revision before CAS; a concurrent write still conflicts.
-        if (accent is null || appearance is null || customThemesJson is null || display is null)
+        // Read the actual prior record before CAS so additive choices and original
+        // theme identity are retained even when a display caller supplies every field.
+        var prior = await _backend.ReadAsync(scope,token).ConfigureAwait(false);
+        if (prior.State == HomeThemeReadState.PermissionDenied) return Denied();
+        if (prior.State != HomeThemeReadState.Available)
+            return new(false,"ThemePreferenceUnavailable",Diagnostic:"The saved appearance could not be read safely; no changes were saved.");
+        HomeThemeIdentityMigration? migration = null;
+        if (prior.Preference is { } stored)
         {
-            var prior = await _backend.ReadAsync(scope,token).ConfigureAwait(false);
-            if (prior.State == HomeThemeReadState.PermissionDenied) return Denied();
-            if (prior.State != HomeThemeReadState.Available)
-                return new(false,"ThemePreferenceUnavailable",Diagnostic:"The saved appearance could not be read safely; no changes were saved.");
-            if (prior.Preference is { } stored)
-            {
-                if (stored.Scope != scope) return new(false,"ThemeScopeMismatch",Diagnostic:"The preference provider returned a different scope.");
-                try { stored.Validate(); }
-                catch (ArgumentException) { return new(false,"ThemeSchemaUnsupported",Diagnostic:"The existing appearance is incompatible and has been preserved."); }
-                if (stored.Revision != expectedRevision) return new(false,"RevisionConflict");
-                if (display is null && stored.Display is { } previous)
-                    display = appearance is not null && appearance != stored.Appearance
-                        ? previous with { Mode = HomeDisplaySettings.FromLegacy(appearance) } : previous;
-                accent ??= stored.Accent;
-                appearance ??= stored.Appearance;
-                customThemesJson ??= stored.CustomThemesJson;
-            }
-            else if (expectedRevision != 0) return new(false,"RevisionConflict");
-            if (!await _authority.CanAccessAsync(scope,true,token).ConfigureAwait(false)) return Denied();
+            if (stored.Scope != scope) return new(false,"ThemeScopeMismatch",Diagnostic:"The preference provider returned a different scope.");
+            try { stored.Validate(); }
+            catch (ArgumentException) { return new(false,"ThemeSchemaUnsupported",Diagnostic:"The existing appearance is incompatible and has been preserved."); }
+            if (stored.Revision != expectedRevision) return new(false,"RevisionConflict");
+            if (display is null && stored.Display is { } previous)
+                display = appearance is not null && appearance != stored.Appearance
+                    ? previous with { Mode = HomeDisplaySettings.FromLegacy(appearance) } : previous;
+            accent ??= stored.Accent;
+            appearance ??= stored.Appearance;
+            customThemesJson ??= stored.CustomThemesJson;
+            migration = stored.ThemeMigration;
+            if (migration is null && stored.ThemeName.Trim().Equals("Cinematic", StringComparison.OrdinalIgnoreCase) &&
+                TryResolve(stored.ThemeName, stored.CustomThemesJson, out var legacy) && legacy == "Comic")
+                migration = new(stored.ThemeName, "comic");
         }
+        else if (expectedRevision != 0) return new(false,"RevisionConflict");
+        if (!await _authority.CanAccessAsync(scope,true,token).ConfigureAwait(false)) return Denied();
         if(!TryResolve(themeName,customThemesJson,out var name)) return new(false,"ThemeUnavailable",Diagnostic:"The theme or custom library is unavailable or incompatible.");
-        var candidate=(new HomeThemePreference(HomeThemePreference.CurrentSchemaVersion,scope,name,checked(expectedRevision+1),accessibility) { Appearance=appearance, Accent=accent, CustomThemesJson=customThemesJson, Display=display }).Validate();
+        if (migration is null && name == "Comic" && themeName.Trim().Equals("Cinematic", StringComparison.OrdinalIgnoreCase))
+            migration = new(themeName, "comic");
+        var candidate=(new HomeThemePreference(HomeThemePreference.CurrentSchemaVersion,scope,name,checked(expectedRevision+1),accessibility)
+            { Appearance=appearance, Accent=accent, CustomThemesJson=customThemesJson, Display=display, ThemeMigration=migration }).Validate();
         var receipt=await _backend.CompareExchangeAsync(scope,expectedRevision,candidate,token).ConfigureAwait(false);
         if(!receipt.Succeeded) return new(false,receipt.Code,Diagnostic:receipt.Diagnostic);
         if(receipt.Preference!=candidate) return new(false,"InvalidThemeReceipt",Diagnostic:"The preference provider did not confirm the exact requested revision and scope.");

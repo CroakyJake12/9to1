@@ -15,6 +15,9 @@ export class DriveStore {
       this.query(`CREATE TABLE IF NOT EXISTS files_operations (
         id TEXT PRIMARY KEY, intent TEXT NOT NULL, stage TEXT NOT NULL,
         provider_id TEXT, result TEXT, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`);
+      this.query(`CREATE INDEX IF NOT EXISTS files_folder_create_target ON files_operations(
+        stage, COALESCE(json_extract(intent,'$.destinationParentId'),''), json_extract(intent,'$.newName'), updated_at DESC, id DESC)
+        WHERE json_extract(intent,'$.operation') = 'CreateFolder'`);
       this.query(`CREATE TABLE IF NOT EXISTS files_pages (
         id TEXT PRIMARY KEY, context TEXT NOT NULL, provider_token TEXT NOT NULL, expires_at INTEGER NOT NULL)`);
       this.query(`CREATE TABLE IF NOT EXISTS files_changes (
@@ -56,28 +59,29 @@ export class DriveStore {
   }
   setRoot(file) { const metadata = this.mapFile(file); this.set('googleRoot', file.id); return metadata; }
   mapFile(file, requestedId = null) {
+    return this.storage.transactionSync(() => this.mapFileInTransaction(file, requestedId));
+  }
+  mapFileInTransaction(file, requestedId = null) {
     if (!file || typeof file.id !== 'string' || typeof file.name !== 'string' || file.name.length > 32768 ||
         typeof file.mimeType !== 'string' || !/^\d{1,24}$/.test(String(file.version)) ||
         !Number.isFinite(Date.parse(file.createdTime)) || !Number.isFinite(Date.parse(file.modifiedTime))) throw badProvider();
     const size = file.size === undefined ? null : Number(file.size);
     if (size !== null && (!Number.isSafeInteger(size) || size < 0)) throw badProvider();
-    return this.storage.transactionSync(() => {
-      const id = this.ensureIdInTransaction(file.id, requestedId), row = this.byId(id);
-      if (row.google_version && BigInt(row.google_version) > BigInt(file.version)) return JSON.parse(row.metadata);
-      const revision = row.google_version === String(file.version) ? row.revision_id : crypto.randomUUID();
-      const parentGoogle = file.parents?.[0] ?? null;
-      const parentId = parentGoogle && parentGoogle !== this.get('googleRoot') ? this.ensureIdInTransaction(parentGoogle) : null;
-      const owner = file.ownedByMe ? this.ownerId : file.owners?.[0]?.permissionId ? 'google:' + file.owners[0].permissionId : 'google:external';
-      const metadata = { id: wrap(id), locationId: wrap(this.get('locationId')), parentId: wrap(parentId), name: file.name,
-        kind: file.mimeType === folderMime ? 'Folder' : file.mimeType === 'application/vnd.google-apps.shortcut' ? 'Reference' : 'File',
-        contentType: file.mimeType, ownerPrincipalId: owner, scope: 'connected-provider', sizeBytes: size,
-        createdAt: file.createdTime, modifiedAt: file.modifiedTime, currentRevisionId: wrap(revision), availability: 'CloudOnly',
-        isShared: file.shared === true, contentHash: file.sha256Checksum ? 'sha256:' + file.sha256Checksum : file.md5Checksum ? 'md5:' + file.md5Checksum : null,
-        metadataSchemaVersion: 1 };
-      this.query('UPDATE files_items SET google_version=?,revision_id=?,metadata=?,provider_metadata=?,observed_at=? WHERE id=?',
-        String(file.version), revision, JSON.stringify(metadata), JSON.stringify(file), this.now(), id);
-      return metadata;
-    });
+    const id = this.ensureIdInTransaction(file.id, requestedId), row = this.byId(id);
+    if (row.google_version && BigInt(row.google_version) > BigInt(file.version)) return JSON.parse(row.metadata);
+    const revision = row.google_version === String(file.version) ? row.revision_id : crypto.randomUUID();
+    const parentGoogle = file.parents?.[0] ?? null;
+    const parentId = parentGoogle && parentGoogle !== this.get('googleRoot') ? this.ensureIdInTransaction(parentGoogle) : null;
+    const owner = file.ownedByMe ? this.ownerId : file.owners?.[0]?.permissionId ? 'google:' + file.owners[0].permissionId : 'google:external';
+    const metadata = { id: wrap(id), locationId: wrap(this.get('locationId')), parentId: wrap(parentId), name: file.name,
+      kind: file.mimeType === folderMime ? 'Folder' : file.mimeType === 'application/vnd.google-apps.shortcut' ? 'Reference' : 'File',
+      contentType: file.mimeType, ownerPrincipalId: owner, scope: 'connected-provider', sizeBytes: size,
+      createdAt: file.createdTime, modifiedAt: file.modifiedTime, currentRevisionId: wrap(revision), availability: 'CloudOnly',
+      isShared: file.shared === true, contentHash: file.sha256Checksum ? 'sha256:' + file.sha256Checksum : file.md5Checksum ? 'md5:' + file.md5Checksum : null,
+      metadataSchemaVersion: 1 };
+    this.query('UPDATE files_items SET google_version=?,revision_id=?,metadata=?,provider_metadata=?,observed_at=? WHERE id=?',
+      String(file.version), revision, JSON.stringify(metadata), JSON.stringify(file), this.now(), id);
+    return metadata;
   }
   newPage(context, providerToken) {
     if (typeof providerToken !== 'string' || providerToken.length > 16384) throw badProvider();
@@ -105,6 +109,12 @@ export class DriveStore {
       return this.operation(id);
     });
   }
+  previousFolderCreate(intent, stage) {
+    return this.query(`SELECT id, provider_id FROM files_operations
+      WHERE json_extract(intent,'$.operation') = 'CreateFolder' AND stage=?
+        AND COALESCE(json_extract(intent,'$.destinationParentId'),'')=? AND json_extract(intent,'$.newName')=? AND id<>?
+      ORDER BY updated_at DESC,id DESC LIMIT 1`, stage, intent.destinationParentId ?? '', intent.newName, intent.id)[0] ?? null;
+  }
   stageOperation(id, stage, providerId = null, result = null) {
     this.query('UPDATE files_operations SET stage=?,provider_id=COALESCE(?,provider_id),result=?,updated_at=? WHERE id=?',
       stage, providerId, result ? JSON.stringify(result) : null, this.now(), guid(id));
@@ -115,8 +125,12 @@ export class DriveStore {
   }
   changes(after, limit = 100) {
     if (!Number.isSafeInteger(after) || after < 0 || !Number.isInteger(limit) || limit < 1 || limit > 500) throw new FilesHttpError(400, 'InvalidCursor', 'The change cursor is invalid.', { notStarted: true });
-    const rows = this.query('SELECT sequence,event FROM files_changes WHERE sequence>? ORDER BY sequence LIMIT ?', after, limit);
-    return { items: rows.map(row => ({ ...JSON.parse(row.event), cursor: { revision: row.sequence } })), nextPageToken: rows.length === limit ? String(rows.at(-1).sequence) : null };
+    // Read one lookahead row in the same SQLite snapshot, but never expose it or
+    // advance the continuation past the last event already delivered.
+    const rows = this.query('SELECT sequence,event FROM files_changes WHERE sequence>? ORDER BY sequence LIMIT ?', after, limit + 1);
+    const hasMore = rows.length > limit;
+    if (hasMore) rows.pop();
+    return { items: rows.map(row => ({ ...JSON.parse(row.event), cursor: { revision: row.sequence } })), nextPageToken: hasMore ? String(rows.at(-1).sequence) : null };
   }
   transfer(id) { const row = this.query('SELECT * FROM files_transfers WHERE id = ?', guid(id))[0]; return row ? JSON.parse(row.record) : null; }
   findTransfer(operationId) { const row = this.query('SELECT record FROM files_transfers WHERE operation_id = ?', guid(operationId))[0]; return row ? JSON.parse(row.record) : null; }

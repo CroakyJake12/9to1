@@ -224,6 +224,24 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
     }
 
     [Fact]
+    public void Capture_never_replaces_malformed_source_or_scope_text_in_its_provenance()
+    {
+        // Construct malformed UTF-16 in the test body: test discovery must not
+        // serialize an attribute argument and turn it into a valid U+FFFD first.
+        const string malformed = "private\uD800body";
+        Assert.Throws<ArgumentException>(() => ContextSnapshot(malformed));
+        var fixture = CollectionFixture(1, new(8_000));
+        var reference = Assert.Single(fixture.Collection.RequestedSources);
+        var value = Body(reference, "Literal \uFFFD source");
+        Assert.Throws<ArgumentException>(() => fixture.Collection.TryInclude(value with { Text = malformed }));
+        Assert.Throws<ArgumentException>(() => fixture.Collection.TryInclude(value with { Label = malformed }));
+        Assert.True(fixture.Collection.TryInclude(value)); // refusal cannot consume the real source identity
+        var capture = fixture.Collection.Complete();
+        Assert.Equal(value.Text, Assert.Single(capture.Items).Text);
+        Assert.Throws<ArgumentException>(() => new OriginalSpaceCapturedContext(capture.SpaceId, malformed, capture.Items));
+    }
+
+    [Fact]
     public void Legacy_capture_digest_stays_identical_and_new_capture_binds_omission_decisions()
     {
         var old = ContextSnapshot("same body").CapturedContext!;

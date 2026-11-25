@@ -301,10 +301,13 @@ public static class CuiThemeResourceApplier
         resources["CuiMenuSelectionBrush"] = new SolidColorBrush(professional && !settings.HighContrast ? palette.PanelHover : palette.AccentSoft);
         resources["CuiChoiceRadius"] = new CornerRadius(5 * settings.DisplayScale);
         var shadowAlpha = (byte)Math.Clamp(Math.Round((Luminance(palette.Text) > Luminance(palette.Panel) ? 110 : 42) * expression.ShadowOpacityScale), 0, 255);
+        var comic = palette.Theme == CuiTheme.Cinematic;
         var popupShadow = new BoxShadow
         {
-            OffsetY = 8 * settings.DisplayScale, Blur = 24 * settings.DisplayScale,
-            Spread = 0, Color = Color.FromArgb(shadowAlpha, 0, 0, 0)
+            OffsetX = comic ? 3 * settings.DisplayScale : 0,
+            OffsetY = (comic ? 4 : 8) * settings.DisplayScale,
+            Blur = (comic ? 0 : 24) * settings.DisplayScale,
+            Spread = 0, Color = comic ? Color.Parse("#B5080C18") : Color.FromArgb(shadowAlpha, 0, 0, 0)
         };
         resources["CuiPopupShadow"] = settings.HighContrast ? new BoxShadows() : new BoxShadows(popupShadow);
         var shadowBounds = settings.HighContrast ? new Rect(0, 0, 1, 1) : popupShadow.TransformBounds(new Rect(0, 0, 1, 1));
@@ -491,6 +494,39 @@ public static class CuiThemeResourceApplier
             resources[$"CuiAccent{role}HoverEffect"] = glow && !settings.ReduceMotion
                 ? new DropShadowEffect { Color = colour, BlurRadius = 14, Opacity = .3, OffsetX = 0, OffsetY = 0 }
                 : null;
+        }
+        var comic = palette.Theme == CuiTheme.Cinematic && !settings.HighContrast;
+        var disabledSurface = Blend(palette.Panel, palette.Muted, .2);
+        resources["CuiComicDisabledBrush"] = comic ? new SolidColorBrush(disabledSurface) : null;
+        resources["CuiComicDisabledForegroundBrush"] = comic
+            ? new SolidColorBrush(CuiContrast.EnsureForegroundContrast(palette.TextSoft, disabledSurface, 4.5)) : null;
+        var actionBase = Blend(palette.Accent, Color.Parse("#080C18"), .44);
+        BoxShadows ActionBase(double offset) => comic
+            ? new BoxShadows(new BoxShadow { OffsetY = offset * settings.DisplayScale, Color = actionBase })
+            : new BoxShadows();
+        resources["CuiComicPrimaryShadow"] = ActionBase(4);
+        resources["CuiComicPrimaryHoverShadow"] = ActionBase(5);
+        resources["CuiComicPrimaryPressedShadow"] = ActionBase(1);
+        if (comic)
+        {
+            var primaryInk = palette.AccentInk;
+            var secondaryInk = CuiContrast.EnsureForegroundContrast(palette.AccentSecondary, palette.Panel2, 4.5);
+            foreach (var (state, fill, secondary) in new (string, Color, Color)[]
+            {
+                ("", palette.Accent, palette.Button),
+                ("Hover", Blend(palette.Accent, primaryInk, .06), palette.ButtonHover),
+                ("Pressed", Blend(palette.Accent, primaryInk, .14), palette.ButtonPressed)
+            })
+            {
+                resources[$"CuiAccentPrimary{state}Brush"] = new SolidColorBrush(fill);
+                resources[$"CuiAccentPrimary{state}ForegroundBrush"] = new SolidColorBrush(
+                    CuiContrast.EnsureForegroundContrast(primaryInk, fill, 4.5));
+                resources[$"CuiAccentSecondary{state}Brush"] = new SolidColorBrush(secondary);
+                resources[$"CuiAccentSecondary{state}ForegroundBrush"] = new SolidColorBrush(
+                    CuiContrast.EnsureForegroundContrast(secondaryInk, secondary, 4.5));
+                resources[$"CuiAccentTertiary{state}Brush"] = new SolidColorBrush(Blend(secondary, palette.Panel2, .42));
+                resources[$"CuiAccentTertiary{state}ForegroundBrush"] = resources["CuiTextBrush"];
+            }
         }
         resources["CuiAccentTextBrush"] = Brushes.Transparent;
         resources["CuiAccentTextHoverBrush"] = Brushes.Transparent;

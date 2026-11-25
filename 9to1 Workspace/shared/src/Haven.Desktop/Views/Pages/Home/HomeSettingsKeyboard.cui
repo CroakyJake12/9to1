@@ -1,0 +1,18 @@
+<Cui id="home.settings.keyboard" version="1">
+  <Page>
+    <Container id="home-settings-keyboard-map" Type="Vertical Stack" CellGap="5" AccessibleName="Keyboard shortcut reference">
+      <Text id="home-settings-keyboard-section" Text="{Binding SettingsCatalogKeyboardTitle}" FontSize="18" FontWeight="750"
+            Margin="12 0 12 6" TextWrapping="Wrap" />
+      <Repeat Source="{Binding SettingsCatalogKeyboardRows}" As="shortcut" Key="{Binding shortcut.Key}">
+        <Container id="home-settings-keyboard-row" Type="Grid" ColumnSizes="1fr Auto" MinHeight="42" CellGap="10"
+                   Padding="12 4" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
+          <Text Text="{Binding shortcut.Label}" VerticalAlignment="Center" FontSize="14" TextWrapping="Wrap" />
+          <Container Column="1" Type="Vertical Stack" VerticalAlignment="Center" Padding="8 4" CornerRadius="5"
+                     Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
+            <Text Text="{Binding shortcut.Chord}" FontSize="13" FontWeight="700" />
+          </Container>
+        </Container>
+      </Repeat>
+    </Container>
+  </Page>
+</Cui>

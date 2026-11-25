@@ -1,9 +1,18 @@
+using System.ComponentModel;
+using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
+using Haven.Application.Haven;
+using Haven.Browser;
+using Haven.Core;
 using Haven.Desktop.Services;
+using HavenOS.Apps.Browse;
 
 namespace Haven.Desktop.Views.Pages.Home;
 
@@ -13,23 +22,51 @@ internal sealed class HomeSettingsAuthorityRefusal(string message) : Exception(m
 
 /// <summary>The same canonical Home Appearance fragment and native preference owner used by
 /// standalone Home. This tab borrows the source/context; it never disposes either or owns a file.</summary>
-internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispatcher, ICuiActionAvailability
+internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiActionDispatcher, ICuiActionAvailability
 {
     private readonly NativeHomeThemePreferences _source;
+    private readonly NativeHomeThemeCreator _creator;
+    private BrowsePageCommandSlot? _pageCommands;
+    private BrowsePageCommand? _saveTheme;
+    private readonly NativeHomeAccentEditor _accentEditor;
     private readonly Func<CancellationToken, Task> _admit;
     private readonly DulcheLocalClient? _dulche;
-    private readonly HomeAtlasSettingsView? _atlas;
-    private readonly CuiControlLoader? _policyLoader;
-    internal event Action<string>? NavigationRequested;
-    internal void OpenProviders() => _atlas?.OpenProviders();
-    internal bool OwnsAtlasNavigation => _atlas is not null;
+    private readonly HomeDulcheExternalSettings? _external;
+    private readonly Func<Haven.Desktop.Views.Pages.Settings.SettingsHavenPage>? _legacyFactory;
+    private Haven.Desktop.Views.Pages.Settings.SettingsHavenPage? _legacy;
+    private readonly Border _legacyHost = new();
+    private readonly Border _externalHost = new();
+    private bool _externalActive;
+    private string? _additionalCategory;
     private string? _dulcheStatus;
-    private readonly CuiControlLoader _loader = new();
+    private readonly CuiControlLoader _loader = new(HomeAppsCuiDocument.CreateControlRegistry());
     private readonly CuiViewModel _bindings = new();
     private readonly DesktopOriginalWorkLifetime _work;
+    private sealed record CategoryRow(string Key, string? Parent, string Label, string Subtitle,
+        string? Icon, bool Expanded, bool Selected);
+    private CategoryRow[] _categoryRows = [];
+    private readonly Dictionary<string, bool> _expanded = new();
+    private readonly Dictionary<string, bool> _searchExpanded = new();
+    private string _typeahead = string.Empty;
+    private long _lastType;
+    private IReadOnlyList<HomeSettingsCatalog.Link> _links = [];
+    private IReadOnlyDictionary<string, HomeAppItem> _nativeApps = new Dictionary<string, HomeAppItem>();
+    private readonly TextBox _search = new();
+    private string _category = "theme";
+    private string _initialCategory = "theme";
+    // Explicit Back to appearance can show the gallery while keeping a previous editor draft.
+    private enum ThemePage { Current, Palette, Gallery }
+    private ThemePage _themePage, _initialThemePage;
+    private bool _openInitialCreator;
+    private bool _initialDirectoryReveal;
+    private bool? _narrowLayout;
+    private long _directoryRevealVersion;
+    private string _query = string.Empty;
+    private Avalonia.Vector _offsetBeforeSearch;
     private Task? _initialization;
     private Task<bool>? _preparation;
     private bool _active, _unavailable, _stopped;
+    private string? _creatorReturnCategory;
     private int _busyCount;
     private bool IsBusy => _busyCount != 0;
     private long _generation;
@@ -51,34 +88,48 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _admit = admit ?? throw new ArgumentNullException(nameof(admit));
         _dulche = dulche;
+        _legacyFactory = legacySettings;
         _work = new(StopAsync, CleanupAsync);
-        var document = HavenOS.Home.HomeCuiSurface.LoadDefault().Document;
-        var theme = document.Components.Single(component => component.IsThemeScope);
-        var fragment = Descendants(theme).Single(component => component.AuthoredId == "home-appearance-settings");
-        CuiComponent Scope(CuiComponent content) => new(theme.Type, theme.Name, theme.Classes, theme.Properties, theme.Actions,
-            [content], theme.Condition, theme.List, theme.Span, theme.DefaultTheme, theme.Repeat,
-            theme.ElseChildren, theme.Groups, theme.IsDefinition, theme.PropertyRegion);
+        if (_dulche is not null)
+        {
+            _external = new(_dulche, RunAuthorizedAsync);
+            _externalHost.Child = _external;
+        }
+        _loader.BindAuthoredControl("home-settings-dulche-provider-host", _ => _externalHost);
+        _loader.BindAuthoredControl("home-settings-legacy-owner-host", _ => _legacyHost);
         _loader.SetThemePreferenceContext(source.Context);
         _loader.SetBindingContext(_bindings); _loader.SetActionDispatcher(this);
-        var loaded = _loader.TryLoad(document with { Components = [Scope(fragment)] });
-        if (loaded.Root is null || loaded.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
-            throw new InvalidDataException("The canonical Home Appearance fragment could not be rendered.");
-        _loader.WireBindings(loaded.Root);
-        if (dulche is not null && legacySettings is not null)
+        _loader.BindAuthoredControl("home-settings-search", _ => _search);
+        RegisterInterfaceScale();
+        RegisterAccessibilitySwitches();
+        _loader.BindAuthoredControl("home-settings-directory-item", _ =>
         {
-            var lifecycle=Descendants(theme).Single(component=>component.AuthoredId=="home-dulche-lifecycle");
-            _policyLoader=new CuiControlLoader();_policyLoader.SetThemePreferenceContext(source.Context);
-            _policyLoader.SetBindingContext(_bindings);_policyLoader.SetActionDispatcher(this);
-            var policy=_policyLoader.TryLoad(document with {Components=[Scope(lifecycle)]});
-            if(policy.Root is null || policy.Diagnostics.Any(item=>item.Severity==CuiDiagnosticSeverity.Error))
-                throw new InvalidDataException("The shared model residency controls are unavailable.");
-            _policyLoader.WireBindings(policy.Root);
-            _atlas=new HomeAtlasSettingsView(loaded.Root,policy.Root,dulche,legacySettings,RunAuthorizedAsync,source.Context);
-            _atlas.Navigate+=destination=>NavigationRequested?.Invoke(destination);
-            Content=_atlas;
-        }
-        else Content=loaded.Root;
+            var button = new Button();
+            button.AttachedToVisualTree += OnDirectoryItemAttached;
+            return button;
+        });
+        NativeHomeThemePreferences.BindAppearanceLayout(_loader, _bindings);
+        _creator = new(source, _bindings, () => IsActionAvailable("ApplyHomeAppearance") == true,
+            (change, token) => DispatchAsync("ApplyHomeAppearance", change, token).AsTask());
+        _creator.Register(_loader);
+        _accentEditor = new(source, _bindings,
+            (change, token) => DispatchAsync("ApplyHomeAppearance", change, token).AsTask());
+        _accentEditor.Register(_loader);
+        ResetExpansion();
+        SetBrowseStatus(string.Empty);
+        PublishCategory();
+        ApplyResponsiveLayout(double.PositiveInfinity);
+        var loaded = _loader.TryLoad(LoadSettingsDocument());
+        if (loaded.Root is null || loaded.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
+            throw new InvalidDataException("Home Settings could not be rendered: " + string.Join("; ",
+                loaded.Diagnostics.Select(item => item.Code + " " + item.Message)));
+        _loader.WireBindings(loaded.Root); Content = loaded.Root;
+        PublishCategory();
+        SizeChanged += (_, args) => ApplyResponsiveLayout(args.NewSize.Width);
+        AddHandler(KeyDownEvent, OnCategoryKeyDown, RoutingStrategies.Tunnel);
+        _search.TextChanged += (_, _) => FilterCategories();
         _bindings.PropertyChanged += NativeHomeThemePreferences.UpdateDisplayReadout;
+        _bindings.PropertyChanged += OnCreatorOpenChanged;
         _source.Changed += OnSourceChanged;
         RefreshBindings();
     }
@@ -86,26 +137,120 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     internal bool IsAlive => !_work.IsRetiring;
     internal Task? OriginalInitialization => _initialization;
     internal Task? OriginalClose => _work.OriginalClose;
-    internal Task WhenActionsIdleAsync() => _loader.WhenActionsIdleAsync();
+    internal Task WhenActionsIdleAsync() => Task.WhenAll(_loader.WhenActionsIdleAsync(), _creator.WhenIdleAsync(),
+        _accentEditor.WhenIdleAsync(), _interfaceScalePreview, _accessibilitySwitchWrite);
     internal NativeHomeThemePreferences.SettingsWriteOutcome? LastWrite { get; private set; }
+    internal Func<bool, CancellationToken, Task>? NavigateHomeAsync { get; set; }
+    internal Func<AppContentAddress, CancellationToken, Task<bool>>? NavigateContentAsync { get; set; }
+    internal Func<AppContentAddress, bool>? ContentAvailable { get; set; }
+    internal bool NewTabCustomisationAvailable { get; set; }
+    internal Func<ModeDefinition, bool>? NativeAppAvailable { get; set; }
+    internal Func<HomeSettingsOwner, CancellationToken, Task<HavenSharedOpenResult>>? OpenOwnerAsync { get; set; }
+    private bool CreatorOpen => _bindings.Get("HomeThemeCreatorOpen") is true;
+    internal string CategoryTitle => _category switch
+    {
+        "theme" when _themePage == ThemePage.Palette => "Accent palette",
+        "theme" when _themePage == ThemePage.Current && CreatorOpen => "Create theme",
+        "theme" => "Theme and accent preferences",
+        _ => HomeSettingsCatalog.Get(_category).Label
+    };
+
+    private void OnCreatorOpenChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName != "HomeThemeCreatorOpen") return;
+        if (!CreatorOpen && _creatorReturnCategory is { } origin)
+        {
+            _creatorReturnCategory = null;
+            if (_active && IsAlive && _category == "theme")
+            {
+                SelectCategory(origin, scroll: origin != "theme-options");
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (!_active || !IsAlive || _category != origin || _pageCommands is { IsHosted: true, IsSelected: false }) return;
+                    if (origin == "theme-options")
+                        this.GetVisualDescendants().OfType<Button>()
+                            .SingleOrDefault(item => item.Name == "home-theme-options-create")?.Focus(NavigationMethod.Tab);
+                    else FocusDirectoryItem(origin);
+                }, DispatcherPriority.Loaded);
+                return;
+            }
+        }
+        if (_active && IsAlive && _category == "theme") CategoryChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    internal void SetInitialRoute(AppContentAddress address)
+    {
+        if (address.ResourceSegments is not ["settings", var route]) return;
+        _initialCategory = HomeSettingsCatalog.ResolveRoute(route)
+            ?? throw new InvalidOperationException("The requested Settings destination was not admitted.");
+        _initialThemePage = route == "appearance-palette" ? ThemePage.Palette : ThemePage.Current;
+        _openInitialCreator = route == "custom-theme";
+    }
+
+    internal void SetNativeApps(IEnumerable<ModeDefinition> modes)
+    {
+        _nativeApps = modes.Where(mode => NativeAppAvailable?.Invoke(mode) == true)
+            .ToDictionary(mode => mode.Key, mode => new HomeAppItem(mode.Key, mode.Name, mode.Description, mode.IconKey,
+                CanonicalId: mode.Id, Source: mode.Source), StringComparer.OrdinalIgnoreCase);
+        PublishCategory();
+    }
+    internal event EventHandler? CategoryChanged;
+
+    internal void AttachPageCommands(BrowsePageCommandSlot slot)
+    {
+        _pageCommands = slot;
+        slot.HostChanged += OnCommandHostChanged;
+        _creator.DraftChanged += OnDraftChanged;
+        _creator.SetShellHosted(slot.IsHosted, slot.IsSelected);
+        RefreshInterfaceScaleHost();
+        UpdatePageCommand();
+    }
+
+    private void OnCommandHostChanged(object? sender, EventArgs args)
+    {
+        _creator.SetShellHosted(_pageCommands!.IsHosted, _pageCommands.IsSelected);
+        RefreshInterfaceScaleHost();
+    }
+    private void OnDraftChanged(object? sender, EventArgs args) => UpdatePageCommand();
+    private void UpdatePageCommand()
+    {
+        if (_pageCommands is null) return;
+        if (_active && IsAlive && _category == "theme" && _themePage == ThemePage.Current && CreatorOpen)
+            _saveTheme ??= new("Save theme", _creator.SaveFromShellAsync, "avares://HavenOS.Apps.Browse.NativeUI/Assets/check.svg");
+        else _saveTheme = null;
+        _pageCommands.Update(_saveTheme, _saveTheme is not null && _creator.CanSave);
+    }
 
     internal Task ActivateAsync(CancellationToken token)
     {
-        Dispatcher.UIThread.VerifyAccess(); _active = true; _atlas?.Activate();
+        Dispatcher.UIThread.VerifyAccess();
+        if (!_active)
+        {
+            _query = string.Empty;
+            _search.Text = string.Empty;
+            ResetExpansion();
+            SetBrowseStatus(string.Empty);
+            _initialDirectoryReveal = true;
+            SelectCategory(_initialCategory, _initialThemePage, scroll: false);
+        }
+        _active = true;
+        UpdateAdditionalOwners();
         return _work.RunAsync(original => RefreshAsync(original, token), actual => _initialization ??= actual);
     }
     internal void Deactivate()
-    { Dispatcher.UIThread.VerifyAccess(); _active = false; ++_generation; _atlas?.Deactivate(); }
+    { Dispatcher.UIThread.VerifyAccess(); _active = false; ++_generation; DeactivateAdditionalOwners(); RefreshInterfaceScale(); UpdatePageCommand(); }
 
-    private Task RunAuthorizedAsync(Func<CancellationToken,Task> body,CancellationToken token) => _work.RunAsync(async original =>
+    private Task RunAuthorizedAsync(Func<CancellationToken, Task> body, CancellationToken token) => _work.RunAsync(async original =>
     {
-        if(!_active || _work.IsRetiring || !await IsAdmittedAsync(original.Token)) return;
-        using var linked=CancellationTokenSource.CreateLinkedTokenSource(original.Token,token);
-        await body(linked.Token);
+        var generation = _generation;
+        var category = _category;
+        original.BindPublicationGuard(() => _active && IsAlive && generation == _generation && category == _category);
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(original.Token, token);
+        if (!_active || _work.IsRetiring || !await original.AwaitAsync(IsAdmittedAsync(linked.Token)) ||
+            !original.IsAcceptedPublicationCurrent) return;
+        linked.Token.ThrowIfCancellationRequested();
+        await original.AwaitAsync(body(linked.Token));
     });
-
-    public bool? IsActionAvailable(string command) => IsAlive && _active && !IsBusy && !_unavailable &&
-        (command is "ApplyHomeAppearance" or "RefreshHomeAppearance" || (_dulche is not null && PolicyFor(command) is not null));
 
     private static string? PolicyFor(string command) => command switch
     {
@@ -113,11 +258,100 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         "DulchePolicyActive" => "active", "DulchePolicyNever" => "never", _ => null
     };
 
+    private bool IsDulcheLifecyclePage => _category is "local-models" or "local-general" or "haven-services" or "haven-model-memory";
+
+    private static string? LegacySection(string category) => category switch
+    {
+        "ai-providers" => "integrations",
+        "ai-personalisation" or "security-privacy" => "privacy",
+        "ai-plugins" or "ai-skills" => "extensions",
+        "ai-voice" => "voice",
+        "security-general" or "security-permissions" or "security-sandbox" => "permissions",
+        "apps-shared" => "apps",
+        _ => null
+    };
+
+    private void DeactivateAdditionalOwners()
+    {
+        if (_externalActive) _external?.Deactivate();
+        _externalActive = false;
+        _additionalCategory = null;
+        _legacyHost.Child = null;
+    }
+
+    private void UpdateAdditionalOwners()
+    {
+        if (!_active || !IsAlive || _additionalCategory == _category) return;
+        DeactivateAdditionalOwners();
+        _additionalCategory = _category;
+        if (_category == "ai-providers" && _external is not null)
+        {
+            _externalActive = true;
+            _external.Activate();
+        }
+        if (_legacyFactory is not null && LegacySection(_category) is { } section)
+        {
+            _legacy ??= _legacyFactory();
+            _legacy.ShowAtlasSection(section);
+            _legacyHost.Child = _legacy;
+        }
+    }
+
+
+    private void OpenThemeCreator()
+    {
+        if (_category != "theme" || _themePage != ThemePage.Current)
+        {
+            if (_category != "theme") _creatorReturnCategory = _category;
+            _search.Text = string.Empty;
+            SelectCategory("theme", scroll: false, notify: CreatorOpen);
+        }
+        _creator.Open();
+    }
+
+    internal void FocusCategory() => FocusDirectoryItem(_category);
+
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs args)
+    {
+        base.OnAttachedToVisualTree(args);
+        if (_openInitialCreator && _active && _category == _initialCategory)
+        {
+            _openInitialCreator = false;
+            if (IsActionAvailable("SettingsOptionsCreateTheme") == true) OpenThemeCreator();
+        }
+        if (_active && _initialDirectoryReveal)
+        {
+            _initialDirectoryReveal = false;
+            RevealSelectedDirectoryItem();
+        }
+    }
+
+    public bool? IsActionAvailable(string command) => IsAlive && _active && (command switch
+    {
+        "SettingsBack" or "SettingsOpenDashboard" => NavigateHomeAsync is not null,
+        "SettingsDirectory" or "SettingsDirectoryLink" or "SettingsTheme" or "SettingsThemeOptions" or "SettingsLayout" or "SettingsAccessibility" => true,
+        "SettingsClearSearch" => _query.Length != 0,
+        "SettingsOptionsAccent" or "SettingsOptionsAccessibility" => _category == "theme-options",
+        "SettingsPaletteBack" => _category == "theme" && _themePage == ThemePage.Palette,
+        "SettingsOptionsCreateTheme" => _category == "theme-options" && !IsBusy && !_unavailable,
+        "SettingsLayoutOpenNewTab" => _category == "layout" && LinkIsAvailable(LayoutNewTabLink),
+        "SettingsLayoutAccessibility" => _category == "layout",
+        "SettingsAccessibilityShortcuts" => _category == "accessibility",
+        "SettingsInterfaceScaleApply" => CanApplyInterfaceScale,
+        "SettingsInterfaceScaleRevert" => CanRevertInterfaceScale,
+        "SettingsOpenBrowseGeneral" => NavigateContentAsync is not null && _category == "haven-general",
+        "SettingsOpenBrowseBookmarks" => NavigateContentAsync is not null && _category == "haven-bookmarks",
+        "SettingsOpenBrowseHistory" => NavigateContentAsync is not null && _category == "haven-history",
+        "ApplyHomeAppearance" or "RefreshHomeAppearance" or "HomeCreateTheme" => !IsBusy && !_unavailable,
+        _ when PolicyFor(command) is not null => _dulche is not null && IsDulcheLifecyclePage && !IsBusy && !_unavailable,
+        _ => false
+    });
+
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
         Dispatcher.UIThread.VerifyAccess();
         if (_work.IsRetiring) return ValueTask.CompletedTask; // Already queued presentation acquires no new business work.
-        if (IsActionAvailable(command) != true) throw new InvalidOperationException("This Home Appearance action is unavailable.");
+        if (IsActionAvailable(command) != true) throw new InvalidOperationException("This Home Settings action is unavailable.");
         if (_dulche is not null && PolicyFor(command) is { } selected)
         {
             return new(_work.RunAsync(async original =>
@@ -138,6 +372,66 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
                 { _dulcheStatus = "Dulche could not confirm the change: " + error.Message; }
                 finally { _busyCount--; if (original.IsAcceptedPublicationCurrent) RefreshBindings(); }
             }));
+        }
+        var scale = command == "SettingsInterfaceScaleApply" ? InterfaceScaleWrite : null;
+        var scaleRequest = _interfaceScaleRequest;
+        var accessibilitySwitch = command == "ApplyHomeAppearance" && IsAccessibilitySwitchIntent(parameter);
+        switch (command)
+        {
+            case "SettingsInterfaceScaleRevert":
+                RevertInterfaceScale();
+                return ValueTask.CompletedTask;
+            case "SettingsBack":
+            case "SettingsOpenDashboard":
+                return new(NavigateHomeAsync!(command == "SettingsOpenDashboard", cancellationToken));
+            case "SettingsClearSearch":
+                ClearSearch();
+                return ValueTask.CompletedTask;
+            case "SettingsDirectory":
+                if (parameter is string selected && _categoryRows.FirstOrDefault(row => row.Key == selected) is { } row)
+                {
+                    if (row.Parent is null) SetGroupExpanded(row.Key, !row.Expanded);
+                    else SelectCategory(row.Key);
+                }
+                return ValueTask.CompletedTask;
+            case "SettingsDirectoryLink":
+                return parameter is HomeSettingsCatalog.Link link && _links.Contains(link) && LinkIsAvailable(link)
+                    ? OpenDirectoryLinkAsync(link, cancellationToken) : ValueTask.CompletedTask;
+            case "SettingsTheme":
+            case "SettingsLayout":
+            case "SettingsAccessibility":
+                SelectCategory(command["Settings".Length..].ToLowerInvariant());
+                return ValueTask.CompletedTask;
+            case "SettingsThemeOptions":
+                SelectCategory("theme-options");
+                return ValueTask.CompletedTask;
+            case "SettingsOptionsAccent":
+                OpenRelatedCategory("theme", ThemePage.Palette);
+                return ValueTask.CompletedTask;
+            case "SettingsPaletteBack":
+                OpenRelatedCategory("theme", ThemePage.Gallery);
+                return ValueTask.CompletedTask;
+            case "SettingsOptionsAccessibility":
+                OpenRelatedCategory("accessibility");
+                return ValueTask.CompletedTask;
+            case "SettingsLayoutOpenNewTab":
+                return OpenDirectoryLinkAsync(LayoutNewTabLink, cancellationToken);
+            case "SettingsAccessibilityShortcuts":
+                OpenRelatedCategory("haven-shortcuts");
+                return ValueTask.CompletedTask;
+            case "SettingsLayoutAccessibility":
+                OpenRelatedCategory("accessibility", focusInterfaceScale: true);
+                return ValueTask.CompletedTask;
+            case "SettingsOptionsCreateTheme":
+            case "HomeCreateTheme":
+                OpenThemeCreator();
+                return ValueTask.CompletedTask;
+            case "SettingsOpenBrowseGeneral":
+                return OpenDirectoryLinkAsync(BrowseLink(BrowserNativePage.Settings), cancellationToken);
+            case "SettingsOpenBrowseBookmarks":
+                return OpenDirectoryLinkAsync(BrowseLink(BrowserNativePage.Bookmarks), cancellationToken);
+            case "SettingsOpenBrowseHistory":
+                return OpenDirectoryLinkAsync(BrowseLink(BrowserNativePage.History), cancellationToken);
         }
         parameter = NativeHomeThemePreferences.CaptureDisplayDraft(parameter, _bindings);
         return new(_work.RunAsync(async original =>
@@ -160,7 +454,17 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
                 if (!await original.AwaitAsync(IsAdmittedAsync(original.Token)))
                 { Deny(original, false); return; }
                 if (!original.IsAcceptedPublicationCurrent) return;
+                if (scale is not null && (!IsInterfaceScalePage || scaleRequest != _interfaceScaleRequest)) return;
                 cancellationToken.ThrowIfCancellationRequested();
+                if (scale is not null)
+                {
+                    parameter = CaptureInterfaceScaleWrite(scale);
+                    if (parameter is null)
+                    {
+                        original.RunAcceptedPublicationCallback(() => RejectInterfaceScaleWrite(scale));
+                        return;
+                    }
+                }
                 write = LastWrite = _source.CreateSettingsWriteOutcome();
                 // The preference owner retains its actual business lifetime. A tab's private
                 // retirement token is not permission to cancel a global atomic preference write.
@@ -172,6 +476,8 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
                 {
                     _status = receipt.Succeeded ? "Appearance saved." : receipt.Diagnostic ??
                         "Appearance changed. Refresh before choosing again.";
+                    if (accessibilitySwitch && receipt.Code == "PermissionDenied") _unavailable = true;
+                    if (scale is not null) CompleteInterfaceScaleWrite(scale, receipt);
                     RefreshBindings();
                 });
             }
@@ -201,6 +507,448 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
                     }
             }
         }));
+    }
+
+    private static readonly HomeSettingsCatalog.Link LayoutNewTabLink = new("New Tab", string.Empty, "Customise",
+        Address: AppContentAddress.Parse("browse://newtab/customise"));
+
+    private static HomeSettingsCatalog.Link BrowseLink(BrowserNativePage page) =>
+        new(string.Empty, string.Empty, string.Empty, Address: AppContentAddress.Parse(BrowserNativePages.Address(page).AbsoluteUri));
+
+    private bool LinkIsAvailable(HomeSettingsCatalog.Link link) =>
+        link.Category is not null
+        || link.Owner.HasValue && OpenOwnerAsync is not null
+        || link.Address is { } address && NavigateContentAsync is not null && ContentAvailable?.Invoke(address) != false
+           && (!HomeSettingsCatalog.IsNewTabCustomisationAddress(address) || NewTabCustomisationAvailable)
+        || link.App is { } app && NavigateContentAsync is not null && _nativeApps.ContainsKey(app);
+
+    private ValueTask OpenDirectoryLinkAsync(HomeSettingsCatalog.Link link, CancellationToken token)
+    {
+        if (link.Category is { } related)
+        {
+            OpenRelatedCategory(related);
+            return ValueTask.CompletedTask;
+        }
+
+        var generation = _generation;
+        var category = _category;
+        return new(_work.RunAsync(async original =>
+        {
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(original.Token, token);
+            original.BindPublicationGuard(() => _active && IsAlive && generation == _generation && category == _category);
+            linked.Token.ThrowIfCancellationRequested();
+            var admitted = await original.AwaitAsync(IsAdmittedAsync(linked.Token));
+            if (!original.IsAcceptedPublicationCurrent) return;
+            if (!admitted)
+            {
+                original.RunAcceptedPublicationCallback(() => SetBrowseStatus("Reopen Settings for the current profile."));
+                return;
+            }
+            linked.Token.ThrowIfCancellationRequested();
+            var status = string.Empty;
+            if (link.Owner is { } owner && OpenOwnerAsync is { } open)
+            {
+                var receipt = await original.AwaitAsync(open(owner, linked.Token));
+                if (!receipt.Opened) status = receipt.Message ?? "This setting is currently unavailable.";
+            }
+            else
+            {
+                var address = link.Address;
+                if (link.App is { } app && _nativeApps.ContainsKey(app)) address = HomeLaunchRouteResolver.Resolve(app);
+                if (address is null || NavigateContentAsync is not { } navigate ||
+                    !await original.AwaitAsync(navigate(address, linked.Token)))
+                    status = "Haven could not open this destination. Try again.";
+            }
+            original.RunAcceptedPublicationCallback(() => SetBrowseStatus(status));
+        }));
+    }
+
+    private void SetBrowseStatus(string status)
+    {
+        _bindings.Set("SettingsBrowseStatus", status);
+        _bindings.Set("SettingsHasBrowseStatus", status.Length != 0);
+    }
+
+    private static CuiDocument LoadSettingsDocument()
+    {
+        using var stream = typeof(HomeSettingsDestinationPage).Assembly.GetManifestResourceStream("Haven.Desktop.Home.Settings.cui")
+            ?? throw new InvalidDataException("The Home Settings document is missing.");
+        using var reader = new StreamReader(stream);
+        var parser = new CuiRichParser();
+        var document = parser.Parse(reader.ReadToEnd(), "HomeSettings.cui");
+        if (parser.Diagnostics.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
+            throw new InvalidDataException("The Home Settings document is invalid: " + string.Join("; ",
+                parser.Diagnostics.Diagnostics.Select(item => item.Code + " " + item.Message)));
+        var home = HavenOS.Home.HomeCuiSurface.LoadDefault().Document;
+        var appearance = home.Components
+            .SelectMany(component => component.DescendantsAndSelf())
+            .Single(component => component.AuthoredId == "home-appearance-settings");
+        var keyboard = LoadKeyboardReference();
+        return document with
+        {
+            Actions = home.Actions.Concat(document.Actions).ToDictionary(action => action.Key, action => action.Value, StringComparer.Ordinal),
+            Components = document.Components.Select(IncludeSettingsFragments).ToArray()
+        };
+
+        CuiComponent IncludeSettingsFragments(CuiComponent component) => new(component.Type, component.Name,
+            component.Classes, component.Properties, component.Actions,
+            component.AuthoredId switch
+            {
+                "home-settings-appearance-host" => [appearance],
+                "home-settings-keyboard-host" => [keyboard],
+                _ => component.Children.Select(IncludeSettingsFragments).ToArray()
+            },
+            component.Condition, component.List, component.Span, component.DefaultTheme, component.Repeat,
+            component.ElseChildren, component.Groups, component.IsDefinition, component.PropertyRegion)
+        { Text = component.Text, TextParts = component.TextParts };
+    }
+
+    private void ApplyResponsiveLayout(double width)
+    {
+        var scale = _source.Context.Current.Accessibility.DisplayScale;
+        width = CuiInterfaceScale.LogicalWidth(width, scale);
+        var logicalHeight = CuiInterfaceScale.LogicalWidth(Bounds.Height, scale);
+        var narrow = width < 790;
+        var shallow = narrow && scale > 1 && logicalHeight is > 0 and < 300;
+        var orientationChanged = _narrowLayout.HasValue && _narrowLayout.Value != narrow;
+        _narrowLayout = narrow;
+        _bindings.Set("SettingsColumns", narrow ? "1fr" : width >= 1120 ? "276 1fr" : "232 1fr");
+        _bindings.Set("SettingsRows", narrow ? "Auto 1fr" : "1fr");
+        _bindings.Set("SettingsContentRow", narrow ? 1 : 0);
+        _bindings.Set("SettingsContentColumn", narrow ? 0 : 1);
+        _bindings.Set("SettingsNavHeight", shallow ? Math.Min(116d, logicalHeight * .46) : narrow ? 176d : double.PositiveInfinity);
+        _bindings.Set("SettingsNavPadding", shallow ? "8 5" : "13 10");
+        _bindings.Set("SettingsNavGap", shallow ? 5d : 10d);
+        _bindings.Set("SettingsNavHeaderColumns", shallow ? "Auto 1fr" : "1fr");
+        _bindings.Set("SettingsNavHeaderRows", shallow ? "Auto" : "Auto Auto");
+        _bindings.Set("SettingsNavShowTitle", !shallow || width >= 300);
+        _bindings.Set("SettingsNavSearchRow", shallow ? 0 : 1);
+        _bindings.Set("SettingsNavSearchColumn", shallow ? 1 : 0);
+        _bindings.Set("SettingsInterfaceScaleWidth", Math.Clamp(width - 44, 64, 300));
+        _bindings.Set("SettingsAccessibilityPadding", shallow ? "12 6 12 8" : narrow ? "14 12 14 16" : "30 25 42 32");
+        _bindings.Set("SettingsOptionsPadding", shallow ? "12 8 12 10" : narrow ? "14 20 14 24" : "48 25 36 32");
+        _bindings.Set("SettingsLayoutPadding", shallow ? "12 8 12 10" : narrow ? "14 16 14 24" : "30 26 30 32");
+        _bindings.Set("SettingsOptionsRows", narrow ? "Auto Auto" : "Auto");
+        _bindings.Set("SettingsOptionsColumns", narrow ? "1fr" : "1fr Auto");
+        _bindings.Set("SettingsOptionsControlRow", narrow ? 1 : 0);
+        _bindings.Set("SettingsOptionsControlColumn", narrow ? 0 : 1);
+        if (orientationChanged) RevealSelectedDirectoryItem();
+    }
+
+    private bool Matches(string terms) => terms.Contains(_query, StringComparison.OrdinalIgnoreCase);
+
+    private ScrollViewer? CategoryScroll() => this.GetVisualDescendants().OfType<CuiContainerControl>()
+        .FirstOrDefault(control => control.Name == "home-settings-categories")?.Child as ScrollViewer;
+
+    private void ClearSearch()
+    {
+        _search.Text = string.Empty;
+        _search.Focus(NavigationMethod.Tab);
+    }
+
+    private void FilterCategories()
+    {
+        var query = _search.Text?.Trim() ?? string.Empty;
+        if (_query == query) return;
+        if (_query.Length == 0) _offsetBeforeSearch = CategoryScroll()?.Offset ?? default;
+        _query = query;
+        _searchExpanded.Clear();
+        PublishCategory();
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (query == _query && CategoryScroll() is { } scroll)
+                scroll.Offset = query.Length == 0 ? _offsetBeforeSearch : default;
+        }, DispatcherPriority.Loaded);
+    }
+
+    private string[] SearchTerms() =>
+        _query.Split([' ', '&', '/', '-', ',', '.'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    private static bool IncludesTerms(string text, string[] terms) =>
+        terms.All(term => text.Contains(term, StringComparison.OrdinalIgnoreCase));
+
+    private static string SearchText(HomeSettingsCatalog.Destination item) => $"{item.Label} {item.Keywords} {item.Description}";
+
+    private void PublishCategory()
+    {
+        var rows = new List<CategoryRow>();
+        var terms = SearchTerms();
+        bool Includes(string text) => IncludesTerms(text, terms);
+
+        foreach (var group in HomeSettingsCatalog.Groups)
+        {
+            var sections = new List<CategoryRow>();
+            var groupMatches = Includes($"{group.Label} {group.Subtitle}");
+            foreach (var section in HomeSettingsCatalog.Children(group.Key))
+            {
+                var includeSectionChildren = groupMatches || Includes(section.Label);
+                var sectionMatches = includeSectionChildren || Includes(SearchText(section));
+                var children = HomeSettingsCatalog.Children(section.Key)
+                    .Where(child => includeSectionChildren || Includes($"{section.Label} {SearchText(child)}")).ToArray();
+                if (!sectionMatches && children.Length == 0) continue;
+                sections.Add(DestinationRow(section));
+                sections.AddRange(children.Select(DestinationRow));
+            }
+            if (sections.Count == 0) continue;
+            var expanded = IsGroupExpanded(group.Key);
+            rows.Add(new(group.Key, null, group.Label, group.Subtitle, null, expanded, false));
+            if (expanded) rows.AddRange(sections);
+        }
+        _categoryRows = rows.ToArray();
+        _bindings.Set("SettingsDirectoryRows", _categoryRows.Select(row => new Dictionary<string, object?>
+        {
+            ["Key"] = row.Key, ["Label"] = row.Label, ["Subtitle"] = row.Subtitle, ["Icon"] = row.Icon,
+            ["HasIcon"] = row.Icon is not null, ["IsGroup"] = row.Parent is null, ["Selected"] = row.Selected,
+            ["AccessibleName"] = row.Parent is null ? $"{row.Label}, {row.Subtitle}" : row.Label,
+            ["Height"] = row.Parent is null ? 52d : row.Icon is null ? 33d : 39d,
+            ["Weight"] = row.Parent is null || row.Selected ? 750 : row.Icon is null ? 600 : 650,
+            ["Indent"] = row.Parent is not null && row.Icon is null ? "24 0 0 0" : "0 0 0 0",
+            ["Connector"] = row.Parent is not null && row.Icon is null ? "1 0 0 0" : "0",
+            ["Chevron"] = row.Expanded ? "icon:chevron-down" : "icon:chevron-right"
+        }).ToArray());
+        _bindings.Set("SettingsHasQuery", _query.Length != 0);
+        _bindings.Set("SettingsNoMatches", rows.Count == 0);
+        _bindings.Set("SettingsShowsAppearance", _category == "theme");
+        _bindings.Set("SettingsAccessibilitySelected", _category == "accessibility");
+        _bindings.Set("SettingsLayoutSelected", _category == "layout");
+        _bindings.Set("SettingsLayoutCustomiseAvailable", LinkIsAvailable(LayoutNewTabLink));
+        _bindings.Set("SettingsAppearanceSelected", _category == "appearance");
+        _bindings.Set("SettingsThemeOptionsSelected", _category == "theme-options");
+        _bindings.Set("SettingsHavenGeneralSelected", _category == "haven-general" && NavigateContentAsync is not null);
+        _bindings.Set("SettingsHavenBookmarksSelected", _category == "haven-bookmarks" && NavigateContentAsync is not null);
+        _bindings.Set("SettingsHavenHistorySelected", _category == "haven-history" && NavigateContentAsync is not null);
+        _bindings.Set("SettingsCatalogSelected", _category is not ("appearance" or "theme" or "theme-options" or "layout" or "accessibility"));
+
+        var item = HomeSettingsCatalog.Get(_category);
+        var scope = HomeSettingsCatalog.GroupFor(item).Scope;
+        AutomationProperties.SetName(this, $"{scope} settings, {(_themePage == ThemePage.Palette ? CategoryTitle : item.Label)}");
+        _bindings.Set("SettingsCatalogScope", scope);
+        _bindings.Set("SettingsCatalogTitle", item.Label);
+        _bindings.Set("SettingsCatalogDescription", item.Description);
+        PublishKeyboardReference();
+        var globalGeneral = item.Key == "global-general";
+        _bindings.Set("SettingsGlobalGeneralSelected", globalGeneral);
+        _bindings.Set("SettingsShowCatalogDescription", !globalGeneral);
+        _bindings.Set("SettingsCatalogRowHeight", globalGeneral ? 76d : 64d);
+        _bindings.Set("SettingsCatalogAvailability", item.Availability);
+        _bindings.Set("SettingsDulcheLifecycleVisible", _dulche is not null && IsDulcheLifecyclePage);
+        _bindings.Set("SettingsDulcheProviderVisible", _external is not null && _category == "ai-providers");
+        _bindings.Set("SettingsLegacyOwnerVisible", _legacyFactory is not null && LegacySection(_category) is not null);
+        _bindings.Set("SettingsHasCatalogAvailability", item.Availability is not null &&
+            !(_dulche is not null && IsDulcheLifecyclePage) &&
+            !(_external is not null && _category == "ai-providers") &&
+            !(_legacyFactory is not null && LegacySection(_category) is not null));
+        _links = HomeSettingsCatalog.Children(item.Key).Select(child => HomeSettingsCatalog.Related(child.Key))
+            .Concat(item.Actions ?? []).ToArray();
+        _bindings.Set("SettingsCatalogLinks", _links.Select((link, index) =>
+        {
+            var related = link.Category is { } key ? HomeSettingsCatalog.Get(key) : null;
+            var label = related?.Label ?? link.Label;
+            var available = LinkIsAvailable(link);
+            return new Dictionary<string, object?>
+            {
+                ["Key"] = $"{_category}-{index}", ["Target"] = link, ["Label"] = label, ["Action"] = link.Action,
+                ["Description"] = link.Description.Length > 0 ? link.Description : related?.Description,
+                ["AccessibleName"] = $"{link.Action} {label}", ["Available"] = available, ["Unavailable"] = !available
+            };
+        }).ToArray());
+        Dispatcher.UIThread.Post(UpdateDirectoryAutomation, DispatcherPriority.Loaded);
+
+        CategoryRow DestinationRow(HomeSettingsCatalog.Destination entry)
+        {
+            var isSection = !HomeSettingsCatalog.TryGet(entry.Parent, out _);
+            var icon = entry.App is { } app && _nativeApps.TryGetValue(app, out var registered)
+                ? HomeAppBrandingIcons.SourceFor(registered.IconKey, registered.CanonicalId, registered.Source)
+                : "icon:" + entry.Icon;
+            return new(entry.Key, entry.Parent, entry.Label, string.Empty, isSection ? icon : null, false, entry.Key == _category);
+        }
+    }
+
+    internal static string DirectoryItemId(string key) => $"id:home-settings-directory|key:{key.Length}:{key}/id:home-settings-directory-item";
+
+    private Dictionary<string, Button> DirectoryButtons()
+    {
+        var available = this.GetVisualDescendants().OfType<Button>()
+            .Where(button => button.Name == "home-settings-directory-item")
+            .ToDictionary(button => CuiRuntimeIdentity.GetStableId(button)!);
+        return _categoryRows.Where(row => available.ContainsKey(DirectoryItemId(row.Key)))
+            .ToDictionary(row => row.Key, row => available[DirectoryItemId(row.Key)]);
+    }
+
+    private void OnDirectoryItemAttached(object? sender, VisualTreeAttachmentEventArgs args)
+    {
+        if (sender is not Button button || !IsAlive) return;
+        var id = CuiRuntimeIdentity.GetStableId(button);
+        var row = _categoryRows.FirstOrDefault(row => DirectoryItemId(row.Key) == id);
+        if (row is not null) SetDirectoryAutomation(button, row);
+    }
+
+    private void UpdateDirectoryAutomation()
+    {
+        if (!IsAlive) return;
+        var controls = DirectoryButtons();
+        foreach (var row in _categoryRows)
+            if (controls.TryGetValue(row.Key, out var button))
+                SetDirectoryAutomation(button, row);
+    }
+
+    private static void SetDirectoryAutomation(Button button, CategoryRow row)
+    {
+        AutomationProperties.SetAutomationId(button, "home-settings-" + row.Key);
+        AutomationProperties.SetItemStatus(button, row.Parent is null
+            ? row.Expanded ? "Expanded" : "Collapsed"
+            : row.Selected ? "Current page" : null);
+    }
+
+    private void RevealSelectedDirectoryItem()
+    {
+        var version = ++_directoryRevealVersion;
+        var category = _category;
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (!_active || !IsAlive || !this.IsAttachedToVisualTree() || version != _directoryRevealVersion ||
+                _category != category) return;
+            if (DirectoryButtons().TryGetValue(category, out var button)) button.BringIntoView();
+        }, DispatcherPriority.Loaded);
+    }
+
+    private void FocusDirectoryItem(string key)
+    {
+        if (!DirectoryButtons().TryGetValue(key, out var button)) return;
+        button.Focus(NavigationMethod.Directional);
+        button.BringIntoView();
+    }
+
+    private void OpenRelatedCategory(string category, ThemePage page = ThemePage.Current, bool focusInterfaceScale = false)
+    {
+        _search.Text = string.Empty;
+        SelectCategory(category, page);
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (!_active || !IsAlive || _category != category || _themePage != page ||
+                _pageCommands is { IsHosted: true, IsSelected: false }) return;
+            if (focusInterfaceScale && _interfaceScale.IsEffectivelyVisible && _interfaceScale.Focus(NavigationMethod.Tab))
+                _interfaceScale.BringIntoView();
+            else if (page == ThemePage.Palette)
+                this.GetVisualDescendants().OfType<Button>()
+                    .SingleOrDefault(button => button.Name == "home-palette-back")?.Focus(NavigationMethod.Tab);
+            else FocusDirectoryItem(category);
+        }, DispatcherPriority.Loaded);
+    }
+
+    private void SelectCategory(string category, ThemePage page = ThemePage.Current, bool scroll = true, bool notify = true)
+    {
+        var changed = _category != category || _themePage != page;
+        _category = category;
+        _themePage = page;
+        _creator.SetCategoryPresentation(category == "theme" && page == ThemePage.Current, page == ThemePage.Palette);
+        UpdatePageCommand();
+        var item = HomeSettingsCatalog.Get(category);
+        _expanded[HomeSettingsCatalog.GroupFor(item).Key] = true;
+        if (changed) SetBrowseStatus(string.Empty);
+        PublishCategory();
+        UpdateAdditionalOwners();
+        RefreshInterfaceScale();
+        if (changed && notify) CategoryChanged?.Invoke(this, EventArgs.Empty);
+        if (!scroll || category != "theme") return;
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (!_active || !IsAlive || _category != category || _themePage != page || !this.IsAttachedToVisualTree()) return;
+            var appearance = this.GetVisualDescendants().OfType<CuiContainerControl>()
+                .SingleOrDefault(control => control.Name == "home-appearance-settings");
+            if (appearance is null) return;
+            var anchor = _query.Length == 0 || page != ThemePage.Current ? null
+                : Matches("Accent palette") || Matches("Override app accents") ? "home-accent-settings"
+                : Matches("Brightness") || Matches("Colour contrast") ? "home-display-settings" : null;
+            if (anchor is null)
+                appearance.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault()?.ScrollToHome();
+            else
+                appearance.GetVisualDescendants().OfType<Control>().FirstOrDefault(control => control.Name == anchor)?.BringIntoView();
+        }, DispatcherPriority.Loaded);
+    }
+
+    private void OnCategoryKeyDown(object? sender, KeyEventArgs args)
+    {
+        if (!_active || args.KeyModifiers != KeyModifiers.None) return;
+        var focused = TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement();
+        var controls = DirectoryButtons();
+        var visible = _categoryRows.Where(row => controls.ContainsKey(row.Key)).ToArray();
+        var index = Array.FindIndex(visible, row => ReferenceEquals(controls[row.Key], focused));
+        if (_query.Length > 0 && args.Key == Key.Escape && (focused == _search || index >= 0))
+        {
+            ClearSearch();
+            args.Handled = true;
+            return;
+        }
+        if (focused == _search && args.Key is Key.Down or Key.Enter)
+        {
+            var results = visible.Where(row => row.Parent is not null).ToArray();
+            var exact = results.Where(row => _query.Equals(row.Label, StringComparison.OrdinalIgnoreCase)).ToArray();
+            var currentGroup = HomeSettingsCatalog.GroupFor(HomeSettingsCatalog.Get(_category)).Key;
+            var terms = SearchTerms();
+            var result = exact.FirstOrDefault(row => HomeSettingsCatalog.GroupFor(HomeSettingsCatalog.Get(row.Key)).Key == currentGroup)
+                ?? exact.FirstOrDefault()
+                ?? results.FirstOrDefault(row => IncludesTerms(SearchText(HomeSettingsCatalog.Get(row.Key)), terms))
+                ?? results.FirstOrDefault(row => HomeSettingsCatalog.TryGet(row.Parent!, out _))
+                ?? results.FirstOrDefault();
+            if (result is null) return;
+            args.Handled = true;
+            FocusDirectoryItem(result.Key);
+            if (args.Key == Key.Enter) controls[result.Key].RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            return;
+        }
+        if (index < 0) return;
+        var current = visible[index];
+        if (current.Parent is null &&
+            (args.Key == Key.Left && current.Expanded || args.Key == Key.Right && !current.Expanded))
+        {
+            SetGroupExpanded(current.Key, args.Key == Key.Right);
+            args.Handled = true;
+            return;
+        }
+        var next = args.Key switch
+        {
+            Key.Up => visible[Math.Max(0, index - 1)],
+            Key.Down => visible[Math.Min(visible.Length - 1, index + 1)],
+            Key.Home => visible[0],
+            Key.End => visible[^1],
+            Key.Left => visible.FirstOrDefault(row => row.Key == current.Parent),
+            Key.Right => visible.FirstOrDefault(row => row.Parent == current.Key),
+            _ => FindTypeahead(visible, index, args.KeySymbol)
+        };
+        if (next is null) return;
+        args.Handled = true;
+        FocusDirectoryItem(next.Key);
+    }
+
+    private CategoryRow? FindTypeahead(CategoryRow[] visible, int index, string? symbol)
+    {
+        if (symbol is not { Length: 1 } || !char.IsLetterOrDigit(symbol[0])) return null;
+        var now = Environment.TickCount64;
+        _typeahead = now - _lastType <= 700 ? _typeahead + symbol : symbol;
+        _lastType = now;
+        var ordered = visible.Skip(index + 1).Concat(visible.Take(index + 1)).ToArray();
+        var match = ordered.FirstOrDefault(row => row.Label.StartsWith(_typeahead, StringComparison.OrdinalIgnoreCase));
+        if (match is not null) return match;
+        _typeahead = symbol;
+        return ordered.FirstOrDefault(row => row.Label.StartsWith(symbol, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private bool IsGroupExpanded(string group) =>
+        _query.Length == 0 ? _expanded[group] : _searchExpanded.GetValueOrDefault(group, true);
+
+    private void SetGroupExpanded(string group, bool expanded)
+    {
+        var expansion = _query.Length == 0 ? _expanded : _searchExpanded;
+        expansion[group] = expanded;
+        PublishCategory();
+    }
+
+    private void ResetExpansion()
+    {
+        foreach (var group in HomeSettingsCatalog.Groups)
+            _expanded[group.Key] = group.InitiallyExpanded;
+        _searchExpanded.Clear();
     }
 
     private async Task<bool> IsAdmittedAsync(CancellationToken token)
@@ -285,6 +1033,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     }
     private void RefreshBindings()
     {
+        UpdatePageCommand();
         Dispatcher.UIThread.VerifyAccess();
         if (_active && !_unavailable)
             _source.ApplyEditorBindings(_bindings);
@@ -296,12 +1045,24 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
             _bindings.Set("HomeModeChoices", Array.Empty<object>());
             _bindings.Set("HomeDisplayTarget", null);
             _bindings.Set("HomeAccessibilityChoices", Array.Empty<object>());
+            _bindings.Set("HomeHighContrastTarget", null);
+            _bindings.Set("HomeReduceMotionTarget", null);
+            _bindings.Set("HomeInterfaceScaleChoices", Array.Empty<object>());
+            _bindings.Set("HomeInterfaceScaleText", null);
+            _bindings.Set("HomeAccentModeChoices", Array.Empty<object>());
+            _bindings.Set("HomeGlobalAccentChoices", Array.Empty<object>());
+            _bindings.Set("HomeAccentPerApp", false);
+            _bindings.Set("HomeAccentEditorTarget", null);
+            _bindings.Set("HomeAccentResetTarget", null);
+            _bindings.Set("HomeAccentCanReset", false);
         }
         var available = _active && IsAlive && !IsBusy && !_unavailable;
         _bindings.Set("HomeAppearanceAvailable", available);
         _bindings.Set("HomeAppearanceCanRefresh", available);
-        _bindings.Set("HomeDulchePresent", _dulche is not null && _atlas is null);
-        _bindings.Set("HomeDulcheCanEdit", available && _dulche is not null);
+        // The original standalone fragment remains available to its own owner. The
+        // hosted Settings route displays the lifecycle controls only on the device pages.
+        _bindings.Set("HomeDulchePresent", false);
+        _bindings.Set("HomeDulcheCanEdit", available && _dulche is not null && IsDulcheLifecyclePage);
         if (_dulche is not null)
         {
             foreach (var key in DulcheLocalClient.Policies)
@@ -310,7 +1071,10 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
             _bindings.Set("DulchePolicyStatus", "Selected: " + (index < 0 ? _dulche.SavedPolicy : DulcheLocalClient.PolicyNames[index]) +
                 (string.IsNullOrEmpty(_dulcheStatus) ? "" : " · " + _dulcheStatus));
         }
+        _bindings.Set("SettingsHasAppearanceStatus", !string.IsNullOrWhiteSpace(_status));
         if (_status is not null) _bindings.Set("HomeAppearanceStatus", _status);
+        RefreshInterfaceScale();
+        RefreshAccessibilitySwitches();
         _loader.RefreshBindings();
     }
 
@@ -352,9 +1116,17 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     private async Task StopAsync()
     {
         Dispatcher.UIThread.VerifyAccess(); _active = false; ++_generation;
+        DeactivateAdditionalOwners();
+        RetireInterfaceScale();
+        RetireAccessibilitySwitches();
         _source.Changed -= OnSourceChanged;
-        _atlas?.Dispose();
-        _policyLoader?.Dispose();
+        _bindings.PropertyChanged -= OnCreatorOpenChanged;
+        if (_pageCommands is { } slot)
+        {
+            _creator.DraftChanged -= OnDraftChanged;
+            slot.HostChanged -= OnCommandHostChanged;
+            slot.Update(null, false);
+        }
         // Seal page admission first. Let admitted CUI actions acknowledge their same global
         // writes before disposing this loader's caller token. The shared source remains live.
         var failures = new List<Exception>();
@@ -369,7 +1141,11 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         }
         // A failed action is still a terminal acknowledgement. Join it, retain its causes,
         // then join the loader's actual disposal/late-dispatch receipts as the production host does.
+        await Join(_creator.CloseAndDrainAsync());
+        await Join(_accentEditor.CloseAndDrainAsync());
         await Join(_loader.WhenActionsIdleAsync());
+        try { _external?.Dispose(); _legacy?.Dispose(); } catch (Exception cause) { failures.Add(cause); }
+        _externalHost.Child = null;
         var disposed = false;
         try { _loader.Dispose(); disposed = true; } catch (Exception cause) { failures.Add(cause); }
         await Join(_loader.WhenActionsIdleAsync());
@@ -380,8 +1156,11 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     {
         Dispatcher.UIThread.VerifyAccess();
         if (!_stopped) throw new InvalidOperationException("The original Settings actions must settle before detachment.");
+        NavigateHomeAsync = null;
+        NavigateContentAsync = null;
+        ContentAvailable = null;
+        NativeAppAvailable = null;
+        OpenOwnerAsync = null;
         Content = null; return Task.CompletedTask;
     }
-    private static IEnumerable<CuiComponent> Descendants(CuiComponent node) =>
-        new[] { node }.Concat(node.Children.SelectMany(Descendants)).Concat(node.ElseChildren.SelectMany(Descendants));
 }

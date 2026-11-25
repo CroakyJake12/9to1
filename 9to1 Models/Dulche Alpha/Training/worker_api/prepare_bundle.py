@@ -15,7 +15,7 @@ _CLI_FILES = (
     "worker_api/prepare_bundle.py", "worker_api/protocol.py", "worker_api/windows_host.py",
     "custody/__init__.py", "custody/artifacts.py", "custody/integration_supervised_fixture.py",
     "custody/provenance.py", "custody/registered_runtime.py", "custody/resources.py",
-    "custody/supervisor.py", "custody/windows_job.py",
+    "custody/supervisor.py", "custody/topology.py", "custody/windows_job.py",
 )
 
 

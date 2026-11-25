@@ -9,14 +9,16 @@ namespace HavenOS.Apps.Stacks;
 public sealed class StackEngine
 {
     private readonly IStackProjectStore _store;
+    private readonly TimeProvider _clock;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private StackManifest? _manifest;
     private IStackOriginalSourceRevision? _originalSourceRevision;
     private bool _originalSourceNeedsReopen;
 
-    public StackEngine(IStackProjectStore store)
+    public StackEngine(IStackProjectStore store, TimeProvider? clock = null)
     {
         _store = store ?? throw new ArgumentNullException(nameof(store));
+        _clock = clock ?? TimeProvider.System;
     }
 
     public async Task<StackDomainSnapshot> CreateProjectAsync(
@@ -258,7 +260,7 @@ public sealed class StackEngine
             await CascadeAsync(state, FindDomain(state, state.MainDomainId), actor, cancellationToken).ConfigureAwait(false);
             StackDomainRecord domain = FindDomain(state, domainId);
             EnsureWritableDomain(domain);
-            EnsureNotFrozen(state, domain, mutation.Path, actor);
+            EnsureMutationNotFrozen(state, domain, mutation);
             EnsureRootEditable(state, domain, mutation.Path);
             ApplyWorkingMutation(domain, mutation);
             AddAudit(state, actor, "SourceChanged", state.ProjectId, domainId, domain.HeadRevisionId, domain.HeadRevisionId, "Succeeded", mutation.Path);
@@ -268,6 +270,61 @@ public sealed class StackEngine
         {
             _gate.Release();
         }
+    }
+
+    /// <summary>Read-only comparison of committed changes against the immediate parent, not a merge authorization.</summary>
+    public async Task<StackPromotionPreview> PreviewPromotionAsync(Guid domainId, StackActor actor,
+        CancellationToken cancellationToken = default)
+    {
+        Demand(actor, StackCapability.ViewSource, domainId.ToString("D"));
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var state = await GetStateAsync(cancellationToken).ConfigureAwait(false);
+            var source = FindDomain(state, domainId);
+            if (source.IsDeleted || source.ParentId is not { } targetId)
+                throw Failure(StackFailureCode.InvalidHierarchy, "Select an active Branch, Twig or Leaf with a parent.", domainId);
+            var target = FindDomain(state, targetId);
+            if (target.IsDeleted) throw Failure(StackFailureCode.InvalidHierarchy, "The parent domain is deleted.", target.Id);
+
+            // Exclude the parent's working changes and the viewer's own staged drafts.
+            var parent = target.BaseTree.Where(pair => pair.Value is not null)
+                .ToDictionary(pair => pair.Key, pair => pair.Value!.Copy(), StringComparer.OrdinalIgnoreCase);
+            foreach (var mutation in target.LocalChanges.Values)
+                ApplyToTree(parent, NormalizeMutation(mutation));
+            var targetWorking = target.WorkingChanges.Values.SelectMany(Touched)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var unresolved = state.Conflicts.Where(row => !row.IsResolved &&
+                (row.DomainId == target.Id || row.DomainId == source.Id)).Select(row => row.Path)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            var rows = new List<StackPromotionPath>();
+            var total = 0;
+            foreach (var mutation in source.LocalChanges.Values.OrderBy(row => row.Path, StringComparer.OrdinalIgnoreCase))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var paths = Touched(mutation).ToArray();
+                var flags = new List<string>(5);
+                if (paths.Any(path => !Equivalent(source.BaseTree.GetValueOrDefault(path), parent.GetValueOrDefault(path))))
+                    flags.Add("Parent differs from source base");
+                if (paths.Any(targetWorking.Contains)) flags.Add("Parent has an uncommitted edit");
+                if (paths.Any(unresolved.Contains)) flags.Add("Unresolved conflict");
+                if (paths.Any(path => ActiveFreeze(state, source, path) is not null || ActiveFreeze(state, target, path) is not null))
+                    flags.Add("Active Freeze");
+                if (state.Roots.Any(root => root.IsActive && IsDescendantOrSelf(state, target.Id, root.OwnerDomainId) &&
+                    paths.Any(path => root.Paths.Any(owned => StackPath.IsWithin(path, owned)))))
+                    flags.Add("Authoritative Root");
+                total++;
+                if (rows.Count < 100) rows.Add(new(mutation.Path, mutation.RenameTo, mutation.Kind, flags.AsReadOnly()));
+            }
+            return new(state.ProjectId, source.Id, source.Name, source.HeadRevisionId ?? source.BaseRevisionId,
+                target.Id, target.Name, target.HeadRevisionId ?? target.BaseRevisionId, source.WorkingChanges.Count,
+                total, rows.AsReadOnly());
+        }
+        finally { _gate.Release(); }
+
+        static IEnumerable<string> Touched(StackMutation mutation) => mutation.RenameTo is { } destination
+            ? [mutation.Path, destination] : [mutation.Path];
     }
 
     public async Task<StackRevision> CreateCommitAsync(
@@ -301,12 +358,12 @@ public sealed class StackEngine
 
             foreach (string path in selected)
             {
-                if (!domain.WorkingChanges.TryGetValue(path, out _))
+                if (!domain.WorkingChanges.TryGetValue(path, out var change))
                 {
                     throw Failure(StackFailureCode.RevisionConflict, $"The selected working change no longer exists: {path}.", domainId, retryable: true);
                 }
 
-                EnsureNotFrozen(state, domain, path, actor);
+                EnsureMutationNotFrozen(state, domain, change);
                 EnsureRootEditable(state, domain, path);
             }
 
@@ -424,6 +481,8 @@ public sealed class StackEngine
             }
 
             StackDomainRecord domain = FindDomain(state, conflict.DomainId);
+            EnsureRootEditable(state, domain, conflict.Path);
+            EnsureNotFrozen(state, domain, conflict.Path);
             StackResource? chosen = action switch
             {
                 StackConflictResolutionAction.KeepLocal => conflict.Local,
@@ -494,26 +553,75 @@ public sealed class StackEngine
         }
     }
 
+    public async Task<StackConflictProposalReview?> ReadConflictProposalReviewAsync(Guid domainId, Guid proposalId,
+        StackActor actor, CancellationToken cancellationToken = default)
+    {
+        Demand(actor, StackCapability.ViewSource, domainId.ToString("D"));
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var state = await GetStateAsync(cancellationToken).ConfigureAwait(false);
+            var proposal = state.ConflictProposals.SingleOrDefault(item => item.Id == proposalId && item.State == StackConflictProposalState.PendingReview);
+            var conflict = proposal is null ? null : state.Conflicts.SingleOrDefault(item =>
+                item.Id == proposal.ConflictId && item.DomainId == domainId && !item.IsResolved);
+            if (proposal is null || conflict is null) return null;
+            var domain = FindDomain(state, domainId);
+            return new(conflict, proposal, domain.HeadRevisionId, ConflictProposalAcceptanceBlocker(state, domain, conflict));
+        }
+        finally { _gate.Release(); }
+    }
+
     public async Task ReviewConflictProposalAsync(Guid proposalId, bool accept, bool merge, StackActor actor, CancellationToken cancellationToken = default)
+    {
+        await ReviewConflictProposalCoreAsync(proposalId, accept, merge, actor, null, cancellationToken).ConfigureAwait(false);
+    }
+
+    public Task<StackConflictProposalReviewOutcome> ReviewObservedConflictProposalAsync(StackConflictProposalReview observed,
+        bool accept, bool merge, StackActor actor, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(observed);
+        if (merge && !accept) throw new ArgumentException("Rejecting a proposal cannot also merge it.");
+        return ReviewConflictProposalCoreAsync(observed.Proposal.Id, accept, merge, actor, observed, cancellationToken);
+    }
+
+    private async Task<StackConflictProposalReviewOutcome> ReviewConflictProposalCoreAsync(Guid proposalId, bool accept, bool merge,
+        StackActor actor, StackConflictProposalReview? observed, CancellationToken cancellationToken)
     {
         Demand(actor, StackCapability.Contribute, proposalId.ToString("D"));
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             StackManifest state = await GetStateAsync(cancellationToken).ConfigureAwait(false);
-            StackConflictProposal proposal = state.ConflictProposals.FirstOrDefault(item => item.Id == proposalId)
-                ?? throw Failure(StackFailureCode.DomainNotFound, "The conflict proposal was not found.", proposalId);
-            if (proposal.State != StackConflictProposalState.PendingReview)
+            var currentProposal = state.ConflictProposals.FirstOrDefault(item => item.Id == proposalId);
+            if (observed is not null)
             {
-                throw Failure(StackFailureCode.RevisionConflict, "The conflict proposal has already been reviewed.", proposalId);
+                var currentConflict = currentProposal is null ? null : state.Conflicts.SingleOrDefault(item => item.Id == currentProposal.ConflictId);
+                if (currentProposal is null || currentProposal.State != StackConflictProposalState.PendingReview ||
+                    currentConflict is null || currentConflict.IsResolved || currentConflict.Id != observed.Conflict.Id ||
+                    currentConflict.ProjectId != observed.Conflict.ProjectId || currentConflict.DomainId != observed.Conflict.DomainId ||
+                    !StringComparer.Ordinal.Equals(currentConflict.Path, observed.Conflict.Path) ||
+                    currentConflict.BaseRevisionId != observed.Conflict.BaseRevisionId || currentConflict.IncomingRevisionId != observed.Conflict.IncomingRevisionId ||
+                    !Equivalent(currentConflict.Base, observed.Conflict.Base) || !Equivalent(currentConflict.Local, observed.Conflict.Local) ||
+                    !Equivalent(currentConflict.Incoming, observed.Conflict.Incoming) ||
+                    !Equivalent(currentProposal.ProposedResource, observed.Proposal.ProposedResource))
+                    return new(null, "This exact conflict proposal is no longer pending. Refresh and review the current record.");
+
+                var reviewedDomain = FindDomain(state, currentConflict.DomainId);
+                if (reviewedDomain.IsDeleted || reviewedDomain.HeadRevisionId != observed.DomainHeadRevisionId)
+                    return new(null, "The domain revision changed. Refresh and review the proposal again.");
+                if (accept && ConflictProposalAcceptanceBlocker(state, reviewedDomain, currentConflict) is { } blocker)
+                    return new(null, blocker);
             }
+            var proposal = currentProposal ?? throw Failure(StackFailureCode.DomainNotFound, "The conflict proposal was not found.", proposalId);
+            if (proposal.State != StackConflictProposalState.PendingReview)
+                throw Failure(StackFailureCode.RevisionConflict, "The conflict proposal has already been reviewed.", proposalId);
 
             if (!accept)
             {
                 Replace(state.ConflictProposals, proposal with { State = StackConflictProposalState.Rejected });
                 AddAudit(state, actor, "ConflictProposalRejected", state.ProjectId, proposalId, null, null, "Rejected");
                 await SaveAsync(state, cancellationToken).ConfigureAwait(false);
-                return;
+                return new(StackConflictProposalState.Rejected, null);
             }
 
             StackConflict conflict = FindConflict(state, proposal.ConflictId);
@@ -523,6 +631,8 @@ public sealed class StackEngine
             }
 
             StackDomainRecord domain = FindDomain(state, conflict.DomainId);
+            EnsureRootEditable(state, domain, conflict.Path);
+            EnsureNotFrozen(state, domain, conflict.Path);
             domain.BaseTree[conflict.Path] = conflict.Incoming?.Copy();
             domain.WorkingChanges[conflict.Path] = proposal.ProposedResource is null
                 ? new StackMutation(StackMutationKind.Delete, conflict.Path)
@@ -546,11 +656,25 @@ public sealed class StackEngine
             }
 
             await SaveAsync(state, cancellationToken).ConfigureAwait(false);
+            return new(merge ? StackConflictProposalState.AcceptedAndMerged : StackConflictProposalState.AcceptedWithoutMerge, null);
         }
         finally
         {
             _gate.Release();
         }
+    }
+
+    private static string? ConflictProposalAcceptanceBlocker(StackManifest state, StackDomainRecord domain, StackConflict conflict)
+    {
+        if (ActiveFreeze(state, domain, conflict.Path) is not null)
+            return "An active Freeze blocks this path. Rejecting the proposal does not edit source.";
+        if (domain.IsDeleted) return "The reviewed domain is deleted.";
+        try { EnsureRootEditable(state, domain, conflict.Path); }
+        catch (StackFailureException failure) when (failure.Code == StackFailureCode.RootLocked) { return failure.Message; }
+        if (!Equivalent(BuildEffectiveTree(state, domain.Id, includeUnresolvedConflicts: false).GetValueOrDefault(conflict.Path), conflict.Local) ||
+            domain.ParentId is { } parent && !Equivalent(BuildEffectiveTree(state, parent).GetValueOrDefault(conflict.Path), conflict.Incoming))
+            return "Local or incoming content has changed since this conflict was captured. This proposal cannot overwrite those changes.";
+        return null;
     }
 
     public async Task<StackRoot> CreateRootAsync(Guid ownerDomainId, IEnumerable<string> paths, StackActor actor, CancellationToken cancellationToken = default)
@@ -610,7 +734,7 @@ public sealed class StackEngine
             foreach (StackMutation change in normalized)
             {
                 EnsureWritableDomain(owner);
-                EnsureNotFrozen(state, owner, change.Path, actor);
+                EnsureMutationNotFrozen(state, owner, change);
                 owner.WorkingChanges[change.Path] = change;
             }
 
@@ -701,7 +825,7 @@ public sealed class StackEngine
 
             foreach (StackMutation change in normalized)
             {
-                EnsureNotFrozen(state, FindDomain(state, subroot.OwnerDomainId), change.Path, actor);
+                EnsureMutationNotFrozen(state, FindDomain(state, subroot.OwnerDomainId), change);
                 if (!subroot.RootIds.Select(id => FindRoot(state, id)).Any(root => root.Paths.Any(path => StackPath.IsWithin(change.Path, path))))
                 {
                     throw Failure(StackFailureCode.RootLocked, "Subroot changes must remain inside Roots claimed by that Subroot.", subrootId);
@@ -796,7 +920,7 @@ public sealed class StackEngine
             EnsureWritableDomain(owner);
             foreach (StackMutation change in subroot.ProposedChanges)
             {
-                EnsureNotFrozen(state, owner, change.Path, actor);
+                EnsureMutationNotFrozen(state, owner, change);
             }
             StackRevision revision = CommitMutations(state, owner, subroot.ProposedChanges, message, actor);
             Replace(state.Subroots, subroot with { IsActive = false });
@@ -842,7 +966,7 @@ public sealed class StackEngine
         ArgumentException.ThrowIfNullOrWhiteSpace(reason);
         Demand(actor, StackCapability.ManageFreezes, targetDomainId.ToString("D"));
         if (targetPath is not null) targetPath = StackPath.Normalize(targetPath);
-        if (expiresAt is not null && expiresAt <= DateTimeOffset.UtcNow)
+        if (expiresAt is not null && expiresAt <= _clock.GetUtcNow())
         {
             throw new ArgumentOutOfRangeException(nameof(expiresAt), "A Freeze expiry must be in the future.");
         }
@@ -857,16 +981,17 @@ public sealed class StackEngine
         try
         {
             StackManifest state = await GetStateAsync(cancellationToken).ConfigureAwait(false);
-            FindDomain(state, targetDomainId);
+            var target = FindDomain(state, targetDomainId);
             if (scope.Length == 0 || scope.Any(id => id == targetDomainId || !IsDescendant(state, id, targetDomainId)))
             {
                 throw Failure(StackFailureCode.InvalidHierarchy, "A Freeze must explicitly select one or more strict descendants of its target domain.", targetDomainId);
             }
 
-            var freeze = new StackFreeze(Guid.NewGuid(), targetDomainId, targetPath, scope.ToHashSet(), DateTimeOffset.UtcNow,
-                actor.ActorId, reason.Trim(), expiresAt, expiryCondition?.Trim(), StackFreezeState.Active);
+            var freeze = new StackFreeze(Guid.NewGuid(), targetDomainId, targetPath, scope.ToHashSet(), _clock.GetUtcNow(),
+                actor.ActorId, reason.Trim(), expiresAt, expiryCondition?.Trim(), StackFreezeState.Active,
+                target.HeadRevisionId ?? target.BaseRevisionId);
             state.Freezes.Add(freeze);
-            AddAudit(state, actor, "FreezeCreated", state.ProjectId, freeze.Id, null, null, "Active", targetPath);
+            AddAudit(state, actor, "FreezeCreated", state.ProjectId, freeze.Id, freeze.CreatedAtRevisionId, null, "Active", targetPath);
             await SaveAsync(state, cancellationToken).ConfigureAwait(false);
             return freeze;
         }
@@ -889,7 +1014,7 @@ public sealed class StackEngine
                 return;
             }
 
-            if (!early && freeze.ExpiresAt is not null && DateTimeOffset.UtcNow < freeze.ExpiresAt)
+            if (!early && freeze.ExpiresAt is not null && _clock.GetUtcNow() < freeze.ExpiresAt)
             {
                 throw Failure(StackFailureCode.PermissionDenied, "The Freeze has not reached its configured expiry time.", freezeId);
             }
@@ -910,6 +1035,7 @@ public sealed class StackEngine
                     "The Freeze cannot expire or thaw until in-progress operations and queued upstream changes have been reconciled.", freezeId.ToString("D"), recoverable: true, retryable: true);
             }
 
+            MaterializeFrozenUpstreamReview(state, freeze, actor);
             Replace(state.Freezes, freeze with { State = early ? StackFreezeState.Thawed : StackFreezeState.Expired });
             AddAudit(state, actor, early ? "FreezeThawed" : "FreezeExpired", state.ProjectId, freezeId, null, null, "Succeeded");
             await SaveAsync(state, cancellationToken).ConfigureAwait(false);
@@ -940,6 +1066,7 @@ public sealed class StackEngine
                     "The Freeze condition is met, but editability remains locked until in-progress operations and queued upstream changes are reconciled.", freezeId.ToString("D"), recoverable: true, retryable: true);
             }
 
+            MaterializeFrozenUpstreamReview(state, freeze, actor);
             Replace(state.Freezes, freeze with { State = StackFreezeState.Expired });
             AddAudit(state, actor, "FreezeExpired", state.ProjectId, freezeId, null, null, "ConditionSatisfied");
             await SaveAsync(state, cancellationToken).ConfigureAwait(false);
@@ -1140,8 +1267,11 @@ public sealed class StackEngine
                 .Where(path => !Equivalent(child.BaseTree.GetValueOrDefault(path), incoming.GetValueOrDefault(path)))
                 .ToArray();
 
+            var heldByFreeze = false;
             foreach (string path in changedPaths)
             {
+                if (ActiveFreeze(state, child, path) is not null)
+                { heldByFreeze = true; continue; }
                 if (previouslyUnresolved.Contains(path)) continue;
                 if (OwnsPath(child, path))
                 {
@@ -1157,7 +1287,7 @@ public sealed class StackEngine
                 child.BaseTree[path] = incoming.GetValueOrDefault(path)?.Copy();
             }
 
-            if (previouslyUnresolved.Count == 0 || changedPaths.All(path => !previouslyUnresolved.Contains(path)))
+            if (!heldByFreeze && (previouslyUnresolved.Count == 0 || changedPaths.All(path => !previouslyUnresolved.Contains(path))))
             {
                 child.BaseRevisionId = parent.HeadRevisionId ?? parent.BaseRevisionId;
             }
@@ -1166,7 +1296,7 @@ public sealed class StackEngine
         }
     }
 
-    private static Dictionary<string, StackResource> BuildEffectiveTree(StackManifest state, Guid domainId)
+    private static Dictionary<string, StackResource> BuildEffectiveTree(StackManifest state, Guid domainId, bool includeUnresolvedConflicts = true)
     {
         StackDomainRecord domain = FindDomain(state, domainId);
         var tree = new Dictionary<string, StackResource>(StringComparer.OrdinalIgnoreCase);
@@ -1180,6 +1310,7 @@ public sealed class StackEngine
             ApplyToTree(tree, mutation);
         }
 
+        if (!includeUnresolvedConflicts) return tree;
         foreach (StackConflict conflict in state.Conflicts.Where(conflict => conflict.DomainId == domainId && !conflict.IsResolved))
         {
             if (conflict.Local is null) tree.Remove(conflict.Path);
@@ -1267,24 +1398,50 @@ public sealed class StackEngine
         }
     }
 
-    private static void EnsureNotFrozen(StackManifest state, StackDomainRecord domain, string path, StackActor actor)
-    {
-        foreach (StackFreeze freeze in state.Freezes.Where(static freeze => freeze.State == StackFreezeState.Active))
-        {
-            bool expired = freeze.ExpiresAt is DateTimeOffset expiry && expiry <= DateTimeOffset.UtcNow;
-            if (expired)
-            {
-                Replace(state.Freezes, freeze with { State = StackFreezeState.Expired });
-                AddAudit(state, actor, "FreezeExpired", state.ProjectId, freeze.Id, null, null, "TimeReached");
-                continue;
-            }
+    private static bool FreezeCovers(StackFreeze freeze, StackDomainRecord domain, string path) =>
+        freeze.State == StackFreezeState.Active && freeze.DescendantDomainIds.Contains(domain.Id) &&
+        (freeze.TargetPath is null || StackPath.IsWithin(path, freeze.TargetPath));
 
-            bool inScope = freeze.DescendantDomainIds.Contains(domain.Id);
-            bool pathMatches = freeze.TargetPath is null || StackPath.IsWithin(path, freeze.TargetPath);
-            if (inScope && pathMatches)
+    private static StackFreeze? ActiveFreeze(StackManifest state, StackDomainRecord domain, string path,
+        Guid? excluding = null) => state.Freezes.FirstOrDefault(freeze => freeze.Id != excluding && FreezeCovers(freeze, domain, path));
+
+    private static void EnsureNotFrozen(StackManifest state, StackDomainRecord domain, string path)
+    {
+        if (ActiveFreeze(state, domain, path) is { } freeze)
+            throw new StackFailureException(StackFailureCode.FreezeActive,
+                "This resource is frozen. Expiry or thaw must revalidate held upstream changes before editing.",
+                freeze.Id.ToString("D"), recoverable: true);
+    }
+
+    private static void EnsureMutationNotFrozen(StackManifest state, StackDomainRecord domain, StackMutation mutation)
+    {
+        EnsureNotFrozen(state, domain, mutation.Path);
+        if (mutation.RenameTo is { } destination) EnsureNotFrozen(state, domain, destination);
+    }
+
+    // Recompare with the original owner now, not a stale queue of bytes. A held
+    // delta becomes an explicit base/local/incoming review; thaw never applies it.
+    private void MaterializeFrozenUpstreamReview(StackManifest state, StackFreeze freeze, StackActor actor)
+    {
+        foreach (var domain in state.Domains.Where(domain => !domain.IsDeleted && freeze.DescendantDomainIds.Contains(domain.Id)))
+        {
+            if (domain.ParentId is not { } parentId) continue;
+            var parent = FindDomain(state, parentId);
+            var incoming = BuildEffectiveTree(state, parentId);
+            var local = BuildEffectiveTree(state, domain.Id);
+            foreach (var path in domain.BaseTree.Keys.Union(incoming.Keys, StringComparer.OrdinalIgnoreCase))
             {
-                throw new StackFailureException(StackFailureCode.FreezeActive,
-                    "This resource is frozen in the selected descendant scope.", freeze.Id.ToString("D"), recoverable: true);
+                if (!FreezeCovers(freeze, domain, path) || ActiveFreeze(state, domain, path, freeze.Id) is not null ||
+                    Equivalent(domain.BaseTree.GetValueOrDefault(path), incoming.GetValueOrDefault(path)) ||
+                    state.Conflicts.Any(conflict => conflict.DomainId == domain.Id && !conflict.IsResolved &&
+                        StringComparer.OrdinalIgnoreCase.Equals(conflict.Path, path))) continue;
+                var conflict = new StackConflict(Guid.NewGuid(), state.ProjectId, domain.Id, path,
+                    domain.BaseTree.GetValueOrDefault(path)?.Copy(), local.GetValueOrDefault(path)?.Copy(),
+                    incoming.GetValueOrDefault(path)?.Copy(), domain.BaseRevisionId,
+                    parent.HeadRevisionId ?? parent.BaseRevisionId, _clock.GetUtcNow());
+                state.Conflicts.Add(conflict);
+                AddAudit(state, actor, "FrozenUpstreamReviewRequired", state.ProjectId, conflict.Id,
+                    conflict.BaseRevisionId, conflict.IncomingRevisionId, "Unresolved", path);
             }
         }
     }

@@ -166,6 +166,7 @@ public static class CuiSurfacePaletteCatalog
         // (e.g. Spaces purple). This is palette resolution only: explicit Home
         // accent overrides and persisted preference modes remain untouched.
         var anchors = accentOverride
+            ?? (theme == CuiTheme.Cinematic ? ColourAnchors("#FFF12A") : null)
             ?? (appColour is null
                 ? (theme == CuiTheme.Professional ? ColourAnchors("#2563EB") : null)
                 : ColourAnchors(appColour));
@@ -182,6 +183,9 @@ public static class CuiSurfacePaletteCatalog
         if (anchors is not null)
             hue = hue with { Tide = Blend(Colors.White, surfaceAccent ?? accent, .28).ToString() };
         var palette = Assemble(hue, appearance, theme, accent, secondary, strong, soft, surfaceAccent);
+        if (theme == CuiTheme.Cinematic)
+            return Comic(palette with { Accent = accent, AccentSecondary = secondary, AccentStrong = strong },
+                appearance, accentOverride is not null);
         if (theme != CuiTheme.Glow) return Express(palette, appearance);
         return appearance is CuiAppearance.Dark or CuiAppearance.SuperDark
             ? GlowDark(palette, appearance, surfaceAccent ?? accent) : palette;
@@ -347,18 +351,39 @@ public static class CuiSurfacePaletteCatalog
             CuiTheme.FrostedGlass => FrostedGlass(palette, appearance),
             CuiTheme.Metallic => Metallic(palette, appearance),
             CuiTheme.Western => Western(palette, appearance),
-            CuiTheme.Cinematic => palette with
-            {
-                Panel = WithAlpha(Blend(palette.Panel, palette.TideColour, isDark ? 0.18 : 0.10), isDark ? (byte)0xEC : (byte)0xF0),
-                Panel2 = WithAlpha(Blend(palette.Panel2, palette.TideColour, 0.14), isDark ? (byte)0xE6 : (byte)0xEA),
-                Panel3 = Blend(palette.Panel3, palette.TideBase, 0.12),
-                Line = Blend(palette.Line, palette.TideColour, 0.22),
-                ButtonHover = Blend(palette.ButtonHover, palette.Accent, 0.20),
-                ButtonPressed = Blend(palette.ButtonPressed, palette.Panel3, 0.30),
-                Focus = WithAlpha(palette.Accent, 0xCC)
-            },
             _ => palette
         };
+    }
+
+    // The dense chrome uses the reference's ink, technical teal and plum planes.
+    // App content keeps its own layout and authored colour.
+    private static CuiPalette Comic(CuiPalette palette, CuiAppearance appearance, bool hasOverride)
+    {
+        var dark = appearance is CuiAppearance.Dark or CuiAppearance.SuperDark;
+        var canvas = Color.Parse(appearance switch
+        {
+            CuiAppearance.SuperDark => "#080C18", CuiAppearance.Dark => "#101522",
+            CuiAppearance.SuperBright => "#FFFCF7", _ => "#F7F0E8"
+        });
+        var teal = Color.Parse(dark ? "#172D40" : "#DAF0EE");
+        var plum = Color.Parse(dark ? "#33203D" : "#F2DEEF");
+        var basePanel = Color.Parse(dark ? "#1A2134" : "#FFF9F2");
+        var text = Color.Parse(dark ? "#F2F4FA" : "#15182A");
+        var muted = Color.Parse(dark ? "#B0BDCE" : "#4E556C");
+        var outline = Color.Parse(dark ? "#66758F" : "#746779");
+        var secondary = hasOverride ? palette.AccentSecondary : Color.Parse(dark ? "#7CE5E7" : "#125960");
+        var focus = CuiContrast.EnsureForegroundContrast(secondary, basePanel, 3);
+        return FinishPreset(palette with
+        {
+            TideBase = canvas, TideColour = Blend(canvas, teal, .28),
+            Panel = basePanel, Panel2 = plum, Panel3 = teal, PanelHover = Blend(basePanel, teal, .72),
+            Text = text, TextSoft = muted, Muted = muted, Muted2 = muted,
+            Line = outline, LineStrong = CuiContrast.EnsureForegroundContrast(outline, basePanel, 3),
+            Button = basePanel, ButtonHover = Blend(basePanel, teal, .8), ButtonPressed = Blend(basePanel, plum, .8),
+            AccentSecondary = secondary, AccentSoft = Blend(plum, palette.Accent, hasOverride ? .18 : .05),
+            Attention = Color.Parse(dark ? "#52361E" : "#FFE5BC"),
+            AttentionBorder = Color.Parse(dark ? "#F4B767" : "#87521A")
+        }) with { Focus = focus };
     }
 
     // CUI Professional owns the hierarchy across platforms: a quiet stage,
@@ -370,23 +395,22 @@ public static class CuiSurfacePaletteCatalog
         var deep = appearance == CuiAppearance.SuperDark;
         var white = appearance == CuiAppearance.SuperBright;
         var accent = palette.Accent;
-        var background = Color.Parse(dark ? deep ? "#FF171819" : "#FF202122" : white ? "#FFFCFCFD" : "#FFF0F1F3");
-        // Deliberate charcoal surface depth. The contextual working surface sits one neutral step
-        // above the shell/background, and the content/card/floating surface sits one step higher
-        // again, so shell/rail, contextual and content/card roles read as distinct layers without
-        // breaking Professional's quiet hierarchy or per-app accent neutrality.
-        var panel = Color.Parse(dark ? deep ? "#FF1C1C1E" : "#FF262627" : white ? "#FFFFFFFF" : "#FFF5F5F7");
-        var panel2 = Color.Parse(dark ? deep ? "#FF232324" : "#FF2D2D30" : white ? "#FFFFFFFF" : "#FFFFFFFF");
+        var background = Color.Parse(dark ? deep ? "#FF171819" : "#FF18191C" : white ? "#FFFCFCFD" : "#FFF0F1F3");
+        // Atlas v4 Professional Dark uses a neutral workspace, matching chrome and card tints,
+        // and a raised panel. The legacy SuperDark palette retains its deeper surface hierarchy.
+        var panel = Color.Parse(dark ? deep ? "#FF1C1C1E" : "#FF212329" : white ? "#FFFFFFFF" : "#FFF5F5F7");
+        var panel2 = Color.Parse(dark ? deep ? "#FF232324" : "#FF2B2E35" : "#FFFFFFFF");
         return palette with
         {
             TideBase = background,
-            TideColour = Color.Parse(dark ? deep ? "#FF090B0E" : "#FF111419" : white ? "#FFFFFFFF" : "#FFFAFAFC"),
+            TideColour = Color.Parse(dark ? deep ? "#FF090B0E" : "#FF17181B" : white ? "#FFFFFFFF" : "#FFFAFAFC"),
             Accent = accent, AccentSecondary = accent, AccentStrong = accent,
             AccentSoft = Blend(panel, accent, dark ? .16 : .10),
             AccentInk = CuiContrast.Ratio(Colors.Black, accent) >= CuiContrast.Ratio(Colors.White, accent) ? Colors.Black : Colors.White,
-            Text = Color.Parse(dark ? "#FFE5E5E7" : "#FF252628"),
-            TextSoft = Color.Parse(dark ? "#FFC3C4C7" : "#FF55575D"),
-            Muted = Color.Parse(dark ? "#FFA0A1A6" : "#FF696B72"), Muted2 = Color.Parse(dark ? "#FF929399" : "#FF75777E"),
+            Text = Color.Parse(dark ? deep ? "#FFE5E5E7" : "#FFF5F6FA" : "#FF252628"),
+            TextSoft = Color.Parse(dark ? deep ? "#FFC3C4C7" : "#FFADB4C3" : "#FF55575D"),
+            Muted = Color.Parse(dark ? "#FFA0A1A6" : "#FF696B72"),
+            Muted2 = Color.Parse(dark ? deep ? "#FF929399" : "#FF95969C" : "#FF75777E"),
             Panel = panel, Panel2 = panel2,
             Panel3 = Color.Parse(dark ? deep ? "#FF2B2B2E" : "#FF353537" : white ? "#FFF2F2F4" : "#FFEBEBED"),
             PanelHover = Color.Parse(dark ? deep ? "#FF313133" : "#FF3B3B3E" : white ? "#FFEAEAEC" : "#FFE2E2E5"),

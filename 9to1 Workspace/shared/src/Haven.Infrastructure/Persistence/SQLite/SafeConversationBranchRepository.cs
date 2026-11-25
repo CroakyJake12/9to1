@@ -187,6 +187,10 @@ public sealed class SafeConversationProductionRepository(
     /// Performs save draft asynchronously so I/O does not block the caller's thread.
     /// </summary>
     public Task SaveDraftAsync(ConversationDraft draft, CancellationToken cancellationToken) => inner.SaveDraftAsync(draft, cancellationToken);
+    public bool SupportsUnsentChatDraft => inner.SupportsUnsentChatDraft;
+    public Task<ConversationDraft> CreateUnsentChatDraftAsync(Conversation conversation, string content,
+        Func<CancellationToken, Task> admit, CancellationToken cancellationToken) =>
+        inner.CreateUnsentChatDraftAsync(conversation, content, admit, cancellationToken);
     /// <summary>
     /// Performs delete draft asynchronously so I/O does not block the caller's thread.
     /// </summary>

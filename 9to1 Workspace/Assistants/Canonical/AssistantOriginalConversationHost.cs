@@ -9,7 +9,7 @@ namespace HavenOS.Apps.Assistants.Canonical;
 /// <summary>Application-owned hosting of the SAME ordinary Chat producer. A presentation borrows
 /// one observation; observer retirement never cancels the business driver. Explicit validated
 /// control can request cancellation of that SAME invocation, never the shared Chat service.</summary>
-public sealed class AssistantOriginalConversationHost(CancellationToken explicitBusinessLifetime = default)
+public sealed partial class AssistantOriginalConversationHost(CancellationToken explicitBusinessLifetime = default)
 {
     private readonly object _gate = new();
     private readonly Dictionary<Guid, Task> _active = [];

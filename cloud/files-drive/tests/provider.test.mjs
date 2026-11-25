@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
-import { DriveProvider, strongDriveETag } from '../src/provider.mjs';
+import { DriveProvider, exactNameQuery, strongDriveETag } from '../src/provider.mjs';
 import { DriveStore } from '../src/store.mjs';
 import { DriveQuota } from '../src/quota.mjs';
 import { GoogleTransport } from '../src/google-transport.mjs';
@@ -23,15 +23,18 @@ function file(id, properties = {}) {
 function fixture(t, { limits, conditionalWrites = true } = {}) {
   const db = new DatabaseSync(':memory:');
   t.after(() => db.close());
+  const model = { now: T0, calls: [], ids: 0, lost: false, nextRace: false, weakETag: false };
   const storage = {
-    sql: { exec(query, ...args) { return { toArray: () => db.prepare(query).all(...args) }; } },
+    sql: { exec(query, ...args) {
+      if (model.failJournal && query.startsWith('INSERT INTO files_changes')) throw new Error('Controlled journal fault');
+      return { toArray: () => db.prepare(query).all(...args) };
+    } },
     transactionSync(work) {
       db.exec('BEGIN IMMEDIATE');
       try { const result = work(); db.exec('COMMIT'); return result; } catch (error) { db.exec('ROLLBACK'); throw error; }
     },
     async sync() {},
   };
-  const model = { now: T0, calls: [], ids: 0, lost: false, nextRace: false, weakETag: false };
   const root = file('my-root', { mimeType: FOLDER, parents: [] });
   const remote = new Map([[root.id, root]]);
   const now = () => model.now;
@@ -61,7 +64,8 @@ function fixture(t, { limits, conditionalWrites = true } = {}) {
       const trash = query === 'trashed = true';
       const parent = /'([^']+)' in parents/.exec(query)?.[1];
       return response(200, { files: [...remote.values()].filter(value =>
-        value.trashed === trash && (trash || value.parents.includes(parent))) });
+        value.trashed === trash && (trash || value.parents.includes(parent)) &&
+        (!query.includes(" and name = ") || exactNameQuery(parent, value.name) === query)) });
     }
     if (method === 'POST') {
       const body = JSON.parse(options.body);
@@ -171,7 +175,7 @@ test('Trash loads recently modified items first and binds pagination to that ord
 });
 
 test('create keeps canonical identity across lost reply, refused reconciliation, an intervening list, and replay', async t => {
-  const f = fixture(t, { limits: { unitsPerMinute: 65 } });
+  const f = fixture(t, { limits: { unitsPerMinute: 165 } });
   const request = operation('CreateFolder', null, { name: 'Private folder' });
   f.model.lost = true;
   const lost = await f.provider.mutate(request);
@@ -199,7 +203,7 @@ test('create keeps canonical identity across lost reply, refused reconciliation,
 });
 
 test('quota refused before create leaves a genuinely unissued intent and reuses its fixed provider ID', async t => {
-  const f = fixture(t, { limits: { unitsPerMinute: 60 } });
+  const f = fixture(t, { limits: { unitsPerMinute: 160 } });
   const request = operation('CreateFolder', null, { name: 'Resumable folder' });
   const refused = await f.provider.mutate(request);
   assert.equal(refused.error.code, 'QuotaExceeded');
@@ -327,4 +331,259 @@ test('transfer helpers return current provider identity and reject a folder with
   actual.size = '79';
   actual.version = Number.MAX_SAFE_INTEGER + 1;
   await assert.rejects(f.provider.readRaw(item.id), { code: 'ProviderUnavailable' });
+});
+
+test('rename and move refuse observed exact-name collisions without mutating or discarding the intent', async t => {
+  const f = fixture(t);
+  const source = file('collision-source', { name: "Jacob's notes" });
+  const destination = file('collision-folder', { mimeType: FOLDER });
+  const occupying = file('collision-occupant', { name: "Jacob's notes", parents: [destination.id] });
+  const sibling = file('collision-sibling', { name: 'Existing folder' });
+  for (const existing of [source, destination, occupying, sibling]) f.remote.set(existing.id, existing);
+  const mapped = f.store.mapFile(source);
+  const folder = f.store.mapFile(destination);
+  const move = operation('Move', mapped, { destination: folder.id });
+  const rename = operation('Rename', mapped, { name: sibling.name });
+
+  for (const request of [rename, move]) {
+    const refused = await f.provider.mutate(request);
+    assert.equal(refused.error.code, 'NameConflict');
+    assert.deepEqual(refused.error.details, { notStarted: 'true' });
+    assert.equal(f.store.operation(request.operation.id).stage, 'prepared');
+  }
+  assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 0);
+  const exactQueries = f.model.calls.map(call => call.url.searchParams.get('q')).filter(Boolean);
+  assert.ok(exactQueries.includes("'collision-folder' in parents and name = 'Jacob" + String.fromCharCode(92) + "'s notes' and trashed = false"));
+  assert.equal(f.store.changes(0).items.length, 0);
+  assert.deepEqual(source.parents, ['my-root']);
+
+  f.remote.delete(occupying.id);
+  const moved = await f.reopen().provider.mutate(move);
+  assert.equal(moved.value.state, 'Committed');
+  assert.deepEqual(moved.value.itemId, mapped.id);
+  assert.deepEqual(source.parents, [destination.id]);
+  assert.equal(f.store.changes(0).items.length, 1);
+});
+
+test('an incomplete exact-name search never grants a Drive mutation', async t => {
+  const f = fixture(t);
+  const source = file('unchecked-source');
+  f.remote.set(source.id, source);
+  f.model.list = () => ({ files: [], incompleteSearch: true });
+  const result = await f.provider.mutate(operation('Rename', f.store.mapFile(source), { name: 'Unverified' }));
+  assert.equal(result.error.code, 'ProviderUnavailable');
+  assert.deepEqual(result.error.details, { notStarted: 'true' });
+  assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 0);
+  assert.equal(source.name, 'unchecked-source');
+});
+
+test('rename ignores the selected item but checks later collision pages', async t => {
+  const f = fixture(t);
+  const source = file('first-match');
+  f.remote.set(source.id, source);
+  const request = operation('Rename', f.store.mapFile(source), { name: 'Rename me' });
+  f.model.list = url => url.searchParams.get('pageToken') === 'next'
+    ? { files: [{ id: 'different-match' }] }
+    : { files: [{ id: source.id }], nextPageToken: 'next' };
+
+  assert.equal((await f.provider.mutate(request)).error.code, 'NameConflict');
+  assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 0);
+  f.model.list = () => ({ files: [{ id: source.id }] });
+  assert.equal((await f.provider.mutate(request)).value.state, 'Committed');
+  assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 1);
+});
+
+test('confirmed Drive edits publish metadata and the original result with exactly one event', async t => {
+  const f = fixture(t);
+  const source = file('journal-source');
+  f.remote.set(source.id, source);
+  const before = f.store.mapFile(source);
+  const edit = operation('Rename', before, { name: 'New name' });
+  f.model.failJournal = true;
+
+  const unresolved = await f.provider.mutate(edit);
+  assert.equal(unresolved.error.code, 'ProviderUnavailable');
+  assert.equal(unresolved.error.details, null);
+  assert.equal(source.name, 'New name', 'provider already applied the change');
+  assert.deepEqual(JSON.parse(f.store.byId(before.id).metadata), before, 'do not expose a local revision without its event');
+  assert.equal(f.store.operation(edit.operation.id).stage, 'issuing');
+  assert.deepEqual(f.store.changes(0), { items: [], nextPageToken: null });
+
+  f.model.failJournal = false;
+  const { store, provider } = f.reopen();
+  const result = await provider.mutate(edit);
+  assert.equal(result.value.state, 'Committed');
+  assert.deepEqual(result.value.itemId, before.id);
+  const [event] = store.changes(0).items;
+  assert.deepEqual(event.operationId, edit.operation.id);
+  assert.deepEqual(event.baseRevisionId, before.currentRevisionId);
+  assert.deepEqual(event.resultRevisionId, result.value.resultRevisionId);
+  assert.equal(event.metadata.name, 'New name');
+  assert.deepEqual(await provider.mutate(edit), result);
+  assert.equal(store.changes(event.cursor.revision).items.length, 0);
+  assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 1);
+});
+
+test('new folder refuses an observed name collision before allocating or mutating', async t => {
+  const f = fixture(t);
+  const occupied = file('existing-folder', { name: "Jacob's work", mimeType: FOLDER });
+  f.remote.set(occupied.id, occupied);
+  const request = operation('CreateFolder', null, { name: occupied.name });
+  const result = await f.provider.mutate(request);
+  assert.equal(result.error.code, 'NameConflict');
+  assert.deepEqual(result.error.details, { notStarted: 'true' });
+  assert.equal(f.model.ids, 0);
+  assert.equal(f.model.calls.filter(call => call.method === 'POST').length, 0);
+  assert.equal(f.store.changes(0).items.length, 0);
+  f.remote.delete(occupied.id);
+  const committed = await f.reopen().provider.mutate(request);
+  assert.equal(committed.value.state, 'Committed');
+  assert.deepEqual(committed.value.itemId, request.operation.itemId);
+  assert.deepEqual(await f.provider.mutate(request), committed);
+  assert.equal(f.model.calls.filter(call => call.method === 'POST').length, 1);
+});
+
+test('a committed or uncertain new folder blocks another identity when the name index has not caught up', async t => {
+  const f = fixture(t);
+  f.model.list = () => ({ files: [], incompleteSearch: false });
+  const first = operation('CreateFolder', null, { name: 'Lagging search' });
+  const alternative = operation('CreateFolder', null, { name: 'Lagging search' });
+
+  f.model.lost = true;
+  const uncertain = await f.provider.mutate(first);
+  assert.equal(uncertain.error.code, 'ProviderUnavailable');
+  assert.equal(f.store.operation(first.operation.id).stage, 'issuing');
+  assert.equal((await f.reopen().provider.mutate(alternative)).error.code, 'NameConflict');
+  const settled = await f.reopen().provider.mutate(first);
+  assert.equal(settled.value.state, 'Committed');
+  const sameName = await f.reopen().provider.mutate(alternative);
+  assert.equal(sameName.error.code, 'NameConflict');
+  assert.deepEqual(sameName.error.details, { notStarted: 'true' });
+  assert.equal(f.model.calls.filter(call => call.method === 'POST').length, 1);
+  assert.equal(f.store.changes(0).items.length, 1);
+  assert.equal(f.remote.size, 2, 'only root and original folder exist');
+
+  // The scoped evidence is a check of the current file, not a permanent
+  // reservation: once the actual previous folder is trashed the name is free.
+  const committedRow = f.store.operation(first.operation.id);
+  f.remote.get(committedRow.provider_id).trashed = true;
+  const reopened = await f.reopen().provider.mutate(alternative);
+  assert.equal(reopened.value.state, 'Committed');
+  assert.equal(f.model.calls.filter(call => call.method === 'POST').length, 2);
+  assert.equal(f.store.changes(0).items.length, 2);
+
+});
+
+test('independent concurrent folder intents cannot both dispatch against identical preflight answers', async t => {
+  const f = fixture(t);
+  // Both handles use the same underlying Durable Object SQLite fixture and see an empty advisory provider listing.
+  f.model.list = () => ({ files: [] });
+  const work = [
+    f.provider.mutate(operation('CreateFolder', null, { name: 'Parallel' })),
+    f.reopen().provider.mutate(operation('CreateFolder', null, { name: 'Parallel' })),
+  ];
+  const results = await Promise.all(work);
+  assert.equal(results.filter(result => result.value?.state === 'Committed').length, 1);
+  assert.equal(results.filter(result => result.error?.code === 'NameConflict').length, 1);
+  assert.equal(f.model.calls.filter(call => call.method === 'POST').length, 1);
+  assert.equal(f.store.changes(0).items.length, 1);
+});
+
+test('two callers recovering the same preallocated folder cannot reset or resend that admission', async t => {
+  const f = fixture(t, { limits: { unitsPerMinute: 160 } });
+  const original = operation('CreateFolder', null, { name: 'Prepared retry target' });
+  const lowered = await f.provider.mutate(original);
+  assert.equal(lowered.error.code, 'QuotaExceeded');
+  assert.equal(f.store.operation(original.operation.id).provider_id, 'generated-1');
+  f.model.now += 120_000;
+
+  const [one, two] = await Promise.all([f.reopen().provider.mutate(original), f.reopen().provider.mutate(original)]);
+  assert.ok([one, two].some(result => result.value?.state === 'Committed'));
+  const receipt = await f.reopen().provider.mutate(original);
+  assert.deepEqual(receipt.value.itemId, original.operation.itemId);
+  assert.equal(f.store.operation(original.operation.id).provider_id, 'generated-1');
+  assert.equal(f.model.calls.filter(call => call.method === 'POST').length, 1);
+  assert.equal(f.store.changes(0).items.length, 1);
+});
+
+test('restore into an occupied original folder preserves both identities and the recoverable Trash state', async t => {
+  const f = fixture(t);
+  const original = file('restore-source', { name: 'Restore specimen', trashed: true, explicitlyTrashed: true });
+  const occupant = file('restore-other', { name: original.name });
+  f.remote.set(original.id, original);
+  f.remote.set(occupant.id, occupant);
+  const row = (await f.provider.list({ trash: true })).items[0];
+  const request = operation('Restore', row);
+
+  const conflict = await f.provider.mutate(request);
+  assert.equal(conflict.error.code, 'NameConflict');
+  assert.deepEqual(conflict.error.details, { notStarted: 'true' });
+  assert.equal(f.remote.get(original.id).trashed, true);
+  assert.equal(f.remote.get(occupant.id).trashed, false);
+  assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 0);
+  assert.equal(f.store.changes(0).items.length, 0);
+
+  occupant.name = 'Free original name';
+  const receipt = await f.reopen().provider.mutate(request);
+  assert.equal(receipt.value.state, 'Committed');
+  assert.deepEqual(receipt.value.itemId, row.id);
+  assert.equal(f.remote.get(original.id).trashed, false);
+  assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 1);
+  assert.equal(f.store.changes(0).items.length, 1);
+});
+
+test('two handles admitting the same metadata edit issue only one conditional provider write', async t => {
+  const f = fixture(t);
+  const original = file('shared-edit', { name: 'Before' });
+  f.remote.set(original.id, original);
+  const request = operation('Rename', f.store.mapFile(original), { name: 'After' });
+  // Both handles observe the same prepared intent and strong ETag. A provider
+  // 412 alone is not enough: the losing call must not reject the shared journal.
+  const results = await Promise.all([f.provider.mutate(request), f.reopen().provider.mutate(request)]);
+  assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 1);
+  assert.ok(results.some(result => result.value?.state === 'Committed'));
+  for (const result of results.filter(result => result.error)) {
+    assert.notEqual(result.error.details?.notStarted, 'true');
+    assert.notEqual(result.error.code, 'RevisionConflict');
+  }
+  const receipt = await f.reopen().provider.mutate(request);
+  assert.equal(receipt.value.state, 'Committed');
+  assert.deepEqual(receipt.value.itemId, request.operation.itemId);
+  assert.equal(original.name, 'After');
+  assert.equal(f.store.changes(0).items.length, 1);
+});
+
+test('competing handles cannot reject a shared edit when its successful provider reply was lost', async t => {
+  const f = fixture(t);
+  const original = file('lost-shared-edit', { name: 'Still recoverable', trashed: true, explicitlyTrashed: true });
+  f.remote.set(original.id, original);
+  const request = operation('Restore', f.store.mapFile(original));
+  f.model.lost = true;
+
+  const results = await Promise.all([f.provider.mutate(request), f.reopen().provider.mutate(request)]);
+  assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 1);
+  assert.ok(results.every(result => result.error?.details?.notStarted !== 'true'));
+  assert.equal(f.store.operation(request.operation.id).stage, 'issuing');
+  assert.equal(original.trashed, false);
+  const receipt = await f.reopen().provider.mutate(request);
+  assert.equal(receipt.value.state, 'Committed');
+  assert.deepEqual(receipt.value.itemId, request.operation.itemId);
+  assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 1);
+  assert.equal(f.store.changes(0).items.length, 1);
+});
+
+test('a different metadata edit cannot reuse a previously committed operation ID', async t => {
+  const f = fixture(t);
+  const original = file('reused-edit', { name: 'Before' });
+  f.remote.set(original.id, original);
+  const request = operation('Rename', f.store.mapFile(original), { name: 'After' });
+  const receipt = await f.provider.mutate(request);
+  assert.equal(receipt.value.state, 'Committed');
+  const altered = { ...request, newName: 'Different', operation: { ...request.operation, payload: { newName: 'Different' } } };
+  const conflict = await f.reopen().provider.mutate(altered);
+  assert.equal(conflict.error.code, 'InvalidState');
+  assert.match(conflict.error.message, /belongs to a different change/);
+  assert.equal(conflict.error.details?.notStarted, 'true');
+  assert.deepEqual(await f.reopen().provider.mutate(request), receipt);
+  assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 1);
 });

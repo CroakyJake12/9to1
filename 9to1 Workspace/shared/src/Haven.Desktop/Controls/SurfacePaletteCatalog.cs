@@ -125,7 +125,9 @@ internal static class SurfacePaletteCatalog
         //
         // CUI applies its own per-theme expression for non-Glow themes, so the legacy
         // Express() must NOT run again on its result.
-        if (CuiOwnedSurfaces.Contains(surface))
+        var theme = HavenPersonalisation.Theme;
+        var comic = theme == HavenUiTheme.Cinematic;
+        if (comic || CuiOwnedSurfaces.Contains(surface))
         {
             return FromCui(CakeOS.Cui.Themes.CuiSurfacePaletteCatalog.For(
                 surface.ToString(),
@@ -136,11 +138,10 @@ internal static class SurfacePaletteCatalog
                     HavenUiAppearance.Dark => CakeOS.Cui.Themes.CuiAppearance.Dark,
                     _ => CakeOS.Cui.Themes.CuiAppearance.SuperDark
                 },
-                CakeOS.Cui.Themes.CuiSurfacePaletteCatalog.ActiveTheme));
+                comic ? CakeOS.Cui.Themes.CuiTheme.Cinematic : CakeOS.Cui.Themes.CuiSurfacePaletteCatalog.ActiveTheme));
         }
 
         var hue = Hues.TryGetValue(surface, out var configured) ? configured : Hues[HavenSurface.Home];
-        var theme = HavenPersonalisation.Theme;
         var accent = Parse(hue.Accent);
         var secondary = Parse(hue.Secondary);
         var strong = Parse(hue.Strong);
@@ -303,16 +304,6 @@ internal static class SurfacePaletteCatalog
                 ButtonHover = WithAlpha(Blend(palette.AccentSoft, palette.Accent, 0.40), 0xFF),
                 ButtonPressed = WithAlpha(Blend(palette.AccentSoft, palette.AccentStrong, 0.55), 0xFF),
                 Focus = WithAlpha(palette.AccentSecondary, 0xE6)
-            },
-            HavenUiTheme.Cinematic => palette with
-            {
-                Panel = WithAlpha(Blend(palette.Panel, palette.TideColour, isDark ? 0.18 : 0.10), isDark ? (byte)0xEC : (byte)0xF0),
-                Panel2 = WithAlpha(Blend(palette.Panel2, palette.TideColour, 0.14), isDark ? (byte)0xE6 : (byte)0xEA),
-                Panel3 = Blend(palette.Panel3, palette.TideBase, 0.12),
-                Line = Blend(palette.Line, palette.TideColour, 0.22),
-                ButtonHover = Blend(palette.ButtonHover, palette.Accent, 0.20),
-                ButtonPressed = Blend(palette.ButtonPressed, palette.Panel3, 0.30),
-                Focus = WithAlpha(palette.Accent, 0xCC)
             },
             _ => palette
         };

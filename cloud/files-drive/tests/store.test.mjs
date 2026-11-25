@@ -44,3 +44,25 @@ test('malformed provider fields and owner reassignment never fabricate usable me
   const f = fixture(); for (const patch of [{ version: 'NaN' }, { size: '-1' }, { createdTime: null }, { id: '../../other' }]) assert.throws(() => f.store.mapFile(file(patch)));
   assert.throws(() => new DriveStore(f.storage, 'another-owner'), /another owner/); f.db.close();
 });
+
+test('change pages offer a continuation only when another row exists', t => {
+  const { db, store } = fixture();
+  t.after(() => db.close());
+  for (const id of ['created', 'moved', 'trashed', 'restored']) store.change({ id });
+
+  const first = store.changes(0, 2);
+  assert.deepEqual(first.items.map(({ id }) => id), ['created', 'moved']);
+  assert.equal(first.nextPageToken, String(first.items.at(-1).cursor.revision));
+
+  const last = store.changes(Number(first.nextPageToken), 2);
+  assert.deepEqual(last.items.map(({ id }) => id), ['trashed', 'restored']);
+  assert.equal(last.nextPageToken, null);
+
+  const checkpoint = last.items.at(-1).cursor.revision;
+  assert.deepEqual(store.changes(checkpoint, 2), { items: [], nextPageToken: null });
+  store.change({ id: 'renamed' });
+  assert.deepEqual(store.changes(checkpoint, 1), {
+    items: [{ id: 'renamed', cursor: { revision: checkpoint + 1 } }],
+    nextPageToken: null,
+  });
+});

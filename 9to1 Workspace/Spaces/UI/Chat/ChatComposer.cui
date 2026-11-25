@@ -167,13 +167,13 @@
                  BorderColor="{Resource CuiLineBrush}" BorderWidth="1" accessible-name="Conversation options">
         <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
           <Container Type="Vertical Stack" CellGap="2" VerticalAlignment="Center">
-            <Text Text="Options" FontSize="20" FontWeight="Bold" />
-            <Text Text="This conversation" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+            <Text Text="Options" FontSize="20" FontWeight="750" />
+            <Text Text="This conversation" FontSize="12" FontWeight="600" Foreground="{Resource CuiTextSoftBrush}" />
           </Container>
           <Button id="options-close" Column="1" action="composer.cancel-options" Content="×" Width="44" Height="44"
                   accessible-name="Close options" Chromeless="True" />
         </Container>
-        <Text Text="Response style" FontSize="15" FontWeight="Bold" />
+        <Text Text="Response style" FontSize="15" FontWeight="750" />
         <Container Type="Wrap" CellGap="6">
           <Button action="composer.set-response-mode.Auto" Content="Automatic" MinHeight="44" Selected="{Binding Composer.ResponseChoice.Auto}" />
           <Button action="composer.set-response-mode.AlwaysVisual" Content="Always visual" MinHeight="44" Selected="{Binding Composer.ResponseChoice.AlwaysVisual}" />
@@ -181,14 +181,14 @@
           <Button action="composer.set-response-mode.PreferText" Content="Prefer text" MinHeight="44" Selected="{Binding Composer.ResponseChoice.PreferText}" />
           <Button action="composer.set-response-mode.AlwaysText" Content="Always text" MinHeight="44" Selected="{Binding Composer.ResponseChoice.AlwaysText}" />
         </Container>
-        <Text Text="Applies to future responses in this chat." FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-        <Text Text="Allowed actions" FontSize="15" FontWeight="Bold" />
+        <Text Text="Applies to future responses in this chat." FontSize="12" FontWeight="600" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+        <Text Text="Allowed actions" FontSize="15" FontWeight="750" />
         <Container Type="Wrap" CellGap="6">
           <Button action="composer.set-action-mode.JustChat" Content="Just chat" MinHeight="44" Selected="{Binding Composer.ActionChoice.JustChat}" />
           <Button action="composer.set-action-mode.AllowBasicActions" Content="Basic actions" MinHeight="44" Selected="{Binding Composer.ActionChoice.AllowBasicActions}" />
           <Button action="composer.set-action-mode.AllowAllActions" Content="All actions" MinHeight="44" Selected="{Binding Composer.ActionChoice.AllowAllActions}" />
         </Container>
-        <Text Text="Save to change which actions this conversation can request." FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+        <Text Text="Save to change which actions this conversation can request." FontSize="12" FontWeight="600" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
         <Button id="refresh-task-actions" action="composer.refresh-task-controls" content="Refresh task actions"
                 IsVisible="{Binding Composer.CanRefreshTaskControls}" MinHeight="44"
                 accessible-name="Refresh this original task's available actions" />

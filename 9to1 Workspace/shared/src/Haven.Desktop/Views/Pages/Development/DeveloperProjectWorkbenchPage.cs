@@ -371,6 +371,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (TryGetCuiPreviewValue(path, out value)) return true;
             if (TryGetFileNavigationValue(path, out value)) return true;
             if (TryGetBuildProblemsValue(path, out value)) return true;
+            if (TryGetSavedTestReportValue(path, out value)) return true;
             value = path switch
             {
                 "ProjectTitle" => _project.Project.Name,
@@ -530,6 +531,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             if (command == "dev.use-lf-endings") return CanUseLineEndings(DeveloperTextLineEndingTarget.Lf);
             if (command == "dev.use-crlf-endings") return CanUseLineEndings(DeveloperTextLineEndingTarget.CrLf);
             if (command == "dev.find-project-file") return _manualReader is not null && DeveloperProjectFileNavigation.IsValidQuery(_fileNavigationQuery);
+            if (command == "dev.inspect-saved-test-report") return CanInspectSavedTestReport();
             if (command == "dev.open-build-problem") return CurrentBuildProblems() is { Report.Diagnostics.Count: > 0 } && (_manual ? _manualReader is not null : _review is not null);
             if (command == "dev.open-file-navigation-result") return _manualReader is not null && CurrentFileNavigationObservation() is { Result.Matches.Count: > 0 };
             if (command == "dev.file-navigation-previous") return CurrentFileNavigationObservation() is not null && _fileNavigationPage > 0;
@@ -625,6 +627,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         if (command == "dev.change-cui-property") return DispatchCuiPropertyChangeAsync(cancellationToken);
         if (command == "dev.analyze-cui-draft") return DispatchCuiAnalysisAsync(cancellationToken);
         if (command == "dev.preview-cui-draft") return DispatchCuiPreviewAsync(cancellationToken);
+        if (command == "dev.inspect-saved-test-report") return DispatchSavedTestReportAsync(cancellationToken);
         if (command is "dev.find-project-file" or "dev.file-navigation-previous" or "dev.file-navigation-next") return DispatchFileNavigationAsync(command, cancellationToken);
         if (command is "dev.go-to-cui-problem" or "dev.go-to-cui-element") return DispatchCuiSourceNavigationAsync(command, parameter, cancellationToken);
         if (command is "dev.undo-source-edit" or "dev.redo-source-edit") return DispatchDraftHistoryAsync(command, cancellationToken);

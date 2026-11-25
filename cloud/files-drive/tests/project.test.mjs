@@ -5,6 +5,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { exportJWK, generateKeyPair, SignJWT } from 'jose';
 import { FilesProject } from '../src/project.mjs';
 import { DriveStore } from '../src/store.mjs';
+import { exactNameQuery } from '../src/provider.mjs';
 import { CHUNK_BYTES, JSON_BYTES } from '../src/google-transport.mjs';
 
 const ROOT_URL = 'https://9to1.uk';
@@ -303,7 +304,12 @@ function disposableDrive(f, fault) {
       return Response.json(file);
     }
     if (options.method === 'GET' && !id) {
-      assert.equal(url.searchParams.get('q'), "'" + f.store.get('providerValidationV1').folders.child.googleId + "' in parents");
+      const query = url.searchParams.get('q');
+      if (query.includes(' and name = ')) {
+        return Response.json({ files: [...remote.values()].filter(file => !file.trashed &&
+          file.parents.some(parent => exactNameQuery(parent, file.name) === query)).map(file => ({ id: file.id })) });
+      }
+      assert.equal(query, "'" + f.store.get('providerValidationV1').folders.child.googleId + "' in parents");
       return Response.json({ files: fault === 'unrelated-child' ? [{ id: 'existing-file' }] : [] });
     }
     const file = remote.get(id);
@@ -478,4 +484,29 @@ test('a new run refuses unknown or interrupted outcomes and never exceeds the ar
   assert.deepEqual(f.store.get('providerValidationV1'), old);
   assert.deepEqual(f.store.get('providerValidationV1:archivedRunIds'), archived);
   assert.equal(f.state.calls.length, before);
+});
+
+test('GET /changes rejects non-decimal cursors and resumes without a phantom page', async t => {
+  const f = fixture(t);
+  await f.link();
+  for (const id of ['created', 'moved', 'trashed', 'restored']) f.store.change({ id });
+  for (const query of ['after=', 'after=%20', 'after=0x1', 'after=1e0', 'after=-0',
+    'after=1%0A', 'after=9007199254740992', 'after=1&after=2', 'limit=1e0', 'limit=501', 'limit=1&limit=2']) {
+    const response = await f.request('/changes?' + query);
+    assert.equal(response.status, 400, query);
+    assert.equal((await response.json()).code, 'InvalidCursor', query);
+  }
+
+  const first = await f.request('/changes?limit=2');
+  assert.equal(first.status, 200);
+  const { items, nextPageToken } = await first.json();
+  assert.deepEqual(items.map(item => item.id), ['created', 'moved']);
+  assert.equal(nextPageToken, String(items.at(-1).cursor.revision));
+
+  const last = await f.request('/changes?after=' + nextPageToken + '&limit=2');
+  assert.equal(last.status, 200);
+  assert.deepEqual(await last.json(), {
+    items: [{ id: 'trashed', cursor: { revision: 3 } }, { id: 'restored', cursor: { revision: 4 } }],
+    nextPageToken: null,
+  });
 });

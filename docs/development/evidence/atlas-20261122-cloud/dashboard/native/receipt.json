@@ -1,0 +1,73 @@
+{
+  "source_revision": "fcb864ea8e0324096df0cd1fe4eb8e712d4f86e9",
+  "renderer": "native Linux Haven apphost on X11 (Xvfb/Openbox)",
+  "profile": "isolated Professional Dark and Blue #4E86FF",
+  "apphost": {
+    "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+    "Haven.dll": "8770432b308a6bd5af085f49000aa5ab54032c1c3d95f1141e53361ec0ec896a",
+    "Haven.runtimeconfig.json": "d9a5ea6e4e95460c1d9cb2db7cb642bbdb028204058c88b10b8f5056022ff44e"
+  },
+  "normal_close": "Normal WM_DELETE_WINDOW requested, exact scoped main window disappeared, owning apphost exit code 0",
+  "captures": [
+    {
+      "file": "03-new-tab-draft-wide.png",
+      "width": 1180,
+      "height": 760,
+      "sha256": "6a952da2eb53c698b485a512471e356be1cdd58bd21d0b97b640fbf6267f747d"
+    },
+    {
+      "file": "04-dashboard-from-new-tab.png",
+      "width": 1180,
+      "height": 760,
+      "sha256": "a677774fcdbee3c822b75f37ff00004390bc5866553f26e47730678612f154f4"
+    },
+    {
+      "file": "07-dashboard-back-early.png",
+      "width": 1180,
+      "height": 760,
+      "sha256": "eac6cc2b723801497757513c5899ece9fbafd149b8e9d4859ed80ee4e40ad888"
+    },
+    {
+      "file": "09-dashboard-narrow.png",
+      "width": 720,
+      "height": 520,
+      "sha256": "065e75f051022ad36205af2757227d9fff4f701684221f2c081ffb02c5f5d96f"
+    },
+    {
+      "file": "10-new-tab-draft-narrow.png",
+      "width": 720,
+      "height": 520,
+      "sha256": "72be0b541762dd82bc31f165f87dea1eb4d2ac688376a1968790cc66bfd8c355"
+    },
+    {
+      "file": "12a-reopen-after-wait.png",
+      "width": 720,
+      "height": 520,
+      "sha256": "be98fbe904edaf8cc88f7af44bc2bab299211b929c8c321ad0dc87023b0ea404"
+    },
+    {
+      "file": "12b-reopen-from-focused-tab.png",
+      "width": 720,
+      "height": 520,
+      "sha256": "0a413217225f0a57dcb5a0bcf791792ee66609815a141591e29aa14b6b750158"
+    },
+    {
+      "file": "15-spaces-chat-options-wide.png",
+      "width": 1180,
+      "height": 760,
+      "sha256": "1e7f8dc0c3812c29277d769ad3b65663ee3b6aa486bf3a627dfd7bde473d60d5"
+    },
+    {
+      "file": "18-spaces-chat-options-narrow.png",
+      "width": 720,
+      "height": 520,
+      "sha256": "1fc95cc8649b8b870851645d56f50b6ad99334b6e98729578ced49256d13c244"
+    },
+    {
+      "file": "19-spaces-chat-escape-narrow.png",
+      "width": 720,
+      "height": 520,
+      "sha256": "8a6b8a9c2d576132b54ca9e411f726c796cd980921eb9cd0c3999abc627f5bd7"
+    }
+  ]
+}

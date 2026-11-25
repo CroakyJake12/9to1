@@ -6,7 +6,9 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.LogicalTree;
+using Avalonia.Platform;
 using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
 
@@ -30,6 +32,12 @@ public interface IBrowseNativeEngineTab : IBrowseEngineTab
 
 public static class BrowseNativeSurface
 {
+    private static readonly Lazy<Bitmap> HostMark = new(() =>
+    {
+        using var source = AssetLoader.Open(new Uri("avares://HavenOS.Apps.Browse.NativeUI/Assets/9to1-logo.png"));
+        return new Bitmap(source);
+    });
+
     public static CuiNativeScene CreateScene(BrowseNativeWorkspace workspace, ICuiSceneReadiness originalReadiness, CuiAppearance? appearance = null)
         => CreateScene(workspace, originalReadiness, appearance, themePreference: null);
 
@@ -37,8 +45,9 @@ public static class BrowseNativeSurface
         CuiAppearance? appearance, CuiThemePreferenceContext? themePreference)
     {
         ArgumentNullException.ThrowIfNull(workspace); ArgumentNullException.ThrowIfNull(originalReadiness);
-        var registry = new CuiControlRegistry();
+        var registry = new CuiControlRegistry { ScaleAuthoredInterfaceMetrics = workspace.IsEmbeddedHost };
         registry.RegisterObjectRenderer("browse.engine", _ => new BrowseEngineViewport(workspace));
+        registry.BindAuthoredControl("HavenHostMark", _ => new Image { Source = HostMark.Value });
         return new("browse", "Browse", "Browse", BrowseNativeWorkspace.LoadDocument(), workspace, workspace, originalReadiness)
             { ControlRegistry = registry, Appearance = appearance, ThemePreference = themePreference, IsPublicationCurrent = () => workspace.IsOriginalPublicationCurrent };
     }
@@ -149,13 +158,8 @@ public sealed class BrowseNativeWindow : Window
     }
     private async void OnKeyDown(object? sender, KeyEventArgs args)
     {
-        if (_originalClose is not null || _initialization is not { IsCompletedSuccessfully: true } ||
+        if (args.Handled || _originalClose is not null || _initialization is not { IsCompletedSuccessfully: true } ||
             _initialization.Result.State != CuiSceneAvailabilityState.Ready) return;
-        if (args.KeyModifiers.HasFlag(KeyModifiers.Control) && args.Key == Key.L)
-        {
-            var address = this.GetLogicalDescendants().OfType<TextBox>().SingleOrDefault(control => control.Name == "BrowseAddressBox");
-            address?.Focus(); address?.SelectAll(); args.Handled = true; return;
-        }
         if (args.Key == Key.Escape && _workspace.TryGetValue("ProfileMenuOpen", out var open) && open is true)
         {
             args.Handled = true;
@@ -179,7 +183,7 @@ public sealed class BrowseNativeWindow : Window
                 _workspace.State.SplitOrientation == Haven.Core.SplitOrientation.Horizontal => "9to1.Browse.NarrowPrimaryPane",
             Key.Left when args.KeyModifiers.HasFlag(KeyModifiers.Alt) => "9to1.Browse.Back",
             Key.Right when args.KeyModifiers.HasFlag(KeyModifiers.Alt) => "9to1.Browse.Forward",
-            Key.Enter when this.GetLogicalDescendants().OfType<TextBox>().SingleOrDefault(control => control.Name == "BrowseAddressBox")?.IsFocused == true => "9to1.Browse.Navigate",
+            Key.Enter when args.Source is TextBox { Name: "BrowseAddressBox", IsFocused: true } => "9to1.Browse.Navigate",
             _ => null
         };
         if (command is null || _workspace.IsActionAvailable(command) != true) return;
@@ -193,6 +197,7 @@ internal sealed class BrowseEngineViewport : ContentControl
 {
     private readonly BrowseNativeWorkspace _workspace;
     private CuiSceneHost? _findKeyScope;
+    private CuiContainerControl? _tabStrip;
     private Window? _menuWindow;
     private readonly Grid _root = new();
     private readonly Grid _surfaces = new();
@@ -227,6 +232,21 @@ internal sealed class BrowseEngineViewport : ContentControl
         // The same CUI scene owns standalone Browse and embedded Haven. Scope the
         // keyboard adapter here, rather than only to the standalone window.
         _findKeyScope = this.GetVisualAncestors().OfType<CuiSceneHost>().FirstOrDefault();
+        if (_findKeyScope is not null)
+        {
+            _findKeyScope.SizeChanged += OnSceneSizeChanged;
+            UpdateHostChromeWidth(_findKeyScope.Bounds.Width);
+            if (_workspace.IsEmbeddedHost)
+            {
+                _findKeyScope.ResourcesChanged += OnSceneResourcesChanged;
+                RefreshHostTabColours();
+            }
+            _workspace.CaptureTabTransitionFocus = CaptureTabTransitionFocus;
+            _findKeyScope.AddHandler(KeyDownEvent, OnTabStripKeyDown, RoutingStrategies.Tunnel);
+            _findKeyScope.AddHandler(KeyDownEvent, OnAddressShortcut, RoutingStrategies.Bubble);
+            _findKeyScope.AddHandler(GotFocusEvent, OnTabStripGotFocus, RoutingStrategies.Bubble, handledEventsToo: true);
+            UpdateTabStops(CurrentSceneFocus());
+        }
         _findKeyScope?.AddHandler(KeyDownEvent, OnFindKeyDown, RoutingStrategies.Tunnel);
         _findKeyScope?.AddHandler(InputElement.PointerPressedEvent, OnTransientMenuPointerPressed,
             RoutingStrategies.Tunnel, handledEventsToo: true);
@@ -239,16 +259,169 @@ internal sealed class BrowseEngineViewport : ContentControl
     private void OnDetached(object? sender, VisualTreeAttachmentEventArgs args)
     {
         _workspace.PropertyChanged -= OnChanged;
+        _workspace.SetHostChromeWidth(0);
+        foreach (var source in _originalAppViews.Keys.OfType<IBrowseNativePageCommandSource>()) source.PageCommandSlot.SetHosted(false);
+        if (_workspace.CaptureTabTransitionFocus == CaptureTabTransitionFocus)
+            _workspace.CaptureTabTransitionFocus = null;
         _workspace.DismissTransientMenus();
         if (_menuWindow is not null) _menuWindow.PropertyChanged -= OnMenuWindowChanged;
         _menuWindow = null;
+        if (_findKeyScope is not null)
+        {
+            _findKeyScope.SizeChanged -= OnSceneSizeChanged;
+            _findKeyScope.ResourcesChanged -= OnSceneResourcesChanged;
+        }
         _findKeyScope?.RemoveHandler(InputElement.PointerPressedEvent, OnTransientMenuPointerPressed);
         _findKeyScope?.RemoveHandler(KeyDownEvent, OnFindKeyDown);
+        _findKeyScope?.RemoveHandler(KeyDownEvent, OnTabStripKeyDown);
+        _findKeyScope?.RemoveHandler(KeyDownEvent, OnAddressShortcut);
+        _findKeyScope?.RemoveHandler(GotFocusEvent, OnTabStripGotFocus);
         _findKeyScope?.RemoveHandler(InputElement.PointerPressedEvent, OnTabPointerPressed);
         _findKeyScope?.RemoveHandler(InputElement.PointerMovedEvent, OnTabPointerMoved);
         _findKeyScope?.RemoveHandler(InputElement.PointerReleasedEvent, OnTabPointerReleased);
         ClearTabDrag();
+        _tabStrip = null;
         _findKeyScope = null;
+    }
+    private void OnSceneSizeChanged(object? sender, SizeChangedEventArgs args) => UpdateHostChromeWidth(args.NewSize.Width);
+
+    private void OnSceneResourcesChanged(object? sender, ResourcesChangedEventArgs args)
+    {
+        if (_findKeyScope is { } scope) UpdateHostChromeWidth(scope.Bounds.Width);
+        RefreshHostTabColours();
+    }
+
+    private void UpdateHostChromeWidth(double width)
+    {
+        var scale = _workspace.IsEmbeddedHost && _findKeyScope is { } scope ? CuiInterfaceScale.For(scope) : 1;
+        _workspace.SetHostChromeWidth(CuiInterfaceScale.LogicalWidth(width, scale));
+    }
+
+    private async void OnAddressShortcut(object? sender, KeyEventArgs args)
+    {
+        var focusAddress = args.Key == Key.L && args.KeyModifiers == KeyModifiers.Control;
+        var discardDraft = args.Key == Key.Escape && args.KeyModifiers == KeyModifiers.None &&
+            args.Source is TextBox { Name: "BrowseAddressBox", IsFocused: true };
+        if (args.Handled || !(focusAddress || discardDraft) || !_workspace.IsReady ||
+            _workspace.HasOpenTransientMenu || _findKeyScope is not { } scope ||
+            args.Source is not Control source || !scope.IsVisualAncestorOf(source) ||
+            TopLevel.GetTopLevel(scope)?.FocusManager?.GetFocusedElement() != source) return;
+        // Bubble after child handlers. A popup can route events through its logical owner while
+        // keeping the real focus outside this scene or in an independent focus scope.
+        if (source.GetSelfAndVisualAncestors().TakeWhile(ancestor => !ReferenceEquals(ancestor, scope))
+            .Any(ancestor => ancestor is IFocusScope or OverlayPopupHost)) return;
+        var toolbar = scope.GetVisualDescendants().OfType<CuiContainerControl>()
+            .FirstOrDefault(control => control.Name == "BrowseNavigationBar");
+        var address = toolbar?.GetVisualDescendants().OfType<TextBox>()
+            .FirstOrDefault(control => control.Name == "BrowseAddressBox");
+        if (address is not { IsEffectivelyVisible: true, IsEffectivelyEnabled: true, IsReadOnly: false }) return;
+        if (discardDraft)
+        {
+            const string discard = "9to1.Browse.DiscardAddress";
+            if (!ReferenceEquals(source, address) || _workspace.IsActionAvailable(discard) != true) return;
+            args.Handled = true;
+            try { await _workspace.DispatchAsync(discard, null); }
+            catch (Exception failure) { System.Diagnostics.Trace.TraceError("Browse could not discard the address draft: {0}", failure); }
+            return;
+        }
+        if (!address.IsFocused && !address.Focus(NavigationMethod.Tab)) return;
+        // CUI reveals its editable value on focus. Select the real route or the retained draft.
+        address.SelectAll();
+        args.Handled = true;
+    }
+
+    private void RefreshHostTabColours()
+    {
+        if (_findKeyScope is not { } scope ||
+            !scope.TryFindResource("CuiPanelBrush", out var chrome) || chrome is not ISolidColorBrush backing ||
+            !scope.TryFindResource("CuiTextBrush", out var text) || text is not ISolidColorBrush ink ||
+            !scope.TryFindResource("CuiTextSoftBrush", out var secondary) || secondary is not ISolidColorBrush softInk) return;
+        var highContrast = scope.TryFindResource("CuiHighContrast", out var contrast) && contrast is true;
+        _workspace.SetHostTabColours(backing.Color, ink.Color, softInk.Color, highContrast);
+    }
+
+    private Action<Guid?>? CaptureTabTransitionFocus(Guid? closingTab)
+    {
+        if (_findKeyScope is not { } scope || TopLevel.GetTopLevel(scope) is not { } topLevel ||
+            topLevel.FocusManager is not { } focusManager) return null;
+        var originalFocus = focusManager.GetFocusedElement();
+        if (originalFocus is Control focused && TopLevel.GetTopLevel(focused) != topLevel) return null;
+        if (closingTab is { } closedId && closedId != _workspace.State.SelectedTabId)
+        {
+            // CUI retains a surviving focused control through its busy gate. Redirect focus
+            // after a background close only when the removed row itself was focused.
+            var row = (originalFocus as Control)?.GetVisualAncestors().OfType<CuiContainerControl>()
+                .FirstOrDefault(control => control.Name == "BrowseTabRow");
+            var title = row?.AuthoredChildren.OfType<Button>().FirstOrDefault(button => button.Name == "BrowseTabButton");
+            if (title is null || !TryGetTabRow(title, out var current) || current?.Key != closedId.ToString("D")) return null;
+        }
+        var focusChanged = false;
+        var window = topLevel as Window;
+        if (window is not null) window.Deactivated += OnDeactivated;
+        var observation = InputElement.GotFocusEvent.AddClassHandler<InputElement>((_, args) =>
+        {
+            if (!ReferenceEquals(args.Source, originalFocus)) focusChanged = true;
+        }, handledEventsToo: true);
+        return target =>
+        {
+            observation.Dispose();
+            if (window is not null) window.Deactivated -= OnDeactivated;
+            var focus = focusManager.GetFocusedElement();
+            if (target is not { } tabId || focusChanged || !ReferenceEquals(_findKeyScope, scope) || !scope.IsAttachedToVisualTree() ||
+                focus is not null && !ReferenceEquals(focus, originalFocus)) return;
+            var key = tabId.ToString("D");
+            var selected = scope.GetVisualDescendants().OfType<Button>().FirstOrDefault(button =>
+                button.Name == "BrowseTabButton" && TryGetTabRow(button, out var row) && row?.Key == key);
+            selected?.Focus(NavigationMethod.Tab);
+        };
+
+        void OnDeactivated(object? sender, EventArgs args) => focusChanged = true;
+    }
+    private Control? CurrentSceneFocus() => TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() as Control;
+    private static CuiContainerControl? TabRowContainer(Control? control) => control?.GetVisualAncestors()
+        .OfType<CuiContainerControl>().FirstOrDefault(parent => parent.Name == "BrowseTabRow");
+    private IEnumerable<Button> TabTitles()
+    {
+        _tabStrip ??= _findKeyScope?.GetVisualDescendants().OfType<CuiContainerControl>()
+            .FirstOrDefault(control => control.Name == "BrowseTabStrip");
+        return _tabStrip?.GetVisualDescendants().OfType<Button>().Where(button => button.Name == "BrowseTabButton")
+            ?? Enumerable.Empty<Button>();
+    }
+
+    private void OnTabStripGotFocus(object? sender, FocusChangedEventArgs args) => UpdateTabStops(args.Source as Control);
+
+    private void UpdateTabStops(Control? focus)
+    {
+        var focusedRow = TabRowContainer(focus);
+        var selectedKey = _workspace.State.SelectedTabId.ToString("D");
+        foreach (var title in TabTitles())
+        {
+            var row = TabRowContainer(title)!;
+            var tabStop = focusedRow is not null ? ReferenceEquals(row, focusedRow) :
+                TabStableKey(title) == selectedKey;
+            title.IsTabStop = tabStop;
+            foreach (var close in row.AuthoredChildren.OfType<Button>().Where(button => button.Name == "BrowseCloseTabRowButton"))
+                close.IsTabStop = tabStop;
+        }
+    }
+
+    private void OnTabStripKeyDown(object? sender, KeyEventArgs args)
+    {
+        if (!_workspace.IsReady || args.Handled || args.KeyModifiers != KeyModifiers.None ||
+            args.Key is not (Key.Left or Key.Right or Key.Home or Key.End) ||
+            CurrentSceneFocus() is not Button { Name: "BrowseTabButton" } source) return;
+        var titles = TabTitles().Where(button => button.IsEffectivelyVisible && button.IsEffectivelyEnabled).ToArray();
+        var current = Array.IndexOf(titles, source);
+        if (current < 0) return;
+        var destination = args.Key switch
+        {
+            Key.Left => (current + titles.Length - 1) % titles.Length,
+            Key.Right => (current + 1) % titles.Length,
+            Key.Home => 0,
+            _ => titles.Length - 1
+        };
+        args.Handled = titles[destination].Focus(NavigationMethod.Directional);
+        if (args.Handled) TabRowContainer(titles[destination])?.BringIntoView();
     }
     private void OnTransientMenuPointerPressed(object? sender, PointerPressedEventArgs args)
     {
@@ -330,17 +503,20 @@ internal sealed class BrowseEngineViewport : ContentControl
     private bool TryGetTabRow(Button button, out BrowseNativeWorkspace.TabRow? row)
     {
         row = null;
+        return TabStableKey(button) is { } key && _workspace.TryGetCurrentTabRow(key, out row);
+    }
+    private static string? TabStableKey(Button button)
+    {
         var stableId = CuiRuntimeIdentity.GetStableId(button);
-        if (stableId is null) return false;
+        if (stableId is null) return null;
         var marker = stableId.LastIndexOf("|key:", StringComparison.Ordinal);
-        if (marker < 0) return false;
+        if (marker < 0) return null;
         var valueStart = marker + 5;
         var lengthEnd = stableId.IndexOf(':', valueStart);
         if (lengthEnd < 0 || !int.TryParse(stableId.AsSpan(valueStart, lengthEnd - valueStart), out var length) || length < 1)
-            return false;
+            return null;
         var keyStart = lengthEnd + 1;
-        if (keyStart + length > stableId.Length) return false;
-        return _workspace.TryGetCurrentTabRow(stableId.Substring(keyStart, length), out row);
+        return length <= stableId.Length - keyStart ? stableId.Substring(keyStart, length) : null;
     }
     private void OnTabPointerCaptureLost(object? sender, PointerCaptureLostEventArgs args)
     {
@@ -479,6 +655,7 @@ internal sealed class BrowseEngineViewport : ContentControl
     {
         if (_tabDragSource is not null && !IsTabDragContextCurrent()) ClearTabDrag();
         RefreshOriginalViews();
+        UpdateTabStops(CurrentSceneFocus());
     }
     private bool IsTabDragContextCurrent()
     {
@@ -524,6 +701,7 @@ internal sealed class BrowseEngineViewport : ContentControl
                 currentApps.Add(app);
                 if (app.OriginalInitialization is { IsCompletedSuccessfully: true } && app.IsPublicationCurrent)
                 {
+                    if (app is IBrowseNativePageCommandSource provider) provider.PageCommandSlot.SetHosted(this.IsAttachedToVisualTree(), tab.Id == state.SelectedTabId);
                     var view = app.OriginalNativeView;
                     if (!_originalAppViews.TryGetValue(app, out var mountedApp))
                     {
@@ -567,6 +745,7 @@ internal sealed class BrowseEngineViewport : ContentControl
         {
             if (original.OriginalClose is not { IsCompletedSuccessfully: true } || !original.CanRetireOriginalView)
                 throw new InvalidOperationException("The original app still owns its native view.");
+            if (original is IBrowseNativePageCommandSource provider) provider.PageCommandSlot.SetHosted(false);
             _surfaces.Children.Remove(_originalAppViews[original]); _originalAppViews.Remove(original);
         }
         // Inactive views remain mounted: selecting a tab does not destroy its

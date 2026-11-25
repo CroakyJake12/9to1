@@ -1,0 +1,160 @@
+{
+  "source": "ef50cd393d4ad00f65ec703da2c8ea3e2eb2848b",
+  "before_source": "c0d98d73711620f2cc18ad253d40e3813632e339",
+  "atlas_sha256": "612a9aa9fdc01b1c8a71e82532b191614992e1a6b78602fe5100aee9fa8bf4d2",
+  "route": "?view=screen&screen=appearance&theme=professional&mode=dark",
+  "native": "Linux X11 / Avalonia, 1:1 DIP to pixel",
+  "actual_assemblies": {
+    "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+    "Haven.dll": "38e5dec4c7c8f43c869175a006e8f7fa270231d9e7f6496a2ef6b40d50649b9c",
+    "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+    "Home.cui": "ee6eec9d989f29b9cc67522730c794b2c2662cd6783a004371a0fbbfe5e94b79",
+    "HavenOS.Apps.Browse.NativeUI.dll": "e3638a7a063ac8b4a6d4c50f34136718287b100bf45009e7aaa7e4b681cf707e",
+    "HavenOS.Home.dll": "4cece814ec7efcc4759e8728999fa0139ce9dae2f9463e0a250d3f5d5e10e46a",
+    "CakeOS.Cui.Themes.dll": "7a4d19f347d07f65b5ed331a670c995f264b1816387cad531a043b015ec1d269"
+  },
+  "observed_preferences": {
+    "default-state": {
+      "legacy_theme": "Professional",
+      "legacy_mode": 3,
+      "legacy_override_active": false,
+      "canonical_theme": null,
+      "canonical_mode": null,
+      "display": null,
+      "accent": null
+    },
+    "explicit-dark-state": {
+      "legacy_theme": "Professional",
+      "legacy_mode": 2,
+      "legacy_override_active": false,
+      "canonical_theme": "Professional",
+      "canonical_mode": "Dark",
+      "display": {
+        "mode": 1,
+        "brightness": 50,
+        "colourContrast": 50
+      },
+      "accent": {
+        "mode": 0,
+        "allAppsColour": null,
+        "individualApps": {}
+      }
+    },
+    "accent-iris-off-state": {
+      "legacy_theme": "Professional",
+      "legacy_mode": 2,
+      "legacy_override_active": false,
+      "canonical_theme": "Professional",
+      "canonical_mode": "Dark",
+      "display": {
+        "mode": 1,
+        "brightness": 50,
+        "colourContrast": 50
+      },
+      "accent": {
+        "mode": 0,
+        "allAppsColour": "#7145FF",
+        "individualApps": {}
+      }
+    },
+    "accent-iris-on-state": {
+      "legacy_theme": "Professional",
+      "legacy_mode": 2,
+      "legacy_override_active": false,
+      "canonical_theme": "Professional",
+      "canonical_mode": "Dark",
+      "display": {
+        "mode": 1,
+        "brightness": 50,
+        "colourContrast": 50
+      },
+      "accent": {
+        "mode": 1,
+        "allAppsColour": "#7145FF",
+        "individualApps": {}
+      }
+    },
+    "accent-iris-restored-off-state": {
+      "legacy_theme": "Professional",
+      "legacy_mode": 2,
+      "legacy_override_active": false,
+      "canonical_theme": "Professional",
+      "canonical_mode": "Dark",
+      "display": {
+        "mode": 1,
+        "brightness": 50,
+        "colourContrast": 50
+      },
+      "accent": {
+        "mode": 0,
+        "allAppsColour": "#7145FF",
+        "individualApps": {}
+      }
+    }
+  },
+  "captures": {
+    "accent-iris-off.png": {
+      "sha256": "5f00759b03a2c440d41844800ea2a4d1f46daf05480e317977da0874132f1481",
+      "pixels": [
+        1440,
+        900
+      ]
+    },
+    "accent-iris-on.png": {
+      "sha256": "b633c31b95e360f8e6ab9dfd0a1df2e11b54d73a3d694d967bfd3ba687df2e10",
+      "pixels": [
+        1440,
+        900
+      ]
+    },
+    "appearance-before.png": {
+      "sha256": "eb2c6fe6e052bd7899d8ae2e56775f02c79df0e88c24c17bf7f5b26c390ee66a",
+      "pixels": [
+        2934,
+        970
+      ]
+    },
+    "appearance-dark-narrow.png": {
+      "sha256": "286429d06aea9eb5475c6b0dc9d153a215847a9149410b5c60fac3396fcf3feb",
+      "pixels": [
+        1494,
+        590
+      ]
+    },
+    "appearance-dark-wide.png": {
+      "sha256": "6ce1ea9a0f0a16c689b7b11c22015e2ebdcc385d8cecb130076c60053f95928b",
+      "pixels": [
+        2934,
+        970
+      ]
+    },
+    "appearance-first-run.png": {
+      "sha256": "d76c29970347cbe4b4b6e176a483541b96c6098d72a3f2f138110a68f4044e56",
+      "pixels": [
+        2934,
+        970
+      ]
+    },
+    "settings-address.png": {
+      "sha256": "38bba0c38b0732b8435493283dff847cb5b94d601c3c896ff2725561bb8fdab1",
+      "pixels": [
+        1440,
+        900
+      ]
+    },
+    "settings-open-bookmarks.png": {
+      "sha256": "cfe4e29624f1eeb22150c84c6322bdc2d2feb24ec3dd28b39935f664c503ed9b",
+      "pixels": [
+        1440,
+        900
+      ]
+    },
+    "settings-search.png": {
+      "sha256": "e3e34f2e6a023380c0680b009b01c2613682ca480309d506b95c3d5ac69882b1",
+      "pixels": [
+        1440,
+        900
+      ]
+    }
+  }
+}

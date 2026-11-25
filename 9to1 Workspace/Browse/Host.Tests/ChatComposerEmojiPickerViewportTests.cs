@@ -765,6 +765,20 @@ public sealed class ChatComposerEmojiPickerViewportTests
             static Button Choice(Control panel, string label) =>
                 panel.GetVisualDescendants().OfType<Button>().Single(control => Equals(control.Content, label));
             var panel = Open();
+            var typography = new (string Label, FontWeight Weight)[]
+            {
+                ("Options", (FontWeight)750),
+                ("Response style", (FontWeight)750),
+                ("Allowed actions", (FontWeight)750),
+                ("This conversation", (FontWeight)600),
+                ("Applies to future responses in this chat.", (FontWeight)600),
+                ("Save to change which actions this conversation can request.", (FontWeight)600)
+            };
+            foreach (var (label, weight) in typography)
+            {
+                var text = panel.GetVisualDescendants().OfType<TextBlock>().Single(control => control.Text == label);
+                Assert.Equal(weight, text.FontWeight);
+            }
             var panelTop = Assert.IsAssignableFrom<TopLevel>(TopLevel.GetTopLevel(panel));
             var close = panel.GetVisualDescendants().OfType<Button>().Single(control =>
                 AutomationProperties.GetAutomationId(control) == "options-close");

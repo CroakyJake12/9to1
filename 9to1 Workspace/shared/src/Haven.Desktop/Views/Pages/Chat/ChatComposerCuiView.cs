@@ -936,14 +936,8 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
             return;
         }
 
-        void FitPanel()
-        {
-            panel.MaxWidth = Math.Max(1, owner.ClientSize.Width - 24);
-            panel.MaxHeight = Math.Max(1, owner.ClientSize.Height - 32);
-        }
-        void OnOwnerSizeChanged(object? sender, SizeChangedEventArgs e) => FitPanel();
-        FitPanel();
-        KeyboardNavigation.SetTabNavigation(panel, KeyboardNavigationMode.Cycle);
+        var conversation = this.GetVisualAncestors().OfType<Control>()
+            .FirstOrDefault(control => control is NewChatPage or ChatSpacePage);
         var popup = new Popup
         {
             PlacementTarget = anchor,
@@ -953,6 +947,31 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
             OverlayDismissEventPassThrough = false,
             WindowManagerAddShadowHint = false
         };
+        void FitPanel()
+        {
+            panel.MaxWidth = Math.Max(1, owner.ClientSize.Width - 24);
+            var height = owner.ClientSize.Height - 32;
+            if (conversation?.TranslatePoint(default, owner) is { } top && anchor.TranslatePoint(default, owner) is { } origin)
+            {
+                // Leave the shared tab and address chrome clear. The authored Options panel
+                // scrolls within the space on either side of its real composer button.
+                const double gutter = 12;
+                var above = origin.Y - Math.Max(0, top.Y) - gutter;
+                var below = Math.Min(owner.ClientSize.Height, top.Y + conversation.Bounds.Height)
+                    - origin.Y - anchor.Bounds.Height - gutter;
+                var opensAbove = above >= below;
+                popup.Placement = opensAbove ? PlacementMode.TopEdgeAlignedLeft : PlacementMode.BottomEdgeAlignedLeft;
+                popup.VerticalOffset = opensAbove ? -6 : 6;
+                height = Math.Min(height, Math.Max(above, below));
+            }
+            panel.MaxHeight = Math.Max(1, height);
+        }
+        void OnOwnerSizeChanged(object? sender, SizeChangedEventArgs e) => Dispatcher.UIThread.Post(() =>
+        {
+            if (ReferenceEquals(_optionsPopup, popup)) FitPanel();
+        }, DispatcherPriority.Loaded);
+        FitPanel();
+        KeyboardNavigation.SetTabNavigation(panel, KeyboardNavigationMode.Cycle);
         CuiPopupPresentation.RequestTransparency(popup);
         _optionsSlot.Children.Remove(panel);
         _optionsPopup = popup;

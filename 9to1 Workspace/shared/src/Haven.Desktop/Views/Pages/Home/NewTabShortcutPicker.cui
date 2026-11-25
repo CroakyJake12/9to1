@@ -1,0 +1,56 @@
+<Cui id="home.new-tab.shortcut-picker" version="1">
+  <Actions>
+    <Action name="PinShortcutCandidate" command="home.newtab-shortcut-pick" parameter="{Binding candidate.Target}" />
+  </Actions>
+  <Theme Name="user_preference">
+    <Page AccessibleName="Add shortcuts">
+      <Container id="home-newtab-shortcut-picker" Type="Grid" RowSizes="Auto Auto 1fr Auto Auto"
+                 Padding="{Binding PickerPadding}" CellGap="16" CornerRadius="22" Background="{Resource CuiPanelBrush}"
+                 Role="dialog" AccessibleName="Add shortcuts">
+        <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="10">
+          <Text Text="Add shortcuts" FontSize="25" FontWeight="800" VerticalAlignment="Center" TextWrapping="Wrap" />
+          <Button id="home-newtab-shortcut-picker-close" Column="1" Action="home.newtab-shortcut-picker-close"
+                  Content="×" AccessibleName="Close shortcuts" ToolTip="Close shortcuts" Chromeless="True"
+                  IsEnabled="{Binding CanClose}" Width="36" Height="36" Padding="0" FontSize="20" />
+        </Container>
+        <Container Type="Grid" Row="1" ColumnSizes="Auto 1fr" CellGap="8" Padding="12 0 4 0"
+                   Background="{Resource CuiPanel2Brush}" CornerRadius="14">
+          <Image Source="icon:search" Width="18" Height="18" VerticalAlignment="Center" IsHitTestVisible="False" />
+          <Input id="home-newtab-shortcut-picker-search" Column="1" Type="Text" AccessibleName="Find an app"
+                 PlaceholderText="Find an app" Background="Transparent" />
+        </Container>
+        <Container id="home-newtab-shortcut-picker-scroll" Row="2" Type="Vertical Stack"
+                   VerticalScrolling="True" HorizontalScrolling="False">
+          <Container id="home-newtab-shortcut-picker-grid" Type="Grid" CellGap="10"
+                     ColumnSizes="{Binding PickerColumns}" RowSizes="{Binding PickerRows}">
+            <Repeat Source="{Binding PickerCandidates}" As="candidate" Key="{Binding candidate.Target}"
+                    ItemRow="{Binding candidate.Row}" ItemColumn="{Binding candidate.Column}">
+              <Button id="home-newtab-shortcut-picker-candidate" Action="PinShortcutCandidate"
+                      AccessibleName="{Binding candidate.AccessibleName}" IsEnabled="{Binding candidate.CanAdd}"
+                      MinHeight="72" Padding="12" HorizontalContentAlignment="Stretch"
+                      CornerRadius="13" BorderWidth="0" Background="{Resource CuiBackgroundBrush}">
+                <Container Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="9">
+                  <Image Source="{Binding candidate.Icon}" Width="27" Height="27" VerticalAlignment="Center" />
+                  <Text Column="1" Text="{Binding candidate.Label}" FontWeight="750" TextWrapping="Wrap" VerticalAlignment="Center" />
+                  <Text Column="2" Text="{Binding candidate.Mark}" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+              </Button>
+            </Repeat>
+          </Container>
+          <Text Text="No available apps match that search." IsVisible="{Binding PickerEmpty}" TextWrapping="Wrap"
+                Foreground="{Resource CuiTextSoftBrush}" />
+        </Container>
+        <Container Type="Vertical Stack" Row="3" CellGap="8" IsVisible="{Binding HasStatus}">
+          <Text id="home-newtab-shortcut-picker-status" Text="{Binding PickerStatus}" TextWrapping="Wrap"
+                Foreground="{Resource CuiTextSoftBrush}" />
+          <Container Type="Wrap" CellGap="8" IsVisible="{Binding CanRetry}">
+            <Button id="home-newtab-shortcut-picker-retry" Action="home.newtab-shortcut-picker-retry" Content="Retry" />
+            <Button id="home-newtab-shortcut-picker-revert" Action="home.newtab-shortcut-picker-revert" Content="Revert" />
+          </Container>
+        </Container>
+        <Button id="home-newtab-shortcut-picker-custom" Row="4" Action="home.newtab-shortcut-picker-custom"
+                Content="Custom address" IsEnabled="{Binding CanAddCustom}" HorizontalAlignment="Left" Chromeless="True" />
+      </Container>
+    </Page>
+  </Theme>
+</Cui>

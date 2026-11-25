@@ -27,3 +27,13 @@ Preserve the existing cross-script `WEB_SESSIONS` binding and the single SQLite 
 ## Usage safeguards
 
 The default app caps are 50,000 request units per rolling minute, 10,000,000 per rolling day, 100 GB of upload reservations per rolling day, and 200 GB of download reservations per rolling day. The upload cap also bounds new individual files. `DRIVE_APP_LIMITS` can lower these caps. The ledger meters Files traffic through this Worker, including retries and conservative response-size reservations. Other clients and direct Drive use lie outside its measurement. Read back Google's actual project quotas before relying on the caps for a new project. [Google Drive limits](https://developers.google.com/workspace/drive/api/guides/limits)
+
+## New-folder conflict recovery
+
+Folder creation checks the requested name in the actual destination with the bounded, metered provider preflight before allocating an ID. If this Files journal has a recent known commit for the exact destination/name, the worker checks that provider identity directly, even if search is stale. While an earlier same-name Files operation is unconfirmed, a new operation is not dispatched; retry the original submitted operation to reconcile its receipt. An occupied name returns a typed pre-operation conflict. Changing the requested name starts a new intent; it never overwrites the existing folder.
+
+This protects same-name folder creation through this Files worker. It does not create provider-wide name uniqueness against concurrent actions from other Google Drive clients, add copy/replace support, or claim that a timeout can be treated as a rejected write.
+
+Restoring from Trash also checks the original live folder for the exact name before asking the provider to untrash. A conflict leaves both originals untouched and the trashed item recoverable; no replacement is implied.
+
+Metadata edits also use one durable admission per submitted operation ID. Another request for that same intent cannot dispatch a duplicate conditional provider write while the first is pending. After an uncertain reply, retry the original operation ID to reconcile the receipt. Reusing an ID for different input is still refused.
