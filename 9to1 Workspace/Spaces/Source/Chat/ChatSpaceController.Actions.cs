@@ -127,8 +127,23 @@ public sealed partial class ChatSpaceController
                 IsEditing = true, EditingMessageId = messageId }, Status = new("Edit the message. Updating creates a branch and preserves the original history.", ChatSpaceStatusTone.Neutral, true) };
         }, view);
     }
-    public void CancelEdit() => Change(state =>
-    { _composerVersion++; return state with { Composer = state.Composer with { Draft = string.Empty, IsEditing = false, EditingMessageId = null } }; });
+    public void CancelEdit()
+    {
+        ChatSpaceViewState next;
+        lock (_gate)
+        {
+            // A delayed UI action is not permission to erase an ordinary unsent draft.
+            if (!_state.Composer.IsEditing || _state.Composer.EditingMessageId is null) return;
+            _composerVersion++;
+            next = _state with
+            {
+                Revision = _state.Revision + 1,
+                Composer = _state.Composer with { Draft = string.Empty, IsEditing = false, EditingMessageId = null }
+            };
+            Volatile.Write(ref _state, next);
+        }
+        StateChanged?.Invoke(next);
+    }
     private async Task ConfirmEditAsync(Guid messageId, CancellationToken token)
     {
         var view = CurrentView();
