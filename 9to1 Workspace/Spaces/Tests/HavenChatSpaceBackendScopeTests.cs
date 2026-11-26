@@ -257,6 +257,160 @@ public sealed class HavenChatSpaceBackendScopeTests
         Assert.Contains("Models are disabled", Assert.IsType<string>(inventory.PolicyNotice), StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData("send", "disabled")]
+    [InlineData("send", "provider")]
+    [InlineData("send", "capability")]
+    [InlineData("send", "unknown")]
+    [InlineData("regenerate", "disabled")]
+    [InlineData("regenerate", "provider")]
+    [InlineData("regenerate", "capability")]
+    [InlineData("regenerate", "unknown")]
+    public async Task Stale_model_selection_cannot_execute_or_regenerate_after_space_policy_changes(string operation, string restriction)
+    {
+        var rig = await Rig.CreateAsync();
+        var row = rig.Add(rig.Space.Id);
+        var user = new ChatMessage(Guid.NewGuid(), row.Id, MessageRole.User, "question", null, null, null, DateTimeOffset.UtcNow);
+        var assistant = new ChatMessage(Guid.NewGuid(), row.Id, MessageRole.Assistant, "answer", null, null, null, DateTimeOffset.UtcNow);
+        rig.MessageRead = () => Task.FromResult<IReadOnlyList<ChatMessage>>([user, assistant]);
+        var current = (await rig.Registry.ReadExistingAsync(rig.Space.Id))!;
+        current = restriction switch
+        {
+            "disabled" => current with { CapabilityCategoryPolicy = new(Models: SpaceCapabilityCategoryState.Disabled) },
+            "provider" => current with { ModelPolicy = new SpaceModelPolicy(null, null, "openai") },
+            "capability" => current with { ModelPolicy = new SpaceModelPolicy(null, [ToolCapability.Vision.ToString()]) },
+            _ => current with { ModelPolicy = new SpaceModelPolicy(null, ["not-a-supported-capability"]) }
+        };
+        await rig.Registry.UpdateAsync(current, current.Revision);
+
+        Func<Task> action = operation == "send"
+            ? () => rig.Backend.SendAsync(new(row, "keep", rig.Model, [], BranchId: rig.Branch(row.Id).Id), null, default)
+            : () => rig.Backend.RegenerateAsync(row.Id, assistant.Id, rig.Model, default);
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(action);
+        Assert.Contains("selected model is no longer available", error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("ExecuteAsync", rig.SensitiveCalls);
+        Assert.DoesNotContain("PrepareRegenerationAsync", rig.SensitiveCalls);
+    }
+
+    [Fact]
+    public async Task Policy_revoked_during_catalogue_lookup_does_not_admit_the_selected_model()
+    {
+        var rig = await Rig.CreateAsync();
+        var row = rig.Add(rig.Space.Id);
+        rig.InventoryRead = async () =>
+        {
+            var current = (await rig.Registry.ReadExistingAsync(rig.Space.Id))!;
+            await rig.Registry.UpdateAsync(current with
+            {
+                CapabilityCategoryPolicy = new(Models: SpaceCapabilityCategoryState.Disabled)
+            }, current.Revision);
+            return new([rig.Model]);
+        };
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            rig.Backend.SendAsync(new(row, "keep", rig.Model, [], BranchId: rig.Branch(row.Id).Id), null, default));
+
+        Assert.DoesNotContain("ExecuteAsync", rig.SensitiveCalls);
+    }
+
+    [Fact]
+    public async Task Explicit_eligible_model_remains_usable_when_space_default_is_missing()
+    {
+        var rig = await Rig.CreateAsync();
+        var row = rig.Add(rig.Space.Id);
+        var current = (await rig.Registry.ReadExistingAsync(rig.Space.Id))!;
+        await rig.Registry.UpdateAsync(current with { ModelPolicy = new SpaceModelPolicy("not-installed") }, current.Revision);
+
+        await rig.Backend.SendAsync(new(row, "question", rig.Model, [], BranchId: rig.Branch(row.Id).Id), null, default);
+
+        Assert.Contains("ExecuteAsync", rig.SensitiveCalls);
+    }
+
+    [Fact]
+    public async Task Policy_revoked_while_safety_admission_waits_is_rechecked_before_send()
+    {
+        var rig = await Rig.CreateAsync();
+        var row = rig.Add(rig.Space.Id);
+        var admissions = 0;
+        rig.SafetyAdmission = async () =>
+        {
+            if (++admissions != 2) return;
+            var current = (await rig.Registry.ReadExistingAsync(rig.Space.Id))!;
+            await rig.Registry.UpdateAsync(current with
+            {
+                CapabilityCategoryPolicy = new(Models: SpaceCapabilityCategoryState.Disabled)
+            }, current.Revision);
+        };
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            rig.Backend.SendAsync(new(row, "keep", rig.Model, [], BranchId: rig.Branch(row.Id).Id), null, default));
+
+        Assert.DoesNotContain("ExecuteAsync", rig.SensitiveCalls);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task Revocation_during_regeneration_safety_is_rechecked_before_dispatch(int revokeAt)
+    {
+        var rig = await Rig.CreateAsync();
+        var row = rig.Add(rig.Space.Id);
+        var user = new ChatMessage(Guid.NewGuid(), row.Id, MessageRole.User, "question", null, null, null, DateTimeOffset.UtcNow);
+        var assistant = new ChatMessage(Guid.NewGuid(), row.Id, MessageRole.Assistant, "answer", null, null, null, DateTimeOffset.UtcNow);
+        rig.MessageRead = () => Task.FromResult<IReadOnlyList<ChatMessage>>([user, assistant]);
+        var admissions = 0;
+        rig.SafetyAdmission = async () =>
+        {
+            if (++admissions != revokeAt) return;
+            var current = (await rig.Registry.ReadExistingAsync(rig.Space.Id))!;
+            await rig.Registry.UpdateAsync(current with
+            {
+                CapabilityCategoryPolicy = new(Models: SpaceCapabilityCategoryState.Disabled)
+            }, current.Revision);
+        };
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            rig.Backend.RegenerateAsync(row.Id, assistant.Id, rig.Model, default));
+
+        Assert.DoesNotContain("ExecuteAsync", rig.SensitiveCalls);
+        Assert.Equal(revokeAt == 2, rig.SensitiveCalls.Contains("PrepareRegenerationAsync"));
+    }
+
+    [Fact]
+    public async Task Regeneration_of_a_valid_response_uses_an_eligible_model()
+    {
+        var rig = await Rig.CreateAsync();
+        var row = rig.Add(rig.Space.Id);
+        var user = new ChatMessage(Guid.NewGuid(), row.Id, MessageRole.User, "question", null, null, null, DateTimeOffset.UtcNow);
+        var assistant = new ChatMessage(Guid.NewGuid(), row.Id, MessageRole.Assistant, "answer", null, null, null, DateTimeOffset.UtcNow);
+        rig.MessageRead = () => Task.FromResult<IReadOnlyList<ChatMessage>>([user, assistant]);
+
+        await rig.Backend.RegenerateAsync(row.Id, assistant.Id, rig.Model, default);
+
+        Assert.Contains("PrepareRegenerationAsync", rig.SensitiveCalls);
+        Assert.Contains("ExecuteAsync", rig.SensitiveCalls);
+    }
+
+    [Fact]
+    public async Task Parent_model_category_revocation_applies_to_child_dispatch()
+    {
+        var rig = await Rig.CreateAsync();
+        var parent = await rig.Registry.CreateAsync("Parent");
+        var child = await rig.Registry.CreateAsync("Child", null, parent.Id);
+        var backend = rig.For(await rig.ContextAsync(child.Id));
+        var row = rig.Add(child.Id);
+        await rig.Registry.UpdateAsync(parent with
+        {
+            CapabilityCategoryPolicy = new(Models: SpaceCapabilityCategoryState.Disabled)
+        }, parent.Revision);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            backend.SendAsync(new(row, "keep", rig.Model, [], BranchId: rig.Branch(row.Id).Id), null, default));
+
+        Assert.DoesNotContain("ExecuteAsync", rig.SensitiveCalls);
+    }
+
     [Fact]
     public async Task Safety_read_checks_membership_again_after_the_service_returns()
     {
@@ -469,7 +623,12 @@ public sealed class HavenChatSpaceBackendScopeTests
             });
             var turns = StrictProxy.Create<IChatSpaceTurnExecutor>((method, _) => { SensitiveCalls.Add(method); return Task.CompletedTask; });
             return new(conversations, production,
-                StrictProxy.Create<IConversationVersioningService>((method, _) => throw new InvalidOperationException(method)),
+                StrictProxy.Create<IConversationVersioningService>((method, args) =>
+                {
+                    if (method != nameof(IConversationVersioningService.PrepareRegenerationAsync)) throw new InvalidOperationException(method);
+                    SensitiveCalls.Add(method);
+                    return Task.FromResult(Branch((Guid)args[0]!));
+                }),
                 StrictProxy.Create<IMessageAttachmentService>((method, args) =>
                 {
                     if (method == nameof(IMessageAttachmentService.DeleteAsync))
