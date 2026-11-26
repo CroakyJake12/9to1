@@ -168,60 +168,99 @@ public sealed partial class DulcheLocalClient
         {
             Content = JsonContent.Create(payload),
         };
-        using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
-        await DemandSuccess(response, token).ConfigureAwait(false);
-
-        var runId = response.Headers.TryGetValues("X-Dulche-Run-Id", out var ids) ? ids.FirstOrDefault() : null;
+        var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
+        StreamReader? reader = null;
+        string? runId = null;
+        var accepted = false;
         var completed = false;
         string? finishReason = null;
+        Exception? streamFailure = null;
         try
         {
-            if (runId is not null) runStarted?.Invoke(runId);
-            using var reader = new StreamReader(await response.Content.ReadAsStreamAsync(token).ConfigureAwait(false));
-            while (await reader.ReadLineAsync(token).ConfigureAwait(false) is { } line)
+            try
             {
-                if (!line.StartsWith("data:", StringComparison.Ordinal))
-                    continue;
-                var data = line[5..].Trim();
-                if (data == "[DONE]")
-                {
-                    if (ownsIncompleteRun && finishReason is not ("stop" or "length"))
-                        throw new InvalidDataException("Dulche finished without confirming a text response.");
-                    completed = true;
-                    yield break;
-                }
-                if (data.Length == 0)
-                    continue;
-                var chunk = JsonNode.Parse(data);
-                if (chunk?["error"] is { } error)
-                    throw new IOException(Explain(error));
-                var choice = chunk?["choices"]?.AsArray().FirstOrDefault();
-                finishReason = choice?["finish_reason"]?.GetValue<string>() ?? finishReason;
-                var content = choice?["delta"]?["content"]?.GetValue<string>();
-                if (!string.IsNullOrEmpty(content))
-                    yield return content;
+                await DemandSuccess(response, token).ConfigureAwait(false);
+                accepted = true;
+                runId = ReadIssuedRunId(response);
+                if (runId is not null) runStarted?.Invoke(runId);
+                reader = new StreamReader(await response.Content.ReadAsStreamAsync(token).ConfigureAwait(false),
+                    System.Text.Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 1024, leaveOpen: true);
             }
-            throw new EndOfStreamException("Dulche disconnected before the response completed. Open the saved run for its outcome.");
+            catch (Exception failure) { streamFailure = failure; }
+            while (streamFailure is null && !completed)
+            {
+                string? content = null;
+                try
+                {
+                    var line = await reader!.ReadLineAsync(token).ConfigureAwait(false);
+                    if (line is null)
+                        throw new EndOfStreamException("Dulche disconnected before the response completed. Open the saved run for its outcome.");
+                    if (!line.StartsWith("data:", StringComparison.Ordinal)) continue;
+                    var data = line[5..].Trim();
+                    if (data == "[DONE]")
+                    {
+                        if (ownsIncompleteRun && finishReason is not ("stop" or "length"))
+                            throw new InvalidDataException("Dulche finished without confirming a text response.");
+                        // daemon.py emits [DONE] after the job reaches a terminal state.
+                        // A finish_reason chunk alone can precede that state transition.
+                        completed = true;
+                        break;
+                    }
+                    if (data.Length == 0) continue;
+                    var chunk = JsonNode.Parse(data);
+                    if (chunk?["error"] is { } error) throw new IOException(Explain(error));
+                    var choice = chunk?["choices"]?.AsArray().FirstOrDefault();
+                    finishReason = choice?["finish_reason"]?.GetValue<string>() ?? finishReason;
+                    content = choice?["delta"]?["content"]?.GetValue<string>();
+                }
+                catch (Exception failure) { streamFailure = failure; break; }
+                if (!string.IsNullOrEmpty(content)) yield return content;
+            }
         }
         finally
         {
-            if (ownsIncompleteRun && !completed && !string.IsNullOrWhiteSpace(runId))
+            var failures = new List<Exception>();
+            if (streamFailure is not null) failures.Add(streamFailure);
+            try { reader?.Dispose(); } catch (Exception failure) { failures.Add(failure); }
+            // The response owns its stream. Close it exactly once before any stop
+            // request; its failure never prevents the independent stop attempt.
+            try { response.Dispose(); } catch (Exception failure) { failures.Add(failure); }
+            if (ownsIncompleteRun && accepted && !completed)
             {
-                // Retire the stream before stopping its exact daemon job. The caller's cancelled
-                // token must not cancel the separate, bounded stop request.
-                response.Dispose();
-                await StopIncompleteRunAsync(runId).ConfigureAwait(false);
+                try
+                {
+                    if (runId is null)
+                        throw new DulcheRunStopUnconfirmedException(null,
+                            "Dulche did not issue one unambiguous run identity; the incomplete response's remote stop is unconfirmed.");
+                    await StopIncompleteRunAsync(runId).ConfigureAwait(false);
+                }
+                catch (Exception failure) { failures.Add(failure); }
             }
+            if (failures.Count == 1)
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+            if (failures.Count > 1)
+                throw new AggregateException("The Dulche response and its owned cleanup did not settle cleanly.", failures);
         }
+    }
+
+    private static string? ReadIssuedRunId(HttpResponseMessage response)
+    {
+        if (!response.Headers.TryGetValues("X-Dulche-Run-Id", out var values)) return null;
+        var ids = values.ToArray();
+        return ids.Length == 1 && !string.IsNullOrWhiteSpace(ids[0]) ? ids[0] : null;
     }
 
     private async Task StopIncompleteRunAsync(string runId)
     {
+        // The caller's canceled generation token must not cancel this distinct,
+        // bounded stop request. Failure remains observable after the stream closes.
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(3));
         try { await StopRunAsync(runId, timeout.Token).ConfigureAwait(false); }
+        catch (DulcheRunStopUnconfirmedException) { throw; }
         catch (Exception error) when (error is HttpRequestException or IOException or OperationCanceledException or JsonException)
         {
-            System.Diagnostics.Trace.TraceWarning("Dulche could not confirm stop of the incomplete local chat run.");
+            throw new DulcheRunStopUnconfirmedException(runId,
+                "Dulche could not confirm the incomplete response's remote stop. Inspect its saved run before continuing.", error);
         }
     }
 
@@ -239,4 +278,11 @@ public sealed partial class DulcheLocalClient
         throw new HttpRequestException($"{(int)response.StatusCode} {text[..Math.Min(text.Length, 350)]}", null, response.StatusCode);
     }
     private static string Explain(JsonNode error) => error is JsonObject obj ? (obj["message"] ?? obj["detail"] ?? obj["code"])?.ToString() ?? error.ToString() : error.ToString();
+}
+
+/// <summary>An incomplete local response whose exact daemon run has no acknowledged terminal stop.</summary>
+internal sealed class DulcheRunStopUnconfirmedException(string? runId, string message, Exception? inner = null)
+    : IOException(message, inner)
+{
+    internal string? RunId { get; } = runId;
 }

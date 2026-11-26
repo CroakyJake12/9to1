@@ -51,10 +51,8 @@ public sealed partial class DulcheLocalClient
         using var response = await _http.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
         await DemandSuccess(response, token).ConfigureAwait(false);
 
-        var runId = response.Headers.TryGetValues("X-Dulche-Run-Id", out var ids)
-            ? ids.FirstOrDefault() ?? Guid.NewGuid().ToString("N")
-            : Guid.NewGuid().ToString("N");
-        onRunStarted?.Invoke(runId);
+        var runId = ReadIssuedRunId(response) ?? string.Empty;
+        if (runId.Length != 0) onRunStarted?.Invoke(runId);
 
         var content = new StringBuilder();
         var reasoning = new StringBuilder();
@@ -110,10 +108,19 @@ public sealed partial class DulcheLocalClient
             sw.Elapsed);
     }
 
-    public Task StopRunAsync(string runId, CancellationToken token)
+    public async Task StopRunAsync(string runId, CancellationToken token)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(runId);
-        return PostAsync($"agents/{Uri.EscapeDataString(runId)}/stop", new { }, token);
+        var response = await PostAsync($"agents/{Uri.EscapeDataString(runId)}/stop", new { }, token).ConfigureAwait(false);
+        // daemon.py returns state.status(the requested run), not a boolean HTTP ACK.
+        // Match the same explicit terminal-state contract as DulcheUnixSocketGateway.
+        var state = response as JsonObject;
+        var returnedId = state?["id"] is JsonValue id && id.TryGetValue<string>(out var identity) ? identity : null;
+        var terminal = state?["state"] is JsonValue value && value.TryGetValue<string>(out var status) ? status : null;
+        if (!StringComparer.Ordinal.Equals(returnedId, runId) ||
+            terminal is not ("stopped" or "completed" or "failed" or "cancelled" or "review"))
+            throw new DulcheRunStopUnconfirmedException(runId,
+                "Dulche did not acknowledge a terminal state for the exact requested run; its remote stop is unconfirmed.");
     }
 
     /// <summary>Exposes this SAME singleton DulcheLocalClient as an IDeveloperModelGateway for 9to1 Build.</summary>

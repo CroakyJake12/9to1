@@ -78,14 +78,151 @@ public sealed class DulcheSocketModelProviderTests
         Assert.Equal(2, handler.Paths.Count);
     }
 
-    private static DulcheSocketModelProvider CreateProvider(HttpMessageHandler handler) =>
-        new(new DulcheLocalClient(new UserPreferencesService(new Paths(
-            Path.Combine(Path.GetTempPath(), "dulche-provider-" + Guid.NewGuid().ToString("N")))), handler));
+    [Theory]
+    [InlineData("{}")]
+    [InlineData("{\"id\":\"other\",\"state\":\"stopped\"}")]
+    [InlineData("{\"id\":\"run-local-1\",\"state\":\"running\"}")]
+    [InlineData("{\"id\":\"run-local-1\",\"state\":true}")]
+    public async Task HttpSuccessWithoutExactTerminalRunCannotAcknowledgeStop(string reply)
+    {
+        using var handler = new ProtocolHandler { StopReply = reply };
+        var provider = CreateProvider(handler);
+        var token = TestContext.Current.CancellationToken;
+        var stream = provider.StreamChatAsync(new("reviewer", [new("user", "Hello")], EffortLevel.Medium), token)
+            .GetAsyncEnumerator(token);
+        Assert.True(await stream.MoveNextAsync());
+        var failure = await Assert.ThrowsAsync<DulcheRunStopUnconfirmedException>(() => stream.DisposeAsync().AsTask());
+        Assert.Equal("run-local-1", failure.RunId);
+        Assert.True(handler.StopSawDisposedResponse);
+        Assert.Equal(1, handler.CompletionStreamDisposals);
+        Assert.Equal(new[] { "/v1/chat/completions", "/v1/agents/run-local-1/stop" }, handler.Paths);
+    }
+
+    [Theory]
+    [InlineData("transport")]
+    [InlineData("json")]
+    [InlineData("http")]
+    [InlineData("timeout")]
+    public async Task FailedStopRemainsObservableAfterResponseCleanup(string kind)
+    {
+        var transport = new HttpRequestException("Controlled stop transport failure");
+        using var handler = new ProtocolHandler
+        {
+            StopFailure = kind == "transport" ? transport : null,
+            StopReply = kind == "json" ? "{invalid json" : "{\"id\":\"run-local-1\",\"state\":\"stopped\"}",
+            StopStatus = kind == "http" ? HttpStatusCode.ServiceUnavailable : HttpStatusCode.OK,
+            WaitForStopTimeout = kind == "timeout"
+        };
+        var token = TestContext.Current.CancellationToken;
+        var stream = CreateProvider(handler).StreamChatAsync(new("reviewer", [new("user", "Hello")], EffortLevel.Medium), token)
+            .GetAsyncEnumerator(token);
+        Assert.True(await stream.MoveNextAsync());
+        var failure = await Assert.ThrowsAsync<DulcheRunStopUnconfirmedException>(() => stream.DisposeAsync().AsTask());
+        Assert.Equal("run-local-1", failure.RunId);
+        Assert.True(handler.StopSawDisposedResponse);
+        Assert.Equal(1, handler.CompletionStreamDisposals);
+        Assert.NotNull(failure.InnerException);
+        if (kind == "transport") Assert.Same(transport, failure.InnerException);
+        if (kind == "json") Assert.IsAssignableFrom<JsonException>(failure.InnerException);
+        if (kind == "timeout") Assert.IsAssignableFrom<OperationCanceledException>(failure.InnerException);
+        Assert.Equal(new[] { "/v1/chat/completions", "/v1/agents/run-local-1/stop" }, handler.Paths);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task MissingOrAmbiguousRunIdentityNeverInventsAStopTarget(bool ambiguous)
+    {
+        using var handler = new ProtocolHandler { RunIds = ambiguous ? ["run-local-1", "other"] : [] };
+        var token = TestContext.Current.CancellationToken;
+        var stream = CreateProvider(handler).StreamChatAsync(new("reviewer", [new("user", "Hello")], EffortLevel.Medium), token)
+            .GetAsyncEnumerator(token);
+        Assert.True(await stream.MoveNextAsync());
+        var failure = await Assert.ThrowsAsync<DulcheRunStopUnconfirmedException>(() => stream.DisposeAsync().AsTask());
+        Assert.Null(failure.RunId);
+        Assert.Equal(new[] { "/v1/chat/completions" }, handler.Paths);
+        Assert.Equal(1, handler.CompletionStreamDisposals);
+    }
+
+    [Fact]
+    public async Task CanceledGenerationStillUsesIndependentBoundedStopRequest()
+    {
+        using var handler = new ProtocolHandler();
+        using var generation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var stream = CreateProvider(handler).StreamChatAsync(new("reviewer", [new("user", "Hello")], EffortLevel.Medium), generation.Token)
+            .GetAsyncEnumerator(generation.Token);
+        Assert.True(await stream.MoveNextAsync());
+        generation.Cancel();
+        await stream.DisposeAsync();
+        Assert.False(handler.StopTokenWasCanceled);
+        Assert.True(handler.StopSawDisposedResponse);
+        Assert.Equal(1, handler.CompletionStreamDisposals);
+        Assert.Equal(new[] { "/v1/chat/completions", "/v1/agents/run-local-1/stop" }, handler.Paths);
+    }
+
+    [Fact]
+    public async Task OriginalStreamFailureAndUnknownStopAreBothRetained()
+    {
+        var transport = new HttpRequestException("Controlled stop failure after malformed terminal stream");
+        using var handler = new ProtocolHandler { Stream = "data: [DONE]\n\n", StopFailure = transport };
+        var token = TestContext.Current.CancellationToken;
+        var failure = await Assert.ThrowsAsync<AggregateException>(() => CreateProvider(handler)
+            .CompleteAsync(new("reviewer", [new("user", "Hello")], EffortLevel.Medium), token));
+        Assert.Contains(failure.InnerExceptions, item => item is InvalidDataException);
+        var stop = Assert.Single(failure.InnerExceptions, item => item is DulcheRunStopUnconfirmedException);
+        Assert.Same(transport, stop.InnerException);
+        Assert.Equal(1, handler.CompletionStreamDisposals);
+    }
+
+    [Theory]
+    [InlineData("stop")]
+    [InlineData("length")]
+    public async Task TerminalChoiceWithoutDoneStillRequiresExactRunStop(string reason)
+    {
+        using var handler = new ProtocolHandler
+        {
+            Stream = "data: {\"choices\":[{\"delta\":{\"content\":\"final\"},\"finish_reason\":\"" + reason + "\"}]}\n\n"
+        };
+        var token = TestContext.Current.CancellationToken;
+        await Assert.ThrowsAsync<EndOfStreamException>(() => CreateProvider(handler)
+            .CompleteAsync(new("reviewer", [new("user", "Hello")], EffortLevel.Medium), token));
+        Assert.Equal(new[] { "/v1/chat/completions", "/v1/agents/run-local-1/stop" }, handler.Paths);
+        Assert.True(handler.StopSawDisposedResponse);
+        Assert.Equal(1, handler.CompletionStreamDisposals);
+    }
+
+    [Fact]
+    public async Task DetailedResponseWithoutServerRunIdentityDoesNotFabricateCustody()
+    {
+        using var handler = new ProtocolHandler { RunIds = [] };
+        var client = CreateClient(handler);
+        string? reported = null;
+        var result = await client.StreamDetailedAsync(new("reviewer", [new("user", "Hello")]),
+            null, id => reported = id, TestContext.Current.CancellationToken);
+        Assert.Equal(string.Empty, result.RunId);
+        Assert.Null(reported);
+        Assert.Equal("Hello, friend.", result.Content);
+        Assert.Equal(new[] { "/v1/chat/completions" }, handler.Paths);
+    }
+
+    private static DulcheSocketModelProvider CreateProvider(HttpMessageHandler handler) => new(CreateClient(handler));
+
+    private static DulcheLocalClient CreateClient(HttpMessageHandler handler) =>
+        new(new UserPreferencesService(new Paths(
+            Path.Combine(Path.GetTempPath(), "dulche-provider-" + Guid.NewGuid().ToString("N")))), handler);
 
     private sealed class ProtocolHandler : HttpMessageHandler
     {
         public List<string> Paths { get; } = [];
         public JsonElement LastCompletion { get; private set; }
+        public string[] RunIds { get; init; } = ["run-local-1"];
+        public string StopReply { get; init; } = "{\"id\":\"run-local-1\",\"state\":\"stopped\"}";
+        public HttpStatusCode StopStatus { get; init; } = HttpStatusCode.OK;
+        public Exception? StopFailure { get; init; }
+        public bool WaitForStopTimeout { get; init; }
+        public bool StopTokenWasCanceled { get; private set; }
+        public bool StopSawDisposedResponse { get; private set; }
+        public int CompletionStreamDisposals { get; private set; }
         public string Stream { get; init; } = """
             : heartbeat
 
@@ -116,18 +253,37 @@ public sealed class DulcheSocketModelProviderTests
                 LastCompletion = body.RootElement.Clone();
                 var response = new HttpResponseMessage(HttpStatusCode.OK)
                 {
-                    Content = new StringContent(Stream, Encoding.UTF8, "text/event-stream"),
+                    Content = new StreamContent(new ObservedStream(Encoding.UTF8.GetBytes(Stream), () => CompletionStreamDisposals++)),
                 };
-                response.Headers.Add("X-Dulche-Run-Id", "run-local-1");
+                response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/event-stream");
+                if (RunIds.Length != 0) response.Headers.TryAddWithoutValidation("X-Dulche-Run-Id", RunIds);
                 return response;
             }
             if (request.Method == HttpMethod.Post && path == "/v1/agents/run-local-1/stop")
-                return Json("""{"id":"run-local-1","state":"stopped"}""");
+            {
+                StopTokenWasCanceled = cancellationToken.IsCancellationRequested;
+                StopSawDisposedResponse = CompletionStreamDisposals != 0;
+                if (StopFailure is not null) throw StopFailure;
+                if (WaitForStopTimeout) await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                return new(StopStatus) { Content = new StringContent(StopReply, Encoding.UTF8, "application/json") };
+            }
             throw new InvalidOperationException($"Unrecognized request {request.Method} {path}");
         }
 
         private static HttpResponseMessage Json(string json) =>
             new(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") };
+    }
+
+    private sealed class ObservedStream(byte[] bytes, Action disposed) : MemoryStream(bytes)
+    {
+        private int _released;
+        protected override void Dispose(bool disposing)
+        {
+            // HttpContent may dispose its cached read wrapper as well as the source.
+            // Observe the actual resource release once, independent of wrapper count.
+            if (disposing && Interlocked.Exchange(ref _released, 1) == 0) disposed();
+            base.Dispose(disposing);
+        }
     }
 
     private sealed class Paths(string root) : IAppPaths
