@@ -68,6 +68,26 @@
             <Button id="home-settings-review-permissions" Action="SettingsReviewPermissions"
                     Content="Review pending requests" HorizontalAlignment="Left"
                     IsVisible="{Binding SettingsPermissionReviewAvailable, fallback=false}" />
+            <Container id="home-settings-spaces-storage" Type="Vertical Stack" CellGap="10" Padding="18"
+                       Background="{Resource CuiSurfaceMaterial}" CornerRadius="12"
+                       IsVisible="{Binding SettingsSpacesStoreVisible, fallback=false}">
+              <Text Text="Spaces storage" FontSize="20" FontWeight="700" TextWrapping="Wrap" />
+              <Text id="home-settings-spaces-storage-status" Text="{Binding SettingsSpacesStoreStatus}" TextWrapping="Wrap" />
+              <Text id="home-settings-spaces-storage-identity" Text="{Binding SettingsSpacesStoreIdentity}"
+                    Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" FontSize="12" />
+              <Container Type="Wrap" CellGap="8">
+                <Button id="home-settings-spaces-storage-inspect" Action="SettingsSpacesStoreInspect" Content="Inspect Spaces storage"
+                        IsEnabled="{Binding SettingsSpacesStoreCanInspect, fallback=false}" />
+                <Button id="home-settings-spaces-storage-request" Action="SettingsSpacesStoreRequest" Content="Request ownership import"
+                        IsVisible="{Binding SettingsSpacesStoreCanRequest, fallback=false}" />
+                <Button id="home-settings-spaces-storage-review" Action="SettingsSpacesStoreReview" Content="Review in Home"
+                        IsVisible="{Binding SettingsSpacesStoreCanReview, fallback=false}" />
+                <Button id="home-settings-spaces-storage-complete" Action="SettingsSpacesStoreComplete" Content="Complete ownership import"
+                        IsVisible="{Binding SettingsSpacesStoreCanComplete, fallback=false}" />
+                <Button id="home-settings-spaces-storage-retry-audit" Action="SettingsSpacesStoreRetryAudit" Content="Finish import audit"
+                        IsVisible="{Binding SettingsSpacesStoreCanRetryAudit, fallback=false}" />
+              </Container>
+            </Container>
             <Container id="home-settings-keyboard-host" Type="Overlay" IsVisible="{Binding SettingsCatalogHasKeyboard, fallback=false}" />
             <Container id="home-settings-dulche-provider-host" Type="Overlay" IsVisible="{Binding SettingsDulcheProviderVisible, fallback=false}" />
             <Container id="home-settings-legacy-owner-host" Type="Overlay" IsVisible="{Binding SettingsLegacyOwnerVisible, fallback=false}" />

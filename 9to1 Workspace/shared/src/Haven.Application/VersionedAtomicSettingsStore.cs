@@ -7,6 +7,7 @@
  * Maintenance: Preserve the layer boundary, nullability annotations, cancellation flow, and existing public signatures when changing this file.
  */
 
+using System.Security.Cryptography;
 using System.Text.Json;
 
 namespace Haven.Application;
@@ -49,6 +50,9 @@ public sealed class SettingsExportManifest
 /// Represents versioned atomic settings store and keeps its related state and behavior together.
 /// </summary>
 public sealed record SettingsStoreIdentity(int SchemaVersion, Guid StoreId, DateTimeOffset CreatedAtUtc);
+
+/// <summary>Strict observation of an existing primary. It supplies no new-store lifecycle proof.</summary>
+public sealed record ExistingSettingsStoreMetadata(SettingsStoreIdentity StoreIdentity, string Revision, bool IsEmpty);
 
 public sealed class VersionedAtomicSettingsStore : IVersionedSettingsStore, IResourceStoreIdentitySource, IVersionedSettingsGuardedCompareExchange
 {
@@ -135,6 +139,34 @@ public sealed class VersionedAtomicSettingsStore : IVersionedSettingsStore, IRes
             await using var diskLease = await AcquireStoreLeaseAsync(cancellationToken).ConfigureAwait(false);
             await RefreshLoadedAsync(cancellationToken).ConfigureAwait(false);
             return new SettingsExportManifest { Version = _version, Settings = new(_settings), StoreIdentity = _identityNeedsPersistence ? null : _identity };
+        }
+        finally { _lock.Release(); }
+    }
+
+    /// <summary>Read the SAME existing primary under its normal store locks, without seeding an
+    /// identity, recovering from backup, or publishing settings. Ownership evidence must not
+    /// certify a corrupt primary merely because the ordinary settings reader can recover it.</summary>
+    public async Task<ExistingSettingsStoreMetadata?> InspectExistingStoreMetadataAsync(CancellationToken cancellationToken)
+    {
+        await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var path = GetSettingsPath();
+            if (Directory.Exists(path)) throw new IOException("The settings file target is a directory; explicit recovery is required.");
+            if (!File.Exists(path)) return null;
+            await using var diskLease = await AcquireStoreLeaseAsync(cancellationToken).ConfigureAwait(false);
+            var manifest = await ReadManifestAsync(path, cancellationToken).ConfigureAwait(false);
+            if (manifest.StoreIdentity is not { } identity) return null;
+            if (!_identityNeedsPersistence && _identity is not null && _identity != identity)
+                throw new InvalidOperationException("The durable settings root changed; preserve it and review ownership before reopening.");
+            // ExportedAt is presentation metadata. Include the exact parsed payload as well
+            // as its version so an out-of-band edit cannot reuse an approved evidence revision.
+            var revision = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new
+            {
+                manifest.SchemaVersion, manifest.Version, StoreIdentity = identity,
+                Settings = manifest.Settings.OrderBy(pair => pair.Key, StringComparer.Ordinal).ToArray()
+            })));
+            return new(identity, revision, manifest.Settings.Count == 0);
         }
         finally { _lock.Release(); }
     }

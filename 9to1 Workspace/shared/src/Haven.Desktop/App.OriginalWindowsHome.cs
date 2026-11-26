@@ -29,6 +29,8 @@ public sealed partial class App
             PrepareOriginalAssistantSqliteComposition(collection, paths);
             var notes = PrepareOriginalNotesComposition(collection, paths);
             var notesEvidence = new NotesLocalStoreEvidenceProvider(notes);
+            var spacesSettings = PrepareOriginalSpacesSettingsComposition(collection, paths);
+            var spacesEvidence = new SpacesLocalStoreEvidenceProvider(spacesSettings);
             PrepareOriginalAssistantMiniComputerConfiguration(paths);
             var principal = new OperatingSystemPrincipalSource();
             var ordinary = RetainOriginalAssistantConversationProcess();
@@ -75,12 +77,14 @@ public sealed partial class App
                     files = new(identity.StateStore, identity.Profiles);
                     personalDen = RetainOriginalAssistantPersonalDen(paths, identity.Profiles);
                     // Metadata evidence does not initialise, import or bind a Notes store.
-                    return new([files, personalDen, miniEvidence, notesEvidence, .. sqliteEvidence], new Dictionary<Type, object>
+                    return new([files, personalDen, miniEvidence, notesEvidence, spacesEvidence, .. sqliteEvidence], new Dictionary<Type, object>
                     {
                         [typeof(NativeFilesWorkspaceService)] = files,
                         [typeof(OriginalAssistantPersonalDenHost)] = personalDen,
                         [typeof(NotesRepository)] = notes,
-                        [typeof(NotesLocalStoreEvidenceProvider)] = notesEvidence
+                        [typeof(NotesLocalStoreEvidenceProvider)] = notesEvidence,
+                        [typeof(IVersionedSettingsStore)] = spacesSettings,
+                        [typeof(SpacesLocalStoreEvidenceProvider)] = spacesEvidence
                     });
                 },
                 configureOriginalResolvers: ownership =>
@@ -111,6 +115,8 @@ public sealed partial class App
                 ?? throw new InvalidOperationException("The SAME original Notes admission owner is unavailable."));
             collection.AddSingleton(notesEvidence);
             RegisterOriginalBoardsStoreSetup(collection, _actualWindowsHome, notes, notesEvidence);
+            collection.AddSingleton(spacesEvidence);
+            RegisterOriginalSpacesStoreSetup(collection, _actualWindowsHome, spacesSettings, spacesEvidence);
             collection.AddSingleton(files!); collection.AddSingleton(authority!); collection.AddSingleton(resolver!);
             collection.AddSingleton(personalDen!);
             RegisterOriginalAssistantSqliteOwners(collection);
@@ -244,14 +250,24 @@ public sealed partial class App
     private void DemandOriginalWindowsHomeRetirementJoin()
     {
         DemandOriginalBoardsStoreSetupRetirementJoin();
+        DemandOriginalSpacesStoreSetupRetirementJoin();
         _actualWindowsHome?.DemandExternalOriginalProcessJoin();
         DemandOriginalHomeRootRetirementJoin();
     }
 
     private async Task JoinOriginalWindowsHomeAfterBorrowersAsync()
     {
-        await JoinOriginalBoardsStoreSetupAfterBorrowersAsync();
-        await JoinOriginalHomeThenRootAfterBorrowersAsync();
+        var failures = new List<Exception>();
+        async Task Join(Func<Task> original)
+        {
+            try { await original(); }
+            catch (Exception error) { failures.Add(error); }
+        }
+        await Join(JoinOriginalBoardsStoreSetupAfterBorrowersAsync);
+        await Join(JoinOriginalSpacesStoreSetupAfterBorrowersAsync);
+        await Join(JoinOriginalHomeThenRootAfterBorrowersAsync);
+        if (failures.Count != 0)
+            throw new AggregateException("Original Home setup owners and Home/root did not all settle cleanly.", failures);
     }
 
     private Task JoinOriginalUntransferredWindowsHomeAsync()

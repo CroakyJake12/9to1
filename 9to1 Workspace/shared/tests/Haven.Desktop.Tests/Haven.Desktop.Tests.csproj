@@ -104,7 +104,7 @@
     <Compile Include="UnifiedCanvasInitialRouteTests.cs" />
     <Compile Include="BoardsLegacyFileOpenTests.cs" />
     <Compile Include="NativeAppContentRegistryTests.cs" />
-    <Compile Include="BoardsOriginalStoreSetupTests.cs" />
+    <Compile Include="BoardsOriginalStoreSetupTests.cs;SpacesOriginalStoreSetupTests.cs" />
     <Compile Include="HomeDashboardCuiRenderTests.cs;HomeDiscoverCuiRenderTests.cs;DashboardWidgetCanvasTests.cs;DashboardEditPlannerTests.cs" />
     <Compile Include="ChatSpacePageAcceptanceTests.cs" />
     <Compile Include="ChatAddMenuNativePopupTests.cs;ChatThemeAdaptationTests.cs;GoPageResponsiveTests.cs" />

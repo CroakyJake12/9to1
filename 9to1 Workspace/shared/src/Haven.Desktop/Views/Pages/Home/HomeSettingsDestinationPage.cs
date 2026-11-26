@@ -344,6 +344,7 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
         "SettingsOpenBrowseBookmarks" => NavigateContentAsync is not null && _category == "haven-bookmarks",
         "SettingsOpenBrowseHistory" => NavigateContentAsync is not null && _category == "haven-history",
         "SettingsReviewPermissions" => _category == "security-permissions" && OpenPermissionReviewAsync is not null,
+        _ when IsSpacesStoreCommand(command) => SpacesStoreActionAvailable(command),
         "ApplyHomeAppearance" or "RefreshHomeAppearance" or "HomeCreateTheme" => !IsBusy && !_unavailable,
         _ when PolicyFor(command) is not null => _dulche is not null && IsDulcheLifecyclePage && !IsBusy && !_unavailable,
         _ => false
@@ -354,6 +355,7 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
         Dispatcher.UIThread.VerifyAccess();
         if (_work.IsRetiring) return ValueTask.CompletedTask; // Already queued presentation acquires no new business work.
         if (IsActionAvailable(command) != true) throw new InvalidOperationException("This Home Settings action is unavailable.");
+        if (IsSpacesStoreCommand(command)) return new(RunSpacesStoreActionAsync(command, cancellationToken));
         if (command == "SettingsReviewPermissions")
             return new(RunAuthorizedAsync(OpenPermissionReviewAsync!, cancellationToken));
         if (_dulche is not null && PolicyFor(command) is { } selected)
@@ -739,6 +741,7 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
         _bindings.Set("SettingsDulcheProviderVisible", _external is not null && _category == "ai-providers");
         _bindings.Set("SettingsLegacyOwnerVisible", _legacyFactory is not null && LegacySection(_category) is not null);
         _bindings.Set("SettingsPermissionReviewAvailable", _category == "security-permissions" && OpenPermissionReviewAsync is not null);
+        RefreshSpacesStoreBindings();
         _bindings.Set("SettingsHasCatalogAvailability", item.Availability is not null &&
             !(_dulche is not null && IsDulcheLifecyclePage) &&
             !(_external is not null && _category == "ai-providers") &&
@@ -1080,6 +1083,7 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
         if (_status is not null) _bindings.Set("HomeAppearanceStatus", _status);
         RefreshInterfaceScale();
         RefreshAccessibilitySwitches();
+        RefreshSpacesStoreBindings();
         _loader.RefreshBindings();
     }
 

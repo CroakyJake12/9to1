@@ -255,7 +255,8 @@ public sealed partial class HomeLocalStoreOwnership(IHomeCoreStateStore store, H
                 originalAuditSucceeded = true;
                 return completion.Binding;
             }
-            catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException)
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException ||
+                IsOriginalScopedAuditFailure(invocation, originalSource, error))
             { throw RetainOriginalImportAuditPending(invocation, requestId, completion, error); }
         }
         finally

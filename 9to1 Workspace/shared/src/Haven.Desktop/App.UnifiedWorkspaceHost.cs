@@ -449,6 +449,7 @@ public sealed partial class App
                     () => ActivatorUtilities.CreateInstance<Haven.Desktop.Views.Pages.Settings.SettingsHavenPage>(_services))
                 {
                     NativeAppAvailable = apps.HasImplementation,
+                    SpacesStoreSetup = _services.GetRequiredService<SpacesOriginalStoreSetupBackend>(),
                     OpenPermissionReviewAsync = async token =>
                     {
                         await AdmitHomeSettingsAsync(request, token);
