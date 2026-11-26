@@ -37,6 +37,11 @@ public sealed class DeveloperAutonomousMissionStore
 
     public string RootDirectory => _rootDirectory;
 
+    public static string ResolveDefaultRootDirectory() =>
+        Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "9to1", "Dev", "AutonomousMissions");
+
     public string GetMissionDirectory(string missionId)
     {
         ValidateId(missionId, nameof(missionId));
@@ -62,6 +67,19 @@ public sealed class DeveloperAutonomousMissionStore
             }
             return result.OrderByDescending(m => m.UpdatedAt).ToArray();
         }
+    }
+
+    public DeveloperAutonomousMission? FindLatestResumableMissionForRepository(string repositoryRoot)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRoot);
+        var normalized = Path.GetFullPath(repositoryRoot).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        return ListMissions().FirstOrDefault(m =>
+            !string.IsNullOrWhiteSpace(m.RepositoryRoot)
+            && string.Equals(
+                Path.GetFullPath(m.RepositoryRoot).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+                normalized,
+                StringComparison.Ordinal)
+            && m.State != DeveloperAutonomousMissionState.Completed);
     }
 
     public DeveloperAutonomousMission? LoadMission(string missionId)

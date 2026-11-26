@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -54,13 +55,22 @@ public sealed class DeveloperGuardedCommandRunner
             throw new ArgumentException("Test filter contains unsupported characters.", nameof(testFilter));
 
         var combined = new StringBuilder();
+        var testOutput = new StringBuilder();
+        var outputGate = new object();
         void Emit(string line)
         {
-            combined.AppendLine(line);
-            onOutputLine?.Invoke(line);
+            lock (outputGate)
+            {
+                combined.AppendLine(line);
+                onOutputLine?.Invoke(line);
+            }
         }
+        void EmitTest(string line) { lock (outputGate) testOutput.AppendLine(line); Emit(line); }
 
-        await using var sdkLock = await AcquireSdkLockAsync(options.SdkLockPath, Emit, cancellationToken).ConfigureAwait(false);
+        var sdkLockPath = string.IsNullOrWhiteSpace(options.SdkLockPath)
+            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "state", "9to1-sdk.lock")
+            : options.SdkLockPath;
+        await using var sdkLock = await AcquireSdkLockAsync(sdkLockPath, Emit, TimeSpan.FromSeconds(120), cancellationToken).ConfigureAwait(false);
 
         var buildArgs = new List<string>
         {
@@ -69,14 +79,22 @@ public sealed class DeveloperGuardedCommandRunner
             "-c", "Release",
             "-m:1",
             "-p:UseSharedCompilation=false",
+            "-p:EnableWindowsTargeting=true",
+            "-p:BuildInParallel=false",
             "--nologo"
         };
+        if (NeedsLinuxNet10FrameworkSelector(worktreeRoot, cleanBuild))
+        {
+            buildArgs.Add("-f");
+            buildArgs.Add("net10.0");
+        }
         Emit($"$ {options.DotNetExecutable} {string.Join(' ', buildArgs)}");
         var buildExit = await RunGuardedProcessAsync(
             worktreeRoot,
             options.DotNetExecutable,
             buildArgs,
             options.MemoryFloorMiB,
+            options.DiskFloorGiB,
             options.CommandTimeoutSeconds,
             Emit,
             cancellationToken).ConfigureAwait(false);
@@ -95,9 +113,16 @@ public sealed class DeveloperGuardedCommandRunner
                 "-c", "Release",
                 "-m:1",
                 "-p:UseSharedCompilation=false",
+                "-p:EnableWindowsTargeting=true",
+                "-p:BuildInParallel=false",
                 "--nologo",
                 "--verbosity", "minimal"
             };
+            if (NeedsLinuxNet10FrameworkSelector(worktreeRoot, cleanTest))
+            {
+                testArgs.Add("-f");
+                testArgs.Add("net10.0");
+            }
             if (!string.IsNullOrWhiteSpace(testFilter))
             {
                 testArgs.Add("--filter");
@@ -109,26 +134,38 @@ public sealed class DeveloperGuardedCommandRunner
                 options.DotNetExecutable,
                 testArgs,
                 options.MemoryFloorMiB,
+                options.DiskFloorGiB,
                 options.CommandTimeoutSeconds,
-                Emit,
+                EmitTest,
                 cancellationToken).ConfigureAwait(false);
+
+            // Test targets are executable MSBuild projects. Refuse a test run that changes the
+            // verified source snapshot, including changes outside the task's assigned recipe.
+            var afterTest = await DeveloperAutonomousWorkspaceTools.CaptureDiffAsync(worktreeRoot, cancellationToken).ConfigureAwait(false);
+            if (!StringComparer.Ordinal.Equals(afterTest.DiffSha256, sourceDiffSha256))
+            {
+                Emit("[SOURCE GUARD] Test command changed the verified worktree diff; verification is rejected.");
+                testExit = 125;
+            }
         }
 
         sw.Stop();
         var fullOutput = combined.ToString();
         var diagnostics = ParseMsBuildDiagnostics(fullOutput, worktreeRoot);
-        (passed, failed, skipped) = ParseTestCounts(fullOutput);
+        (passed, failed, skipped) = ParseTestCounts(testOutput.ToString());
 
         var buildSucceeded = buildExit == 0;
-        var testsSucceeded = cleanTest is null
-            ? buildSucceeded
-            : buildSucceeded && testExit == 0 && failed == 0 && passed > 0;
+        var testsSucceeded = cleanTest is not null
+            && buildSucceeded
+            && testExit == 0
+            && failed == 0
+            && passed > 0;
 
         return new DeveloperBuildVerificationReport(
             BuildSucceeded: buildSucceeded,
             TestsSucceeded: testsSucceeded,
             BuildExitCode: buildExit,
-            TestExitCode: cleanTest is null ? buildExit : testExit,
+            TestExitCode: cleanTest is null ? -1 : testExit,
             TestsPassed: passed,
             TestsFailed: failed,
             TestsSkipped: skipped,
@@ -212,6 +249,7 @@ public sealed class DeveloperGuardedCommandRunner
         string executable,
         IReadOnlyList<string> arguments,
         int memoryFloorMiB,
+        long diskFloorGiB,
         int timeoutSeconds,
         Action<string> emit,
         CancellationToken cancellationToken)
@@ -247,6 +285,8 @@ public sealed class DeveloperGuardedCommandRunner
         psi.Environment["DOTNET_NOLOGO"] = "1";
         psi.Environment["MSBUILDDISABLENODEREUSE"] = "1";
         psi.Environment["DOTNET_PARALLEL_COMPILE"] = "0";
+        psi.Environment["CUDA_VISIBLE_DEVICES"] = "";
+        psi.Environment["DOTNET_PROCESSOR_COUNT"] = Math.Clamp(Environment.ProcessorCount, 1, 2).ToString();
 
         if (OperatingSystem.IsLinux() && TryReadMemAvailableMiB(out var beforeMiB) && beforeMiB <= memoryFloorMiB)
         {
@@ -254,11 +294,17 @@ public sealed class DeveloperGuardedCommandRunner
             return 124;
         }
 
+        if (!TryReadDiskAvailableGiB(workingDirectory, out var beforeDiskGiB) || beforeDiskGiB <= diskFloorGiB)
+        {
+            emit($"[DISK GUARD] Refused launch: available disk {beforeDiskGiB} GiB <= floor {diskFloorGiB} GiB or could not be measured.");
+            return 124;
+        }
+
         using var proc = Process.Start(psi) ?? throw new InvalidOperationException($"Failed to start {resolvedExecutable}.");
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeoutCts.CancelAfter(TimeSpan.FromSeconds(Math.Clamp(timeoutSeconds, 15, 2400)));
 
-        var memGuardTripped = false;
+        var guardTripped = 0;
         var outTask = PumpAsync(proc.StandardOutput, emit, timeoutCts.Token);
         var errTask = PumpAsync(proc.StandardError, emit, timeoutCts.Token);
 
@@ -268,8 +314,15 @@ public sealed class DeveloperGuardedCommandRunner
             {
                 if (OperatingSystem.IsLinux() && TryReadMemAvailableMiB(out var availMiB) && availMiB <= memoryFloorMiB)
                 {
-                    memGuardTripped = true;
+                    Interlocked.Exchange(ref guardTripped, 1);
                     emit($"[MEM GUARD] MemAvailable dropped to {availMiB} MiB (floor {memoryFloorMiB} MiB); terminating build process tree.");
+                    try { proc.Kill(entireProcessTree: true); } catch { }
+                    return;
+                }
+                if (!TryReadDiskAvailableGiB(workingDirectory, out var diskGiB) || diskGiB <= diskFloorGiB)
+                {
+                    Interlocked.Exchange(ref guardTripped, 1);
+                    emit($"[DISK GUARD] Available disk dropped to {diskGiB} GiB (floor {diskFloorGiB} GiB) or became unreadable; terminating build process tree.");
                     try { proc.Kill(entireProcessTree: true); } catch { }
                     return;
                 }
@@ -294,7 +347,7 @@ public sealed class DeveloperGuardedCommandRunner
             try { await Task.WhenAll(outTask, errTask, monitorTask).ConfigureAwait(false); } catch { }
         }
 
-        return memGuardTripped ? 124 : proc.ExitCode;
+        return Volatile.Read(ref guardTripped) != 0 ? 124 : proc.ExitCode;
     }
 
     private static async Task PumpAsync(StreamReader reader, Action<string> emit, CancellationToken token)
@@ -305,6 +358,24 @@ public sealed class DeveloperGuardedCommandRunner
                 emit(line);
         }
         catch (OperationCanceledException) { }
+    }
+
+    private static bool NeedsLinuxNet10FrameworkSelector(string worktreeRoot, string relativeProject)
+    {
+        if (!OperatingSystem.IsLinux() || !relativeProject.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
+            return false;
+        try
+        {
+            var full = Path.Combine(Path.GetFullPath(worktreeRoot), relativeProject);
+            if (!File.Exists(full)) return false;
+            var text = File.ReadAllText(full);
+            return text.Contains("<TargetFrameworks>", StringComparison.OrdinalIgnoreCase)
+                && text.Contains("net10.0", StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static string ResolveDotNetExecutable(string configured)
@@ -337,49 +408,95 @@ public sealed class DeveloperGuardedCommandRunner
         return false;
     }
 
+    private static bool TryReadDiskAvailableGiB(string workingDirectory, out long availableGiB)
+    {
+        availableGiB = 0;
+        try
+        {
+            var fullPath = Path.GetFullPath(workingDirectory);
+            var drive = new DriveInfo(Path.GetPathRoot(fullPath)!);
+            if (!drive.IsReady) return false;
+            availableGiB = drive.AvailableFreeSpace / (1024L * 1024 * 1024);
+            return true;
+        }
+        catch { return false; }
+    }
+
     private static async Task<IAsyncDisposable> AcquireSdkLockAsync(
         string? lockPath,
         Action<string> emit,
+        TimeSpan waitTimeout,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(lockPath))
-            return NoopDisposable.Instance;
+        ArgumentException.ThrowIfNullOrWhiteSpace(lockPath);
 
         var full = Path.GetFullPath(lockPath);
         Directory.CreateDirectory(Path.GetDirectoryName(full)!);
+        var deadline = Stopwatch.GetTimestamp() + (long)(waitTimeout.TotalSeconds * Stopwatch.Frequency);
         var announced = false;
         while (true)
         {
             cancellationToken.ThrowIfCancellationRequested();
             try
             {
-                var stream = new FileStream(full, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
-                return new FileLockHandle(stream);
+                // Existing development scripts use POSIX flock(LOCK_EX). FileShare.None does not
+                // reliably interoperate with that advisory lock on Linux, so acquire the same flock.
+                var stream = new FileStream(full, FileMode.OpenOrCreate, FileAccess.ReadWrite,
+                    OperatingSystem.IsLinux() ? FileShare.ReadWrite : FileShare.None);
+                if (!OperatingSystem.IsLinux()) return new FileLockHandle(stream, flockHeld: false);
+                var fd = checked((int)stream.SafeFileHandle.DangerousGetHandle());
+                if (Flock(fd, LockExclusive | LockNonBlocking) == 0)
+                    return new FileLockHandle(stream, flockHeld: true);
+
+                var errno = Marshal.GetLastPInvokeError();
+                stream.Dispose();
+                if (errno is not (11 or 35 or 4))
+                    throw new InvalidOperationException($"Could not acquire SDK flock (errno {errno}).");
+
+                if (!announced)
+                {
+                    emit($"[SDK LOCK] Waiting for serial SDK lock {full} (bounded to {waitTimeout.TotalSeconds:0}s)...");
+                    announced = true;
+                }
+                var remaining = TimeSpan.FromSeconds((deadline - Stopwatch.GetTimestamp()) / (double)Stopwatch.Frequency);
+                if (remaining <= TimeSpan.Zero)
+                    throw new TimeoutException($"Timed out waiting for serial SDK lock {full} after {waitTimeout.TotalSeconds:0}s.");
+                await Task.Delay(remaining < TimeSpan.FromMilliseconds(250) ? remaining : TimeSpan.FromMilliseconds(250), cancellationToken).ConfigureAwait(false);
+                continue;
             }
-            catch (IOException)
+            catch (IOException) when (Stopwatch.GetTimestamp() < deadline)
             {
                 if (!announced)
                 {
-                    emit($"[SDK LOCK] Waiting for serial SDK lock {full}...");
+                    emit($"[SDK LOCK] Waiting for serial SDK lock {full} (bounded to {waitTimeout.TotalSeconds:0}s)...");
                     announced = true;
                 }
-                await Task.Delay(500, cancellationToken).ConfigureAwait(false);
+                var remaining = TimeSpan.FromSeconds((deadline - Stopwatch.GetTimestamp()) / (double)Stopwatch.Frequency);
+                await Task.Delay(remaining < TimeSpan.FromMilliseconds(250) ? remaining : TimeSpan.FromMilliseconds(250), cancellationToken).ConfigureAwait(false);
             }
+            if (Stopwatch.GetTimestamp() >= deadline)
+                throw new TimeoutException($"Timed out waiting for serial SDK lock {full} after {waitTimeout.TotalSeconds:0}s.");
         }
     }
 
-    private sealed class FileLockHandle(FileStream stream) : IAsyncDisposable
+    private const int LockExclusive = 2;
+    private const int LockNonBlocking = 4;
+    private const int LockUnlock = 8;
+
+    [DllImport("libc", EntryPoint = "flock", SetLastError = true)]
+    private static extern int Flock(int fileDescriptor, int operation);
+
+    private sealed class FileLockHandle(FileStream stream, bool flockHeld) : IAsyncDisposable
     {
         public ValueTask DisposeAsync()
         {
+            if (flockHeld)
+            {
+                try { Flock(checked((int)stream.SafeFileHandle.DangerousGetHandle()), LockUnlock); }
+                catch { }
+            }
             stream.Dispose();
             return ValueTask.CompletedTask;
         }
-    }
-
-    private sealed class NoopDisposable : IAsyncDisposable
-    {
-        public static readonly NoopDisposable Instance = new();
-        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 }

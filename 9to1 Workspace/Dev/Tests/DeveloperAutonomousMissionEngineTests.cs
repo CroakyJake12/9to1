@@ -149,6 +149,88 @@ public sealed class DeveloperAutonomousMissionEngineTests
     }
 
     [Fact]
+    public async Task Guarded_command_runner_does_not_mark_skipped_tests_as_succeeded()
+    {
+        var root = Directory.CreateTempSubdirectory("9to1-buildonly-");
+        try
+        {
+            var repoDir = Path.Combine(root.FullName, "repo");
+            await CreateSampleGitRepoAsync(repoDir);
+            var runner = new DeveloperGuardedCommandRunner();
+            var options = new DeveloperAutonomousMissionOptions
+            {
+                RepositoryRoot = repoDir,
+                SdkLockPath = Path.Combine(root.FullName, "sdk.lock"),
+                MemoryFloorMiB = 256,
+                DiskFloorGiB = 1,
+                CommandTimeoutSeconds = 180
+            };
+            var result = await runner.VerifyAsync(
+                worktreeRoot: repoDir,
+                buildProjectRelative: "src/MiniCalc.csproj",
+                testProjectRelative: null,
+                testFilter: null,
+                sourceDiffSha256: "deadbeef",
+                options: options);
+
+            Assert.True(result.BuildSucceeded, result.CombinedOutput);
+            Assert.False(result.TestsSucceeded);
+            Assert.Equal(-1, result.TestExitCode);
+            Assert.Equal(0, result.TestsPassed);
+            Assert.Null(result.TestProject);
+        }
+        finally
+        {
+            try { root.Delete(true); } catch { }
+        }
+    }
+
+    [Fact]
+    public async Task InitializeOrResumeAsync_resumes_latest_persisted_mission_for_repository()
+    {
+        var root = Directory.CreateTempSubdirectory("9to1-auto-resume-");
+        try
+        {
+            var repoDir = Path.Combine(root.FullName, "repo");
+            var progDir = Path.Combine(root.FullName, "programme");
+            var storeDir = Path.Combine(root.FullName, "store");
+            await CreateSampleGitRepoAsync(repoDir);
+            WriteSampleProgramme(progDir);
+
+            var gateway = new ScriptedDualModelGateway();
+            var options = new DeveloperAutonomousMissionOptions
+            {
+                RepositoryRoot = repoDir,
+                ProgrammeDirectory = progDir,
+                StoreDirectory = storeDir,
+                SdkLockPath = Path.Combine(root.FullName, "sdk.lock"),
+                MissionName = "Resume Proof",
+                MemoryFloorMiB = 256,
+                DiskFloorGiB = 1
+            };
+
+            string originalMissionId;
+            await using (var first = new DeveloperAutonomousMissionEngine(options, gateway))
+            {
+                var created = await first.InitializeOrResumeAsync();
+                originalMissionId = created.MissionId;
+                await first.SaveCheckpointAsync("before_restart");
+            }
+
+            await using (var second = new DeveloperAutonomousMissionEngine(options, gateway))
+            {
+                var resumed = await second.InitializeOrResumeAsync(existingMissionId: null, resumeExistingForRepository: true);
+                Assert.Equal(originalMissionId, resumed.MissionId);
+                Assert.Contains(resumed.Checkpoints, c => c.Reason == "before_restart");
+            }
+        }
+        finally
+        {
+            try { root.Delete(true); } catch { }
+        }
+    }
+
+    [Fact]
     public async Task Autonomous_mission_progresses_across_two_requirements_with_diagnostics_delegation_review_compaction_and_guarded_integration()
     {
         var root = Directory.CreateTempSubdirectory("9to1-e2e-auto-");
@@ -168,6 +250,7 @@ public sealed class DeveloperAutonomousMissionEngineTests
                 RepositoryRoot = repoDir,
                 ProgrammeDirectory = progDir,
                 StoreDirectory = storeDir,
+                SdkLockPath = Path.Combine(root.FullName, "sdk.lock"),
                 MissionName = "E2E Independence Proof",
                 AutoAdvance = true,
                 GuardedIntegration = true,
@@ -270,6 +353,7 @@ public sealed class DeveloperAutonomousMissionEngineTests
                 RepositoryRoot = repoDir,
                 ProgrammeDirectory = progDir,
                 StoreDirectory = storeDir,
+                SdkLockPath = Path.Combine(root.FullName, "sdk.lock"),
                 MissionName = "Live Qwen Independence Proof",
                 AutoAdvance = true,
                 GuardedIntegration = true,

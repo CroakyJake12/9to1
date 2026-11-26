@@ -47,6 +47,7 @@ public sealed record DeveloperAutonomousMissionOptions
     public string? Objective { get; init; }
     public string? WorkerModelId { get; init; }
     public string? SupervisorModelId { get; init; }
+    public string? PreferredOwner { get; init; }
     public string? BaseRevision { get; init; }
     public string? IntegrationBranch { get; init; }
     public bool AutoAdvance { get; init; } = true;
@@ -56,7 +57,8 @@ public sealed record DeveloperAutonomousMissionOptions
     public bool EnableReasoning { get; init; } = true;
     public int ContextBudgetTokens { get; init; } = 131_072;
     public int CompactThresholdTokens { get; init; } = 48_000;
-    public int MaxCompletionTokens { get; init; } = 4_096;
+    public int MaxCompletionTokens { get; init; } = 8_192;
+    public TimeSpan StreamIdleTimeout { get; init; } = TimeSpan.FromMinutes(2);
     public int MaxTurnsPerTask { get; init; } = 24;
     public int MaxIdleTurns { get; init; } = 5;
     // Null means no overall task-count limit; explicit bounded runs remain supported.
@@ -311,6 +313,7 @@ public sealed record DeveloperAutonomousMission
     public required string CurrentRevision { get; init; }
     public string? WorkerModelId { get; init; }
     public string? SupervisorModelId { get; init; }
+    public string? PreferredOwner { get; init; }
     public DeveloperAutonomousMissionState State { get; init; } = DeveloperAutonomousMissionState.Idle;
     public bool AutoAdvance { get; init; } = true;
     public bool GuardedIntegration { get; init; } = true;
@@ -325,6 +328,7 @@ public sealed record DeveloperAutonomousMission
     public string TranscriptChainHead { get; init; } = "";
     public string? ActiveEpochId { get; init; }
     public string? ActiveDulcheRunId { get; init; }
+    public bool CompletionStopUnconfirmed { get; init; }
     public DeveloperMissionTask? ActiveTask { get; init; }
     public IReadOnlyList<DeveloperMissionTask> CompletedTasks { get; init; } = [];
     public IReadOnlyList<DeveloperMissionTask> BlockedTasks { get; init; } = [];

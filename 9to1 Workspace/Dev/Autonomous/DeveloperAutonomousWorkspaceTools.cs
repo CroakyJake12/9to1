@@ -420,7 +420,7 @@ public sealed class DeveloperAutonomousWorkspaceTools
         return (ordered, unified, DeveloperAutonomousMissionStore.Sha256Hex(unified));
     }
 
-    private static bool IsIgnoredBuildArtifactPath(string relativePath)
+    public static bool IsIgnoredBuildArtifactPath(string relativePath)
     {
         var segments = relativePath.Replace('\\', '/').Split('/', StringSplitOptions.RemoveEmptyEntries);
         return segments.Any(seg => BlockedSegments.Contains(seg, StringComparer.OrdinalIgnoreCase));

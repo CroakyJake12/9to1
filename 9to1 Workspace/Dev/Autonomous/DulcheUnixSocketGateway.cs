@@ -103,7 +103,7 @@ public sealed class DulcheUnixSocketGateway : IDeveloperModelGateway, IDisposabl
         };
         using var request = new HttpRequestMessage(HttpMethod.Post, $"v1/models/{Uri.EscapeDataString(modelId)}/count-tokens")
         {
-            Content = JsonContent.Create(payload)
+            Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
         };
         using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseContentRead, bounded.Token).ConfigureAwait(false);
         await DemandSuccessAsync(response, bounded.Token).ConfigureAwait(false);
@@ -138,9 +138,10 @@ public sealed class DulcheUnixSocketGateway : IDeveloperModelGateway, IDisposabl
         await DemandSuccessAsync(response, cancellationToken).ConfigureAwait(false);
 
         var runId = response.Headers.TryGetValues("X-Dulche-Run-Id", out var ids)
-            ? ids.FirstOrDefault() ?? Guid.NewGuid().ToString("N")
-            : Guid.NewGuid().ToString("N");
-        onRunStarted?.Invoke(runId);
+            ? ids.FirstOrDefault() ?? ""
+            : "";
+        // Only server-issued identities confer cancellation custody.
+        if (!string.IsNullOrWhiteSpace(runId)) onRunStarted?.Invoke(runId);
 
         var content = new StringBuilder();
         var reasoning = new StringBuilder();
@@ -192,8 +193,8 @@ public sealed class DulcheUnixSocketGateway : IDeveloperModelGateway, IDisposabl
             }
         }
 
-        if (!completed)
-            throw new EndOfStreamException("Dulche stream ended before [DONE]. Inspect the saved run for its outcome.");
+        if (!completed || string.IsNullOrWhiteSpace(finishReason))
+            throw new EndOfStreamException("Dulche stream ended without a terminal choice and [DONE]. Inspect the saved run for its outcome.");
 
         started.Stop();
         return new DeveloperCompletionResult(
@@ -215,10 +216,16 @@ public sealed class DulcheUnixSocketGateway : IDeveloperModelGateway, IDisposabl
         bounded.CancelAfter(TimeSpan.FromSeconds(15));
         using var request = new HttpRequestMessage(HttpMethod.Post, $"v1/agents/{Uri.EscapeDataString(dulcheRunId)}/stop")
         {
-            Content = JsonContent.Create(new { })
+            Content = new StringContent("{}", Encoding.UTF8, "application/json")
         };
         using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseContentRead, bounded.Token).ConfigureAwait(false);
         await DemandSuccessAsync(response, bounded.Token).ConfigureAwait(false);
+        var state = JsonNode.Parse(await response.Content.ReadAsStringAsync(bounded.Token).ConfigureAwait(false)) as JsonObject;
+        var returnedId = state?["id"]?.ToString();
+        var terminal = state?["state"]?.ToString();
+        if (!StringComparer.Ordinal.Equals(returnedId, dulcheRunId)
+            || terminal is not ("stopped" or "completed" or "failed" or "cancelled" or "review"))
+            throw new IOException("Dulche did not acknowledge a terminal state for the owned run; cancellation remains unconfirmed.");
     }
 
     public static JsonObject BuildCompletionPayload(DeveloperCompletionRequest request)
@@ -377,11 +384,11 @@ public sealed class DulcheUnixSocketGateway : IDeveloperModelGateway, IDisposabl
             throw new InvalidOperationException($"Dulche service phase is '{status.Phase}', not ready.");
         if (status.StopAll)
             throw new InvalidOperationException("Dulche stop-all is active; autonomous admission is paused.");
-        if (status.Resources.HostAvailableMiB > 0 && status.Resources.HostAvailableMiB < memoryFloorMiB)
+        if (status.Resources.HostAvailableMiB < memoryFloorMiB)
             throw new InvalidOperationException(
                 $"Host available memory ({status.Resources.HostAvailableMiB} MiB) is below the safety floor ({memoryFloorMiB} MiB).");
         var diskFloorBytes = diskFloorGiB * 1024L * 1024L * 1024L;
-        if (status.Resources.DiskFreeBytes > 0 && status.Resources.DiskFreeBytes < diskFloorBytes)
+        if (status.Resources.DiskFreeBytes < diskFloorBytes)
             throw new InvalidOperationException(
                 $"Free disk space ({status.Resources.DiskFreeBytes / (1024L * 1024L * 1024L)} GiB) is below the safety floor ({diskFloorGiB} GiB).");
     }

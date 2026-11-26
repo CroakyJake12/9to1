@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -73,6 +74,7 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
     private readonly DeveloperGuardedCommandRunner _runner;
     private readonly DeveloperGuardedIntegrator _integrator;
     private readonly object _gate = new();
+    private static readonly TimeSpan StopAcknowledgementTimeout = TimeSpan.FromSeconds(15);
 
     private DeveloperProgrammeCatalog? _catalog;
     private DeveloperAutonomousMission _mission = null!;
@@ -80,6 +82,8 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
     private readonly StringBuilder _terminalBuffer = new();
     private CancellationTokenSource? _runCts;
     private Task? _activeLoop;
+    private CancellationTokenSource? _completionCts;
+    private Task? _completionEnded;
     private bool _pauseRequested;
     private bool _disposed;
 
@@ -91,11 +95,11 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
         DeveloperGuardedIntegrator? integrator = null)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
+        if (options.StreamIdleTimeout <= TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(options), "The model stream idle timeout must be positive.");
         _gateway = gateway ?? throw new ArgumentNullException(nameof(gateway));
         var storeDir = options.StoreDirectory
-            ?? Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "9to1", "Dev", "AutonomousMissions");
+            ?? DeveloperAutonomousMissionStore.ResolveDefaultRootDirectory();
         _store = store ?? new DeveloperAutonomousMissionStore(storeDir);
         _context = new DeveloperMissionContextManager(_store, _gateway);
         _runner = runner ?? new DeveloperGuardedCommandRunner();
@@ -115,7 +119,8 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
 
     public async Task<DeveloperAutonomousMission> InitializeOrResumeAsync(
         string? existingMissionId = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool resumeExistingForRepository = false)
     {
         var repoRoot = Path.GetFullPath(_options.RepositoryRoot);
         if (!Directory.Exists(repoRoot))
@@ -123,15 +128,40 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
 
         LoadProgrammeIfAvailable(repoRoot);
 
-        if (!string.IsNullOrWhiteSpace(existingMissionId))
+        var resolvedMissionId = existingMissionId;
+        if (string.IsNullOrWhiteSpace(resolvedMissionId) && resumeExistingForRepository)
+            resolvedMissionId = _store.FindLatestResumableMissionForRepository(repoRoot)?.MissionId;
+
+        if (!string.IsNullOrWhiteSpace(resolvedMissionId))
         {
-            var loaded = _store.LoadMission(existingMissionId)
-                ?? throw new KeyNotFoundException($"Mission '{existingMissionId}' was not found.");
+            var loaded = _store.LoadMission(resolvedMissionId)
+                ?? throw new KeyNotFoundException($"Mission '{resolvedMissionId}' was not found.");
             if (!_store.VerifyTranscriptIntegrity(loaded.MissionId, out var integrityError))
                 throw new InvalidDataException($"Mission transcript integrity check failed: {integrityError}");
-            SetMission(loaded, persist: false);
-            RecordEvent("mission_resumed", $"Resumed durable mission '{loaded.Name}' at revision {loaded.CurrentRevision[..Math.Min(10, loaded.CurrentRevision.Length)]}.");
-            return loaded;
+            var normalizedState = loaded.State is DeveloperAutonomousMissionState.SelectingTask
+                or DeveloperAutonomousMissionState.Implementing
+                or DeveloperAutonomousMissionState.Verifying
+                or DeveloperAutonomousMissionState.Reviewing
+                or DeveloperAutonomousMissionState.Integrating
+                ? DeveloperAutonomousMissionState.Paused
+                : loaded.State;
+            if (normalizedState == DeveloperAutonomousMissionState.Completed && HasBlockedRequirements(loaded))
+                normalizedState = DeveloperAutonomousMissionState.Blocked;
+            var resumed = loaded with
+            {
+                State = normalizedState,
+                CompletionStopUnconfirmed = loaded.CompletionStopUnconfirmed || loaded.ActiveDulcheRunId is not null,
+                WorkerModelId = !string.IsNullOrWhiteSpace(_options.WorkerModelId) ? _options.WorkerModelId.Trim() : loaded.WorkerModelId,
+                SupervisorModelId = !string.IsNullOrWhiteSpace(_options.SupervisorModelId) ? _options.SupervisorModelId.Trim() : loaded.SupervisorModelId,
+                ProgrammeDirectory = _catalog?.RootDirectory ?? loaded.ProgrammeDirectory,
+                AutoAdvance = _options.AutoAdvance,
+                GuardedIntegration = _options.GuardedIntegration,
+                EnableReasoning = _options.EnableReasoning,
+                UpdatedAt = DateTimeOffset.UtcNow
+            };
+            SetMission(resumed, persist: true, restoreCompletionOwnership: true);
+            RecordEvent("mission_resumed", $"Resumed durable mission '{resumed.Name}' ({resumed.MissionId}) at revision {resumed.CurrentRevision[..Math.Min(10, resumed.CurrentRevision.Length)]}.");
+            return resumed;
         }
 
         var baseRev = !string.IsNullOrWhiteSpace(_options.BaseRevision)
@@ -160,6 +190,7 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
             CurrentRevision = baseRev,
             WorkerModelId = workerModel,
             SupervisorModelId = supervisorModel,
+            PreferredOwner = _options.PreferredOwner,
             State = DeveloperAutonomousMissionState.Idle,
             AutoAdvance = _options.AutoAdvance,
             GuardedIntegration = _options.GuardedIntegration,
@@ -178,7 +209,7 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
 
     public async Task<DeveloperDulcheStatus> RefreshModelsAsync(CancellationToken cancellationToken = default)
     {
-        var status = await _gateway.GetStatusAsync(cancellationToken).ConfigureAwait(false);
+        var status = await ReadModelStatusAsync(cancellationToken).ConfigureAwait(false);
         if (CurrentMission is { } current)
         {
             var (worker, supervisor, ctx) = SelectModelsFromStatus(status, current.WorkerModelId, current.SupervisorModelId);
@@ -224,11 +255,12 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
 
     public Task StartAsync(CancellationToken cancellationToken = default)
     {
-        RequireMission();
         lock (_gate)
         {
+            var mission = RequireMission();
             if (_activeLoop is { IsCompleted: false })
                 return _activeLoop;
+            DemandNoUnconfirmedCompletion(mission);
             _pauseRequested = false;
             _runCts?.Dispose();
             _runCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -240,11 +272,12 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
 
     public Task RunSingleStepAsync(CancellationToken cancellationToken = default)
     {
-        RequireMission();
         lock (_gate)
         {
+            var mission = RequireMission();
             if (_activeLoop is { IsCompleted: false })
                 throw new InvalidOperationException("An autonomous mission run is already in progress.");
+            DemandNoUnconfirmedCompletion(mission);
             _pauseRequested = false;
             _runCts?.Dispose();
             _runCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -265,41 +298,54 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
 
     public async Task StopActiveRunAsync(CancellationToken cancellationToken = default)
     {
-        string? runId;
-        CancellationTokenSource? cts;
+        CancellationTokenSource? loopCancellation;
+        CancellationTokenSource? completionCancellation;
+        Task? completionEnded;
         Task? loop;
         lock (_gate)
         {
             _pauseRequested = true;
-            runId = _mission?.ActiveDulcheRunId;
-            cts = _runCts;
-            loop = _activeLoop;
+            loopCancellation = _runCts;
+            completionCancellation = _completionCts;
+            completionEnded = _completionEnded;
+            loop = _activeLoop is { IsCompleted: false } ? _activeLoop : null;
         }
 
-        if (!string.IsNullOrWhiteSpace(runId))
-        {
-            try { await _gateway.StopRunAsync(runId, cancellationToken).ConfigureAwait(false); }
-            catch { }
-        }
-
-        try { cts?.Cancel(); } catch { }
+        CancelIfAvailable(loopCancellation);
+        CancelIfAvailable(completionCancellation);
         if (loop is not null)
         {
-            try { await loop.ConfigureAwait(false); }
-            catch (OperationCanceledException) { }
-            catch { }
+            try { await loop.WaitAsync(cancellationToken).ConfigureAwait(false); }
+            catch (Exception) when (!cancellationToken.IsCancellationRequested) { }
         }
+        if (completionEnded is not null)
+            await completionEnded.WaitAsync(cancellationToken).ConfigureAwait(false);
 
         if (CurrentMission is { } current)
         {
-            SetMission(current with
+            // A separately requested Stop can recover a known run after a previous stop failed.
+            if (completionEnded is null && current.CompletionStopUnconfirmed
+                && current.ActiveDulcheRunId is { } runId)
             {
-                State = DeveloperAutonomousMissionState.Paused,
-                ActiveDulcheRunId = null,
-                UpdatedAt = DateTimeOffset.UtcNow
-            }, persist: true);
-            RecordEvent("mission_stopped", "Active autonomous run stopped; durable checkpoint and worktree preserved.");
+                await ConfirmOwnedRunStopAsync(runId, cancellationToken).ConfigureAwait(false);
+                SetCompletionOwnership(unconfirmed: false, runId: null);
+                current = RequireMission();
+            }
+            DemandNoUnconfirmedCompletion(current);
+            if (loop is null && completionEnded is null)
+                return;
+
+            if (current.State is not (DeveloperAutonomousMissionState.Completed or DeveloperAutonomousMissionState.Blocked
+                or DeveloperAutonomousMissionState.Failed))
+                TransitionMissionState(DeveloperAutonomousMissionState.Paused);
+            RecordEvent("mission_stopped", "Autonomous run stopped; durable checkpoint and worktree preserved.");
         }
+    }
+
+    private static void CancelIfAvailable(CancellationTokenSource? source)
+    {
+        try { source?.Cancel(); }
+        catch (ObjectDisposedException) { }
     }
 
     public async Task<DeveloperMissionCheckpoint> SaveCheckpointAsync(
@@ -353,15 +399,18 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
     {
         var current = RequireMission();
         var modelId = current.WorkerModelId ?? throw new InvalidOperationException("No worker model selected.");
+        var status = await ReadModelStatusAsync(cancellationToken).ConfigureAwait(false);
+        var worker = RequireLoadedModel(status, modelId, "worker");
         var (_, tokens, epoch) = await _context.BuildWorkingContextAsync(
             current,
             WorkerSystemPrompt,
             modelId,
-            current.ContextBudgetTokens,
+            GetContextBudget(worker),
             current.CompactThresholdTokens,
             forceCompact: true,
             compactReason: reason,
-            cancellationToken: cancellationToken).ConfigureAwait(false);
+            cancellationToken: cancellationToken,
+            completionTokens: WorkerCompletionTokens).ConfigureAwait(false);
 
         if (epoch is null)
             throw new InvalidOperationException("Forced context compaction did not produce an epoch.");
@@ -384,11 +433,13 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(objective);
         var current = RequireMission();
+        DemandNoUnconfirmedCompletion(current);
         var modelId = current.SupervisorModelId ?? current.WorkerModelId
             ?? throw new InvalidOperationException("No Dulche model is loaded for delegation.");
 
-        var status = await _gateway.GetStatusAsync(cancellationToken).ConfigureAwait(false);
+        var status = await ReadModelStatusAsync(cancellationToken).ConfigureAwait(false);
         DulcheUnixSocketGateway.DemandHardwareSafeguards(status, _options.MemoryFloorMiB, _options.DiskFloorGiB);
+        var model = RequireLoadedModel(status, modelId, "delegation");
 
         var runId = "del-" + Guid.NewGuid().ToString("N")[..10];
         var startedAt = DateTimeOffset.UtcNow;
@@ -407,12 +458,13 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
                 new("system", "You are a senior 9to1 supervisor and architecture advisor assisting an autonomous developer inside 9to1 Build. Provide concise, source-grounded technical guidance, edge cases, and concrete next edits."),
                 new("user", $"{contextSummary}\n\nDelegated objective:\n{objective}")
             ],
-            MaxTokens: Math.Min(2048, _options.MaxCompletionTokens),
+            MaxTokens: Math.Min(2048, WorkerCompletionTokens),
             Temperature: 0.1,
             EnableReasoning: current.EnableReasoning,
             RequireJsonObject: false,
             Objective: "Build delegated supervision: " + Truncate(objective, 80));
 
+        await CheckCompletionBudgetAsync("Delegation", model, request, cancellationToken).ConfigureAwait(false);
         RecordEvent("delegation_started", $"Delegated to {modelId}: {Truncate(objective, 120)}", active?.TaskId, modelId);
         var completion = await StreamModelAsync(DeveloperAgentRole.DelegatedSubagent, request, cancellationToken).ConfigureAwait(false);
 
@@ -448,7 +500,7 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
         var task = current.ActiveTask ?? throw new InvalidOperationException("There is no active task to integrate.");
         var worker = current.WorkerModelId ?? "autonomous-worker";
 
-        if (task.Verification is not { BuildSucceeded: true, TestsSucceeded: true })
+        if (!MatchesVerification(task.Verification, task.DiffSha256, task.BuildProject, task.TestProject, task.TestFilter))
             throw new InvalidOperationException("Build and test verification must pass before guarded integration.");
 
         var updatedTask = task;
@@ -515,14 +567,11 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
                 }
 
                 var current = RequireMission();
-                var status = await _gateway.GetStatusAsync(cancellationToken).ConfigureAwait(false);
+                var status = await ReadModelStatusAsync(cancellationToken).ConfigureAwait(false);
                 DulcheUnixSocketGateway.DemandHardwareSafeguards(status, _options.MemoryFloorMiB, _options.DiskFloorGiB);
 
                 var (worker, supervisor, ctx) = SelectModelsFromStatus(status, current.WorkerModelId, current.SupervisorModelId);
-                if (string.IsNullOrWhiteSpace(worker))
-                    throw new InvalidOperationException("No loaded Dulche model is available. Ensure Qwen is loaded in Dulche.");
-
-                if (worker != current.WorkerModelId || supervisor != current.SupervisorModelId)
+                if (worker != current.WorkerModelId || supervisor != current.SupervisorModelId || ctx != current.ContextBudgetTokens)
                 {
                     SetMission(current with
                     {
@@ -548,9 +597,15 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
                     var next = await AdmitNextRequirementTaskAsync(cancellationToken).ConfigureAwait(false);
                     if (next is null)
                     {
-                        TransitionMissionState(DeveloperAutonomousMissionState.Completed);
-                        await SaveCheckpointAsync("mission_completed", "All eligible specification requirements have been processed.", cancellationToken).ConfigureAwait(false);
-                        RecordEvent("mission_completed", "No remaining uncovered approved requirements in the programme.");
+                        var blocked = HasBlockedRequirements(RequireMission());
+                        var state = blocked ? DeveloperAutonomousMissionState.Blocked : DeveloperAutonomousMissionState.Completed;
+                        var eventKind = blocked ? "mission_blocked" : "mission_completed";
+                        var summary = blocked
+                            ? "No runnable requirements remain. Blocked requirements still need resolution."
+                            : "No remaining uncovered approved requirements in the programme.";
+                        TransitionMissionState(state);
+                        await SaveCheckpointAsync(eventKind, summary, cancellationToken).ConfigureAwait(false);
+                        RecordEvent(eventKind, summary);
                         return;
                     }
                     tasksProcessed++;
@@ -571,8 +626,9 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
                 }
 
                 // 3) Execute one autonomous developer turn for the active task.
+                var activeWorker = RequireLoadedModel(status, worker, "worker");
                 TransitionMissionState(DeveloperAutonomousMissionState.Implementing);
-                var taskFinished = await ExecuteWorkerTurnAsync(worker, cancellationToken).ConfigureAwait(false);
+                var taskFinished = await ExecuteWorkerTurnAsync(activeWorker, cancellationToken).ConfigureAwait(false);
 
                 if (singleStep)
                 {
@@ -583,13 +639,14 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
 
                 if (taskFinished && !RequireMission().AutoAdvance)
                 {
-                    TransitionMissionState(DeveloperAutonomousMissionState.Paused);
-                    RecordEvent("auto_advance_disabled", "Task completed; pausing because Auto-Advance is disabled.");
+                    if (RequireMission().State != DeveloperAutonomousMissionState.Blocked)
+                        TransitionMissionState(DeveloperAutonomousMissionState.Paused);
+                    RecordEvent("auto_advance_disabled", "Task ended; pausing because Auto-Advance is disabled.");
                     return;
                 }
             }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             TransitionMissionState(DeveloperAutonomousMissionState.Paused);
             RecordEvent("mission_cancelled", "Autonomous loop paused via cancellation.");
@@ -602,7 +659,6 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
                 SetMission(current with
                 {
                     State = DeveloperAutonomousMissionState.Failed,
-                    ActiveDulcheRunId = null,
                     LastError = ex.Message,
                     UpdatedAt = DateTimeOffset.UtcNow
                 }, persist: true);
@@ -611,6 +667,10 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
             throw;
         }
     }
+
+    private static bool HasBlockedRequirements(DeveloperAutonomousMission mission) =>
+        mission.BlockedRecordIds.Concat(mission.BlockedTasks.SelectMany(task => task.RecordIds))
+            .Except(mission.CompletedRecordIds, StringComparer.Ordinal).Any();
 
     private async Task<DeveloperMissionTask?> AdmitNextRequirementTaskAsync(CancellationToken cancellationToken)
     {
@@ -626,7 +686,8 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
 
         var completed = new HashSet<string>(current.CompletedRecordIds, StringComparer.Ordinal);
         var blocked = new HashSet<string>(current.BlockedRecordIds, StringComparer.Ordinal);
-        var selected = catalog.SelectNextUncoveredRequirement(completed, blocked, current.ProgrammeModuleCursor);
+        var preferredOwner = ResolvePreferredOwner(current, catalog);
+        var selected = catalog.SelectNextUncoveredRequirement(completed, blocked, current.ProgrammeModuleCursor, preferredOwner);
         if (selected is null)
             return null;
 
@@ -642,10 +703,13 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
             current.CurrentRevision,
             cancellationToken).ConfigureAwait(false);
 
-        var (buildProj, testProj) = DiscoverDefaultProjects(worktreePath);
+        var (buildProj, testProj, testFilter, allowedSource, allowedTest, previewFiles) =
+            ResolveModuleProjectsAndScope(worktreePath, module, record);
 
         var focusBuilder = new StringBuilder();
-        focusBuilder.AppendLine($"Requirement {record.RecordId} (Module {module.ModuleId}: {module.Title})");
+        focusBuilder.AppendLine($"Requirement {record.RecordId} (Module {module.ModuleId}: {module.Title}, owner={module.Owner})");
+        if (!string.IsNullOrWhiteSpace(record.SourcePath))
+            focusBuilder.AppendLine($"Authoritative spec source: {record.SourcePath}" + (record.SourceLine is { } ln ? $":{ln}" : ""));
         focusBuilder.AppendLine(record.Requirement);
         if (!string.IsNullOrWhiteSpace(record.SourceText) && !record.SourceText.Equals(record.Requirement, StringComparison.Ordinal))
         {
@@ -668,8 +732,11 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
             AcceptanceCriteria = string.IsNullOrWhiteSpace(record.Acceptance)
                 ? $"Satisfy all clauses of {record.RecordId} with passing build and focused automated tests."
                 : record.Acceptance,
+            AllowedSourcePaths = allowedSource,
+            AllowedTestPaths = allowedTest,
             BuildProject = buildProj,
             TestProject = testProj,
+            TestFilter = testFilter,
             WorktreePath = worktreePath,
             BaseRevision = current.CurrentRevision,
             CurrentRevision = current.CurrentRevision,
@@ -684,23 +751,31 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
         };
         SetMission(updated, persist: true);
 
-        var filesPreview = DeveloperAutonomousWorkspaceTools.ListFiles(worktreePath, ".", 60);
+        var scopeLine = allowedSource.Count + allowedTest.Count > 0
+            ? $"Allowed edit scope: {string.Join(", ", allowedSource.Concat(allowedTest))}\n"
+            : "";
+        var filterLine = !string.IsNullOrWhiteSpace(testFilter)
+            ? $"Recommended test filter: {testFilter}\n"
+            : "";
         AppendTranscript("user",
             $"NEW AUTONOMOUS TASK {task.TaskId} (base revision {task.BaseRevision[..Math.Min(10, task.BaseRevision.Length)]})\n"
             + $"{task.Focus}\n\n"
             + $"Acceptance criteria:\n{task.AcceptanceCriteria}\n\n"
+            + scopeLine
             + $"Detected build project: {buildProj ?? "(discover with list_files)"}\n"
             + $"Detected test project: {testProj ?? "(discover with list_files)"}\n"
-            + $"Worktree files (first {filesPreview.Count}):\n{string.Join('\n', filesPreview)}\n\n"
-            + "Inspect relevant source files, implement the requirement, write/update focused tests, verify with run_tests, and submit with complete_task.");
+            + filterLine
+            + $"Relevant worktree files (first {previewFiles.Count}):\n{string.Join('\n', previewFiles)}\n\n"
+            + "Inspect relevant source and test files, implement a real focused gap or invariant for this requirement within your owned scope, write/update focused automated tests, verify with run_tests, and submit with complete_task.");
 
         await SaveCheckpointAsync("task_admitted", $"Admitted requirement {record.RecordId} as task {task.TaskId}.", cancellationToken).ConfigureAwait(false);
         RecordEvent("task_admitted", $"Selected requirement {record.RecordId}: {task.Title}", task.TaskId, current.WorkerModelId);
         return task;
     }
 
-    private async Task<bool> ExecuteWorkerTurnAsync(string workerModelId, CancellationToken cancellationToken)
+    private async Task<bool> ExecuteWorkerTurnAsync(DeveloperModelInfo worker, CancellationToken cancellationToken)
     {
+        var workerModelId = worker.Id;
         var current = RequireMission();
         var task = current.ActiveTask ?? throw new InvalidOperationException("No active task.");
         if (task.TurnCount >= _options.MaxTurnsPerTask)
@@ -713,10 +788,11 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
             current,
             WorkerSystemPrompt,
             workerModelId,
-            current.ContextBudgetTokens,
+            GetContextBudget(worker),
             current.CompactThresholdTokens,
             forceCompact: false,
-            cancellationToken: cancellationToken).ConfigureAwait(false);
+            cancellationToken: cancellationToken,
+            completionTokens: WorkerCompletionTokens).ConfigureAwait(false);
 
         if (newEpoch is not null)
         {
@@ -738,12 +814,13 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
             new DeveloperCompletionRequest(
                 ModelId: workerModelId,
                 Messages: messages,
-                MaxTokens: _options.MaxCompletionTokens,
+                MaxTokens: WorkerCompletionTokens,
                 Temperature: 0.1,
                 EnableReasoning: current.EnableReasoning,
                 RequireJsonObject: !current.EnableReasoning,
                 Objective: $"9to1 Build {task.TaskId} turn {task.TurnCount + 1}"),
             cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
 
         var (action, parseError) = ParseJsonAction(completion.Content);
         var op = action?["op"]?.ToString() ?? "invalid";
@@ -769,20 +846,21 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
             await AdvanceTurnAsync(task, changed: false, freshRead: false, op: "parse_error",
                 receipt: $"Rejected: {parseError}. Return ONE valid JSON object with an 'op' field.",
                 visitedDigest: null, cancellationToken: cancellationToken).ConfigureAwait(false);
-            return false;
+            return RequireMission().ActiveTask is null;
         }
 
         var worktree = task.WorktreePath!;
         var allowedScope = task.AllowedSourcePaths.Concat(task.AllowedTestPaths).ToArray();
-        var actionDigest = DeveloperAutonomousMissionStore.Sha256Hex(action.ToJsonString());
+        var actionDigest = ComputeActionDigest(action);
 
         var mutatingOp = op is "edit_file" or "create_file" or "complete_task" or "defer_task" or "block_task" or "compact";
-        if (!mutatingOp && task.VisitedActionDigests.Contains(actionDigest, StringComparer.Ordinal))
+        if (!mutatingOp && (task.VisitedActionDigests.Contains(actionDigest, StringComparer.Ordinal)
+            || task.VisitedActionDigests.Contains(DeveloperAutonomousMissionStore.Sha256Hex(action.ToJsonString()), StringComparer.Ordinal)))
         {
             await AdvanceTurnAsync(task, changed: false, freshRead: false, op: op,
                 receipt: "Rejected: identical read-only action already executed since the last edit. Use retained receipts or make a concrete code edit.",
                 visitedDigest: null, cancellationToken: cancellationToken).ConfigureAwait(false);
-            return false;
+            return RequireMission().ActiveTask is null;
         }
 
         string receipt;
@@ -968,7 +1046,7 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
 
         await AdvanceTurnAsync(RequireMission().ActiveTask ?? task, changed, freshRead, op, receipt,
             mutatingOp ? null : actionDigest, cancellationToken).ConfigureAwait(false);
-        return false;
+        return RequireMission().ActiveTask is null;
     }
 
     private async Task<(bool Completed, string Feedback, bool Progressed)> HandleCompleteTaskAsync(
@@ -1004,6 +1082,13 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
             resolvedTest ??= discovered.TestProject;
         }
 
+        if (string.IsNullOrWhiteSpace(resolvedBuild) || string.IsNullOrWhiteSpace(resolvedTest))
+            return (false, "Cannot verify task: specify both build_project and test_project so guarded compilation and automated tests actually execute.", false);
+
+        resolvedBuild = DeveloperAutonomousWorkspaceTools.NormalizeAndValidateRelativePath(worktree, resolvedBuild);
+        resolvedTest = DeveloperAutonomousWorkspaceTools.NormalizeAndValidateRelativePath(worktree, resolvedTest);
+        testFilter = NormalizeTestFilter(testFilter);
+
         var workingTask = task with
         {
             ChangedPaths = changedPaths,
@@ -1012,30 +1097,23 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
             Summary = summary,
             BuildProject = resolvedBuild,
             TestProject = resolvedTest,
-            TestFilter = testFilter
+            TestFilter = testFilter,
+            Review = null
         };
         SetMission(current with { ActiveTask = workingTask, UpdatedAt = DateTimeOffset.UtcNow }, persist: true);
 
-        // 1) Guarded Build + Test verification (must match exact current diff SHA-256).
-        DeveloperBuildVerificationReport verification;
-        if (workingTask.Verification is { BuildSucceeded: true, TestsSucceeded: true } existing
-            && StringComparer.Ordinal.Equals(existing.SourceDiffSha256, diffSha))
-        {
-            verification = existing;
-        }
-        else if (!string.IsNullOrWhiteSpace(resolvedBuild))
-        {
-            verification = await RunVerificationForTaskAsync(workingTask, resolvedBuild, resolvedTest, testFilter, cancellationToken).ConfigureAwait(false);
-        }
-        else
-        {
-            return (false, "Cannot verify task: specify build_project (and test_project) so guarded compilation and tests can run.", false);
-        }
+        // 1) Guarded build and tests must cover this exact diff and verification scope.
+        var verification = MatchesVerification(workingTask.Verification, diffSha, resolvedBuild, resolvedTest, testFilter)
+            ? workingTask.Verification!
+            : await RunVerificationForTaskAsync(workingTask, resolvedBuild, resolvedTest, testFilter, cancellationToken).ConfigureAwait(false);
 
-        if (!verification.BuildSucceeded || !verification.TestsSucceeded)
+        if (verification is not { BuildSucceeded: true, TestsSucceeded: true, TestsPassed: > 0 })
             return (false, "Guarded verification failed; fix the actual errors and re-run before calling complete_task.\n" + FormatVerificationReceipt(verification), true);
 
         workingTask = RequireMission().ActiveTask!;
+        if (!StringComparer.Ordinal.Equals(workingTask.DiffSha256, diffSha)
+            || !MatchesVerification(verification, workingTask.DiffSha256, resolvedBuild, resolvedTest, testFilter))
+            return (false, "The worktree changed during verification. Inspect the current diff and re-run the exact build and tests.", false);
 
         // 2) Independent Supervisor Review (bound to exact diff SHA-256).
         if (RequireMission().RequireSupervisorReview)
@@ -1084,7 +1162,7 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
     {
         TransitionMissionState(DeveloperAutonomousMissionState.Verifying);
         var worktree = task.WorktreePath!;
-        var (changedPaths, unifiedDiff, diffSha) = await DeveloperAutonomousWorkspaceTools.CaptureDiffAsync(worktree, cancellationToken).ConfigureAwait(false);
+        var (_, _, diffSha) = await DeveloperAutonomousWorkspaceTools.CaptureDiffAsync(worktree, cancellationToken).ConfigureAwait(false);
 
         AppendTerminalLine($"=== Guarded verification for {task.TaskId} ({buildProject}) ===");
         RecordEvent("verification_started", $"Running guarded build/test for {task.TaskId} ({buildProject}).", task.TaskId);
@@ -1093,7 +1171,7 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
             worktree,
             buildProject,
             testProject,
-            testFilter,
+            NormalizeTestFilter(testFilter),
             diffSha,
             _options,
             AppendTerminalLine,
@@ -1101,15 +1179,17 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
 
         _store.SaveReceipt(RequireMission().MissionId, $"{task.TaskId}-verify", report);
 
+        var (changedPaths, unifiedDiff, currentDiffSha) = await DeveloperAutonomousWorkspaceTools.CaptureDiffAsync(worktree, cancellationToken).ConfigureAwait(false);
         var updatedTask = RequireMission().ActiveTask! with
         {
             ChangedPaths = changedPaths,
             DiffText = unifiedDiff,
-            DiffSha256 = diffSha,
-            BuildProject = buildProject,
-            TestProject = testProject,
-            TestFilter = testFilter,
+            DiffSha256 = currentDiffSha,
+            BuildProject = report.BuildProject,
+            TestProject = report.TestProject,
+            TestFilter = report.TestFilter,
             Verification = report,
+            Review = null,
             State = report.BuildSucceeded && report.TestsSucceeded
                 ? DeveloperMissionTaskState.Verifying
                 : DeveloperMissionTaskState.Implementing
@@ -1125,6 +1205,21 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
         return report;
     }
 
+    private static string? NormalizeTestFilter(string? filter) => string.IsNullOrWhiteSpace(filter) ? null : filter;
+
+    private static bool MatchesVerification(
+        DeveloperBuildVerificationReport? report,
+        string diffSha256,
+        string? buildProject,
+        string? testProject,
+        string? testFilter) =>
+        report is { BuildSucceeded: true, TestsSucceeded: true, TestsPassed: > 0 }
+        && !string.IsNullOrWhiteSpace(testProject)
+        && StringComparer.Ordinal.Equals(report.SourceDiffSha256, diffSha256)
+        && StringComparer.Ordinal.Equals(report.BuildProject, buildProject)
+        && StringComparer.Ordinal.Equals(report.TestProject, testProject)
+        && StringComparer.Ordinal.Equals(NormalizeTestFilter(report.TestFilter), NormalizeTestFilter(testFilter));
+
     private async Task<DeveloperReviewReceipt> RunSupervisorReviewAsync(
         DeveloperMissionTask task,
         string workerModelId,
@@ -1132,6 +1227,9 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
     {
         var current = RequireMission();
         var reviewer = current.SupervisorModelId ?? workerModelId;
+        var status = await ReadModelStatusAsync(cancellationToken).ConfigureAwait(false);
+        DulcheUnixSocketGateway.DemandHardwareSafeguards(status, _options.MemoryFloorMiB, _options.DiskFloorGiB);
+        var reviewerModel = RequireLoadedModel(status, reviewer, "supervisor");
         var bindingDigest = ComputeReviewBindingDigest(task);
 
         var reviewPayload = JsonSerializer.Serialize(new
@@ -1143,32 +1241,32 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
             acceptance = task.AcceptanceCriteria,
             changed_paths = task.ChangedPaths,
             diff_sha256 = task.DiffSha256,
-            tests_passed = task.Verification?.TestsPassed ?? 0,
-            tests_failed = task.Verification?.TestsFailed ?? 0,
+            verification = ReviewVerificationEvidence(task.Verification),
             summary = task.Summary,
-            diff = Truncate(task.DiffText, 16_000)
+            diff = task.DiffText
         });
 
+        var request = new DeveloperCompletionRequest(
+            ModelId: reviewer,
+            Messages:
+            [
+                new("system", SupervisorReviewPrompt),
+                new("user", reviewPayload)
+            ],
+            MaxTokens: Math.Min(3072, WorkerCompletionTokens),
+            Temperature: 0.05,
+            EnableReasoning: current.EnableReasoning,
+            RequireJsonObject: !current.EnableReasoning,
+            Objective: $"9to1 Build supervisor review {task.TaskId}");
+
+        await CheckCompletionBudgetAsync("Supervisor review of the full diff", reviewerModel, request, cancellationToken).ConfigureAwait(false);
         RecordEvent("review_started", $"Requesting independent review from {reviewer} for {task.TaskId}.", task.TaskId, reviewer);
-        var completion = await StreamModelAsync(
-            DeveloperAgentRole.Supervisor,
-            new DeveloperCompletionRequest(
-                ModelId: reviewer,
-                Messages:
-                [
-                    new("system", SupervisorReviewPrompt),
-                    new("user", reviewPayload)
-                ],
-                MaxTokens: 1024,
-                Temperature: 0.05,
-                EnableReasoning: current.EnableReasoning,
-                RequireJsonObject: !current.EnableReasoning,
-                Objective: $"9to1 Build supervisor review {task.TaskId}"),
-            cancellationToken).ConfigureAwait(false);
+        var completion = await StreamModelAsync(DeveloperAgentRole.Supervisor, request, cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
 
         var (parsed, parseErr) = ParseJsonAction(completion.Content);
         var approved = parsed is not null
-            && parsed["approve"]?.GetValue<bool>() == true
+            && parsed["approve"] is JsonValue approval && approval.TryGetValue<bool>(out var accepted) && accepted
             && StringComparer.Ordinal.Equals(parsed["sha256"]?.ToString(), bindingDigest);
 
         var reason = parsed?["reason"]?.ToString()
@@ -1274,6 +1372,7 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
         var current = RequireMission();
         SetMission(current with
         {
+            State = DeveloperAutonomousMissionState.Blocked,
             ActiveTask = null,
             BlockedTasks = current.BlockedTasks.Append(blockedTask).ToArray(),
             BlockedRecordIds = current.BlockedRecordIds.Concat(blockedTask.RecordIds).Distinct(StringComparer.Ordinal).ToArray(),
@@ -1309,6 +1408,8 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
             ChangedPaths = changedPaths,
             DiffText = unifiedDiff,
             DiffSha256 = diffSha,
+            Verification = task.Verification?.SourceDiffSha256 == diffSha ? task.Verification : null,
+            Review = task.Review?.DiffSha256 == diffSha ? task.Review : null,
             TurnCount = task.TurnCount + 1,
             IdleTurns = idle,
             VisitedActionDigests = visited
@@ -1340,79 +1441,180 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
         DeveloperCompletionRequest request,
         CancellationToken cancellationToken)
     {
-        var reasoningSb = new StringBuilder();
-        var contentSb = new StringBuilder();
+        using var idle = new CancellationTokenSource();
+        using var streamCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, idle.Token);
+        var ended = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        lock (_gate)
+        {
+            if (_completionCts is not null)
+                throw new InvalidOperationException("This mission already has a model completion in progress.");
+            DemandNoUnconfirmedCompletion(RequireMission());
+            _completionCts = streamCancellation;
+            _completionEnded = ended.Task;
+        }
+
+        var streamGate = new object();
+        var reasoning = new StringBuilder();
+        var content = new StringBuilder();
+        var receiving = true;
+        var receivedChunk = false;
+        var dispatched = false;
         string? activeRunId = null;
         double? lastTps = null;
+        Task<DeveloperCompletionResult>? transport = null;
 
-        PublishStream(new DeveloperLiveStreamSnapshot(role, request.ModelId, null, "", "", null, true));
         try
         {
-            var result = await _gateway.StreamCompletionAsync(
+            streamCancellation.Token.ThrowIfCancellationRequested();
+            PublishStream(new(role, request.ModelId, null, "", "", null, true));
+            SetCompletionOwnership(unconfirmed: true, runId: null);
+            dispatched = true;
+            idle.CancelAfter(_options.StreamIdleTimeout);
+
+            transport = _gateway.StreamCompletionAsync(
                 request,
                 chunk =>
                 {
-                    if (!string.IsNullOrEmpty(chunk.ReasoningDelta))
-                        reasoningSb.Append(chunk.ReasoningDelta);
-                    if (!string.IsNullOrEmpty(chunk.ContentDelta))
-                        contentSb.Append(chunk.ContentDelta);
-                    if (chunk.TokensPerSecond is > 0)
-                        lastTps = chunk.TokensPerSecond;
-                    PublishStream(new DeveloperLiveStreamSnapshot(
-                        role,
-                        request.ModelId,
-                        activeRunId ?? chunk.RunId,
-                        reasoningSb.ToString(),
-                        contentSb.ToString(),
-                        lastTps,
-                        true));
+                    lock (streamGate)
+                    {
+                        if (!receiving || streamCancellation.IsCancellationRequested)
+                            return;
+                        receivedChunk = true;
+                        idle.CancelAfter(_options.StreamIdleTimeout);
+                        reasoning.Append(chunk.ReasoningDelta);
+                        content.Append(chunk.ContentDelta);
+                        if (chunk.TokensPerSecond is > 0)
+                            lastTps = chunk.TokensPerSecond;
+                        PublishStream(new(role, request.ModelId, activeRunId, reasoning.ToString(), content.ToString(), lastTps, true));
+                    }
                 },
                 runId =>
                 {
-                    activeRunId = runId;
-                    if (CurrentMission is { } m)
-                        SetMission(m with { ActiveDulcheRunId = runId, UpdatedAt = DateTimeOffset.UtcNow }, persist: false);
+                    lock (streamGate)
+                    {
+                        // Capture an acknowledgement that races with cancellation so we can still stop the owned run.
+                        if (!receiving || activeRunId is not null || string.IsNullOrWhiteSpace(runId))
+                            return;
+                        activeRunId = runId;
+                        SetCompletionOwnership(unconfirmed: true, runId);
+                        idle.CancelAfter(_options.StreamIdleTimeout);
+                    }
                 },
-                cancellationToken).ConfigureAwait(false);
+                streamCancellation.Token);
 
-            PublishStream(new DeveloperLiveStreamSnapshot(
-                role,
-                request.ModelId,
-                result.RunId,
-                result.ReasoningContent,
-                result.Content,
-                result.TokensPerSecond ?? lastTps,
-                false));
-
-            if (CurrentMission is { } m2)
-                SetMission(m2 with { ActiveDulcheRunId = null, UpdatedAt = DateTimeOffset.UtcNow }, persist: false);
-
+            var result = await transport.WaitAsync(streamCancellation.Token).ConfigureAwait(false);
+            lock (streamGate)
+                receiving = false;
+            SetCompletionOwnership(unconfirmed: false, runId: null);
+            dispatched = false;
+            PublishStream(new(role, request.ModelId, result.RunId, result.ReasoningContent, result.Content,
+                result.TokensPerSecond ?? lastTps, false));
             return result;
         }
-        catch
+        catch (Exception streamError)
         {
-            PublishStream(new DeveloperLiveStreamSnapshot(
-                role,
-                request.ModelId,
-                activeRunId,
-                reasoningSb.ToString(),
-                contentSb.ToString(),
-                lastTps,
-                false));
-            if (CurrentMission is { } m3)
-                SetMission(m3 with { ActiveDulcheRunId = null, UpdatedAt = DateTimeOffset.UtcNow }, persist: false);
+            lock (streamGate)
+                receiving = false;
+            var timedOut = idle.IsCancellationRequested && !cancellationToken.IsCancellationRequested;
+            CancelIfAvailable(streamCancellation);
+            if (transport is not null)
+            {
+                // WaitAsync bounds the wait even if the transport fails to observe cancellation.
+                _ = transport.ContinueWith(task => { _ = task.Exception; },
+                    CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
+            }
+            PublishStream(new(role, request.ModelId, activeRunId, reasoning.ToString(), content.ToString(), lastTps, false));
+
+            if (dispatched)
+            {
+                try
+                {
+                    if (transport is { IsCompletedSuccessfully: true }
+                        || (activeRunId is null && !receivedChunk && WasCompletionRequestRejected(streamError)))
+                    {
+                        SetCompletionOwnership(unconfirmed: false, runId: null);
+                    }
+                    else if (activeRunId is not null)
+                    {
+                        await ConfirmOwnedRunStopAsync(activeRunId, CancellationToken.None).ConfigureAwait(false);
+                        SetCompletionOwnership(unconfirmed: false, runId: null);
+                    }
+                }
+                catch (Exception stopError)
+                {
+                    throw new IOException($"Dulche did not confirm stopping owned run '{activeRunId}'.",
+                        new AggregateException(streamError, stopError));
+                }
+
+                if (RequireMission().CompletionStopUnconfirmed)
+                    throw new IOException("Dulche did not provide an owned run ID or confirm that the completion ended.", streamError);
+            }
+
+            if (timedOut)
+                throw new TimeoutException($"Dulche model '{request.ModelId}' stopped streaming for {_options.StreamIdleTimeout}.", streamError);
             throw;
         }
+        finally
+        {
+            lock (_gate)
+            {
+                _completionCts = null;
+                _completionEnded = null;
+            }
+            ended.SetResult();
+        }
+    }
+
+    private static bool WasCompletionRequestRejected(Exception error) =>
+        error is HttpRequestException { StatusCode: HttpStatusCode.BadRequest or HttpStatusCode.Unauthorized
+            or HttpStatusCode.Forbidden or HttpStatusCode.NotFound or HttpStatusCode.RequestEntityTooLarge
+            or HttpStatusCode.UnprocessableEntity or HttpStatusCode.TooManyRequests };
+
+    private async Task ConfirmOwnedRunStopAsync(string runId, CancellationToken cancellationToken)
+    {
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        deadline.CancelAfter(StopAcknowledgementTimeout);
+        await _gateway.StopRunAsync(runId, deadline.Token).WaitAsync(deadline.Token).ConfigureAwait(false);
+        RecordEvent("model_run_stop_confirmed", $"Dulche confirmed stopping owned run '{runId}'.");
+    }
+
+    private void SetCompletionOwnership(bool unconfirmed, string? runId)
+    {
+        DeveloperAutonomousMission updated;
+        lock (_gate)
+        {
+            updated = RequireMission() with
+            {
+                CompletionStopUnconfirmed = unconfirmed,
+                ActiveDulcheRunId = runId,
+                UpdatedAt = DateTimeOffset.UtcNow
+            };
+            _store.SaveMission(updated);
+            _mission = updated;
+        }
+        MissionChanged?.Invoke(updated);
+    }
+
+    private static void DemandNoUnconfirmedCompletion(DeveloperAutonomousMission mission)
+    {
+        if (!mission.CompletionStopUnconfirmed)
+            return;
+
+        throw new InvalidOperationException(mission.ActiveDulcheRunId is { } id
+            ? $"Dulche run '{id}' may still be active. Stop and confirm that run before restarting the mission."
+            : "A previous Dulche completion may still be active without a confirmed owned run ID. Inspect the resident runtime before restarting.");
     }
 
     private async Task<(string? Worker, string? Supervisor, int ContextBudget)> ResolveModelsAsync(CancellationToken cancellationToken)
     {
         try
         {
-            var status = await _gateway.GetStatusAsync(cancellationToken).ConfigureAwait(false);
+            var status = await ReadModelStatusAsync(cancellationToken).ConfigureAwait(false);
             return SelectModelsFromStatus(status, _options.WorkerModelId, _options.SupervisorModelId);
         }
-        catch
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested
+            && ex is IOException or HttpRequestException or TimeoutException or OperationCanceledException)
         {
             return (_options.WorkerModelId, _options.SupervisorModelId, _options.ContextBudgetTokens);
         }
@@ -1424,18 +1626,148 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
         string? preferredSupervisor)
     {
         var loaded = status.Models.Where(m => m.IsLoaded).ToArray();
-        var worker = !string.IsNullOrWhiteSpace(preferredWorker) && loaded.Any(m => m.Id == preferredWorker)
-            ? loaded.First(m => m.Id == preferredWorker)
+        var workerId = !string.IsNullOrWhiteSpace(preferredWorker)
+            ? preferredWorker.Trim()
             : loaded.OrderByDescending(m => m.Id.Contains("flash", StringComparison.OrdinalIgnoreCase) ? 1 : 0)
                 .ThenByDescending(m => m.ContextLength)
-                .FirstOrDefault();
+                .FirstOrDefault()?.Id;
+        var worker = loaded.FirstOrDefault(model => model.Id == workerId);
+        var supervisorId = !string.IsNullOrWhiteSpace(preferredSupervisor)
+            ? preferredSupervisor.Trim()
+            : worker is null ? null : loaded.FirstOrDefault(model => model.Id != worker.Id)?.Id ?? worker.Id;
 
-        var supervisor = !string.IsNullOrWhiteSpace(preferredSupervisor) && loaded.Any(m => m.Id == preferredSupervisor)
-            ? loaded.First(m => m.Id == preferredSupervisor)
-            : loaded.FirstOrDefault(m => worker is not null && m.Id != worker.Id) ?? worker;
+        return (workerId, supervisorId, worker is null ? _options.ContextBudgetTokens : GetContextBudget(worker));
+    }
 
-        var ctx = worker?.ContextLength is > 0 ? worker.ContextLength : _options.ContextBudgetTokens;
-        return (worker?.Id ?? preferredWorker, supervisor?.Id ?? preferredSupervisor, ctx);
+    private Task<DeveloperDulcheStatus> ReadModelStatusAsync(CancellationToken cancellationToken) =>
+        DeveloperMissionContextManager.RetryGatewayReadAsync(_gateway.GetStatusAsync, cancellationToken);
+
+    private static DeveloperModelInfo RequireLoadedModel(DeveloperDulcheStatus status, string? selectedId, string role)
+    {
+        if (string.IsNullOrWhiteSpace(selectedId))
+            throw new InvalidOperationException($"No loaded Dulche model is available for the {role}.");
+        return status.Models.FirstOrDefault(model => model.IsLoaded && model.Id == selectedId)
+            ?? throw new InvalidOperationException($"Selected {role} model '{selectedId}' is unavailable or unloaded in Dulche.");
+    }
+
+    private int GetContextBudget(DeveloperModelInfo model) => Math.Min(model.ContextLength, _options.ContextBudgetTokens);
+
+    private int WorkerCompletionTokens => Math.Clamp(_options.MaxCompletionTokens, 64, 32_768);
+
+    private async Task CheckCompletionBudgetAsync(
+        string role, DeveloperModelInfo model, DeveloperCompletionRequest request, CancellationToken cancellationToken)
+    {
+        var promptTokens = await _context.MeasurePromptTokensAsync(model.Id, request.Messages, cancellationToken).ConfigureAwait(false);
+        DeveloperMissionContextManager.DemandContextFit(role, GetContextBudget(model), promptTokens, request.MaxTokens);
+    }
+
+    private static string? ResolvePreferredOwner(DeveloperAutonomousMission mission, DeveloperProgrammeCatalog catalog)
+    {
+        if (!string.IsNullOrWhiteSpace(mission.PreferredOwner))
+            return mission.PreferredOwner.Trim();
+        if (!catalog.IsStructuredManifest)
+            return null;
+        var worker = mission.WorkerModelId ?? "";
+        if (worker.Contains("flash", StringComparison.OrdinalIgnoreCase))
+            return "flash";
+        if (worker.Contains("27b", StringComparison.OrdinalIgnoreCase)
+            || worker.Contains("local-2c31f26c4d698422017d6c14", StringComparison.OrdinalIgnoreCase))
+            return "qwen27";
+        return null;
+    }
+
+    private (
+        string? BuildProject,
+        string? TestProject,
+        string? TestFilter,
+        IReadOnlyList<string> AllowedSourcePaths,
+        IReadOnlyList<string> AllowedTestPaths,
+        IReadOnlyList<string> PreviewFiles)
+        ResolveModuleProjectsAndScope(string worktreeRoot, DeveloperProgrammeModuleSummary module, DeveloperProgrammeRecord record)
+    {
+        if (!string.IsNullOrWhiteSpace(_options.DefaultBuildProject))
+        {
+            return (
+                _options.DefaultBuildProject,
+                _options.DefaultTestProject,
+                null,
+                [],
+                [],
+                DeveloperAutonomousWorkspaceTools.ListFiles(worktreeRoot, ".", 60));
+        }
+
+        bool Exists(string rel) =>
+            File.Exists(Path.Combine(worktreeRoot, rel)) || Directory.Exists(Path.Combine(worktreeRoot, rel));
+
+        static IReadOnlyList<string> GatherPreview(string root, string[] dirs, string? testFilePrefix = null)
+        {
+            var files = new List<string>();
+            foreach (var dir in dirs)
+            {
+                if (!Directory.Exists(Path.Combine(root, dir))) continue;
+                var listed = DeveloperAutonomousWorkspaceTools.ListFiles(root, dir, 80);
+                if (!string.IsNullOrWhiteSpace(testFilePrefix) && dir.Contains("Tests", StringComparison.OrdinalIgnoreCase))
+                    listed = listed.Where(f => Path.GetFileName(f).StartsWith(testFilePrefix, StringComparison.OrdinalIgnoreCase)).ToArray();
+                files.AddRange(listed);
+            }
+            return files.Distinct(StringComparer.Ordinal).Take(80).ToArray();
+        }
+
+        switch (module.ModuleId)
+        {
+            case "Q25" when Exists("9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj"):
+                return (
+                    "9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj",
+                    Exists("9to1 Workspace/shared/tests/Haven.Core.Tests/Haven.Core.Tests.csproj")
+                        ? "9to1 Workspace/shared/tests/Haven.Core.Tests/Haven.Core.Tests.csproj" : null,
+                    "FullyQualifiedName~Games",
+                    ["9to1 Workspace/shared/src/Haven.Core/Games", "9to1 Workspace/shared/src/Haven.Application/Games"],
+                    ["9to1 Workspace/shared/tests/Haven.Core.Tests", "9to1 Workspace/shared/tests/Haven.Application.Tests"],
+                    GatherPreview(worktreeRoot,
+                        ["9to1 Workspace/shared/src/Haven.Core/Games", "9to1 Workspace/shared/src/Haven.Application/Games", "9to1 Workspace/shared/tests/Haven.Core.Tests"],
+                        "Games"));
+            case "Q21" when Exists("9to1 Workspace/Dev/HavenOS.Dev.csproj"):
+                return (
+                    "9to1 Workspace/Dev/HavenOS.Dev.csproj",
+                    Exists("9to1 Workspace/Dev/Tests/HavenOS.Dev.Tests.csproj")
+                        ? "9to1 Workspace/Dev/Tests/HavenOS.Dev.Tests.csproj" : null,
+                    null,
+                    ["9to1 Workspace/Dev"],
+                    ["9to1 Workspace/Dev/Tests"],
+                    GatherPreview(worktreeRoot, ["9to1 Workspace/Dev"]));
+            case "Q22" when Exists("9to1 Workspace/Sites/HavenOS.Sites.csproj"):
+                return (
+                    "9to1 Workspace/Sites/HavenOS.Sites.csproj",
+                    Exists("9to1 Workspace/Sites/Tests/HavenOS.Sites.Tests.csproj")
+                        ? "9to1 Workspace/Sites/Tests/HavenOS.Sites.Tests.csproj" : null,
+                    null,
+                    ["9to1 Workspace/Sites"],
+                    ["9to1 Workspace/Sites/Tests"],
+                    GatherPreview(worktreeRoot, ["9to1 Workspace/Sites"]));
+            case "Q23" when Exists("9to1 Workspace/Stacks/HavenOS.Stacks.csproj"):
+                return (
+                    "9to1 Workspace/Stacks/HavenOS.Stacks.csproj",
+                    Exists("9to1 Workspace/Stacks/Tests/HavenOS.Stacks.Tests.csproj")
+                        ? "9to1 Workspace/Stacks/Tests/HavenOS.Stacks.Tests.csproj" : null,
+                    null,
+                    ["9to1 Workspace/Stacks"],
+                    ["9to1 Workspace/Stacks/Tests"],
+                    GatherPreview(worktreeRoot, ["9to1 Workspace/Stacks"]));
+            case "Q11" or "Q12" when Exists("9to1 Workspace/Files/CUI/HavenOS.Files.CUI.csproj"):
+                return (
+                    "9to1 Workspace/Files/CUI/HavenOS.Files.CUI.csproj",
+                    Exists("9to1 Workspace/Files/CUI.Tests/HavenOS.Files.CUI.Tests.csproj")
+                        ? "9to1 Workspace/Files/CUI.Tests/HavenOS.Files.CUI.Tests.csproj" : null,
+                    null,
+                    ["9to1 Workspace/Files/CUI", "9to1 Workspace/Files/NativeUI", "9to1 Workspace/Files/NativeHost"],
+                    ["9to1 Workspace/Files/CUI.Tests", "9to1 Workspace/Files/NativeUI.Tests"],
+                    GatherPreview(worktreeRoot, ["9to1 Workspace/Files/CUI", "9to1 Workspace/Files/CUI.Tests"]));
+        }
+
+        // Generic fallback: walk up from source candidates or discover defaults in small/test repositories.
+        var (defaultBuild, defaultTest) = DiscoverDefaultProjects(worktreeRoot);
+        var preview = DeveloperAutonomousWorkspaceTools.ListFiles(worktreeRoot, ".", 60);
+        return (defaultBuild, defaultTest, null, [], [], preview);
     }
 
     private (string? BuildProject, string? TestProject) DiscoverDefaultProjects(string worktreeRoot)
@@ -1490,10 +1822,21 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
         SetMission(current with { State = state, UpdatedAt = DateTimeOffset.UtcNow }, persist: true);
     }
 
-    private void SetMission(DeveloperAutonomousMission mission, bool persist)
+    private void SetMission(DeveloperAutonomousMission mission, bool persist, bool restoreCompletionOwnership = false)
     {
-        lock (_gate) _mission = mission;
-        if (persist) _store.SaveMission(mission);
+        lock (_gate)
+        {
+            if (!restoreCompletionOwnership && _mission is { } current && current.MissionId == mission.MissionId)
+            {
+                mission = mission with
+                {
+                    CompletionStopUnconfirmed = current.CompletionStopUnconfirmed,
+                    ActiveDulcheRunId = current.ActiveDulcheRunId
+                };
+            }
+            if (persist) _store.SaveMission(mission);
+            _mission = mission;
+        }
         MissionChanged?.Invoke(mission);
     }
 
@@ -1609,6 +1952,36 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
         return obj;
     }
 
+    private static string ComputeActionDigest(JsonObject action)
+    {
+        var operation = new JsonObject(action.Where(property => property.Key != "memory")
+            .OrderBy(property => property.Key, StringComparer.Ordinal)
+            .Select(property => KeyValuePair.Create(property.Key, CanonicalizeActionValue(property.Value))));
+        return DeveloperAutonomousMissionStore.Sha256Hex(operation.ToJsonString());
+    }
+
+    private static JsonNode? CanonicalizeActionValue(JsonNode? node) => node switch
+    {
+        JsonObject obj => new JsonObject(obj.OrderBy(property => property.Key, StringComparer.Ordinal)
+            .Select(property => KeyValuePair.Create(property.Key, CanonicalizeActionValue(property.Value)))),
+        JsonArray array => new JsonArray(array.Select(CanonicalizeActionValue).ToArray()),
+        _ => node?.DeepClone()
+    };
+
+    private static object? ReviewVerificationEvidence(DeveloperBuildVerificationReport? verification) =>
+        verification is null ? null : new
+        {
+            build_project = verification.BuildProject,
+            test_project = verification.TestProject,
+            test_filter = verification.TestFilter,
+            build_exit_code = verification.BuildExitCode,
+            test_exit_code = verification.TestExitCode,
+            tests_passed = verification.TestsPassed,
+            tests_failed = verification.TestsFailed,
+            tests_skipped = verification.TestsSkipped,
+            source_diff_sha256 = verification.SourceDiffSha256
+        };
+
     private static string ComputeReviewBindingDigest(DeveloperMissionTask task)
     {
         var canonical = JsonSerializer.Serialize(new
@@ -1617,7 +1990,7 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
             records = task.RecordIds,
             paths = task.ChangedPaths,
             diff_sha256 = task.DiffSha256,
-            tests_passed = task.Verification?.TestsPassed ?? 0
+            verification = ReviewVerificationEvidence(task.Verification)
         });
         return DeveloperAutonomousMissionStore.Sha256Hex(canonical);
     }
@@ -1628,6 +2001,8 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
         sb.AppendLine($"Build: {(report.BuildSucceeded ? "PASSED" : $"FAILED (exit {report.BuildExitCode})")} ({report.BuildProject})");
         if (report.TestProject is not null)
             sb.AppendLine($"Tests: {(report.TestsSucceeded ? "PASSED" : $"FAILED (exit {report.TestExitCode})")} — passed={report.TestsPassed}, failed={report.TestsFailed}, skipped={report.TestsSkipped} ({report.TestProject})");
+        else
+            sb.AppendLine("Tests: NOT RUN (build-only verification; run_tests with a real test_project is required before complete_task)");
         if (report.Diagnostics.Count > 0)
         {
             sb.AppendLine($"Diagnostics ({report.Diagnostics.Count}):");
@@ -1663,7 +2038,14 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
     {
         if (_disposed) return;
         _disposed = true;
-        await StopActiveRunAsync(CancellationToken.None).ConfigureAwait(false);
+        bool running;
+        lock (_gate)
+            running = _activeLoop is { IsCompleted: false } || _completionCts is not null;
+        if (running)
+        {
+            try { await StopActiveRunAsync(CancellationToken.None).ConfigureAwait(false); }
+            catch (InvalidOperationException) when (CurrentMission is { CompletionStopUnconfirmed: true }) { }
+        }
         _runCts?.Dispose();
     }
 }

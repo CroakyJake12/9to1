@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 
 namespace HavenOS.Apps.Dev.Autonomous;
@@ -25,15 +26,30 @@ public sealed class DeveloperMissionContextManager
         IReadOnlyList<DeveloperChatMessage> messages,
         CancellationToken cancellationToken = default)
     {
-        try
+        var tokens = await RetryGatewayReadAsync(
+            token => _gateway.CountTokensAsync(modelId, messages, token), cancellationToken).ConfigureAwait(false);
+        return tokens >= 0 ? tokens : throw new InvalidDataException("Dulche returned a negative prompt token count.");
+    }
+
+    internal static async Task<T> RetryGatewayReadAsync<T>(
+        Func<CancellationToken, Task<T>> read,
+        CancellationToken cancellationToken)
+    {
+        for (var attempt = 1; ; attempt++)
         {
-            return await _gateway.CountTokensAsync(modelId, messages, cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception ex) when (ex is HttpRequestException or IOException or InvalidDataException or NotSupportedException)
-        {
-            // Conservative fallback (~3 chars/token + message framing) when tokenizer endpoint is offline.
-            var chars = messages.Sum(m => m.Content.Length + m.Role.Length + 16);
-            return Math.Max(1, chars / 3);
+            cancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                return await read(cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (attempt < 3 && !cancellationToken.IsCancellationRequested
+                && ex is IOException or TimeoutException or OperationCanceledException
+                    or HttpRequestException { StatusCode: null or HttpStatusCode.RequestTimeout
+                        or HttpStatusCode.TooManyRequests or HttpStatusCode.BadGateway
+                        or HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout })
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(120 * attempt), cancellationToken).ConfigureAwait(false);
+            }
         }
     }
 
@@ -46,8 +62,14 @@ public sealed class DeveloperMissionContextManager
             int compactThresholdTokens,
             bool forceCompact = false,
             string compactReason = "threshold",
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            int completionTokens = 8_192)
     {
+        var hardCeiling = maxContextTokens - (long)completionTokens;
+        if (completionTokens <= 0 || hardCeiling <= 0)
+            throw new InvalidOperationException(
+                $"The worker context of {maxContextTokens} tokens cannot reserve {completionTokens} completion tokens.");
+        var compactCeiling = Math.Min(compactThresholdTokens, hardCeiling);
         var transcript = _store.ReadTranscript(mission.MissionId);
         DeveloperMissionContextEpoch? activeEpoch = !string.IsNullOrWhiteSpace(mission.ActiveEpochId)
             ? _store.LoadContextEpoch(mission.MissionId, mission.ActiveEpochId)
@@ -63,13 +85,12 @@ public sealed class DeveloperMissionContextManager
                 AppendProjected(projected, transcript[i], maxChars: 16_000);
             }
             var tokens = await MeasurePromptTokensAsync(modelId, projected, cancellationToken).ConfigureAwait(false);
-            var safeCeiling = Math.Min(compactThresholdTokens, Math.Max(4_096, maxContextTokens - 8_192));
-            if (tokens <= safeCeiling && transcript.Count - activeEpoch.CoveredMessageCount <= 48)
+            if (tokens <= compactCeiling && transcript.Count - activeEpoch.CoveredMessageCount <= 48)
             {
                 return (projected, tokens, null);
             }
-            compactReason = tokens > safeCeiling
-                ? $"prompt tokens {tokens} exceeded threshold {safeCeiling}"
+            compactReason = tokens > compactCeiling
+                ? $"prompt tokens {tokens} exceeded threshold {compactCeiling}"
                 : "turn window exceeded";
         }
         else if (!forceCompact && activeEpoch is null && transcript.Count <= 40)
@@ -80,10 +101,9 @@ public sealed class DeveloperMissionContextManager
             if (raw.Count == 1)
                 raw.Add(new("user", BuildMissionLedgerMessage(mission, transcript.Count)));
             var tokens = await MeasurePromptTokensAsync(modelId, raw, cancellationToken).ConfigureAwait(false);
-            var safeCeiling = Math.Min(compactThresholdTokens, Math.Max(4_096, maxContextTokens - 8_192));
-            if (tokens <= safeCeiling)
+            if (tokens <= compactCeiling)
                 return (raw, tokens, null);
-            compactReason = $"initial window tokens {tokens} exceeded threshold {safeCeiling}";
+            compactReason = $"initial window tokens {tokens} exceeded threshold {compactCeiling}";
         }
 
         // Lossless compaction: canonical transcript stays untouched; build a fresh epoch projection.
@@ -102,7 +122,6 @@ public sealed class DeveloperMissionContextManager
             compacted.Add(new("user", "Continue from the active mission ledger and receipts with one valid JSON action."));
 
         var compactedTokens = await MeasurePromptTokensAsync(modelId, compacted, cancellationToken).ConfigureAwait(false);
-        var hardCeiling = Math.Max(4_096, maxContextTokens - 6_144);
         if (compactedTokens > hardCeiling)
         {
             // Trim tail further while keeping full authoritative ledger & active task.
@@ -117,6 +136,7 @@ public sealed class DeveloperMissionContextManager
                 compacted.Add(new("user", "Continue from the active mission ledger with one valid JSON action."));
             compactedTokens = await MeasurePromptTokensAsync(modelId, compacted, cancellationToken).ConfigureAwait(false);
         }
+        DemandContextFit("Worker", maxContextTokens, compactedTokens, completionTokens);
 
         var epochId = "ep-" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "-" + Guid.NewGuid().ToString("N")[..6];
         var chainHead = transcript.Count == 0 ? "" : transcript[^1].ChainSha256;
@@ -132,6 +152,16 @@ public sealed class DeveloperMissionContextManager
             ProjectedMessages: compacted);
         _store.SaveContextEpoch(epoch);
         return (compacted, compactedTokens, epoch);
+    }
+
+    internal static void DemandContextFit(string role, int contextTokens, int promptTokens, int completionTokens)
+    {
+        if ((long)promptTokens + completionTokens > contextTokens)
+        {
+            throw new InvalidOperationException(
+                $"{role} needs {promptTokens} measured prompt tokens plus {completionTokens} completion tokens, "
+                + $"exceeding the {contextTokens}-token context.");
+        }
     }
 
     public string RecallByIndex(string missionId, int index, int offset = 0, int length = 4000)
