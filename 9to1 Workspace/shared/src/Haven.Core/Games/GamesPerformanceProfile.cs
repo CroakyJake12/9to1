@@ -77,7 +77,7 @@ public sealed record GamesPerformanceDocument(int Revision, string SelectedProfi
         if (executors.Select(e => e.ExecutorID).Distinct(StringComparer.Ordinal).Count() != executors.Length) throw new InvalidDataException("Games remote executors contain duplicate identities.");
         var capabilities = Capabilities.Select(c => c?.Capture() ?? throw new InvalidDataException("Games capability is missing.")).ToArray();
         if (capabilities.Select(c => c.CapabilityID).Distinct(StringComparer.Ordinal).Count() != capabilities.Length) throw new InvalidDataException("Games capabilities contain duplicate identities.");
-        return (this with { Profiles = profiles, RemoteExecutors = executors, Capabilities = capabilities }).Capture();
+        return this with { Profiles = profiles, RemoteExecutors = executors, Capabilities = capabilities };
     }
 
     public static GamesPerformanceDocument Create(IEnumerable<GamesPerformanceProfile> profiles, string selectedProfileID)

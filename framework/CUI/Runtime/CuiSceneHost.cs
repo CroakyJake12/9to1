@@ -52,8 +52,11 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
     // Transient action-failure notice state (owner directive 21 November).
     private Grid? _actionBannerLayout;
     private Control? _actionBannerOriginal;
+    private Control? _actionBannerControl;
     private DispatcherTimer? _actionBannerTimer;
+    private CancellationTokenSource? _actionBannerCts;
     private int _actionBannerGeneration;
+    internal TimeSpan GuardedActionBannerDuration { get; set; } = TimeSpan.FromSeconds(6);
     public CuiActionFailure? LastActionFailure { get; private set; }
     private Avalonia.Controls.ResourceDictionary? _visualResources;
     private CuiSceneThemeBinding? _themeBinding;
@@ -252,6 +255,8 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 _disposed = true;
+                CancelActionBannerExpiry();
+                _actionBannerControl = null;
                 Interlocked.Increment(ref _generation);
                 OriginalPublication[] admitted;
                 lock (_originalGate) admitted = _originalPublications.ToArray();
@@ -595,6 +600,8 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
 
             previous = PublicationFor(_loader);
             previousFailure = PublicationFor(_failureLoader);
+            CancelActionBannerExpiry();
+            _actionBannerControl = null;
             _failureLoader = null; _failureModel = null; LastActionFailure = null;
             _loader = next;
             _currentScene = scene;
@@ -677,8 +684,9 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
                 if (_currentScene is { } currentScene) ConfigureSceneLoader(acquired, currentScene);
                 acquired.SetBindingContext(model);
                 var banner = acquired.Load(new CuiRichParser().Parse(
-                    "<Cui><Text id=\"scene-action-status\" text=\"{Binding ActionStatus}\" text-wrapping=\"Wrap\" margin=\"12\" /></Cui>"))
+                    "<Cui><Text id=\"scene-action-status\" text=\"{Binding ActionStatus}\" IsVisible=\"{Binding ActionStatusVisible}\" text-wrapping=\"Wrap\" margin=\"12\" /></Cui>"))
                     ?? throw new InvalidDataException("The action status CUI did not produce a control.");
+                acquired.WireBindings(banner);
                 DemandPublicationCurrent(generation, isPublicationCurrent, CancellationToken.None, publication);
                 var original = Content as Control;
                 _failureLoader = acquired; _failureModel = model;
@@ -692,10 +700,25 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
                 }
                 publication.Root = layout;
                 originalOwner.FailureLayout = layout;
+                _actionBannerControl = banner;
                 _contentLoader = sender; _contentRoot = layout;
                 Publish(() => Content = layout);
             }
-            Publish(() => model.Set("ActionStatus", failure.Message));
+            Publish(() =>
+            {
+                model.Set("ActionStatus", failure.Message);
+                model.Set("ActionStatusVisible", true);
+            });
+            // Auto-expire the visual notice after 6 seconds on guarded scenes too (owner directive 21 November),
+            // collapsing row 0 without detaching the mounted layout or clearing retained Diagnostics/LastActionFailure.
+            CancelActionBannerExpiry();
+            var bannerCts = new CancellationTokenSource();
+            _actionBannerCts = bannerCts;
+            var bannerGeneration = ++_actionBannerGeneration;
+            var bannerModel = model;
+            var bannerWidget = _actionBannerControl;
+            var bannerDuration = GuardedActionBannerDuration;
+            _ = ExpireGuardedActionBannerAsync(Dispatcher.UIThread, sender, bannerModel, bannerWidget, bannerGeneration, bannerDuration, bannerCts.Token);
             complete = true;
         }
         catch (Exception error)
@@ -899,6 +922,8 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
         }
         if (_disposed) return;
         _disposed = true;
+        CancelActionBannerExpiry();
+        _actionBannerControl = null;
         Interlocked.Increment(ref _generation);
         _lifetime.Cancel();
         _themeBinding?.Dispose(); _themeBinding = null; _currentScene = null;
@@ -906,5 +931,47 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
         _failureLoader?.Dispose(); _failureLoader = null; _failureModel = null;
         _loader = null;
         _lifetime.Dispose();
+    }
+
+    private void CancelActionBannerExpiry()
+    {
+        _actionBannerTimer?.Stop();
+        _actionBannerTimer = null;
+        var cts = _actionBannerCts;
+        _actionBannerCts = null;
+        if (cts is not null)
+        {
+            try { cts.Cancel(); } catch (ObjectDisposedException) { }
+            cts.Dispose();
+        }
+    }
+
+    private async Task ExpireGuardedActionBannerAsync(
+        Dispatcher dispatcher,
+        CuiControlLoader sender,
+        CuiViewModel bannerModel,
+        Control? bannerWidget,
+        int bannerGeneration,
+        TimeSpan duration,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(duration, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        if (cancellationToken.IsCancellationRequested || _disposed) return;
+        dispatcher.Post(() =>
+        {
+            if (cancellationToken.IsCancellationRequested || _disposed || bannerGeneration != _actionBannerGeneration) return;
+            lock (_originalGate)
+                if (_originalClose is not null) return;
+            if (!ReferenceEquals(_loader, sender) || !ReferenceEquals(_failureModel, bannerModel)) return;
+            bannerModel.Set("ActionStatus", string.Empty);
+            bannerModel.Set("ActionStatusVisible", false);
+        }, DispatcherPriority.Normal);
     }
 }

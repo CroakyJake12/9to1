@@ -19,10 +19,11 @@ public sealed record GamesInputBinding(Guid BindingID, GamesInputDevice Device, 
         return this;
     }
 
-    /// <summary>Two bindings collide when they share device, action and context: one logical action cannot have two sources in the same context.</summary>
+    /// <summary>Two bindings collide when they share device and context and either target the same logical action or claim the same physical key.</summary>
     public bool CollidesWith(GamesInputBinding other) => other is not null && Device == other.Device
-        && string.Equals(Action, other.Action, StringComparison.Ordinal)
-        && string.Equals(Context, other.Context, StringComparison.Ordinal);
+        && string.Equals(Context, other.Context, StringComparison.Ordinal)
+        && (string.Equals(Action, other.Action, StringComparison.Ordinal)
+            || string.Equals(PhysicalKey, other.PhysicalKey, StringComparison.OrdinalIgnoreCase));
 
     private static bool IsValidToken(string value) =>
         !string.IsNullOrWhiteSpace(value) && value.Length <= 128 && value.All(c => char.IsLetterOrDigit(c) || c == '_' || c == '.');

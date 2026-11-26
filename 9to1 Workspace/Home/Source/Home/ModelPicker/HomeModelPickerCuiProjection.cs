@@ -147,7 +147,7 @@ public sealed record HomeModelPickerRouteSelection(string RouteId);
 public sealed record HomeModelPickerCandidateSelection(string ProviderId, string ModelId, string? ArtifactRevision);
 public sealed record HomeModelPickerCandidateToggleSelection(string ProviderId, string ModelId, string? ArtifactRevision, bool Enabled);
 public sealed record HomeModelPickerReasoningLevelSelection(string ProviderId, string ModelId, string? ArtifactRevision, string? ReasoningLevelId);
-public sealed record HomeModelPickerCatalogueSelection(string ProviderId, string ModelId, string? ArtifactRevision);
+public sealed record HomeModelPickerCatalogueSelection(string ProviderId, string ModelId, string? ArtifactRevision, string? CompactRole = null);
 public sealed record HomeModelPickerFamilySelection(string FamilyKey);
 
 /// <summary>Non-executable presentation grouping. Deliberately exposes no model Selection.</summary>
@@ -189,9 +189,12 @@ public sealed class HomeModelPickerCatalogueRow : ICuiBindingContext
 {
     private readonly HomeModelPickerCatalogueEntry _entry;
 
-    internal HomeModelPickerCatalogueRow(HomeModelPickerCatalogueEntry entry)
+    private readonly string? _compactRole;
+
+    internal HomeModelPickerCatalogueRow(HomeModelPickerCatalogueEntry entry, string? compactRole = null)
     {
         _entry = entry;
+        _compactRole = compactRole;
         Identity = JsonSerializer.Serialize(new[] { entry.ProviderId, entry.ModelId, entry.ArtifactRevision });
         Locality = entry.IsLocal switch { true => "Local", false => "Remote", null => "Locality unknown" };
         Capabilities = entry.Capabilities is { Count: > 0 }
@@ -210,6 +213,9 @@ public sealed class HomeModelPickerCatalogueRow : ICuiBindingContext
             case "Identity": value = Identity; return true;
             case "DisplayName": value = _entry.DisplayName; return true;
             case "ProviderName": value = _entry.ProviderName; return true;
+            case "CompactSource": value = _entry.IsLocal == true ? "This device" : _entry.ProviderName; return true;
+            case "CompactChooseLabel": value = "Prefer model"; return true;
+            case "CompactChooseName": value = $"Prefer {_entry.DisplayName} from {_entry.ProviderName}"; return true;
             case "Locality": value = Locality; return true;
             case "Capabilities": value = Capabilities; return true;
             case "FamilyLabel": value = _entry.Presentation?.FamilyLabel switch
@@ -235,7 +241,7 @@ public sealed class HomeModelPickerCatalogueRow : ICuiBindingContext
                     : _entry.ReportedMetadata?.ReportedQuantisation is { } quant ? "Reported quantization: " + quant
                     : "Quantization unknown";
                 return true;
-            case "Selection": value = new HomeModelPickerCatalogueSelection(_entry.ProviderId, _entry.ModelId, _entry.ArtifactRevision); return true;
+            case "Selection": value = new HomeModelPickerCatalogueSelection(_entry.ProviderId, _entry.ModelId, _entry.ArtifactRevision, _compactRole); return true;
             default: value = null; return false;
         }
     }
@@ -385,6 +391,7 @@ public sealed class HomeModelPickerReasoningChoice : ICuiBindingContext
             case "Id": value = Id; return true;
             case "Label": value = Label; return true;
             case "IsSelected": value = IsSelected; return true;
+            case "AccentRole": value = IsSelected ? "Secondary" : "None"; return true;
             case "Selection": value = _selection; return true;
             default: value = null; return false;
         }

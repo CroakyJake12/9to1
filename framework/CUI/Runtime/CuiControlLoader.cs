@@ -1008,13 +1008,13 @@ public sealed partial class CuiControlLoader : IDisposable
         {
             outcome = new CuiCommandOutcome(false, true, "Cancelled", "The action was cancelled.", null);
             AddOriginalTaskFailure(failures, actualDispatcher, error);
-            RetainActionFailure(control, error, failures, frame, invocation.FrameOwned);
+            RetainActionFailure(control, error, failures, frame, invocation.FrameOwned, invocation.Command);
         }
         catch (Exception error)
         {
             outcome = new CuiCommandOutcome(false, false, "Failed", error.Message, null);
             AddOriginalTaskFailure(failures, actualDispatcher, error);
-            RetainActionFailure(control, error, failures, frame, invocation.FrameOwned);
+            RetainActionFailure(control, error, failures, frame, invocation.FrameOwned, invocation.Command);
         }
         try
         {
@@ -1068,7 +1068,7 @@ public sealed partial class CuiControlLoader : IDisposable
         {
             var failures = new List<Exception>();
             AddDistinctFailure(failures, error);
-            RetainActionFailure(control, error, failures, frame, invocation.FrameOwned);
+            RetainActionFailure(control, error, failures, frame, invocation.FrameOwned, invocation.Command);
             ThrowRetainedFailures(failures);
         }
     }
@@ -1321,8 +1321,19 @@ public sealed partial class CuiControlLoader : IDisposable
         ThrowRetainedFailures(failures);
     }
 
-    private void RetainActionFailure(Control control, Exception original, List<Exception> failures, object? frame = null, bool frameOwned = false)
+    private void RetainActionFailure(Control control, Exception original, List<Exception> failures, object? frame = null, bool frameOwned = false, string? commandName = null)
     {
+        var authoredId = _authoredControls.TryGetValue(control, out var authored) ? authored.Name : control.Name;
+        var controlLabel = string.IsNullOrWhiteSpace(authoredId) ? control.GetType().Name : authoredId;
+        var rootCause = original is AggregateException agg && agg.InnerExceptions.Count == 1 ? agg.InnerExceptions[0] : original;
+        if (original is not OperationCanceledException)
+        {
+            var firstFrame = rootCause.StackTrace?.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.Trim() ?? "";
+            var diagLine = $"[9to1 CUI action failure] command={commandName ?? "(unknown)"} control={controlLabel} exception={rootCause.GetType().FullName}: {rootCause.Message}"
+                + (string.IsNullOrEmpty(firstFrame) ? "" : $" | {firstFrame}");
+            System.Diagnostics.Trace.TraceError(diagLine);
+            try { Console.Error.WriteLine(diagLine); } catch { }
+        }
         if (!_disposed && (frame is null || IsActionOriginCurrent(frame, control, frameOwned)))
         {
             var failure = original is OperationCanceledException
@@ -3373,7 +3384,7 @@ public sealed partial class CuiControlLoader : IDisposable
             converted = typedNumber;
             return double.IsFinite(typedNumber);
         }
-        var text = rawValue.ToString() ?? string.Empty;
+        var text = Convert.ToString(rawValue, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
         if (sourceType == typeof(string))
         {
             converted = text;
@@ -4142,7 +4153,8 @@ public sealed partial class CuiControlLoader : IDisposable
         };
     }
 
-    private string? ResolveResourceValue(string key) => ResolveResourceObject(key)?.ToString();
+    private string? ResolveResourceValue(string key) =>
+        Convert.ToString(ResolveResourceObject(key), System.Globalization.CultureInfo.InvariantCulture);
 
     private object? ResolveResourceObject(string key, Control? control = null)
     {
@@ -4174,7 +4186,7 @@ public sealed partial class CuiControlLoader : IDisposable
         // Try live binding context
         if (_bindingContext is not null && _bindingContext.TryGetValue(binding.Path, out var result))
         {
-            return result?.ToString();
+            return Convert.ToString(result, System.Globalization.CultureInfo.InvariantCulture);
         }
         // Fall back to declared fallback value
         return binding.Fallback;
@@ -4336,7 +4348,7 @@ public sealed partial class CuiControlLoader : IDisposable
                     hasTypedValue = true;
                     sourceFound = true;
                     sourceType = result?.GetType().Name;
-                    value = result?.ToString();
+                    value = Convert.ToString(result, System.Globalization.CultureInfo.InvariantCulture);
                 }
                 else
                 {

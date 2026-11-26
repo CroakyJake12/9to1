@@ -17,6 +17,7 @@ public sealed record HomeModelPickerEditorState(
     public static HomeModelPickerEditorState Initial { get; } = new(
         false, "NotLoaded", "Model routes have not been loaded.", null, null, null, false, null);
 
+    public bool RouteRefreshRequired { get; init; }
     public string? PendingApprovalRequestId { get; init; }
     public string? PendingAuditRequestId { get; init; }
     public bool CanFinishAudit => !IsBusy && PendingAuditRequestId is not null;
@@ -36,6 +37,8 @@ public sealed class HomeModelPickerRouteEditor(IHomeModelPickerFeatureProvider p
     private HomeModelPickerEditorState _state = HomeModelPickerEditorState.Initial;
 
     public HomeModelPickerEditorState Current => Volatile.Read(ref _state);
+
+    internal void RequireRouteRefresh() => Publish(Current with { RouteRefreshRequired = true });
 
     /// <summary>Reads the current authorised provider catalogue through Home's existing feature owner.
     /// Catalogue entries remain detached from route state until the caller explicitly adds one to the draft.</summary>
@@ -221,6 +224,29 @@ public sealed class HomeModelPickerRouteEditor(IHomeModelPickerFeatureProvider p
         var draft = route with { Candidates = Array.AsReadOnly(candidates) };
         Publish(state with { DraftRoute = draft, HasUnsavedChanges = true, PendingApprovalRequestId = null,
             Preview = null, StatusCode = "UnsavedChanges", StatusMessage = "The added model is not saved." });
+        return Success(draft, state.Snapshot?.Revision ?? 0);
+    }
+
+    /// <summary>Sets the preferred candidate of the current route draft, retaining existing fallbacks.</summary>
+    internal HomeCoreOperationResult<HomeModelRouteContract> PreferCandidate(HomeModelPickerCatalogueEntry entry)
+    {
+        var state = Current;
+        if (state.IsBusy) return Fail<HomeModelRouteContract>("OperationInProgress", "Wait for the current model operation to finish.");
+        if (state.PendingApprovalRequestId is not null || state.PendingAuditRequestId is not null)
+            return Fail<HomeModelRouteContract>("RouteChangePending", "Resolve the pending route change before choosing another model.");
+        if (state.DraftRoute is not { } route)
+            return Fail<HomeModelRouteContract>("RouteNotSelected", "Select a model route first.");
+
+        var candidates = Ordered(route.Candidates);
+        var preferred = candidates.FirstOrDefault(candidate => SameIdentity(candidate, entry.ProviderId, entry.ModelId, entry.ArtifactRevision));
+        if (preferred is { Enabled: true, Order: 0 }) return Success(route, state.Snapshot?.Revision ?? 0);
+        preferred ??= new(entry.ProviderId, entry.ModelId, entry.ArtifactRevision, true, 0);
+        var reordered = candidates.Where(candidate => !SameIdentity(candidate, entry.ProviderId, entry.ModelId, entry.ArtifactRevision))
+            .Prepend(preferred with { Enabled = true })
+            .Select((candidate, index) => candidate with { Order = index }).ToArray();
+        var draft = route with { Candidates = Array.AsReadOnly(reordered) };
+        Publish(state with { DraftRoute = draft, HasUnsavedChanges = true,
+            Preview = null, StatusCode = "UnsavedChanges", StatusMessage = "Model preference is ready to save." });
         return Success(draft, state.Snapshot?.Revision ?? 0);
     }
 

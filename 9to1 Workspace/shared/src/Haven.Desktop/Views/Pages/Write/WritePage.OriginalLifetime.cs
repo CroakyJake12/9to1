@@ -109,12 +109,14 @@ public sealed partial class WritePage
         finally { Interlocked.Decrement(ref _pendingAsyncBodies); }
     }
 
-    private void RunOriginalEvent(Func<Task> body)
+    private void RunOriginalEvent(Func<Task> body) => _ = RunOriginalEventTask(body);
+
+    private Task RunOriginalEventTask(Func<Task> body)
     {
-        if (_work.IsRetiring || !CanAdmitOriginalPresentation) return;
+        if (_work.IsRetiring || !CanAdmitOriginalPresentation) return Task.CompletedTask;
         try
         {
-            _ = RunOriginalAsync(async () =>
+            return RunOriginalAsync(async () =>
             {
                 try { await ObserveOriginalAsync(body); }
                 catch (Exception error)
@@ -124,7 +126,7 @@ public sealed partial class WritePage
                 }
             });
         }
-        catch (ObjectDisposedException) when (_work.IsRetiring) { }
+        catch (ObjectDisposedException) when (_work.IsRetiring) { return Task.CompletedTask; }
     }
 
     private Task ObserveOriginalAsync(Func<Task> source)
@@ -167,10 +169,12 @@ public sealed partial class WritePage
     private void QueueOriginalPublication(Action publication) => RunOriginalEvent(() =>
         ObserveOriginalAsync(() => Dispatcher.UIThread.InvokeAsync(() => Publish(publication)).GetTask()));
 
+    private Task _pendingStatsAction = Task.CompletedTask;
+
     private void ScheduleOriginalStats(Action publication)
     {
         var generation = Interlocked.Increment(ref _statsGeneration);
-        RunOriginalEvent(async () =>
+        _pendingStatsAction = RunOriginalEventTask(async () =>
         {
             await ObserveOriginalAsync(StatsDelaySource);
             await ObserveOriginalAsync(() => Dispatcher.UIThread.InvokeAsync(() =>

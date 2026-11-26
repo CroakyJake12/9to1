@@ -1274,6 +1274,22 @@ public sealed partial class App
                     case "ToggleFamily":
                         RefuseMalformed(command);
                         return;
+                    case "SelectCompactRole" when parameter is string role:
+                        await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
+                            HomeModelPickerAction.SelectCompactRole, Category: role), cancellationToken));
+                        return;
+                    case "ToggleCompactSection" when parameter is string section:
+                        await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
+                            HomeModelPickerAction.ToggleCompactSection, FamilyKey: section), cancellationToken));
+                        return;
+                    case "ChooseCompactModel" when parameter is HomeModelPickerCatalogueSelection compactChoice:
+                        await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
+                            HomeModelPickerAction.ChooseCompactModel, Category: compactChoice.CompactRole, ProviderId: compactChoice.ProviderId,
+                            ModelId: compactChoice.ModelId, ArtifactRevision: compactChoice.ArtifactRevision), cancellationToken));
+                        return;
+                    case "SelectCompactRole" or "ToggleCompactSection" or "ChooseCompactModel":
+                        RefuseMalformed(command);
+                        return;
                     case "AddCatalogueCandidate" when parameter is HomeModelPickerCatalogueSelection candidate:
                         await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
                             HomeModelPickerAction.AddCatalogueCandidate, ProviderId: candidate.ProviderId,

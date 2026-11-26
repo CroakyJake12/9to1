@@ -194,7 +194,7 @@ public sealed partial class WritePage : UserControl, IDisposable, IAsyncDisposab
     private async Task RefreshAiModelsAsync(CancellationToken cancellationToken)
     {
         if (_aiModels is null) { Publish(() => _route.SetAiModels([])); return; }
-        try { var models = await ObserveOriginalAsync(() => _aiModels.GetModelsAsync(cancellationToken)); Publish(() => _route.SetAiModels(models.Select(model => model.Name).Where(name => !string.IsNullOrWhiteSpace(name)).ToArray())); }
+        try { var models = await _aiModels.GetModelsAsync(cancellationToken); Publish(() => _route.SetAiModels(models.Select(model => model.Name).Where(name => !string.IsNullOrWhiteSpace(name)).ToArray())); }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch { Publish(() => _route.SetAiModels([])); }
     }
@@ -293,6 +293,11 @@ public sealed partial class WritePage : UserControl, IDisposable, IAsyncDisposab
             if (!CanPublishOriginal) return false;
             if (_readAloudStopUnacknowledged || _readAloud?.IsActive == true) return false;
             if (!await SaveAsync(reason, cancellationToken)) return false;
+            // A title/text edit also schedules an owned statistics update. Await its actual
+            // completion before reporting that close is prepared; otherwise the caller's
+            // immediate close fence still sees pending work after a successful save.
+            var pendingStats = _pendingStatsAction;
+            await ObserveOriginalAsync(() => pendingStats.WaitAsync(cancellationToken));
             if (_dirty || Document?.Recovery.HasUnsavedRecovery == true)
             {
                 Publish(() => _route.SetStatus("Newer changes remain unsaved. Save them before closing."));

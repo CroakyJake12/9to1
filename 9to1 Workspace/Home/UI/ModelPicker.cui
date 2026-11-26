@@ -2,6 +2,14 @@
   <Actions>
     <Action name="Refresh" command="Refresh" parameter="{Binding RefreshSelection}" />
     <Action name="RefreshCatalogue" command="RefreshCatalogue" />
+    <Action name="CompactMainRole" command="SelectCompactRole" parameter="chat" />
+    <Action name="CompactVoiceRole" command="SelectCompactRole" parameter="voice" />
+    <Action name="CompactVisionRole" command="SelectCompactRole" parameter="vision" />
+    <Action name="ToggleCompactContext" command="ToggleCompactSection" parameter="context" />
+    <Action name="ToggleCompactModel" command="ToggleCompactSection" parameter="model" />
+    <Action name="ToggleCompactParticipant" command="ToggleCompactSection" parameter="participant" />
+    <Action name="ChooseCompactModel" command="ChooseCompactModel" parameter="{Binding model.Selection}" />
+    <Action name="FinishAudit" command="FinishAudit" />
     <Action name="AddCatalogueCandidate" command="AddCatalogueCandidate" parameter="{Binding model.Selection}" />
     <Action name="ToggleFamily" command="ToggleFamily" parameter="{Binding family.ToggleSelection}" />
     <Action name="ShowModelSettings" command="ShowModelSettings" />
@@ -30,20 +38,107 @@
   <Theme Name="user_preference">
     <Page>
       <Container id="model-picker-root" Type="Vertical Stack">
-        <Container id="compact-model-picker" Type="Vertical Stack" IsVisible="{Binding IsPickerOpen, fallback=true}" Padding="8" CellGap="14">
-          <Container Type="Vertical Stack" CellGap="3">
-            <Text Text="Main model" FontSize="13" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
-            <Text id="compact-model-picker-selection" Text="{Binding CompactModelName}" FontSize="22" FontWeight="800" TextWrapping="Wrap" />
-            <Text id="compact-model-picker-source" IsVisible="{Binding HasCompactModelSource, fallback=false}" Text="{Binding CompactModelSource}"
-                  Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+        <Container id="compact-model-picker" Type="Vertical Stack" IsVisible="{Binding IsPickerOpen, fallback=true}" Padding="8" CellGap="8">
+          <Container id="compact-model-picker-roles" Type="Grid" ColumnSizes="1fr 1fr 1fr" CellGap="4">
+            <Button id="compact-model-main-role" Action="CompactMainRole" Content="Main" AccentRole="{Binding CompactMainAccent}" />
+            <Button id="compact-model-voice-role" Column="1" Action="CompactVoiceRole" Content="Voice" AccentRole="{Binding CompactVoiceAccent}" />
+            <Button id="compact-model-vision-role" Column="2" Action="CompactVisionRole" Content="Vision" AccentRole="{Binding CompactVisionAccent}" />
           </Container>
-          <Container Type="Wrap" CellGap="8" Padding="0 8" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 1 0 0">
-            <Text Text="Reasoning" FontWeight="700" />
-            <Text id="compact-model-picker-reasoning" Text="{Binding CompactReasoning}" Foreground="{Resource CuiTextSoftBrush}" />
+          <Container id="compact-model-picker-effort" Type="Vertical Stack" CellGap="4" Padding="6 2">
+            <Container Type="Grid" ColumnSizes="1fr Auto">
+              <Text Text="Reasoning" FontWeight="700" />
+              <Text id="compact-model-picker-reasoning" Column="1" Text="{Binding CompactReasoning}" Foreground="{Resource CuiTextSoftBrush}" />
+            </Container>
+            <If condition="{Binding HasCompactReasoningChoices}">
+              <Container Type="Wrap" CellGap="4">
+                <Repeat Source="{Binding CompactReasoningChoices}" As="choice" Key="{Binding choice.Identity}" Panel="Wrap">
+                  <Button Action="SelectReasoningLevel" Content="{Binding choice.Label}" AccentRole="{Binding choice.AccentRole}"
+                          AccessibleName="{Binding choice.Id}" IsEnabled="{Binding CanCommitReasoningLevel, fallback=false}" MinHeight="26" Padding="8 3" />
+                </Repeat>
+              </Container>
+            </If>
           </Container>
-          <Container Type="Wrap" CellGap="8" IsVisible="{Binding HasCompactContextCapacity, fallback=false}">
-            <Text Text="Reported context capacity" FontWeight="700" />
-            <Text id="compact-model-picker-capacity" Text="{Binding CompactContextCapacity}" Foreground="{Resource CuiTextSoftBrush}" />
+          <Container Type="Vertical Stack" CellGap="4">
+            <Button id="compact-model-context" Action="ToggleCompactContext" AccessibleName="{Binding CompactContextDisclosureName}"
+                    HorizontalContentAlignment="Stretch" Background="{Resource CuiPanelBrush}" Padding="9 6">
+              <Container Type="Grid" ColumnSizes="1fr Auto Auto" CellGap="6">
+                <Text Text="Context" FontWeight="700" />
+                <Text id="compact-model-picker-capacity" Column="1" Text="{Binding CompactContextCapacity}" Foreground="{Resource CuiTextSoftBrush}" />
+                <Text Column="2" Text="{Binding CompactContextChevron}" Foreground="{Resource CuiTextSoftBrush}" />
+              </Container>
+            </Button>
+            <If condition="{Binding CompactContextOpen}">
+              <Container Type="Vertical Stack" Padding="8 4" CellGap="4">
+                <Text Text="{Binding CompactContextDetails}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                <Text Text="Conversation usage and context changes are unavailable here." Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+              </Container>
+            </If>
+            <Button id="compact-model-collection" Action="ToggleCompactModel" AccessibleName="{Binding CompactModelDisclosureName}"
+                    HorizontalContentAlignment="Stretch" Background="{Resource CuiPanelBrush}" Padding="9 6">
+              <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="6">
+                <Container Type="Vertical Stack" CellGap="2">
+                  <Text Text="Model" FontWeight="700" />
+                  <Text id="compact-model-picker-selection" Text="{Binding CompactModelName}" FontWeight="600" TextWrapping="Wrap" />
+                  <Text id="compact-model-picker-source" IsVisible="{Binding HasCompactModelSource, fallback=false}"
+                        Text="{Binding CompactModelSource}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                </Container>
+                <Text Column="1" Text="{Binding CompactModelChevron}" Foreground="{Resource CuiTextSoftBrush}" />
+              </Container>
+            </Button>
+            <If condition="{Binding CompactModelOpen}">
+              <Container id="compact-model-discovery" Type="Vertical Stack" Padding="8 4" CellGap="6">
+                <Text IsVisible="{Binding HasCompactModelSource, fallback=false}" Text="{Binding CompactModelState}"
+                      Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                <Text IsVisible="{Binding HasCompactRouteMessage, fallback=false}" Text="{Binding CompactRouteMessage}"
+                      Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                <Text IsVisible="{Binding HasCompactCatalogueMessage, fallback=false}" Text="{Binding CompactCatalogueMessage}"
+                      Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                <Button id="compact-model-refresh" Action="RefreshCatalogue" Content="Refresh models" HorizontalAlignment="Left" />
+                <Repeat Source="{Binding CompactCatalogue}" As="model" Key="{Binding model.Identity}">
+                  <Container Type="Vertical Stack" Padding="0 6" CellGap="3" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 1 0 0">
+                    <Text Text="{Binding model.DisplayName}" FontWeight="600" TextWrapping="Wrap" />
+                    <Text Text="{Binding model.CompactSource}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                    <If condition="{Binding CanChooseCompactModel}">
+                      <Button Action="ChooseCompactModel" Content="{Binding model.CompactChooseLabel}"
+                              AccessibleName="{Binding model.CompactChooseName}" HorizontalAlignment="Left" MinHeight="26" Padding="8 3" />
+                    </If>
+                  </Container>
+                </Repeat>
+              </Container>
+            </If>
+            <Button id="compact-model-participant" Action="ToggleCompactParticipant" AccessibleName="{Binding CompactParticipantDisclosureName}"
+                    HorizontalContentAlignment="Stretch" Background="{Resource CuiPanelBrush}" Padding="9 6">
+              <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="6">
+                <Container Type="Vertical Stack" CellGap="2">
+                  <Text Text="Assistant / Specialist" FontWeight="700" TextWrapping="Wrap" />
+                  <Text Text="Unavailable" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+                <Text Column="1" Text="{Binding CompactParticipantChevron}" Foreground="{Resource CuiTextSoftBrush}" />
+              </Container>
+            </Button>
+            <If condition="{Binding CompactParticipantOpen}">
+              <Text Text="This picker has no conversation participant connection." Margin="8 4"
+                    Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+            </If>
+          </Container>
+          <If condition="{Binding RouteRefreshRequired}">
+            <Container Type="Vertical Stack" CellGap="4">
+              <Text Text="Reasoning level saved. Refresh the route to continue editing." Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+              <Button id="compact-model-refresh-route" Action="Refresh" Content="Refresh route" HorizontalAlignment="Left" />
+            </Container>
+          </If>
+          <If condition="{Binding HasCompactStatus}">
+            <Text id="compact-model-status" Text="{Binding CompactStatus}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          </If>
+          <If condition="{Binding HasCompactPendingApproval}">
+            <Text Text="Change pending review in Home" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          </If>
+          <Container Type="Wrap" CellGap="6">
+            <Button id="compact-model-save" Action="SaveRoute" Content="Save route" IsVisible="{Binding CanSaveCompactRoute, fallback=false}" />
+            <Button id="compact-model-discard" Action="DiscardRoute" Content="Discard" IsVisible="{Binding CanDiscardRoute, fallback=false}"
+                    AccessibleName="Discard unsaved model route changes" />
+            <Button id="compact-model-finish-audit" Action="FinishAudit" Content="Finish route audit"
+                    IsVisible="{Binding HasCompactPendingAudit, fallback=false}" />
           </Container>
           <Button id="compact-model-picker-edit" Action="ShowModelSettings" Content="More settings" HorizontalAlignment="Right" />
         </Container>
@@ -65,6 +160,9 @@
             <Button id="category-video" action="VideoCategory" content="Advanced video" margin="8 0 0 0" accessible-name="Show advanced video routes" />
           </Container>
           <Text id="model-picker-status" text="{Binding StatusMessage, fallback=Model routes have not been loaded}" foreground="{Resource CuiTextSoftBrush}" margin="0 10 0 14" TextWrapping="Wrap" />
+          <If condition="{Binding RouteRefreshRequired}">
+            <Text Text="Reasoning level saved. Refresh the route to continue editing." Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          </If>
           <Container id="model-catalogue" background="{Resource CuiPanelBrush}" padding="14" margin="0 8 8 8" Type="Vertical Stack" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
             <Container Type="Vertical Stack">
               <Text id="model-catalogue-title" text="Add a model to your route" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
@@ -152,7 +250,7 @@
                                 <Container id="candidate-reasoning-choices" Type="Wrap" margin="0 8 0 0">
                                   <Text id="candidate-reasoning-selected" text="{Binding candidate.SelectedReasoningLabel, fallback=No level selected}" foreground="{Resource CuiTextBrush}" margin="0 4 0 0" TextWrapping="Wrap" />
                                   <Repeat Source="{Binding candidate.ReasoningLevelChoices}" As="choice" Key="{Binding choice.Identity}">
-                                    <Button action="SelectReasoningLevel" content="{Binding choice.Label}" margin="4 0 0 0" accessible-name="Select reasoning level" />
+                                    <Button action="SelectReasoningLevel" content="{Binding choice.Label}" margin="4 0 0 0" accessible-name="Select reasoning level" IsEnabled="{Binding CanCommitReasoningLevel, fallback=false}" />
                                   </Repeat>
                                   <If condition="{Binding candidate.HasReasoningLevel}">
                                     <Button action="ClearReasoningLevel" content="Clear" margin="4 0 0 0" accessible-name="Clear the saved reasoning level default" />

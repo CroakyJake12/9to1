@@ -9,7 +9,7 @@ public sealed class GamesPlayToolProfileTests
     [Fact]
     public void NoToolsMatchDeniesEveryCallWithExplicitReason()
     {
-        var profile = PlayToolProfile.NoTools("strict", "Strict Match");
+        var profile = PlayToolProfile.CreateNoTools("strict", "Strict Match");
         var result = profile.Authorize("web.search");
         Assert.Equal(PlayToolDecision.Denied, result.Decision);
         Assert.False(result.IsAllowed);
@@ -49,7 +49,7 @@ public sealed class GamesPlayToolProfileTests
     [Fact]
     public void ProfileIdentityIsStableAndValidated()
     {
-        var profile = PlayToolProfile.NoTools("strict", "Strict Match");
+        var profile = PlayToolProfile.CreateNoTools("strict", "Strict Match");
         Assert.Equal("strict", profile.ProfileID);
         Assert.True(profile.NoTools);
         Assert.Throws<InvalidDataException>(() => new PlayToolProfile(" ", "Bad", false, []).Capture());

@@ -4,6 +4,7 @@ using Avalonia.Input;
 using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -80,6 +81,8 @@ public sealed partial class UnifiedHomeContentTests
     {
         var point = button.TranslatePoint(new Rect(button.Bounds.Size).Center, window);
         Assert.NotNull(point);
+        // Headless pointer input advances the compositor before hit testing the newly laid-out rail.
+        window.MouseMove(point.Value);
         var hit = window.InputHitTest(point.Value) as Control;
         Assert.True(ReferenceEquals(hit, button) || hit?.GetVisualAncestors().Contains(button) == true,
             $"Click at {point} hit {hit?.GetType().Name} ({hit?.Name}), not {button.Name}. Ancestors: " +

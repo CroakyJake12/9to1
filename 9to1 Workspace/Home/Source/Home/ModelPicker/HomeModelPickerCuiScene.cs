@@ -26,6 +26,9 @@ public enum HomeModelPickerAction
     CommitReasoningLevel,
     ToggleFamily,
     DiscardRoute,
+    SelectCompactRole,
+    ToggleCompactSection,
+    ChooseCompactModel,
 }
 
 public sealed record HomeModelPickerActionRequest(
@@ -53,7 +56,23 @@ public sealed class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPrope
     private bool _catalogueObserved;
     private bool _catalogueReadFailed;
     private HavenModelProjectionSnapshot? _compactModel;
-    private bool _mainRouteHasCandidates;
+    private HomeModelRouteContract? _mainRoute;
+    private HomeModelRouteContract? _voiceRoute;
+    private readonly HashSet<(string Role, string Section)> _compactSections = new();
+    private string? _compactStatus;
+
+    internal const string MainRole = "chat";
+    internal const string VoiceRole = "voice";
+    internal const string VisionRole = "vision";
+    public string CompactRole { get; private set; } = MainRole;
+    internal bool CanEditCompactRoute => MatchesRole(Category) &&
+        State is { DraftRoute: not null, IsBusy: false, RouteRefreshRequired: false };
+    private bool MatchesRole(string category) => CompactRole switch
+    {
+        MainRole => IsMainCategory(category),
+        VoiceRole => string.Equals(category, VoiceRole, StringComparison.OrdinalIgnoreCase),
+        _ => false,
+    };
 
     public HomeModelPickerCuiSurface(CuiDocument document)
     {
@@ -89,33 +108,155 @@ public sealed class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPrope
             case "IsSettingsOpen": value = IsSettingsOpen; return true;
             case "IsPickerOpen": value = !IsSettingsOpen; return true;
             case "CanDiscardRoute": value = CanDiscardRoute(State); return true;
-            case "CompactModelName":
-                value = CompactCatalogueModel?.DisplayName ?? _compactModel?.ModelId ??
-                    (_mainRouteHasCandidates ? "Model unavailable" : "Choose a model");
+            case "RouteRefreshRequired": value = State.RouteRefreshRequired; return true;
+            case "CanCommitReasoningLevel":
+                value = State is { HasUnsavedChanges: false, RouteRefreshRequired: false, PendingAuditRequestId: null };
                 return true;
+            case "CompactMainAccent": value = CompactRole == MainRole ? "Secondary" : "None"; return true;
+            case "CompactVoiceAccent": value = CompactRole == VoiceRole ? "Secondary" : "None"; return true;
+            case "CompactVisionAccent": value = CompactRole == VisionRole ? "Secondary" : "None"; return true;
+            case "CompactContextOpen": value = IsSectionOpen("context"); return true;
+            case "CompactModelOpen": value = IsSectionOpen("model"); return true;
+            case "CompactParticipantOpen": value = IsSectionOpen("participant"); return true;
+            case "CompactContextChevron": value = SectionChevron("context"); return true;
+            case "CompactModelChevron": value = SectionChevron("model"); return true;
+            case "CompactParticipantChevron": value = SectionChevron("participant"); return true;
+            case "CompactContextDisclosureName": value = SectionName("context", "Context"); return true;
+            case "CompactModelDisclosureName": value = SectionName("model", "Model"); return true;
+            case "CompactParticipantDisclosureName": value = SectionName("participant", "Assistant or Specialist"); return true;
+            case "CompactModelName": value = CompactCatalogueModel?.DisplayName ?? CompactIdentity?.ModelId ?? "Choose a model"; return true;
             case "CompactModelSource":
-                value = _compactModel is { LocalityKnown: true, IsLocal: true } ? "This device"
-                    : CompactCatalogueModel?.ProviderName ?? _compactModel?.ProviderId;
+                value = CompactCatalogueModel is { IsLocal: true } || IsCompactModelResolved && _compactModel is { LocalityKnown: true, IsLocal: true }
+                    ? "This device" : CompactCatalogueModel?.ProviderName ?? CompactIdentity?.ProviderId;
                 return true;
-            case "HasCompactModelSource": value = _compactModel?.ProviderId is not null; return true;
+            case "HasCompactModelSource": value = CompactIdentity is not null; return true;
+            case "CompactModelState":
+                value = CompactRouteIsDraft ? "Route preference pending"
+                    : IsCompactModelResolved ? "Current route choice"
+                    : CompactIdentity is null ? ""
+                    : CompactCatalogueModel is null && _catalogueObserved ? "Saved preference unavailable in the catalogue"
+                    : "Saved route preference";
+                return true;
             case "CompactReasoning":
-                value = _compactModel is { AdvertisedReasoningIds.Count: > 0 } model
+                value = CompactReasoningChoices.Count > 0 && _compactModel is { } model
                     ? HomeModelPickerReasoningLabels.LabelForLevel(model.AdvertisedReasoningIds, model.SelectedReasoningId)
-                        ?? (model.SelectedReasoningOrdinal is not null ? model.SelectedReasoningId : "No level selected")
+                        ?? model.SelectedReasoningId ?? "Provider default"
                     : "Unavailable";
                 return true;
-            case "HasCompactContextCapacity": value = CompactCatalogueModel?.ContextWindow is > 0; return true;
+            case "CompactReasoningChoices": value = CompactReasoningChoices; return true;
+            case "HasCompactReasoningChoices": value = CompactReasoningChoices.Count > 0; return true;
             case "CompactContextCapacity":
-                value = CompactCatalogueModel?.ContextWindow is { } capacity && capacity > 0 ? $"{capacity:N0} tokens" : null;
+                value = CompactCatalogueModel?.ContextWindow is { } capacity && capacity > 0 ? $"{capacity:N0} tokens" : "Capacity unknown";
                 return true;
+            case "CompactContextDetails":
+                value = CompactCatalogueModel?.ContextWindow is { } reported && reported > 0
+                    ? $"Reported model context capacity: {reported:N0} tokens."
+                    : "The selected model reports no context capacity.";
+                return true;
+            case "CompactCatalogue":
+                value = Catalogue.Where(entry => MatchesCompactCapability(entry, CompactRole))
+                    .Select(entry => new HomeModelPickerCatalogueRow(entry, CompactRole)).ToArray();
+                return true;
+            case "HasCompactCatalogueMessage": value = CompactCatalogueMessage.Length > 0; return true;
+            case "CompactCatalogueMessage": value = CompactCatalogueMessage; return true;
+            case "HasCompactRouteMessage": value = CompactRouteMessage.Length > 0; return true;
+            case "CompactRouteMessage": value = CompactRouteMessage; return true;
+            case "CanChooseCompactModel": value = CanEditCompactRoute; return true;
+            case "CanSaveCompactRoute":
+                value = CanEditCompactRoute && State.HasUnsavedChanges && State.PendingAuditRequestId is null;
+                return true;
+            case "HasCompactPendingApproval":
+                value = State.PendingApprovalRequestId is not null || PendingApprovalRequestId is not null;
+                return true;
+            case "HasCompactPendingAudit":
+                value = State.PendingAuditRequestId is not null || PendingAuditRequestId is not null;
+                return true;
+            case "HasCompactStatus": value = !string.IsNullOrWhiteSpace(_compactStatus); return true;
+            case "CompactStatus": value = _compactStatus; return true;
             default: return Projection.TryGetValue(path, out value);
         }
     }
 
-    private HomeModelPickerCatalogueEntry? CompactCatalogueModel => _compactModel is { ProviderId: { } provider, ModelId: { } id }
-        ? Catalogue.FirstOrDefault(entry => StringComparer.OrdinalIgnoreCase.Equals(entry.ProviderId, provider) &&
-            StringComparer.OrdinalIgnoreCase.Equals(entry.ModelId, id))
+    private string CompactCatalogueMessage => _catalogueReadFailed ? CatalogueStatus : !_catalogueObserved
+        ? "Refresh to discover models."
+        : Catalogue.Any(entry => MatchesCompactCapability(entry, CompactRole)) ? ""
+        : CompactRole == VoiceRole ? "No catalogue models advertise conversational voice."
+        : "No models are available for this role.";
+
+    private string CompactRouteMessage => CompactRole == VisionRole ? "A separate Vision route is unavailable."
+        : CanEditCompactRoute || State.RouteRefreshRequired ? "" : "Select this role again to open its route.";
+
+    private bool CompactRouteIsDraft => MatchesRole(Category) && State.HasUnsavedChanges;
+    private HomeModelRouteContract? CompactRoute => CompactRouteIsDraft ? State.DraftRoute : CompactRole switch
+    {
+        MainRole => _mainRoute,
+        VoiceRole => _voiceRoute,
+        _ => null,
+    };
+
+    private HomeModelRouteCandidate? CompactIdentity => CompactRoute?.Candidates.Where(candidate => candidate.Enabled)
+        .OrderBy(candidate => candidate.Order).FirstOrDefault()
+        ?? (CompactRole == MainRole && !CompactRouteIsDraft && _compactModel is { ProviderId: { } provider, ModelId: { } model }
+            ? new(provider, model, null, true, 0) : null);
+
+    private bool IsCompactModelResolved => CompactRole == MainRole && CompactIdentity is { } candidate &&
+        _compactModel is { } model && string.Equals(candidate.ProviderId, model.ProviderId, StringComparison.OrdinalIgnoreCase)
+        && string.Equals(candidate.ModelId, model.ModelId, StringComparison.OrdinalIgnoreCase);
+
+    private HomeModelPickerCatalogueEntry? CompactCatalogueModel => CompactIdentity is { } identity
+        ? Catalogue.FirstOrDefault(entry => StringComparer.Ordinal.Equals(entry.ProviderId, identity.ProviderId) &&
+            StringComparer.Ordinal.Equals(entry.ModelId, identity.ModelId) &&
+            StringComparer.Ordinal.Equals(entry.ArtifactRevision, identity.ArtifactRevision))
         : null;
+
+    private IReadOnlyList<HomeModelPickerReasoningChoice> CompactReasoningChoices =>
+        IsCompactModelResolved && MatchesRole(Category) && !CompactRouteIsDraft &&
+        CompactIdentity is { } candidate && _compactModel is { } model
+            ? new HomeModelPickerCandidateRow(candidate, model.AdvertisedReasoningIds, model.ProviderId, model.ModelId,
+                candidate.ArtifactRevision, model.SelectedReasoningId).ReasoningLevelChoices
+            : [];
+
+    internal static bool MatchesCompactCapability(HomeModelPickerCatalogueEntry entry, string role)
+    {
+        var required = role switch
+        {
+            MainRole => nameof(Haven.Core.ToolCapability.Text),
+            // Audio input or output alone does not establish conversational voice support.
+            VoiceRole => "Voice",
+            VisionRole => nameof(Haven.Core.ToolCapability.Vision),
+            _ => null,
+        };
+        return required is not null && entry.Capabilities?.Any(value =>
+            string.Equals(value, required, StringComparison.OrdinalIgnoreCase)) == true;
+    }
+
+    internal void SetCompactRole(string role)
+    {
+        CompactRole = role;
+        NotifyChanged();
+    }
+
+    private bool IsSectionOpen(string section) => _compactSections.Contains((CompactRole, section));
+    private string SectionChevron(string section) => IsSectionOpen(section) ? "⌃" : "⌄";
+    private string SectionName(string section, string label) => $"{(IsSectionOpen(section) ? "Collapse" : "Expand")} {label}";
+
+    internal bool ToggleCompactSection(string? section)
+    {
+        if (section is not ("model" or "context" or "participant")) return false;
+        var key = (CompactRole, section);
+        if (!_compactSections.Add(key)) _compactSections.Remove(key);
+        NotifyChanged();
+        return true;
+    }
+
+    internal void SetCompactStatus(string? status)
+    {
+        if (string.Equals(_compactStatus, status, StringComparison.Ordinal)) return;
+        _compactStatus = status;
+        NotifyChanged();
+    }
+
+    private void NotifyChanged() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
 
     internal static bool CanDiscardRoute(HomeModelPickerEditorState state) => state is
         { HasUnsavedChanges: true, IsBusy: false, PendingApprovalRequestId: null, PendingAuditRequestId: null };
@@ -147,8 +288,9 @@ public sealed class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPrope
             Scope = snapshot.Scope;
             Category = snapshot.Category;
             ScopeId = snapshot.Routes.FirstOrDefault()?.ScopeId;
-            if (IsMainCategory(Category))
-                _mainRouteHasCandidates = snapshot.Routes.Any(route => route.Candidates.Any(candidate => candidate.Enabled));
+            var committed = snapshot.Routes.FirstOrDefault(route => route.RouteId == state.SelectedRouteId);
+            if (IsMainCategory(Category)) _mainRoute = committed;
+            if (string.Equals(Category, VoiceRole, StringComparison.OrdinalIgnoreCase)) _voiceRoute = committed;
         }
         RebuildProjection();
     }
@@ -196,11 +338,12 @@ public sealed class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPrope
         ArgumentNullException.ThrowIfNull(request);
         if (request.Action == HomeModelPickerAction.ToggleFamily && !Projection.Families.Any(group => group.Identity == request.FamilyKey))
             return false;
-        if (request.Action == HomeModelPickerAction.SelectCategory && string.IsNullOrWhiteSpace(request.Category))
+        if ((request.Action is HomeModelPickerAction.SelectCategory or HomeModelPickerAction.SelectCompactRole) &&
+            string.IsNullOrWhiteSpace(request.Category))
             return false;
         if (request.Action == HomeModelPickerAction.SelectRoute && string.IsNullOrWhiteSpace(request.RouteId))
             return false;
-        if ((request.Action is HomeModelPickerAction.SetCandidateEnabled or HomeModelPickerAction.MoveCandidateUp or HomeModelPickerAction.MoveCandidateDown or HomeModelPickerAction.SetReasoningLevel or HomeModelPickerAction.AddCatalogueCandidate)
+        if ((request.Action is HomeModelPickerAction.SetCandidateEnabled or HomeModelPickerAction.MoveCandidateUp or HomeModelPickerAction.MoveCandidateDown or HomeModelPickerAction.SetReasoningLevel or HomeModelPickerAction.AddCatalogueCandidate or HomeModelPickerAction.ChooseCompactModel)
             && (string.IsNullOrWhiteSpace(request.ProviderId) || string.IsNullOrWhiteSpace(request.ModelId) || (request.ArtifactRevision is not null && string.IsNullOrWhiteSpace(request.ArtifactRevision))))
             return false;
         if (request.Action == HomeModelPickerAction.SetCandidateEnabled && request.Enabled is null)
@@ -239,6 +382,7 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
     private readonly HomeModelPickerRouteEditor _editor = editor ?? throw new ArgumentNullException(nameof(editor));
     private readonly HomeModelSelectionSource? _source = source;
     private readonly AuthenticatedResourceActor? _actor = actor;
+    private readonly SemaphoreSlim _actionGate = new(1, 1);
     private long _generation;
 
     public HomeModelPickerCuiSurface Surface { get; } = surface ?? HomeModelPickerCuiSurface.LoadDefault();
@@ -270,6 +414,26 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(action);
+        await _actionGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            if (!CanPublish()) return Failure<object>("PickerUnavailable", "The model picker is no longer current.");
+            if (_editor.Current.RouteRefreshRequired && ChangesRoute(action.Action))
+                return Failure<object>("RouteRefreshRequired", "Refresh the saved route before editing.");
+            return await ExecuteCurrentAsync(action, cancellationToken).ConfigureAwait(false);
+        }
+        finally { _actionGate.Release(); }
+    }
+
+    private static bool ChangesRoute(HomeModelPickerAction action) => action is
+        HomeModelPickerAction.ChooseCompactModel or HomeModelPickerAction.AddCatalogueCandidate or
+        HomeModelPickerAction.SetCandidateEnabled or HomeModelPickerAction.SetReasoningLevel or
+        HomeModelPickerAction.MoveCandidateUp or HomeModelPickerAction.MoveCandidateDown or
+        HomeModelPickerAction.CommitReasoningLevel or HomeModelPickerAction.SaveRoute;
+
+    private async Task<HomeCoreOperationResult<object>> ExecuteCurrentAsync(
+        HomeModelPickerActionRequest action, CancellationToken cancellationToken)
+    {
         HomeCoreOperationResult<object> result;
         try
         {
@@ -282,7 +446,12 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
                 result = action.Action switch
                 {
                     HomeModelPickerAction.RefreshCatalogue => Box(await LoadCatalogueAsync(cancellationToken).ConfigureAwait(false)),
+                    HomeModelPickerAction.SelectCompactRole => await SelectCompactRoleAsync(action.Category, cancellationToken).ConfigureAwait(false),
+                    HomeModelPickerAction.ToggleCompactSection => CanPublish() && Surface.ToggleCompactSection(action.FamilyKey)
+                        ? new(true, "SectionToggled", "Picker section updated.")
+                        : Failure<object>("SectionUnavailable", "Choose a compact picker section."),
                     HomeModelPickerAction.AddCatalogueCandidate => Box(AddCatalogueCandidate(action)),
+                    HomeModelPickerAction.ChooseCompactModel => Box(ChooseCompactModel(action)),
                     HomeModelPickerAction.ToggleFamily => CanPublish() && Surface.ToggleFamily(action.FamilyKey ?? "")
                         ? new(true, "FamilyToggled", "Catalogue family expansion updated.")
                         : Failure<object>("FamilyNotFound", "Choose a current catalogue family."),
@@ -322,11 +491,30 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
         {
             result = Failure<object>("InvalidArgument", exception.Message);
         }
-        if (CanPublish())
+        if (CanPublish() && action.Action != HomeModelPickerAction.ToggleCompactSection)
         {
             Surface.ApplyState(_editor.Current);
-            await ApplyEffectiveReasoningAsync(cancellationToken).ConfigureAwait(false);
+            if (!Surface.IsSettingsOpen)
+                Surface.SetCompactStatus(result.Succeeded || action.Action == HomeModelPickerAction.RefreshCatalogue ? null : result.Message);
+            if (action.Action != HomeModelPickerAction.ChooseCompactModel)
+                await ApplyEffectiveReasoningAsync(cancellationToken).ConfigureAwait(false);
         }
+        return result;
+    }
+
+    private async Task<HomeCoreOperationResult<object>> SelectCompactRoleAsync(string? role, CancellationToken cancellationToken)
+    {
+        if (role is not (HomeModelPickerCuiSurface.MainRole or HomeModelPickerCuiSurface.VoiceRole or HomeModelPickerCuiSurface.VisionRole))
+            return Failure<object>("RoleUnavailable", "Choose Main, Voice or Vision.");
+        if (Surface.IsSettingsOpen || !CanPublish())
+            return Failure<object>("PickerUnavailable", "The compact model picker is unavailable.");
+        if (_editor.Current.HasUnsavedChanges && (Surface.CompactRole != role || !Surface.CanEditCompactRoute))
+            return Failure<object>("UnsavedChanges", "Save or discard the current route changes before switching roles.");
+
+        var result = role == HomeModelPickerCuiSurface.VisionRole || Surface.CompactRole == role && Surface.CanEditCompactRoute
+            ? new HomeCoreOperationResult<object>(true, "RoleSelected", "Picker role updated.")
+            : Box(await _editor.RefreshAsync(Surface.Scope, role, cancellationToken: cancellationToken).ConfigureAwait(false));
+        if (result.Succeeded && CanPublish()) Surface.SetCompactRole(role);
         return result;
     }
 
@@ -339,14 +527,29 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
 
     private HomeCoreOperationResult<HomeModelRouteContract> AddCatalogueCandidate(HomeModelPickerActionRequest action)
     {
-        var entry = Surface.Catalogue.FirstOrDefault(item =>
-            string.Equals(item.ProviderId, action.ProviderId, StringComparison.Ordinal) &&
-            string.Equals(item.ModelId, action.ModelId, StringComparison.Ordinal) &&
-            string.Equals(item.ArtifactRevision, action.ArtifactRevision, StringComparison.Ordinal));
+        var entry = FindCatalogueEntry(action);
         if (entry is null)
             return Failure<HomeModelRouteContract>("CatalogueEntryNotLoaded", "Refresh the authorised catalogue and choose one of its current entries.");
         return _editor.AddCandidate(entry);
     }
+
+    private HomeCoreOperationResult<HomeModelRouteContract> ChooseCompactModel(HomeModelPickerActionRequest action)
+    {
+        if (!CanPublish() || Surface.IsSettingsOpen || !Surface.CanEditCompactRoute ||
+            !string.Equals(action.Category, Surface.CompactRole, StringComparison.Ordinal))
+            return Failure<HomeModelRouteContract>("RouteUnavailable", "Open the corresponding route before choosing a model.");
+
+        var entry = FindCatalogueEntry(action);
+        if (entry is null || !HomeModelPickerCuiSurface.MatchesCompactCapability(entry, Surface.CompactRole))
+            return Failure<HomeModelRouteContract>("CatalogueEntryUnavailable", "Choose a current catalogue model for this role.");
+        return _editor.PreferCandidate(entry);
+    }
+
+    private HomeModelPickerCatalogueEntry? FindCatalogueEntry(HomeModelPickerActionRequest action) =>
+        Surface.Catalogue.FirstOrDefault(item =>
+            string.Equals(item.ProviderId, action.ProviderId, StringComparison.Ordinal) &&
+            string.Equals(item.ModelId, action.ModelId, StringComparison.Ordinal) &&
+            string.Equals(item.ArtifactRevision, action.ArtifactRevision, StringComparison.Ordinal));
 
     /// <summary>The canonical picker commit path: persists the chosen advertised reasoning-level default
     /// through the shared Home-owned source (guarded route CAS when wired; otherwise the retained memory
@@ -356,6 +559,14 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
     {
         if (_source is null || _actor is null)
             return Failure<object>("SourceUnavailable", "No selected-reasoning source/actor is available to commit a level.");
+        var state = _editor.Current;
+        if (state.HasUnsavedChanges)
+            return Failure<object>("UnsavedChanges", "Save or discard the current route changes before saving a reasoning level.");
+        if (state.PendingAuditRequestId is not null)
+            return Failure<object>("AuditPending", "Finish the original route audit before saving a reasoning level.");
+        if (state.Snapshot is not { } routeSnapshot || !HomeModelPickerCuiSurface.IsMainCategory(routeSnapshot.Category))
+            return Failure<object>("RouteUnavailable", "Open the Main route before saving a reasoning level.");
+
         var providerId = Required(action.ProviderId, "provider ID");
         var modelId = Required(action.ModelId, "model ID");
         var surfaceScope = $"{Surface.Scope}:{Surface.ScopeId}";
@@ -373,6 +584,18 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
             // Surface the source-owned pending route-audit handle (SavedAuditPending / OutcomeUnconfirmed)
             // alongside the approval line so the host can finish/retry it through that SAME source owner.
             Surface.PendingAuditRequestId = _source.GetPendingAuditRequestId(_actor.ProfileId, stableKey, surfaceScope);
+            if (result.Succeeded)
+            {
+                // The selection source writes through its own actor-scoped route owner. Reload this
+                // editor's canonical baseline before any queued model or route draft can use it.
+                _editor.RequireRouteRefresh();
+                Surface.ApplyState(_editor.Current);
+                var refreshed = await _editor.RefreshAsync(routeSnapshot.Scope, routeSnapshot.Category,
+                    cancellationToken: cancellationToken).ConfigureAwait(false);
+                if (!refreshed.Succeeded)
+                    return new(true, "ReasoningSavedRouteRefreshRequired",
+                        "Reasoning level saved. Refresh the route to continue editing.", result.Value);
+            }
         }
         return result.Succeeded
             ? new HomeCoreOperationResult<object>(true, "Succeeded", "Reasoning level saved.", result.Value)

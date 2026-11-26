@@ -9,7 +9,7 @@ public sealed class GamesRuntimeApplyBackTests
     private static readonly Guid Node = Guid.NewGuid();
     private static readonly Guid Other = Guid.NewGuid();
 
-    private static GamesAuthoredScene Scene(long revision) => new(revision,
+    private static GamesAuthoredScene Scene(long revision) => new GamesAuthoredScene(revision,
         [new GamesAuthoredValue(Node, "Position.X", 1.0), new GamesAuthoredValue(Other, "Position.X", 5.0)]).Capture();
 
     private static GamesRuntimeChange Change(Guid id, long baseRevision, double runtimeValue) =>

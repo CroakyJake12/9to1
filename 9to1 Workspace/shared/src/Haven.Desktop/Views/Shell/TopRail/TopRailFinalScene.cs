@@ -12,6 +12,8 @@ namespace Haven.Desktop.Views.Shell.TopRail;
 internal sealed class TopRailFinalScene
 {
     private const double MaximumTabStripWidth = 460d;
+    private const double ExpandedMaximumTabStripWidth = 1280d;
+    private double _availableRailWidth;
     private IReadOnlyList<TopRailTab> _tabs = [];
     private PopupMenu? _activeTabMenu;
 
@@ -203,7 +205,20 @@ internal sealed class TopRailFinalScene
         _activeTabMenu?.Dismiss();
         _tabs = tabs.ToArray();
         TabStrip.SetItems(_tabs.Select(x => new HavenTabStripItem(x.Key, x.Title, x.IsSelected, HasContextMenu: true, x.IconKey, x.IsCloseable)).ToArray());
-        TabStrip.SetValue(HavenProperties.Width, HavenLength.Px(PreferredTabStripWidth(_tabs)));
+        UpdateTabStripWidth();
+    }
+
+    internal void SetAvailableRailWidth(double railWidth)
+    {
+        if (!double.IsFinite(railWidth) || railWidth <= 0d) return;
+        if (Math.Abs(_availableRailWidth - railWidth) < 1d) return;
+        _availableRailWidth = railWidth;
+        UpdateTabStripWidth();
+    }
+
+    private void UpdateTabStripWidth()
+    {
+        TabStrip.SetValue(HavenProperties.Width, HavenLength.Px(PreferredTabStripWidth(_tabs, _availableRailWidth)));
     }
 
     private void ShowTabContextMenu(TopRailTab tab)
@@ -318,13 +333,18 @@ internal sealed class TopRailFinalScene
         NotificationsButton.Accessibility.AccessibleName = count > 0 ? $"Notifications, {count} unread" : "Notifications";
     }
 
-    private static double PreferredTabStripWidth(IReadOnlyList<TopRailTab> tabs)
+    private static double PreferredTabStripWidth(IReadOnlyList<TopRailTab> tabs, double availableRailWidth)
     {
         if (tabs.Count == 0) return 72d;
         // Leading icon and the visible close control both consume tab width (HAV-TAB-002).
+        // On wide desktop screens let the tab strip grow cleanly into the unused spacer region
+        // instead of crushing 4+ open tabs inside the compact 460px cap.
         var width = tabs.Sum(tab => Math.Clamp((Math.Min(tab.Title.Length, 24) * 8d) + 24d + (string.IsNullOrWhiteSpace(tab.IconKey) ? 0d : 20d) + (tab.IsCloseable ? 30d : 0d), 72d, 260d));
         width += Math.Max(0, tabs.Count - 1) * 5d;
-        return Math.Clamp(width, 72d, MaximumTabStripWidth);
+        var cap = availableRailWidth > 1240d
+            ? Math.Clamp(availableRailWidth - 780d, MaximumTabStripWidth, ExpandedMaximumTabStripWidth)
+            : MaximumTabStripWidth;
+        return Math.Clamp(width, 72d, cap);
     }
 
     private static Container Dropdown(string name, double width, string leadIcon, string content, string buttonName, out HavenButton button)

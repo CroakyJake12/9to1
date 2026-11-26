@@ -44,6 +44,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
     }
 
     private IDeveloperModelGateway? _injectedAutonomousGateway;
+    private readonly string? _autonomousMissionStoreDirectory;
     private DulcheUnixSocketGateway? _ownedAutonomousGateway;
     private DeveloperAutonomousMissionEngine? _autonomousEngine;
     private DeveloperAutonomousMission? _autonomousMission;
@@ -387,14 +388,14 @@ public sealed partial class DeveloperProjectWorkbenchPage
                     }
                     case "dev.mission-checkpoint":
                     {
-                        var engine = _autonomousEngine ?? throw new InvalidOperationException("Start or initialize a mission first.");
+                        var engine = await EnsureAutonomousEngineInitializedAsync(original, cancellationToken).ConfigureAwait(false);
                         var cp = await original.AwaitAsync(engine.SaveCheckpointAsync("manual_ui_checkpoint", null, cancellationToken)).ConfigureAwait(false);
                         await PublishAsync(original, () => _status = $"Saved durable checkpoint {cp.CheckpointId}.").ConfigureAwait(false);
                         break;
                     }
                     case "dev.mission-compact":
                     {
-                        var engine = _autonomousEngine ?? throw new InvalidOperationException("Start or initialize a mission first.");
+                        var engine = await EnsureAutonomousEngineInitializedAsync(original, cancellationToken).ConfigureAwait(false);
                         var ep = await original.AwaitAsync(engine.CompactContextAsync("manual_ui_compaction", cancellationToken)).ConfigureAwait(false);
                         await PublishAsync(original, () => _status = $"Context compacted into epoch {ep.EpochId} ({ep.ProjectedPromptTokens} prompt tokens).").ConfigureAwait(false);
                         break;
@@ -413,14 +414,14 @@ public sealed partial class DeveloperProjectWorkbenchPage
                     }
                     case "dev.mission-approve-integration":
                     {
-                        var engine = _autonomousEngine ?? throw new InvalidOperationException("No active mission.");
+                        var engine = await EnsureAutonomousEngineInitializedAsync(original, cancellationToken).ConfigureAwait(false);
                         var receipt = await original.AwaitAsync(engine.ApproveAndIntegrateActiveTaskAsync(cancellationToken)).ConfigureAwait(false);
                         await PublishAsync(original, () => _status = $"Guarded integration committed {receipt.CommitRevision[..Math.Min(10, receipt.CommitRevision.Length)]} onto {receipt.BranchName}.").ConfigureAwait(false);
                         break;
                     }
                     case "dev.mission-reject-integration":
                     {
-                        var engine = _autonomousEngine ?? throw new InvalidOperationException("No active mission.");
+                        var engine = await EnsureAutonomousEngineInitializedAsync(original, cancellationToken).ConfigureAwait(false);
                         string reason;
                         lock (_gate) reason = string.IsNullOrWhiteSpace(_missionDelegatePrompt)
                             ? "Owner requested additional refinement and verification before integration."
@@ -449,6 +450,51 @@ public sealed partial class DeveloperProjectWorkbenchPage
         }));
     }
 
+    private void HydratePersistedAutonomousMissionLocked(string repositoryRoot)
+    {
+        if (_autonomousMission is not null || string.IsNullOrWhiteSpace(repositoryRoot))
+            return;
+        try
+        {
+            var storeDir = _autonomousMissionStoreDirectory ?? DeveloperAutonomousMissionStore.ResolveDefaultRootDirectory();
+            if (!Directory.Exists(storeDir))
+                return;
+            var store = new DeveloperAutonomousMissionStore(storeDir);
+            var persisted = store.FindLatestResumableMissionForRepository(repositoryRoot);
+            if (persisted is null)
+                return;
+            if (!store.VerifyTranscriptIntegrity(persisted.MissionId, out _))
+                return;
+
+            _autonomousMission = persisted;
+            if (string.IsNullOrWhiteSpace(_missionWorkerModel) && !string.IsNullOrWhiteSpace(persisted.WorkerModelId))
+                _missionWorkerModel = persisted.WorkerModelId;
+            if (string.IsNullOrWhiteSpace(_missionSupervisorModel) && !string.IsNullOrWhiteSpace(persisted.SupervisorModelId))
+                _missionSupervisorModel = persisted.SupervisorModelId;
+            if (string.IsNullOrWhiteSpace(_missionProgrammePath) && !string.IsNullOrWhiteSpace(persisted.ProgrammeDirectory))
+                _missionProgrammePath = persisted.ProgrammeDirectory;
+            if (!string.IsNullOrWhiteSpace(persisted.Objective))
+                _missionObjective = persisted.Objective;
+            _missionAutoAdvance = persisted.AutoAdvance;
+            _missionGuardedIntegration = persisted.GuardedIntegration;
+            _missionEnableReasoning = persisted.EnableReasoning;
+            _selectedMissionTaskId = persisted.ActiveTask?.TaskId
+                ?? persisted.CompletedTasks.LastOrDefault()?.TaskId
+                ?? persisted.BlockedTasks.LastOrDefault()?.TaskId;
+
+            if (_autonomousEvents.Count == 0)
+            {
+                var tail = store.ReadEvents(persisted.MissionId, 60);
+                if (tail.Count > 0)
+                    _autonomousEvents.AddRange(tail);
+            }
+        }
+        catch
+        {
+            // Corrupted/unreadable mission folders must never block opening the project workbench.
+        }
+    }
+
     private async Task<DeveloperAutonomousMissionEngine> EnsureAutonomousEngineInitializedAsync(
         DesktopOriginalWorkLifetime.Original original,
         CancellationToken cancellationToken)
@@ -471,10 +517,14 @@ public sealed partial class DeveloperProjectWorkbenchPage
         var homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var defaultLock = Path.Combine(homeDir, ".local", "state", "9to1-sdk.lock");
 
+        string? existingMissionId;
+        lock (_gate) existingMissionId = _autonomousMission?.MissionId;
+
         var options = new DeveloperAutonomousMissionOptions
         {
             RepositoryRoot = repoRoot,
             ProgrammeDirectory = programmeDir,
+            StoreDirectory = _autonomousMissionStoreDirectory,
             MissionName = $"Build: {_project.Project.Name}",
             Objective = _missionObjective,
             WorkerModelId = string.IsNullOrWhiteSpace(_missionWorkerModel) ? null : _missionWorkerModel.Trim(),
@@ -532,12 +582,19 @@ public sealed partial class DeveloperProjectWorkbenchPage
             ScheduleAutonomousUiRefresh(gen);
         };
 
-        var mission = await original.AwaitAsync(engine.InitializeOrResumeAsync(cancellationToken: cancellationToken)).ConfigureAwait(false);
+        var mission = await original.AwaitAsync(engine.InitializeOrResumeAsync(
+            existingMissionId: existingMissionId,
+            cancellationToken: cancellationToken,
+            resumeExistingForRepository: true)).ConfigureAwait(false);
+        var storeDir = _autonomousMissionStoreDirectory ?? DeveloperAutonomousMissionStore.ResolveDefaultRootDirectory();
+        var persistedEvents = new DeveloperAutonomousMissionStore(storeDir).ReadEvents(mission.MissionId, 60);
         lock (_gate)
         {
             _autonomousEngine = engine;
             _autonomousMission = mission;
             _autonomousProgramme = engine.ProgrammeCatalog ?? _autonomousProgramme;
+            if (_autonomousEvents.Count == 0 && persistedEvents.Count > 0)
+                _autonomousEvents.AddRange(persistedEvents);
         }
         return engine;
     }

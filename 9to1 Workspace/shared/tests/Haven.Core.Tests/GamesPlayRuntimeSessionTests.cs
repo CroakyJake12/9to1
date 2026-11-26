@@ -10,7 +10,8 @@ public sealed class GamesPlayRuntimeSessionTests
     private static readonly Guid Session = Guid.NewGuid();
     private static readonly Guid Node = Guid.NewGuid();
 
-    private static GamesAuthoredScene Authored(long revision) => new(revision, [new GamesAuthoredValue(Node, "Position.X", 1.0)]).Capture();
+    private static GamesAuthoredScene Authored(long revision) =>
+        new GamesAuthoredScene(revision, [new GamesAuthoredValue(Node, "Position.X", 1.0)]).Capture();
 
     [Fact]
     public void StartSnapshotsAuthoredRevision()

@@ -13,7 +13,7 @@ public sealed class GamesPlayMatchLifecycleTests
         [new PlayStateField("Question", "string", PlayVisibility.Public)], [new PlayRole("Human", true)], ["TeamA"], new PlayClock(30, 120), "sum", "high");
 
     private static PlayMatch OpenNoTools() => PlayMatch.Open(Match, Definition(),
-        [PlayMatchRound.Open(1, PlayToolProfile.NoTools("strict-r1", "Strict Round 1"))]);
+        [PlayMatchRound.Open(1, PlayToolProfile.CreateNoTools("strict-r1", "Strict Round 1"))]);
 
     [Fact]
     public void NoToolsRoundDeniesParticipantToolCallByRuntimeCapability()

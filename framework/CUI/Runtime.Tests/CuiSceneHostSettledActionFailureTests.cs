@@ -152,4 +152,39 @@ public sealed class CuiSceneHostSettledActionFailureTests
         Assert.NotNull(failure);
         rig.Expect(failure!);
     }, validator: e => false);
+
+    [Fact]
+    public Task Guarded_action_failure_banner_auto_expires_while_retaining_last_failure_and_diagnostics() => Run(async rig =>
+    {
+        rig.Host.GuardedActionBannerDuration = TimeSpan.FromMilliseconds(80);
+        var dispatcher = Dispatcher.UIThread;
+        var action = new SettlingAction();
+        var scene = Scene(new Readiness(), action);
+        await rig.Host.ShowAsync(scene).WaitAsync(Bound);
+        var panel = rig.Host.Content as Avalonia.Controls.Panel;
+        var button = Assert.Single(panel?.Children.OfType<Button>() ?? Enumerable.Empty<Button>());
+        button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        for (var i = 0; i < 5; i++) { dispatcher.RunJobs(); await Task.Delay(10); }
+
+        Assert.NotNull(rig.Host.LastActionFailure);
+        var grid = Assert.IsType<Grid>(rig.Host.Content);
+        var banner = Assert.IsType<TextBlock>(grid.Children[0]);
+        Assert.True(banner.IsVisible);
+        Assert.Contains("could not complete", banner.Text ?? "", StringComparison.OrdinalIgnoreCase);
+
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(2);
+        while (banner.IsVisible && DateTime.UtcNow < deadline)
+        {
+            await Task.Delay(25);
+            dispatcher.RunJobs();
+        }
+
+        Assert.False(banner.IsVisible);
+        Assert.Equal(string.Empty, banner.Text);
+        Assert.NotNull(rig.Host.LastActionFailure);
+        Assert.Contains(rig.Host.Diagnostics, d => d.Code == "CUIA_FAILED");
+        var close = rig.Host.CloseOriginalAsync();
+        await close.WaitAsync(Bound);
+        Assert.True(close.IsCompletedSuccessfully);
+    }, validator: e => e is TestSettledFailure);
 }

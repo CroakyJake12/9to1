@@ -145,10 +145,11 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         FileDeveloperWorkspaceStore? editorSessionStore = null,
         FilesDeveloperOriginalCurrentProjectExecutionBridge? editorSessionExecution = null,
         DeveloperTaskDraftRecoveryOwner? taskRecoveryOwner = null,
-        IDeveloperModelGateway? autonomousModelGateway = null)
+        IDeveloperModelGateway? autonomousModelGateway = null,
+        string? autonomousMissionStoreDirectory = null)
         : this(development, canonical, actualProject, actualTaskId, actualExecutionId, actualContextId, readiness,
             resolveOriginalDocument, demandOriginalDocumentSourceExternalJoin, explicitBusinessCancellationToken,
-            retainOriginalAcquisition, null, sourceExplorerReader, editorSessionStore, editorSessionExecution, taskRecoveryOwner, autonomousModelGateway) { }
+            retainOriginalAcquisition, null, sourceExplorerReader, editorSessionStore, editorSessionExecution, taskRecoveryOwner, autonomousModelGateway, autonomousMissionStoreDirectory) { }
 
     internal DeveloperProjectWorkbenchPage(DeveloperTaskWorkspaceService development, TaskExecutionCoordinator canonical,
         DeveloperResolvedProject actualProject, Guid actualTaskId, Guid actualExecutionId, Guid actualContextId,
@@ -161,7 +162,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         FileDeveloperWorkspaceStore? editorSessionStore = null,
         FilesDeveloperOriginalCurrentProjectExecutionBridge? editorSessionExecution = null,
         DeveloperTaskDraftRecoveryOwner? taskRecoveryOwner = null,
-        IDeveloperModelGateway? autonomousModelGateway = null)
+        IDeveloperModelGateway? autonomousModelGateway = null,
+        string? autonomousMissionStoreDirectory = null)
     {
         _development = development ?? throw new ArgumentNullException(nameof(development));
         _canonical = canonical ?? throw new ArgumentNullException(nameof(canonical));
@@ -171,6 +173,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         _editorSessionExecution = editorSessionExecution;
         _taskRecoveryOwner = taskRecoveryOwner;
         _injectedAutonomousGateway = autonomousModelGateway;
+        _autonomousMissionStoreDirectory = autonomousMissionStoreDirectory;
         if (actualTaskId == Guid.Empty || actualExecutionId == Guid.Empty || actualContextId == Guid.Empty)
             throw new ArgumentException("The existing canonical Task/Run/context must be supplied together.");
         _taskId = actualTaskId; _runId = actualExecutionId; _contextId = actualContextId;
@@ -233,7 +236,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         IProviderSecretStore? originalRecoveryKeys = null,
         IAppPaths? originalRecoveryPaths = null,
         DeveloperManualProjectProcessOwner? manualProcessOwner = null,
-        IDeveloperModelGateway? autonomousModelGateway = null)
+        IDeveloperModelGateway? autonomousModelGateway = null,
+        string? autonomousMissionStoreDirectory = null)
     {
         _development = development ?? throw new ArgumentNullException(nameof(development));
         _canonical = canonical ?? throw new ArgumentNullException(nameof(canonical));
@@ -255,6 +259,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         _editorSessionStore = editorSessionStore;
         _editorSessionExecution = editorSessionExecution;
         _injectedAutonomousGateway = autonomousModelGateway;
+        _autonomousMissionStoreDirectory = autonomousMissionStoreDirectory;
         _review = null; // No AI Task-backed review session; manual edits route through the genuine edit admission + kernel.
         Document = DeveloperWorkbenchCuiDocument.Load();
         _controls = new();
@@ -328,7 +333,12 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             original.BindPublicationGuard(() => IsCurrent(generation));
             using var scope = CancellationTokenSource.CreateLinkedTokenSource(original.Token, cancellationToken);
             var project = await ResolveProjectAsync(original, scope.Token).ConfigureAwait(false);
-            await PublishAsync(original, () => { _project = project; _status = "Existing project opened. Source reads use its current Home permissions."; }).ConfigureAwait(false);
+            await PublishAsync(original, () =>
+            {
+                _project = project;
+                HydratePersistedAutonomousMissionLocked(project.Root.Location);
+                _status = "Existing project opened. Source reads use its current Home permissions.";
+            }).ConfigureAwait(false);
             if (_manual)
             {
                 await RestoreCleanSessionAsync(original, project, scope.Token).ConfigureAwait(false);

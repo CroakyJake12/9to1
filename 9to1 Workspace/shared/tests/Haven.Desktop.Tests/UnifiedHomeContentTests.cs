@@ -655,12 +655,13 @@ public sealed partial class UnifiedHomeContentTests
             Assert.True(back.IsEffectivelyVisible && back.IsEnabled);
             var accessibilityPage = SettingsControl<CuiContainerControl>(settings, "home-settings-accessibility-page");
             Assert.True(accessibilityPage.IsEffectivelyVisible);
-            Assert.False(SettingsControl<CuiContainerControl>(settings, "home-appearance-settings").IsEffectivelyVisible);
-            var scroll = Assert.IsType<ScrollViewer>(accessibilityPage.Child);
+            Assert.DoesNotContain(settings.GetVisualDescendants().OfType<Control>(),
+                control => CuiRuntimeIdentity.GetStableId(control) == "id:home-appearance-settings");
+            var accessibilityScroll = Assert.IsType<ScrollViewer>(accessibilityPage.Child);
             var scale = SettingsControl<ComboBox>(settings, "home-settings-interface-scale");
             Assert.True(scale.IsEffectivelyVisible);
-            Assert.True(scroll.Extent.Height > scroll.Viewport.Height);
-            Assert.InRange(scale.TranslatePoint(default, scroll)!.Value.Y, 0, scroll.Extent.Height);
+            Assert.True(accessibilityScroll.Extent.Height > accessibilityScroll.Viewport.Height);
+            Assert.InRange(scale.TranslatePoint(default, accessibilityScroll)!.Value.Y, 0, accessibilityScroll.Extent.Height);
 
             PressSettingsKey(window, PhysicalKey.Home);
             var global = SettingsControl<Button>(settings, "home-settings-global");
@@ -668,7 +669,7 @@ public sealed partial class UnifiedHomeContentTests
             PressSettingsKey(window, PhysicalKey.ArrowLeft);
             Layout();
             Assert.Equal("Collapsed", AutomationProperties.GetItemStatus(global));
-            Assert.DoesNotContain(settings.GetVisualDescendants(), control => ReferenceEquals(control, theme));
+            Assert.DoesNotContain(settings.GetVisualDescendants().OfType<Control>(), control => ReferenceEquals(control, theme));
             PressSettingsKey(window, PhysicalKey.ArrowRight);
             Layout();
             Assert.Equal("Expanded", AutomationProperties.GetItemStatus(global));
@@ -689,6 +690,8 @@ public sealed partial class UnifiedHomeContentTests
             await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
             Layout();
             Assert.True(SettingsCategorySelected(theme));
+            var themePage = SettingsControl<CuiContainerControl>(settings, "home-appearance-settings");
+            var scroll = Assert.IsType<ScrollViewer>(themePage.Child);
             Assert.Equal(global::Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled, scroll.HorizontalScrollBarVisibility);
             Assert.Equal(global::Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, scroll.VerticalScrollBarVisibility);
             Assert.True(scroll.Viewport.Height > 0 && scroll.Viewport.Height <= 520);
@@ -2123,7 +2126,8 @@ public sealed partial class UnifiedHomeContentTests
             var shortcuts = SettingsControl<CuiContainerControl>(page, "home-newtab-shortcuts");
             var shortcutButtons = shortcuts.GetVisualDescendants().OfType<Button>()
                 .Where(button => button.Name == "home-newtab-shortcut").ToArray();
-            Assert.Equal(new[] { "Apps", "Library", "Dashboard" }, shortcutButtons.Select(AutomationProperties.GetName));
+            Assert.Equal(new[] { "Apps", "Library (unavailable)", "Dashboard" }, shortcutButtons.Select(AutomationProperties.GetName));
+            Assert.False(shortcutButtons[1].IsEnabled);
             var positions = shortcutButtons.Select(button => button.TranslatePoint(default, shortcuts)!.Value).ToArray();
             if (expectedShortcutColumns is { } expected)
                 Assert.Equal(expected, positions.GroupBy(position => Math.Round(position.Y)).Max(row => row.Count()));
@@ -2508,6 +2512,7 @@ public sealed partial class UnifiedHomeContentTests
         {
             RegisterProductionImageResolver(window);
             window.Show(); await window.InitializeAsync().WaitAsync(limit);
+            SettleFixtureLayout(window);
             sourcePage = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(source.OriginalNativeView).OriginalContent);
             if (fromNewTab)
             {

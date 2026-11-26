@@ -38,7 +38,7 @@ public sealed class DeveloperTrxIncompleteResultTests
   <ResultSummary outcome=""Completed"">
     <Counters total=""2"" passed=""1"" failed=""0"" error=""0"" />
   </ResultSummary>
-</TestRun>"";
+</TestRun>";
 
         var result = DeveloperTrxTestResults.Parse(trx);
         Assert.True(result.Succeeded);

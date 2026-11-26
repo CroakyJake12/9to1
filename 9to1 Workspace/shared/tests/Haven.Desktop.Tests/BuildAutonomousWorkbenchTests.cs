@@ -154,6 +154,7 @@ public sealed class BuildAutonomousWorkbenchTests
             var prefs = new UserPreferencesService(new TempPaths(temp.FullName));
             var client = new DulcheLocalClient(prefs, socketPath);
             var gateway = client.AsAutonomousGateway();
+            var missionStoreDir = Path.Combine(temp.FullName, "missions");
             var taskId = Guid.NewGuid();
             var execId = Guid.NewGuid();
             var ctxId = Guid.NewGuid();
@@ -170,7 +171,8 @@ public sealed class BuildAutonomousWorkbenchTests
                 () => { },
                 cts.Token,
                 retainOriginalAcquisition: null,
-                autonomousModelGateway: gateway);
+                autonomousModelGateway: gateway,
+                autonomousMissionStoreDirectory: missionStoreDir);
 
             window = new Window { Width = 1200, Height = 850, Content = page };
             window.Show();
@@ -209,6 +211,35 @@ public sealed class BuildAutonomousWorkbenchTests
             Assert.Contains("manual_ui_checkpoint", cps?.ToString());
             Assert.True(page.TryGetValue("MissionContextSummary", out var ctxSummary));
             Assert.Contains("77", ctxSummary?.ToString());
+
+            var firstMissionId = page.AutonomousEngine?.CurrentMission?.MissionId;
+            Assert.False(string.IsNullOrWhiteSpace(firstMissionId));
+
+            // 5) Close and reopen workbench on the same repo: persisted mission must hydrate & resume (not silently replace).
+            await page.CloseAndDrainAsync();
+            page = new DeveloperProjectWorkbenchPage(
+                devService,
+                canonical,
+                resolved,
+                taskId,
+                execId,
+                ctxId,
+                new ReadyScene(),
+                (_, _, _) => throw new NotSupportedException(),
+                () => { },
+                cts.Token,
+                retainOriginalAcquisition: null,
+                autonomousModelGateway: gateway,
+                autonomousMissionStoreDirectory: missionStoreDir);
+            window.Content = page;
+            await page.ActivateAsync(cts.Token);
+
+            Assert.True(page.TryGetValue("MissionStatusSummary", out var reopenedStatus));
+            Assert.Contains(firstMissionId!, reopenedStatus?.ToString());
+            Assert.True(page.TryGetValue("CanResumeMission", out var canResume));
+            Assert.Equal(true, canResume);
+            await page.DispatchAsync("dev.mission-checkpoint", null, cts.Token);
+            Assert.Equal(firstMissionId, page.AutonomousEngine?.CurrentMission?.MissionId);
         }
         finally
         {

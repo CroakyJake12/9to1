@@ -135,7 +135,10 @@ public sealed partial class DulcheLocalClient
 
     public async Task<JsonNode> PostAsync(string route, object body, CancellationToken token, string? idempotencyKey)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Post, "v1/" + route) { Content = JsonContent.Create(body) };
+        using var request = new HttpRequestMessage(HttpMethod.Post, "v1/" + route)
+        {
+            Content = new StringContent(JsonSerializer.Serialize(body), System.Text.Encoding.UTF8, "application/json")
+        };
         if (idempotencyKey is not null) request.Headers.Add("Idempotency-Key", idempotencyKey);
         return await ReadAsync(request, token);
     }

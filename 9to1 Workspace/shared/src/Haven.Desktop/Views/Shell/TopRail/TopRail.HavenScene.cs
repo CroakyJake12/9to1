@@ -59,6 +59,7 @@ public sealed partial class TopRail
     private void UpdateTaskbarShelfState(double width)
     {
         if (_havenOwnedScene is null || width <= 0d) return;
+        _havenOwnedScene.SetAvailableRailWidth(width);
         var next = TaskbarShelfLayout.Resolve(width);
         if (next == _shelfState) return;
         _shelfState = next;

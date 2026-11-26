@@ -48,7 +48,8 @@ public sealed class GamesPlayMatchCheckpointTests
         // Sealed submissions and resolved round survive reconstruction exactly.
         Assert.Equal(advanced.CurrentRound, reconstructed.CurrentRound);
         Assert.Equal(advanced.SealedSubmissions.Count, reconstructed.SealedSubmissions.Count);
-        Assert.Equal(2, reconstructed.ScoredEvents.Count);
+        Assert.Equal(advanced.ScoredEvents.Count, reconstructed.ScoredEvents.Count);
+        Assert.Single(reconstructed.ScoredEvents);
     }
 
     [Fact]
@@ -59,7 +60,7 @@ public sealed class GamesPlayMatchCheckpointTests
 
         // The branch carries the committed state forward under a new lineage.
         Assert.NotEqual(original.LineageID, branch.LineageID);
-        Assert.Equal(1, branch.Checkpoints.Count);
+        Assert.Single(branch.Checkpoints);
 
         // Appending to the branch does not mutate the original history.
         var appended = branch.Append(MatchCheckpoint.Commit(Guid.NewGuid(), branch.LineageID, 2, branch.CurrentState(), new PlayClock(30, 120), []));

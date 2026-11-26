@@ -552,7 +552,7 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         return true;
     }
     private void UpdateHeaderVisibilityForDashboardBriefing() =>
-        Set(_heading, "IsVisible", _section is not ("settings" or "newtab") &&
+        Set(_heading, "IsVisible", _section is not ("settings" or "newtab" or "events") &&
             (_section != "dashboard" || _dashboard?.ShowsHomeBriefing != true));
 
     private void OnDashboardBriefingVisibilityChanged(object? sender, EventArgs args)

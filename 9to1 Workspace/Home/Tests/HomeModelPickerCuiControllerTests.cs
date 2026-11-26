@@ -1,6 +1,9 @@
 using System.Text.Json;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
+using Dulche.Runtime;
+using Haven.Application;
+using Haven.Core;
 using HavenOS.Home;
 using HavenOS.Home.Core;
 using Xunit;
@@ -13,19 +16,34 @@ namespace HavenOS.Home.Tests;
 /// and the host composition tests.</summary>
 public sealed class HomeModelPickerCuiControllerTests
 {
-    private sealed class StubProvider(HomeModelPickerSnapshot snapshot) : IHomeModelPickerFeatureProvider
+    private sealed class StubProvider(HomeModelPickerSnapshot snapshot) : IHomeModelPickerOriginalActorFeatureProvider
     {
         public HomeModelPickerSnapshot Snapshot { get; private set; } = snapshot;
         public HomeModelCataloguePage Catalogue { get; init; } = new([], 0, 20, false, 1);
         public HomeModelRouteEdit? LastEdit { get; private set; }
+        public HomeModelPickerSnapshot? VoiceSnapshot { get; init; }
+        public List<string> RequestedCategories { get; } = [];
+        public string? CatalogueFailure { get; set; }
+        public bool FailRouteRefresh { get; set; }
         public Task<HomeCoreOperationResult<object>> RetryAuditAsync(string requestId, CancellationToken ct = default) =>
             Task.FromResult(new HomeCoreOperationResult<object>(false, "AuditNotOwned", "This host does not own the original route audit."));
         public Task<HomeCoreOperationResult<HomeModelCataloguePage>> GetCatalogueAsync(string? query = null, CancellationToken ct = default) =>
-            Task.FromResult(new HomeCoreOperationResult<HomeModelCataloguePage>(true, "Ready", "Current authorised provider catalogue.", Catalogue));
-        public Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> GetSnapshotAsync(string scope, string category, CancellationToken ct = default) =>
-            Task.FromResult(new HomeCoreOperationResult<HomeModelPickerSnapshot>(true, "Ready", "Current personal Home route.", Snapshot));
+            Task.FromResult(CatalogueFailure is { } message
+                ? new HomeCoreOperationResult<HomeModelCataloguePage>(false, "Offline", message)
+                : new HomeCoreOperationResult<HomeModelCataloguePage>(true, "Ready", "Current authorised provider catalogue.", Catalogue));
+
+        public Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> GetSnapshotAsync(string scope, string category, CancellationToken ct = default)
+        {
+            RequestedCategories.Add(category);
+            if (FailRouteRefresh)
+                return Task.FromResult(new HomeCoreOperationResult<HomeModelPickerSnapshot>(false, "Offline", "Route store offline."));
+            var current = category == "voice" && VoiceSnapshot is not null ? VoiceSnapshot : Snapshot;
+            return Task.FromResult(new HomeCoreOperationResult<HomeModelPickerSnapshot>(true, "Ready", "Current personal Home route.", current));
+        }
         public Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> UpdateRouteAsync(HomeModelRouteEdit edit, CancellationToken ct = default)
         {
+            if (edit.ExpectedRevision != Snapshot.Revision)
+                return Task.FromResult(new HomeCoreOperationResult<HomeModelPickerSnapshot>(false, "Conflict", "Route revision changed."));
             LastEdit = edit;
             Snapshot = Snapshot with
             {
@@ -34,6 +52,10 @@ public sealed class HomeModelPickerCuiControllerTests
             };
             return Task.FromResult(new HomeCoreOperationResult<HomeModelPickerSnapshot>(true, "Saved", "Saved.", Snapshot));
         }
+        public Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> UpdateRouteForActorAsync(
+            AuthenticatedResourceActor expectedActor, HomeModelRouteEdit edit, CancellationToken cancellationToken = default) =>
+            UpdateRouteAsync(edit, cancellationToken);
+
         public Task<HomeCoreOperationResult<HomeModelRoutePreview>> PreviewResolutionAsync(HomeModelRoutePreviewRequest request, CancellationToken ct = default) =>
             Task.FromResult(new HomeCoreOperationResult<HomeModelRoutePreview>(false, "PermissionDenied", "n/a"));
     }
@@ -242,6 +264,201 @@ public sealed class HomeModelPickerCuiControllerTests
         Assert.False(result.Succeeded);
         Assert.Equal("InvalidReasoningLevel", result.Code);
     }
+
+    [Fact]
+    public async Task Compact_model_choice_prefers_the_current_catalogue_identity_and_saves_only_on_request()
+    {
+        var route = Route("chat.active", new("p", "current", null, true, 0),
+            new("p", "desired", null, false, 1, "low"), new("p", "fallback", null, true, 2));
+        var provider = new StubProvider(new HomeModelPickerSnapshot(4, "User", "chat", [route]))
+        {
+            Catalogue = new([Model("desired", "Text"), Model("vision-only", "Vision")], 0, 2, false, 1),
+        };
+        var controller = new HomeModelPickerCuiController(new HomeModelPickerRouteEditor(provider),
+            new HomeModelPickerCuiSurface(new CuiRichParser().Parse("<Cui><Page/></Cui>")));
+        await controller.OpenAsync("User", "chat");
+
+        var entry = Assert.Single(Value<HomeModelPickerCatalogueRow[]>(controller.Surface, "CompactCatalogue"));
+        var choice = Value<HomeModelPickerCatalogueSelection>(entry, "Selection");
+        Assert.Equal("chat", choice.CompactRole);
+        var ineligible = await controller.ExecuteAsync(new(HomeModelPickerAction.ChooseCompactModel,
+            Category: "chat", ProviderId: "p", ModelId: "vision-only"));
+        Assert.Equal("CatalogueEntryUnavailable", ineligible.Code);
+        var stale = await controller.ExecuteAsync(new(HomeModelPickerAction.ChooseCompactModel,
+            Category: "voice", ProviderId: choice.ProviderId, ModelId: choice.ModelId));
+        Assert.Equal("RouteUnavailable", stale.Code);
+
+        var staged = await controller.ExecuteAsync(new(HomeModelPickerAction.ChooseCompactModel, Category: choice.CompactRole,
+            ProviderId: choice.ProviderId, ModelId: choice.ModelId, ArtifactRevision: choice.ArtifactRevision));
+
+        Assert.True(staged.Succeeded);
+        Assert.Null(provider.LastEdit);
+        Assert.True(Value<bool>(controller.Surface, "CanSaveCompactRoute"));
+        Assert.Equal("Friendly desired", Value<string>(controller.Surface, "CompactModelName"));
+        Assert.Equal("Route preference pending", Value<string>(controller.Surface, "CompactModelState"));
+        Assert.Equal(new[] { ("desired", true, 0), ("current", true, 1), ("fallback", true, 2) },
+            controller.Surface.State.Candidates.Select(candidate => (candidate.ModelId, candidate.Enabled, candidate.Order)));
+        Assert.Equal("low", controller.Surface.State.Candidates[0].ReasoningLevelId);
+        var blocked = await controller.ExecuteAsync(new(HomeModelPickerAction.SelectCompactRole, Category: "voice"));
+        Assert.Equal("UnsavedChanges", blocked.Code);
+        Assert.Equal(new[] { "chat" }, provider.RequestedCategories);
+
+        var saved = await controller.ExecuteAsync(new(HomeModelPickerAction.SaveRoute));
+
+        Assert.True(saved.Succeeded);
+        Assert.Equal(4, provider.LastEdit!.ExpectedRevision);
+        Assert.Equal("desired", provider.LastEdit.Route.Candidates[0].ModelId);
+        Assert.False(Value<bool>(controller.Surface, "CanSaveCompactRoute"));
+    }
+
+    [Fact]
+    public async Task Compact_roles_keep_separate_disclosures_and_never_route_vision_to_image_generation()
+    {
+        var chat = Route("chat.active", new HomeModelRouteCandidate("p", "main", null, true, 0));
+        var voice = Route("voice.active", new HomeModelRouteCandidate("p", "voice-pref", null, true, 0)) with { Category = "voice" };
+        var provider = new StubProvider(new HomeModelPickerSnapshot(4, "User", "chat", [chat]))
+        {
+            VoiceSnapshot = new(4, "User", "voice", [voice]),
+            Catalogue = new([Model("main", "Text"), Model("camera", "Vision"), Model("audio", "AudioInput", "AudioOutput")],
+                0, 3, false, 1),
+        };
+        var surface = new HomeModelPickerCuiSurface(new CuiRichParser().Parse("<Cui><Page/></Cui>"));
+        var controller = new HomeModelPickerCuiController(new HomeModelPickerRouteEditor(provider), surface);
+        await controller.OpenAsync("User", "chat");
+        await controller.ExecuteAsync(new(HomeModelPickerAction.ToggleCompactSection, FamilyKey: "context"));
+
+        Assert.True((await controller.ExecuteAsync(new(HomeModelPickerAction.SelectCompactRole, Category: "voice"))).Succeeded);
+        Assert.False(Value<bool>(surface, "CompactContextOpen"));
+        Assert.Equal("voice-pref", Value<string>(surface, "CompactModelName"));
+        Assert.Empty(Value<HomeModelPickerCatalogueRow[]>(surface, "CompactCatalogue"));
+        await controller.ExecuteAsync(new(HomeModelPickerAction.ToggleCompactSection, FamilyKey: "model"));
+
+        Assert.True((await controller.ExecuteAsync(new(HomeModelPickerAction.SelectCompactRole, Category: "vision"))).Succeeded);
+        Assert.Equal("Choose a model", Value<string>(surface, "CompactModelName"));
+        Assert.False(Value<bool>(surface, "CompactModelOpen"));
+        Assert.False(Value<bool>(surface, "CanChooseCompactModel"));
+        Assert.Equal("Friendly camera", Value<string>(Assert.Single(
+            Value<HomeModelPickerCatalogueRow[]>(surface, "CompactCatalogue")), "DisplayName"));
+        Assert.Equal(new[] { "chat", "voice" }, provider.RequestedCategories);
+
+        surface.SetSettingsOpen(true);
+        surface.SetSettingsOpen(false);
+        Assert.Equal("vision", surface.CompactRole);
+        Assert.True((await controller.ExecuteAsync(new(HomeModelPickerAction.SelectCompactRole, Category: "chat"))).Succeeded);
+        Assert.True(Value<bool>(surface, "CompactContextOpen"));
+        Assert.False(Value<bool>(surface, "CompactModelOpen"));
+        Assert.Equal("Friendly main", Value<string>(surface, "CompactModelName"));
+        Assert.True((await controller.ExecuteAsync(new(HomeModelPickerAction.SelectCompactRole, Category: "voice"))).Succeeded);
+        Assert.True(Value<bool>(surface, "CompactModelOpen"));
+        Assert.Null(provider.LastEdit);
+    }
+
+    [Fact]
+    public async Task Compact_discovery_survives_a_catalogue_failure_and_can_retry()
+    {
+        var provider = new StubProvider(new HomeModelPickerSnapshot(4, "User", "chat", [Route("chat.active")]))
+        {
+            Catalogue = new([Model("main", "Text")], 0, 1, false, 1),
+            CatalogueFailure = "Provider catalogue offline. Try again.",
+        };
+        var surface = new HomeModelPickerCuiSurface(new CuiRichParser().Parse("<Cui><Page/></Cui>"));
+        var controller = new HomeModelPickerCuiController(new HomeModelPickerRouteEditor(provider), surface);
+
+        Assert.True((await controller.OpenAsync("User", "chat")).Succeeded);
+        Assert.True(Value<bool>(surface, "HasCompactCatalogueMessage"));
+        Assert.Equal(provider.CatalogueFailure, Value<string>(surface, "CompactCatalogueMessage"));
+        Assert.Empty(Value<HomeModelPickerCatalogueRow[]>(surface, "CompactCatalogue"));
+
+        provider.CatalogueFailure = null;
+        Assert.True((await controller.ExecuteAsync(new(HomeModelPickerAction.RefreshCatalogue))).Succeeded);
+        Assert.False(Value<bool>(surface, "HasCompactCatalogueMessage"));
+        Assert.Single(Value<HomeModelPickerCatalogueRow[]>(surface, "CompactCatalogue"));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Reasoning_save_rebases_a_later_model_preference_to_the_canonical_route_revision(bool refreshTemporarilyUnavailable)
+    {
+        var actor = new AuthenticatedResourceActor("actor", "profile", null, null, "auth-1");
+        var routeId = HomeModelPickerFeatureProvider.RouteId(actor.ProfileId, ModelCapabilityCategory.Chat);
+        var route = Route(routeId, new HomeModelRouteCandidate("p", "current", null, true, 0)) with { ScopeId = actor.ProfileId };
+        var provider = new StubProvider(new HomeModelPickerSnapshot(4, "User", "Chat", [route]))
+        {
+            Catalogue = new([Model("current", "Text"), Model("next", "Text")], 0, 2, false, 1),
+        };
+        var source = new HomeModelSelectionSource(new ModelProviderRegistry([new ReasoningCatalogueProvider()]),
+            new InMemoryModelRouteRepository(),
+            (category, _) => Task.FromResult(category == ModelCapabilityCategory.Chat ? ReadCanonicalRoute() : null),
+            _ => Task.FromResult<AuthenticatedResourceActor?>(actor),
+            (_, _, _) => Task.FromResult<IReadOnlyList<string>?>(["low", "medium", "high"]),
+            routeProvider: provider);
+        var surface = new HomeModelPickerCuiSurface(new CuiRichParser().Parse("<Cui><Page/></Cui>"));
+        var controller = new HomeModelPickerCuiController(new HomeModelPickerRouteEditor(provider), surface, source, actor);
+        Assert.True((await controller.OpenAsync("User", "chat")).Succeeded);
+
+        provider.FailRouteRefresh = refreshTemporarilyUnavailable;
+        var reasoning = await controller.ExecuteAsync(new(HomeModelPickerAction.CommitReasoningLevel,
+            ProviderId: "p", ModelId: "current", ReasoningLevelId: "medium"));
+
+        Assert.True(reasoning.Succeeded);
+        Assert.Equal(4, provider.LastEdit!.ExpectedRevision);
+        Assert.Equal(5, provider.Snapshot.Revision);
+        Assert.Equal("medium", provider.Snapshot.Routes.Single().Candidates.Single().ReasoningLevelId);
+
+        var select = new HomeModelPickerActionRequest(HomeModelPickerAction.ChooseCompactModel,
+            Category: "chat", ProviderId: "p", ModelId: "next");
+        if (refreshTemporarilyUnavailable)
+        {
+            Assert.Equal("ReasoningSavedRouteRefreshRequired", reasoning.Code);
+            Assert.True(Value<bool>(surface, "RouteRefreshRequired"));
+            Assert.Equal("RouteRefreshRequired", (await controller.ExecuteAsync(select)).Code);
+            provider.FailRouteRefresh = false;
+            Assert.True((await controller.ExecuteAsync(new(HomeModelPickerAction.Refresh))).Succeeded);
+        }
+        Assert.Equal(5, surface.State.Snapshot!.Revision);
+        Assert.False(Value<bool>(surface, "RouteRefreshRequired"));
+        Assert.True((await controller.ExecuteAsync(select)).Succeeded);
+        Assert.True((await controller.ExecuteAsync(new(HomeModelPickerAction.SaveRoute))).Succeeded);
+        Assert.Equal(5, provider.LastEdit.ExpectedRevision);
+        Assert.Equal(6, provider.Snapshot.Revision);
+        Assert.Equal("next", provider.LastEdit.Route.Candidates[0].ModelId);
+        Assert.Equal("medium", provider.LastEdit.Route.Candidates[1].ReasoningLevelId);
+
+        ConfiguredModelRoute ReadCanonicalRoute()
+        {
+            var current = provider.Snapshot.Routes.Single();
+            return new(routeId, current.Version, ModelRouteScope.User, actor.ProfileId, ModelCapabilityCategory.Chat,
+                current.Candidates.Select(candidate => new ModelRouteCandidate(
+                    new ModelIdentity(candidate.ProviderId, candidate.ModelId, candidate.ArtifactRevision),
+                    candidate.Enabled, candidate.Order, candidate.ReasoningLevelId)).ToArray(), new ProviderPolicy());
+        }
+    }
+
+    private sealed class ReasoningCatalogueProvider : IModelProvider
+    {
+        public string Id => "p";
+        public string DisplayName => "Provider";
+        public ModelProviderKind Kind => ModelProviderKind.Ollama;
+        public bool IsLocal => true;
+        public bool CanManageModels => false;
+        public Task<ProviderHealthStatus> CheckHealthAsync(CancellationToken cancellationToken) =>
+            Task.FromResult(new ProviderHealthStatus(Id, true, "Ready", TimeSpan.Zero, DateTimeOffset.UnixEpoch));
+        public Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ProviderModelDescriptor>>(new[] { "current", "next" }
+                .Select(name => new ProviderModelDescriptor(Id, IsLocal, new ModelDescriptor(name, 0, "test", "1B", "Q8",
+                    new HashSet<ToolCapability> { ToolCapability.Text }, DateTimeOffset.UnixEpoch))).ToArray());
+        public IAsyncEnumerable<string> StreamChatAsync(OllamaChatRequest request, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException("Picker actions must not start inference.");
+        public Task<string> CompleteAsync(OllamaChatRequest request, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException("Picker actions must not start inference.");
+        public Task<OllamaToolResponse> ChatWithToolsAsync(OllamaToolRequest request, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException("Picker actions must not start inference.");
+    }
+
+    private static HomeModelPickerCatalogueEntry Model(string id, params string[] capabilities) =>
+        new("p", id, null, "Friendly " + id, "Provider", true,
+            capabilities.ToHashSet(StringComparer.Ordinal), 4096, null, null, null);
 
     private static HomeModelRouteContract Route(string id, params HomeModelRouteCandidate[] candidates) =>
         new(id, 4, "User", "chat", null, null, candidates, JsonSerializer.SerializeToElement(new { }));

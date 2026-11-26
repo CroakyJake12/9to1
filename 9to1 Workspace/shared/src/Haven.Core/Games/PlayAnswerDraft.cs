@@ -76,7 +76,7 @@ public sealed record PlayAnswerLedger(Guid MatchID, int Round, PlayRevealState R
         if (!Enum.IsDefined(RevealState)) throw new InvalidDataException("Play reveal state is unsupported.");
         var answers = (Answers ?? []).Select(a => a?.Capture() ?? throw new InvalidDataException("A play answer is missing.")).ToArray();
         if (answers.Select(a => a.ContestantID).Distinct().Count() != answers.Length) throw new InvalidOperationException("PlayDuplicateAnswerContestant");
-        return (this with { Answers = answers }).Capture();
+        return this with { Answers = answers };
     }
 
     public static PlayAnswerLedger Open(Guid matchID, int round) =>

@@ -51,10 +51,16 @@ public sealed class GamesPlayLeaderboardTests
     [Fact]
     public void LeaderboardExposesNoPrivateAnswerContent()
     {
-        var leaderboard = PlayLeaderboard.From(Committed());
-        // Rows carry only team/score/rank — there is no field for answers or model context.
+        var definition = Definition();
+        var state = MatchState.Open(Match, definition, [new PlayContestant(Alice, "Alice", "Human", "TeamA"), new PlayContestant(Bob, "Bob", "Human", "TeamB")]);
+        var submitted = state.Submit(definition, 1, new PlaySubmission(Guid.NewGuid(), Alice, 1, "Submit", "SECRET_ANSWER_TOKEN", DateTimeOffset.UtcNow))
+            .Submit(definition, 2, new PlaySubmission(Guid.NewGuid(), Bob, 1, "Submit", "WRONG_ANSWER_TOKEN", DateTimeOffset.UtcNow));
+        var leaderboard = PlayLeaderboard.From(submitted.Resolve(submitted.Revision, correctAnswer: "SECRET_ANSWER_TOKEN", points: 10));
+        // Rows carry only team/score/rank — private answers never appear in any leaderboard row.
         Assert.All(leaderboard.Rows, row => Assert.False(string.IsNullOrEmpty(row.Team)));
-        Assert.DoesNotContain("B", string.Join(",", leaderboard.Rows.Select(r => r.Team)));
+        var serialized = string.Join(",", leaderboard.Rows.Select(r => $"{r.Team}:{r.Score}:{r.Rank}"));
+        Assert.DoesNotContain("SECRET_ANSWER_TOKEN", serialized);
+        Assert.DoesNotContain("WRONG_ANSWER_TOKEN", serialized);
     }
 
     [Fact]
