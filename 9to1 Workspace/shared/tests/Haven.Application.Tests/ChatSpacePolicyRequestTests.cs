@@ -56,7 +56,104 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
     }
 
     [Fact]
-    public async Task Parent_revision_changed_at_physical_dispatch_prevents_transport_body()
+    public async Task Native_ordinary_builtin_chat_derives_explicit_routing_from_its_original_policy()
+    {
+        using var files = new SpacePolicyFiles();
+        var space = await files.Registry.GetAsync(SpaceRegistry.ChatSpaceId, TestContext.Current.CancellationToken);
+        Assert.NotNull(space);
+        var source = new ControlledSpacePolicySource(files.Registry);
+        var rig = new SpacePolicyRig(source, space.Id);
+
+        await rig.SendFromOriginalAsync(callback => callback(), new GenerationOptions(0.3, 8192, 7));
+
+        var request = Assert.Single(rig.Transport.Requests);
+        Assert.Equal(1, source.Captures);
+        Assert.True(source.Validations > 0);
+        Assert.Equal(0, rig.Transport.DiscoveryReads);
+        Assert.True(request.Options!.RequireOriginalSpacePolicy);
+        Assert.Equal(space.Id, request.Options.RequestedSpacePolicyLineage!.SpaceId);
+        Assert.NotNull(request.Options.OriginalSpacePolicy);
+        Assert.Equal(new ModelRequestRoutingConstraints(AllowCloud: true, AllowFallback: true),
+            request.Options.RequestedRoutingConstraints);
+        Assert.Equal(0.3, request.Options.Temperature);
+        Assert.Equal(8192, request.Options.ContextLimit);
+        Assert.Equal(7, request.Options.ActionLimit);
+        Assert.Equal(0, rig.LegacyMemory.Reads);
+        files.Passed = true;
+    }
+
+    [Fact]
+    public async Task Native_ordinary_space_policy_preserves_existing_request_routing_restrictions()
+    {
+        using var files = new SpacePolicyFiles();
+        var space = await files.Registry.CreateAsync("Existing restrictions", cancellationToken: TestContext.Current.CancellationToken);
+        var rig = new SpacePolicyRig(new ControlledSpacePolicySource(files.Registry), space.Id);
+        var restrictions = new ModelRequestRoutingConstraints(AllowCloud: false, AllowFallback: false);
+
+        await rig.SendFromOriginalAsync(callback => callback(), new GenerationOptions
+        {
+            RequestedRoutingConstraints = restrictions
+        });
+
+        Assert.Equal(restrictions, Assert.Single(rig.Transport.Requests).Options!.RequestedRoutingConstraints);
+        Assert.Equal(0, rig.Transport.DiscoveryReads);
+        files.Passed = true;
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Native_ordinary_space_provider_policy_is_bound_before_actual_dispatch(bool matchingProvider)
+    {
+        using var files = new SpacePolicyFiles();
+        var space = await files.Registry.CreateAsync("Native provider restriction", cancellationToken: TestContext.Current.CancellationToken);
+        space = await files.Registry.UpdateAsync(space with
+        {
+            ModelPolicy = new SpaceModelPolicy(null, [], "required-provider")
+        }, space.Revision, TestContext.Current.CancellationToken);
+        var source = new ControlledSpacePolicySource(files.Registry);
+        var rig = new SpacePolicyRig(source, space.Id,
+            actualProviderId: matchingProvider ? "required-provider" : "different-provider");
+
+        var error = await Record.ExceptionAsync(() => rig.SendFromOriginalAsync(callback => callback()));
+
+        Assert.Equal(1, source.Captures);
+        Assert.True(source.Validations > 0);
+        Assert.Equal(0, rig.Transport.DiscoveryReads);
+        if (matchingProvider)
+        {
+            Assert.Null(error);
+            var request = Assert.Single(rig.Transport.Requests);
+            Assert.False(request.Options!.RequestedRoutingConstraints!.AllowFallback);
+            Assert.True(request.Options.RequestedRoutingConstraints.AllowCloud);
+        }
+        else
+        {
+            Assert.NotNull(error);
+            Assert.True(ContainsSpaceCode(error, "SPACE_PROVIDER_POLICY_REQUIRED"));
+            Assert.Empty(rig.Transport.Requests);
+        }
+        files.Passed = true;
+    }
+
+    [Fact]
+    public async Task Native_ordinary_space_without_original_policy_source_refuses_before_discovery_or_dispatch()
+    {
+        var rig = new SpacePolicyRig(null, SpaceRegistry.ChatSpaceId);
+
+        var error = await Record.ExceptionAsync(() => rig.SendFromOriginalAsync(callback => callback()));
+
+        Assert.NotNull(error);
+        Assert.True(ContainsSpaceCode(error, "SPACE_POLICY_SOURCE_UNAVAILABLE"));
+        Assert.Equal(0, rig.Transport.DiscoveryReads);
+        Assert.Empty(rig.Transport.Requests);
+        Assert.Equal(0, rig.LegacyMemory.Reads);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Parent_revision_changed_at_physical_dispatch_prevents_transport_body(bool nativeOrdinary)
     {
         using var files = new SpacePolicyFiles();
         var parent = await files.Registry.CreateAsync("Parent", cancellationToken: TestContext.Current.CancellationToken);
@@ -67,7 +164,9 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         {
             await files.Registry.UpdateAsync(parent with { Instructions = "Changed parent policy" }, parent.Revision, TestContext.Current.CancellationToken);
         };
-        var error = await Record.ExceptionAsync(() => rig.SendAsync(null));
+        var error = await Record.ExceptionAsync(() => nativeOrdinary
+            ? rig.SendFromOriginalAsync(callback => callback())
+            : rig.SendAsync(null));
         Assert.NotNull(error);
         Assert.True(ContainsSpaceCode(error!, "SPACE_POLICY_CHANGED"));
         Assert.Empty(rig.Transport.Requests);
@@ -204,7 +303,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         private readonly ModelDescriptor _model;
         internal readonly SpacePolicyTransport Transport;
         internal readonly MemorySource LegacyMemory = new();
-        internal SpacePolicyRig(IOriginalSpaceRequestPolicySource source, Guid spaceId, string actualProviderId = "fixture-provider")
+        internal SpacePolicyRig(IOriginalSpaceRequestPolicySource? source, Guid spaceId, string actualProviderId = "fixture-provider")
         {
             var now = DateTimeOffset.UtcNow;
             _conversation = new(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "Controlled Space request", null, null,
@@ -213,7 +312,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
             Transport = new(_model, new SpacePolicyProvider(actualProviderId));
             _chat = new(new Conversations(), Transport, new CapabilityPreflightService(), new Safety(),
                 new WorkspaceToolRuntime(new Workspace()), new ComputerToolRuntime(new Computer()), memorySource: LegacyMemory);
-            _chat.BindOriginalSpacePolicySource(source);
+            if (source is not null) _chat.BindOriginalSpacePolicySource(source);
         }
         internal async Task SendAsync(GenerationOptions? options)
         {
@@ -227,12 +326,12 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
             catch (Exception cause) { failures.Add(cause); }
             if (failures.Count != 0) throw new AggregateException("Actual original Space consumer and settlement failed.", failures);
         }
-        internal async Task SendFromOriginalAsync(Action<Action> originalScope)
+        internal async Task SendFromOriginalAsync(Action<Action> originalScope, GenerationOptions? options = null)
         {
             var stream = _chat.SendWithCommittedInputFromOriginalAsync(originalScope, _conversation, "Hello", _model,
                 EffortLevel.Medium, [], "Fixture", "", DuoMode.Solo, null, null, null, null,
                 TestContext.Current.CancellationToken,
-                generationOptions: new GenerationOptions { RequestedRoutingConstraints = new(AllowCloud: true) });
+                generationOptions: options);
             await foreach (var _ in stream.WithCancellation(TestContext.Current.CancellationToken)) { }
         }
     }
@@ -256,8 +355,10 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
     {
         internal readonly List<OllamaChatRequest> Requests = [];
         internal Func<Task>? BeforePhysicalDispatch;
+        internal int DiscoveryReads;
         public Task<bool> IsAvailableAsync(CancellationToken token) => Task.FromResult(true);
-        public Task<IReadOnlyList<ModelDescriptor>> GetModelsAsync(CancellationToken token) => Task.FromResult<IReadOnlyList<ModelDescriptor>>([model]);
+        public Task<IReadOnlyList<ModelDescriptor>> GetModelsAsync(CancellationToken token)
+        { DiscoveryReads++; return Task.FromResult<IReadOnlyList<ModelDescriptor>>([model]); }
         public async IAsyncEnumerable<string> StreamChatAsync(OllamaChatRequest request, [EnumeratorCancellation] CancellationToken token)
         {
             if (BeforePhysicalDispatch is { } before) { BeforePhysicalDispatch = null; await before(); }

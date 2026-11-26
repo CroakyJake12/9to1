@@ -26,6 +26,39 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         Assert.True(rig.Source.Validations > 0);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Native_ordinary_space_captured_context_derives_local_only_routing_before_dispatch(bool localRecipient)
+    {
+        var snapshot = ContextSnapshot("NATIVE_REVIEWED_SOURCE", sourceOnly: true);
+        var source = new ContextPolicySource(snapshot);
+        var rig = new ContextRig(source, localRecipient);
+
+        var error = await Record.ExceptionAsync(() => rig.SendFromOriginalAsync());
+
+        Assert.True(source.Validations > 0);
+        Assert.Equal(0, rig.LegacyMemory.Reads);
+        if (localRecipient)
+        {
+            Assert.Null(error);
+            var request = Assert.Single(rig.Transport.Requests);
+            Assert.False(request.Options!.RequestedRoutingConstraints!.AllowCloud);
+            Assert.True(request.Options.RequestedRoutingConstraints.AllowFallback);
+            Assert.Equal(snapshot.CapturedContext!.Sha256, request.Options.RequestedSpaceContextSha256);
+            Assert.Contains("NATIVE_REVIEWED_SOURCE", request.SystemPrompt ?? "", StringComparison.Ordinal);
+            Assert.DoesNotContain("UNQUALIFIED_HISTORY_SENTINEL",
+                string.Join(" ", request.Messages.Select(value => value.Content)), StringComparison.Ordinal);
+            Assert.Equal("Hello", Assert.Single(request.Messages).Content);
+        }
+        else
+        {
+            Assert.NotNull(error);
+            Assert.True(ContainsSpaceCode(error, "SPACE_CONTEXT_LOCAL_PROVIDER_REQUIRED"));
+            Assert.Empty(rig.Transport.Requests);
+        }
+    }
+
     [Fact]
     public void Denied_selection_cannot_be_relabelled_as_captured_source()
     {
@@ -96,13 +129,15 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         Assert.Empty(rig.Transport.Requests);
     }
 
-    [Fact]
-    public async Task Original_context_source_refusal_at_dispatch_prevents_physical_body()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Original_context_source_refusal_at_dispatch_prevents_physical_body(bool nativeOrdinary)
     {
         var source = new ContextPolicySource(ContextSnapshot("reviewed source"));
         var rig = new ContextRig(source);
         rig.Transport.BeforePhysicalDispatch = () => source.Revoked = true;
-        var error = await Record.ExceptionAsync(() => rig.SendAsync());
+        var error = await Record.ExceptionAsync(() => nativeOrdinary ? rig.SendFromOriginalAsync() : rig.SendAsync());
         Assert.NotNull(error);
         Assert.True(ContainsSpaceCode(error!, "SPACE_CONTEXT_SOURCE_REVOKED"));
         Assert.Empty(rig.Transport.Requests);
@@ -331,6 +366,13 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
             _chat = new(new ContextConversations(_conversation), Transport, new CapabilityPreflightService(), new Safety(),
                 new WorkspaceToolRuntime(new Workspace()), new ComputerToolRuntime(new Computer()), memorySource: LegacyMemory);
             _chat.BindOriginalSpacePolicySource(source);
+        }
+        internal async Task SendFromOriginalAsync()
+        {
+            var stream = _chat.SendWithCommittedInputFromOriginalAsync(callback => callback(), _conversation,
+                "Hello", _model, EffortLevel.Medium, [], "Fixture", "", DuoMode.Solo, null, null, null, null,
+                TestContext.Current.CancellationToken, generationOptions: new GenerationOptions());
+            await foreach (var _ in stream.WithCancellation(TestContext.Current.CancellationToken)) { }
         }
         internal async Task SendAsync(GenerationOptions? options = null)
         {

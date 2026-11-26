@@ -361,8 +361,9 @@ public sealed partial class ChatSessionService(
         // Plain native chats need the SAME source ledger as Space chats: a canceled
         // outer iterator alone cannot distinguish an acknowledged user stop from a
         // faulted provider, an uncommitted writer or failed cleanup.
-        if (conversation.SpaceId is not null && generationOptions?.RequestedRoutingConstraints is null)
-            throw new InvalidOperationException("This original source requires explicit constrained routing before provider discovery.");
+        // A native Space caller supplies generation preferences, not a policy grant.
+        // The same producer captures its original Space source and derives explicit
+        // routing before any model discovery or dispatch in SendOriginalAsync.
 
         var original = new ChatOrdinaryOriginalInvocation(this, cancellationToken, originalSynchronousScope);
         original.Bind(CreateOriginalSend(conversation, prompt, model with { Capabilities = model.Capabilities.ToFrozenSet() },
@@ -645,7 +646,8 @@ public sealed partial class ChatSessionService(
             ordinaryOriginal, originalCustody, cancellationToken).ConfigureAwait(false);
         if (originalSpacePolicy is not null)
         {
-            generationOptions = SpaceRequestPolicyConstraints.BindContext(generationOptions, originalSpacePolicy.Snapshot)
+            generationOptions = SpaceRequestPolicyConstraints.BindContext(generationOptions, originalSpacePolicy.Snapshot,
+                requireExplicitRouting: ordinaryOriginal is not null)
                 with { OriginalSpacePolicy = originalSpacePolicy.DispatchGuard };
             if (originalSpacePolicy.Snapshot.CapturedContext is { } capturedContext)
             {
@@ -660,6 +662,12 @@ public sealed partial class ChatSessionService(
                 if (originalSpacePolicy.Snapshot.Policy.Context.SourceOnly) agentInstructions = "";
             }
         }
+        // Keep the ordinary source's explicit-routing boundary after its real policy
+        // capture/intersection, before inventory, estimator or provider work. Missing
+        // or stale Home/Space authority already refuses in that original capture.
+        if (ordinaryOriginal is not null && conversation.SpaceId is not null &&
+            generationOptions?.RequestedRoutingConstraints is null)
+            throw new InvalidOperationException("This original source requires explicit constrained routing before provider discovery.");
         ModelDescriptor etaModel = model;
 
         async Task<string?> EstimateEtaAsync(

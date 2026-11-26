@@ -223,7 +223,11 @@ public static class SpaceRequestPolicyConstraints
         !policy.Context.IncludeCurrentSelection || policy.Context.MaximumRetrievedItems is not null ||
         policy.Sources.Any(reference => reference.IncludedAutomatically);
 
-    public static GenerationOptions BindContext(GenerationOptions? options, OriginalSpacePolicySnapshot snapshot)
+    public static GenerationOptions BindContext(GenerationOptions? options, OriginalSpacePolicySnapshot snapshot) =>
+        BindContext(options, snapshot, requireExplicitRouting: false);
+
+    internal static GenerationOptions BindContext(GenerationOptions? options, OriginalSpacePolicySnapshot snapshot,
+        bool requireExplicitRouting)
     {
         options ??= new();
         if (options.RequestedSpacePolicyLineage is { } old && !old.Equals(snapshot.Lineage))
@@ -250,6 +254,14 @@ public static class SpaceRequestPolicyConstraints
             RequireOriginalPersistentMemoryInput = allowPersonal && context.AllowPersistentMemoryRead == true
         };
         var routing = options.RequestedRoutingConstraints;
+        if (requireExplicitRouting)
+        {
+            // The ordinary producer has captured this SAME original policy. Explicit
+            // true means this Space adds no restriction in that dimension; central
+            // privacy, configuration and permission checks still decide admission.
+            // Existing false restrictions survive, and this policy only narrows below.
+            routing = new(AllowCloud: routing?.AllowCloud != false, AllowFallback: routing?.AllowFallback != false);
+        }
         if ((policy.Model.RequiredCapabilities?.Count ?? 0) != 0 || !string.IsNullOrWhiteSpace(policy.Model.ProviderConstraint))
             routing = (routing ?? new()) with { AllowFallback = false };
         // Reviewed document reads do not issue a cloud disclosure grant. Require the actual
