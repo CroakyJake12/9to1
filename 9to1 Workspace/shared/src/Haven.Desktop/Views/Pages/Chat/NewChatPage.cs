@@ -1812,6 +1812,17 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             if (!_originalWork.IsRetiring)
                 await AwaitChatOriginalAsync(SetStatusAsync("9to1 could not complete that response: " + exception.Message));
         }
+        catch (AggregateException exception) when (originalConversation.Mode != HavenMode.Tasks)
+        {
+            // Original source and cleanup ledgers join their exact failures. A refusal
+            // before input commitment still owns the accepted draft, even when joined.
+            // Retain it before restoration/status so a publication failure cannot erase it.
+            RetainHandledOriginalChatCause(exception);
+            if (committedUserMessageId is null) await RestoreUnsentOriginalInstructionIfUnchangedUiAsync();
+            if (!_originalWork.IsRetiring)
+                await AwaitChatOriginalAsync(SetStatusAsync("9to1 could not complete that response."));
+            throw; // Preserve the same failed invocation and its original causes.
+        }
         finally
         {
             if (initialTaskObservation is not null)

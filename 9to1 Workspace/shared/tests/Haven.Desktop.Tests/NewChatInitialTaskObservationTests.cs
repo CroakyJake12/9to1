@@ -252,6 +252,133 @@ public sealed partial class ChatCloudPermissionCallerTests
         }
     }
 
+    [AvaloniaTheory]
+    [InlineData(false, null)]
+    [InlineData(false, "Newer unsent draft")]
+    [InlineData(false, "")]
+    [InlineData(true, null)]
+    public async Task Compiled_native_space_send_source_failure_preserves_only_current_uncommitted_draft(bool afterCommit, string? newerText)
+    {
+        var token = TestContext.Current.CancellationToken;
+        var timeout = TimeSpan.FromSeconds(15);
+        await using var rig = new Rig(temporary: false);
+        var model = rig.Provider.Model.Model with
+        {
+            Name = rig.Provider.Model.Key,
+            Capabilities = new HashSet<ToolCapability> { ToolCapability.Text }
+        };
+        rig.Client.AvailableModels = [model];
+        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var refusal = new SpaceRequestPolicyBlockedException("SPACE_POLICY_STORE_OWNERSHIP_UNAVAILABLE",
+            "The controlled original Space source refused its ownership check.");
+        var cleanupFailure = new IOException("Independent original Space source cleanup failure.");
+        var directory = Directory.CreateTempSubdirectory("compiled-space-refusal-").FullName;
+        var paths = NativeComposerProxy<IAppPaths>((name, _) => name == "get_DataDirectory" ? directory : Path.Combine(directory, name));
+        var registry = new SpaceRegistry(new VersionedAtomicSettingsStore(paths));
+        var space = await registry.CreateAsync("Refusing composer Space", cancellationToken: token);
+        var policy = new CompiledComposerSpacePolicySource(registry)
+        {
+            CaptureGate = afterCommit ? null : gate.Task,
+            CaptureCleanup = afterCommit ? null : Task.FromException(cleanupFailure)
+        };
+        var client = new CompiledComposerGuardedClient(rig.Client, rig.Provider)
+        {
+            BeforeDispatchGuard = afterCommit ? gate.Task : null
+        };
+        var sessions = new ChatSessionService(rig.Conversations, client, new CapabilityPreflightService(), new Safety(),
+            new WorkspaceToolRuntime(new Workspace()), new ComputerToolRuntime(new Computer()));
+        sessions.BindOriginalSpacePolicySource(policy);
+        var drafts = new NativeComposerDraftStore();
+        var page = CreateNativeComposerPage(rig, directory, drafts, enableFreshChatTemporaryLifecycle: true,
+            modelClient: client, sessions: sessions);
+        var window = new Window { Width = 1200, Height = 900, Content = page };
+        Task? actions = null;
+        var closed = false;
+        try
+        {
+            await page.OriginalInitialization.WaitAsync(timeout, token);
+            await page.JoinAdmittedOriginalWorkAsync().WaitAsync(timeout, token);
+            await page.StartFreshConversationAsync(HavenMode.Chat, null, spaceId: space.Id).WaitAsync(timeout, token);
+            await page.JoinAdmittedOriginalWorkAsync().WaitAsync(timeout, token);
+            await page.RefreshModelsAsync();
+            page.SelectModel(model);
+            window.Show();
+            Dispatcher.UIThread.RunJobs();
+            window.UpdateLayout();
+            var composer = Assert.Single(page.GetVisualDescendants().OfType<ChatComposerCuiView>());
+            await composer.InitializeAsync().WaitAsync(timeout, token);
+            var input = Assert.Single(composer.GetVisualDescendants().OfType<TextBox>(),
+                control => AutomationProperties.GetAutomationId(control) == "composer-input");
+            const string prompt = "Preserve this uncommitted original Space input";
+            input.Text = prompt;
+            Dispatcher.UIThread.RunJobs();
+            window.UpdateLayout();
+            var send = Assert.Single(composer.GetVisualDescendants().OfType<Button>(),
+                control => AutomationProperties.GetAutomationId(control) == "send-button");
+            Assert.True(send.IsEffectivelyVisible);
+            Assert.True(send.IsEnabled);
+            var peer = Assert.IsAssignableFrom<AutomationPeer>(ControlAutomationPeer.CreatePeerForElement(send));
+            Assert.IsAssignableFrom<IInvokeProvider>(peer.GetProvider<IInvokeProvider>()).Invoke();
+            actions = composer.CaptureOriginalActionSettlement();
+            var boundary = afterCommit ? client.DispatchGuardEntered.Task : policy.CaptureEntered.Task;
+            await Task.WhenAny(boundary, actions).WaitAsync(timeout, token);
+            if (actions.IsCompleted) await actions;
+            Assert.True(boundary.IsCompletedSuccessfully);
+            Assert.Empty(page.ComposerInput.Text ?? string.Empty);
+            Assert.Equal(afterCommit ? 1 : 0, rig.Conversations.Messages.Count(message => message.Role == MessageRole.User));
+
+            if (newerText is not null)
+            {
+                // Type/delete is a newer deliberate empty draft, not the send's clear.
+                if (newerText.Length == 0) input.Text = "User typed and then deleted this";
+                input.Text = newerText;
+            }
+            if (afterCommit)
+            {
+                // This is the actual physical-dispatch guard, after committed input.
+                policy.ValidationFailure = refusal;
+                gate.TrySetResult();
+            }
+            else gate.TrySetException(refusal);
+
+            var observedAction = await Record.ExceptionAsync(() => actions.WaitAsync(timeout, token));
+            Assert.IsType<AggregateException>(observedAction);
+            Assert.Contains(Leaves(observedAction!), error => ReferenceEquals(error, refusal));
+            if (!afterCommit) Assert.Contains(Leaves(observedAction!), error => ReferenceEquals(error, cleanupFailure));
+            var expectedDraft = afterCommit ? string.Empty : newerText ?? prompt;
+            Assert.Equal(expectedDraft, page.ComposerInput.Text);
+            Assert.False(page.IsSending);
+            Assert.Equal(0, client.GuardedDispatches);
+            Assert.Equal(0, rig.Client.Dispatches);
+            Assert.Equal(afterCommit ? 1 : 0, rig.Conversations.Messages.Count(message => message.Role == MessageRole.User));
+            if (afterCommit) Assert.Equal(prompt, Assert.Single(rig.Conversations.Messages, message => message.Role == MessageRole.User).Content);
+
+            page.RequestRetirement();
+            var originalClose = page.CloseAndDrainAsync();
+            var observedClose = await Record.ExceptionAsync(() => originalClose.WaitAsync(timeout, token));
+            closed = true;
+            Assert.Same(originalClose, page.CloseAndDrainAsync());
+            Assert.NotNull(observedClose);
+            Assert.Contains(Leaves(observedClose!), error => ReferenceEquals(error, refusal));
+            if (!afterCommit) Assert.Contains(Leaves(observedClose!), error => ReferenceEquals(error, cleanupFailure));
+            if (expectedDraft.Length == 0) Assert.True(string.IsNullOrEmpty(drafts.Last?.Content));
+            else Assert.Equal(expectedDraft, Assert.IsType<ConversationDraft>(drafts.Last).Content);
+        }
+        finally
+        {
+            gate.TrySetResult();
+            if (actions is not null) _ = await Record.ExceptionAsync(() => actions.WaitAsync(timeout, token));
+            if (!closed)
+            {
+                page.RequestRetirement();
+                _ = await Record.ExceptionAsync(() => page.CloseAndDrainAsync().WaitAsync(timeout, token));
+            }
+            window.Content = null;
+            window.Close();
+            Directory.Delete(directory, true);
+        }
+    }
+
     [AvaloniaFact]
     public async Task Committed_home_model_change_affects_the_next_send_without_replaying_or_changing_the_active_send()
     {
@@ -1153,14 +1280,27 @@ public sealed partial class ChatCloudPermissionCallerTests
         internal int Reads;
         internal int Validations;
         internal OriginalSpacePolicySnapshot? CapturedSnapshot;
+        internal Task? CaptureGate;
+        internal Task? CaptureCleanup;
+        internal Exception? ValidationFailure;
+        internal readonly TaskCompletionSource CaptureEntered = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         public Task<IOriginalSpaceRequestPolicyInput> CaptureAsync(Conversation conversation, Action<Action> acquire, CancellationToken token) =>
             Run(acquire, async originals =>
             {
                 Interlocked.Increment(ref Captures);
-                var snapshot = await ResolveAsync(conversation.SpaceId!.Value, originals, token);
-                CapturedSnapshot = snapshot;
-                return (IOriginalSpaceRequestPolicyInput)new Input(this, conversation.Id, snapshot);
+                CaptureEntered.TrySetResult();
+                try
+                {
+                    if (CaptureGate is { } gate) await originals.AwaitAsync(gate);
+                    var snapshot = await ResolveAsync(conversation.SpaceId!.Value, originals, token);
+                    CapturedSnapshot = snapshot;
+                    return (IOriginalSpaceRequestPolicyInput)new Input(this, conversation.Id, snapshot);
+                }
+                finally
+                {
+                    if (CaptureCleanup is { } cleanup) await originals.AwaitAsync(cleanup);
+                }
             });
 
         public Task<OriginalSpacePolicySnapshot> ReadAsync(IOriginalSpaceRequestPolicyInput input, Conversation conversation,
@@ -1187,6 +1327,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         private async Task ValidateCoreAsync(Input input, Conversation conversation, CloudflareOriginalTaskLedger originals, CancellationToken token)
         {
             Interlocked.Increment(ref Validations);
+            if (ValidationFailure is { } failure) throw failure;
             var current = await ResolveAsync(conversation.SpaceId!.Value, originals, token);
             if (!current.Lineage.Equals(input.Snapshot.Lineage))
                 throw new SpaceRequestPolicyBlockedException("SPACE_POLICY_CHANGED", "The controlled Space policy changed.");
@@ -1208,6 +1349,8 @@ public sealed partial class ChatCloudPermissionCallerTests
     {
         internal int CatalogueReads;
         internal int GuardedDispatches;
+        internal Task? BeforeDispatchGuard;
+        internal readonly TaskCompletionSource DispatchGuardEntered = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Task<bool> IsAvailableAsync(CancellationToken token) => inner.IsAvailableAsync(token);
         public Task<IReadOnlyList<ModelDescriptor>> GetModelsAsync(CancellationToken token)
         {
@@ -1216,6 +1359,8 @@ public sealed partial class ChatCloudPermissionCallerTests
         }
         public async IAsyncEnumerable<string> StreamChatAsync(OllamaChatRequest request, [EnumeratorCancellation] CancellationToken token)
         {
+            DispatchGuardEntered.TrySetResult();
+            if (BeforeDispatchGuard is { } gate) await gate.WaitAsync(token);
             OriginalPrivateContextDispatch.ValidateProviderRoute(request.Options, provider);
             await OriginalPrivateContextDispatch.ValidateProviderAsync(request.Options, provider, token);
             Interlocked.Increment(ref GuardedDispatches);
