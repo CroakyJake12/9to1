@@ -1122,12 +1122,13 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
         SetMission(current with { ActiveTask = workingTask, UpdatedAt = DateTimeOffset.UtcNow }, persist: true);
 
         // 1) Guarded build and tests must cover this exact diff and verification scope.
-        var verification = MatchesVerification(workingTask.Verification, diffSha, resolvedBuild, resolvedTest, testFilter)
+        var reusedVerification = MatchesReusableVerification(workingTask.Verification, diffSha, resolvedBuild, resolvedTest, testFilter);
+        var verification = reusedVerification
             ? workingTask.Verification!
             : await RunVerificationForTaskAsync(workingTask, resolvedBuild, resolvedTest, testFilter, cancellationToken).ConfigureAwait(false);
 
         if (verification is not { BuildSucceeded: true, TestsSucceeded: true, TestsPassed: > 0 })
-            return (false, "Guarded verification failed; fix the actual errors and re-run before calling complete_task.\n" + FormatVerificationReceipt(verification), true);
+            return (false, "Guarded verification failed; fix the actual errors and re-run before calling complete_task.\n" + FormatVerificationReceipt(verification), !reusedVerification);
 
         workingTask = RequireMission().ActiveTask!;
         if (!StringComparer.Ordinal.Equals(workingTask.DiffSha256, diffSha)
@@ -1233,11 +1234,37 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
         string? testProject,
         string? testFilter) =>
         report is { BuildSucceeded: true, TestsSucceeded: true, TestsPassed: > 0 }
+        && MatchesVerificationScope(report, diffSha256, buildProject, testProject, testFilter);
+
+    private static bool MatchesReusableVerification(
+        DeveloperBuildVerificationReport? report,
+        string diffSha256,
+        string? buildProject,
+        string? testProject,
+        string? testFilter) =>
+        MatchesVerificationScope(report, diffSha256, buildProject, testProject, testFilter)
+        && report is not null
+        && (report is { BuildSucceeded: true, TestsSucceeded: true, TestsPassed: > 0 }
+            || !IsTransientVerificationFailure(report));
+
+    private static bool MatchesVerificationScope(
+        DeveloperBuildVerificationReport? report,
+        string diffSha256,
+        string? buildProject,
+        string? testProject,
+        string? testFilter) =>
+        report is not null
         && !string.IsNullOrWhiteSpace(testProject)
         && StringComparer.Ordinal.Equals(report.SourceDiffSha256, diffSha256)
         && StringComparer.Ordinal.Equals(report.BuildProject, buildProject)
         && StringComparer.Ordinal.Equals(report.TestProject, testProject)
         && StringComparer.Ordinal.Equals(NormalizeTestFilter(report.TestFilter), NormalizeTestFilter(testFilter));
+
+    private static bool IsTransientVerificationFailure(DeveloperBuildVerificationReport report) =>
+        report.BuildExitCode == 124 || report.TestExitCode == 124
+        || report.CombinedOutput.Contains("[MEM GUARD]", StringComparison.OrdinalIgnoreCase)
+        || report.CombinedOutput.Contains("[DISK GUARD]", StringComparison.OrdinalIgnoreCase)
+        || report.CombinedOutput.Contains("[TIME GUARD]", StringComparison.OrdinalIgnoreCase);
 
     private async Task<DeveloperReviewReceipt> RunSupervisorReviewAsync(
         DeveloperMissionTask task,
