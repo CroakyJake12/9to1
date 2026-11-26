@@ -126,6 +126,13 @@ public sealed partial class ResilientProviderRoutingModelClient(
                 SingleReader = true, SingleWriter = true, FullMode = BoundedChannelFullMode.Wait
             });
             Exception? observedProviderFailure = null;
+            Task<bool>? originalCanceledMove = null;
+            OperationCanceledException? originalMoveCancellation = null;
+            CancellationToken originalMoveToken = default;
+            Task? originalCanceledWrite = null;
+            OperationCanceledException? originalWriteCancellation = null;
+            CancellationToken originalWriteToken = default;
+            Task? originalIteratorDisposal = null;
             var routedRequest = CreateRoutedRequest(request, selected, state.Context);
             var producer = RunOriginalContextFrameAsync(state, request, routedRequest, async (invocationFence, token) =>
             {
@@ -153,9 +160,33 @@ public sealed partial class ResilientProviderRoutingModelClient(
                         catch (Exception failure)
                         {
                             observedProviderFailure = ObserveExactRawFailure(move, null, failure);
+                            // Retain the exact canceled operation, not an OCE-shaped fault or
+                            // an aggregate leaf. Only its actual frame token can qualify.
+                            if (move.IsCanceled && failure is OperationCanceledException cancellation &&
+                                cancellation.CancellationToken == token)
+                            {
+                                originalCanceledMove = move;
+                                originalMoveCancellation = cancellation;
+                                originalMoveToken = token;
+                            }
                             throw;
                         }
-                        await channel.Writer.WriteAsync(original.Current, token).ConfigureAwait(false);
+                        var write = channel.Writer.WriteAsync(original.Current, token).AsTask();
+                        try { await AwaitExactTaskAsync(write).ConfigureAwait(false); }
+                        catch (Exception failure)
+                        {
+                            // Backpressure cancels our channel write after a successful raw move.
+                            // Retain that distinct operation; it is not a provider-body failure.
+                            if (write.IsCanceled && move.IsCompletedSuccessfully && move.Result &&
+                                failure is OperationCanceledException cancellation &&
+                                cancellation.CancellationToken == token)
+                            {
+                                originalCanceledWrite = write;
+                                originalWriteCancellation = cancellation;
+                                originalWriteToken = token;
+                            }
+                            throw;
+                        }
                         move = original.MoveNextAsync().AsTask();
                     }
                 }
@@ -167,6 +198,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
                         try
                         {
                             var cleanup = original.DisposeAsync().AsTask();
+                            originalIteratorDisposal = cleanup;
                             await AwaitExactTaskAsync(cleanup).ConfigureAwait(false);
                         }
                         catch (Exception failure) { cleanupFailure = failure; }
@@ -188,14 +220,25 @@ public sealed partial class ResilientProviderRoutingModelClient(
                 channel.Writer, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
 
             Exception? frameFailure = null;
+            Exception? readerFailure = null;
+            Task<bool>? originalReaderWait = null;
             var readFinished = false;
             try
             {
                 while (true)
                 {
                     bool available;
-                    try { available = await channel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false); }
-                    catch (Exception failure) { frameFailure = failure; readFinished = true; break; }
+                    try
+                    {
+                        originalReaderWait = channel.Reader.WaitToReadAsync(cancellationToken).AsTask();
+                        available = await AwaitExactTaskAsync(originalReaderWait).ConfigureAwait(false);
+                    }
+                    catch (Exception failure)
+                    {
+                        readerFailure = frameFailure = failure;
+                        readFinished = true;
+                        break;
+                    }
                     if (!available) { readFinished = true; break; }
                     while (channel.Reader.TryRead(out var chunk))
                     {
@@ -213,9 +256,11 @@ public sealed partial class ResilientProviderRoutingModelClient(
                 Exception? completionFailure = null;
                 try { await AwaitExactTaskAsync(completion).ConfigureAwait(false); }
                 catch (Exception failure) { completionFailure = failure; }
+                Exception? producerFailure = null;
                 try { await AwaitExactTaskAsync(producer).ConfigureAwait(false); }
                 catch (Exception failure)
                 {
+                    producerFailure = failure;
                     if (frameFailure is null) frameFailure = failure;
                     else if (!ReferenceEquals(frameFailure, failure))
                         frameFailure = new AggregateException("Stream observation and original frame both failed.", frameFailure, failure);
@@ -226,6 +271,32 @@ public sealed partial class ResilientProviderRoutingModelClient(
                 if (completionFailure is not null)
                     frameFailure = frameFailure is null ? completionFailure
                         : new AggregateException("Stream settlement and completion callback both failed.", frameFailure, completionFailure);
+                // Ordinary streams own this linked token. Map only their exact canceled raw
+                // MoveNext or channel write after every original cleanup/continuation has joined.
+                // Canonical frames, faulted OCEs, foreign tokens and early abandonment keep
+                // their existing failure semantics. Each cleanup stage is checked separately,
+                // even if it throws the same exception object as the cooperative cancellation.
+                var readerSettled = readerFailure is null
+                    ? originalReaderWait is { IsCompletedSuccessfully: true } && !originalReaderWait.Result
+                    : originalReaderWait is { IsCanceled: true } &&
+                      readerFailure is OperationCanceledException readerCancellation &&
+                      readerCancellation.CancellationToken == cancellationToken;
+                var rawMoveCanceled = originalCanceledMove is { IsCanceled: true } &&
+                    originalMoveCancellation is not null && originalMoveToken == frameCancellation.Token &&
+                    originalMoveCancellation.CancellationToken == originalMoveToken &&
+                    ReferenceEquals(producerFailure, originalMoveCancellation);
+                var channelWriteCanceled = originalCanceledWrite is { IsCanceled: true } &&
+                    originalWriteCancellation is not null && originalWriteToken == frameCancellation.Token &&
+                    originalWriteCancellation.CancellationToken == originalWriteToken &&
+                    ReferenceEquals(producerFailure, originalWriteCancellation);
+                if (state.Admission is null && readFinished && readerSettled &&
+                    cancellationToken.IsCancellationRequested && frameCancellation.IsCancellationRequested &&
+                    producer.IsCanceled && (rawMoveCanceled || channelWriteCanceled) &&
+                    originalIteratorDisposal is { IsCompletedSuccessfully: true } &&
+                    completion.IsCompletedSuccessfully && completionFailure is null && cancellationFailure is null)
+                    throw new OperationCanceledException(
+                        "The caller canceled the provider stream after its original cleanup completed.",
+                        frameFailure, cancellationToken);
                 if (!readFinished && frameFailure is not null)
                     ExceptionDispatchInfo.Capture(frameFailure).Throw();
             }

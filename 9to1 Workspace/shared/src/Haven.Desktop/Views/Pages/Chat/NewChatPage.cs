@@ -1735,8 +1735,11 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             }
             else
             {
-                await RequireChatOriginal().ReadStreamAsync(_sessions.SendWithCommittedInputFromOriginalAsync(
-                               callback => RequireChatOriginal().RunAcceptedPublicationCallback(callback),
+                // Keep source acquisition, including retirement cleanup, on this SAME
+                // admitted Send original. Presentation retains its publication guards.
+                var original = RequireChatOriginal();
+                await original.ReadStreamAsync(_sessions.SendWithCommittedInputFromOriginalAsync(
+                               original.RunAcceptedSourceCallback,
                                originalConversation,
                                instruction,
                                admittedModel,

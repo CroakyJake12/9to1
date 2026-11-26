@@ -188,3 +188,14 @@ Twelve owning Spaces cases plus the existing embedded Permissions layout regress
 Native10fb verified genuine existing Spaces ownership review/import, actual Send, Regenerate with preserved draft/user rows, exact settled Stop and Send afterwards. The real model-switch gate failed despite a correct saved Home route and header: the picker expected an inner Spaces session while production Browse exposes its registered native wrapper.
 
 The reviewed repair retains an issuer-owned wrapper/inner/chat target and preserves all original owner, tab, actor, conversation and revision checks. Nine focused component cases passed, including the actual wrapped Spaces/compiled Send and real page/tab retirement. A replacement native run must still prove the actual saved route reaches both the next provider request and persisted assistant model. CPU fixture, visual and stopped-partial-persistence limits are recorded in the continuation handoff.
+
+
+### Native model acceptance and Stop retirement — 26 November 2026
+
+**Native:** 529 completed actual same-conversation reviewer → worker routing through the native picker, exact Home Accept once and same-editor Save. Both provider requests and saved assistant models agree with their selected routes. Prior messages, next draft, policy and grants were preserved. Six primary captures and actual action/fixture logs were independently verified.
+
+**Conflict found:** 10fb's exact backend Stop and next Send had passed, but genuine normal close later refused its retained aggregate cancellation. The ordinary router now normalizes only exact owned canceled MoveNext/write tasks after successful original joins. Faulted/foreign cancellation, cleanup/callback failures, unconfirmed settlement, canonical frames and early abandonment retain failures. A stronger close-while-Stop-is-pending test also exposed publication scope being used to acquire iterator cleanup. Ordinary Send now captures the same admitted original and uses its existing source callback, preserving all publication and owner guards.
+
+**Test:** 15/15 focused cases passed with stable source, full production references/analyzers,72s/minimum60,297MiB/floor12,288MiB. Includes compiled Stop/Close with held exact ACK, next-Send recovery, separately retained callback failure, unset settlement, strict raw-task controls and exact router backpressure/cleanup. Three earlier failed test attempts are retained. Exact hashes and limits are in the continuation handoff.
+
+**Native gate pending for this source checkpoint:** guarded successor publication, actual regeneration/draft and Stop/recovery, then genuine normal managed close/reload. Model acceptance on529 is not a Stop-close pass. Production daemon deployment, real-model quality and full visual Atlas parity remain separate.

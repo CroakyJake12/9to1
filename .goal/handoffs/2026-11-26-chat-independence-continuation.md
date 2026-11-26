@@ -2,6 +2,10 @@
 
 Jacob explicitly asked this chat to continue Astra 2's development from the supplied handover. At takeover the native candidate was `qualification/independence-20261126` in the owner-converged checkout. Integration subsequently moved to `chat/independence-native-20261126` at `/home/jacob/Documents/GitHub/9to1-worktrees/chat-independence-native-20261126` after unrelated worker edits appeared in the shared checkout. All of those edits were preserved. Main contains separate training and other work and is not the integration source for this pass.
 
+## Latest status — reviewed Stop candidate, native gate pending
+
+Native Build CPU protocol qualification, real Spaces ownership import, Send, regeneration/draft, and actual model switching are recorded below. The registered-model native gate passed on529; an acknowledged Stop still caused a normal-close refusal on10fb. The reviewed cancellation/source-retirement repair now passes all15 focused owning cases. Its guarded native publication and actual Stop → next Send → normal managed reload are the remaining gate. Historical failures are retained; this is private CPU-fixture qualification, not real-model coding or visual Atlas acceptance.
+
 ## Observed takeover state
 
 - Candidate source: `99f3ec052` (unchanged failed-verification reuse); no tracked dirty files. Terra's shared scope handoff was untracked and preserved.
@@ -20,14 +24,14 @@ The private scripted backend consumed the verification request before the SDK lo
 
 Native Resume was invoked through the actual Haven window. At 09:10:11 GMT the owning project compiled successfully and the focused partial-edit regression failed at its intended assertion: a reread was rejected instead of returning `// recovered`. This is the first valid regression reproduction, distinct from the retained package-configuration and SDK-lock failures. The trial is scripted CPU protocol qualification, not evidence of trained-model coding ability.
 
-## Current exclusive scopes
+## Scopes at takeover
 
 - This chat: candidate integration, native UI, autonomous harness recovery and shared SDK allocation for its own tests.
 - Terra: isolated Spaces lane and its existing shared handoff. Stop/close recovery and regeneration remain explicitly open in that handoff.
 - Antigravity: Build CUI workbench/landing assigned in prior handover; no finished contribution independently observed at takeover.
 - ALORA remains under its separate existing training owner.
 
-## Next actions
+## Next actions at takeover
 
 Finish the native failure/repair/test/review/commit trial; review and integrate its actual source commit. Run the focused SDK-contention owning tests once the native verification releases the shared lock. Prepare a guarded immutable candidate including the reviewed fixes, reload via the established managed lifecycle, and check the actual native controls. Preserve all failures and unresolved acceptance gaps.
 
@@ -123,3 +127,26 @@ The missing source boundary is now corrected narrowly. Production Browse exposes
 All9 focused owning cases passed against unchanged exact inputs: three real Browse/registry/Spaces/compiled-Send cases plus six existing route/draft and wrapper-close controls. The admitted A request remains A while the next send uses B; actual New Chat and actual tab close/replacement make the old receipt ineffective. Guard exit0,46.1s, minimum65,614MiB/floor12,288MiB, peak542MiB. The component fixture uses a validated supplied projection and controlled original policy/provider; actual Home save callback and persisted native assistant route remain the next gate. Manifest `work/chat-registered-model-route-20261126/manifest.json` SHA256 `35fd0ca422c2a0956e92873d5b07ad38853f898918825e2d6a5a34e3a839aaa8`; TRX SHA256 `ae798956984384cd04fcf2821deae6c87522e9343c65dafe559d5e47999c91dd`.
 
 Next: guarded immutable publish of this clean registered-session repair, genuine managed reload on the same profile, then repeat the real model-route change and check both provider request and persisted assistant identity. Existing successful ownership, Send, Regenerate and Stop evidence remains retained separately from the failed model-switch gate.
+
+
+## Native model acceptance and ordinary Stop settlement — 26 November 2026
+
+Native5299040f2e2452478a4dea6eb68698c751d4abf9 passed its guarded publish in159.5s (minimum64,958MiB, floor12,000MiB, peak559MiB). Before activation, the genuine normal close of native10fb exposed a separate failure after its acknowledged Stop. The router combined cancellation of its caller-token channel wait and linked-token provider read into a faulted AggregateException. The ordinary invocation ledger correctly refused to waive that aggregate and retained it into page/composer close. Preserve `work/chat-native-acceptance-10fb509f6c/normal-close-failure.log`, its `shutdown-checkpoint.json`, and `work/chat-native-registered-model-route-reload-20261126-121143.json`. This supersedes any interpretation of the earlier backend Stop/next-Send passes as clean-close acceptance.
+
+A hash-verified profile/database backup preceded the authorized exact-PID termination and reviewed restart. The actual exit-15 is retained and is not called a clean close. The model-only529 candidate launched as run68fc86b7-87e6-4d56-975d-37df3ce1729f on the same established profile and private CPU fixture; it does not claim to repair the Stop-close failure.
+
+Actual native model-switch acceptance now passes. Fresh conversation7ae28d67-84a7-44bd-aa52-430020493256 inherited the saved Dulche reviewer route; its first actual request and saved assistant both identify qualification-reviewer. The actual picker → exact Home Accept once → same-editor Save committed route revision2→3 with qualification-worker first, request9ae02948c17240f2911fa92ffb1a352e. The next actual request and saved assistant identify qualification-worker. Both original rows are unchanged, each user input was committed once, the unsent draft read back unchanged after save, and route policy/trust grants are unchanged. This initial route inheritance observation is Dulche-specific; no general new default-selection guarantee for other providers is claimed.
+
+Raw native files and `model-switch-verification.json` are under `work/chat-native-acceptance-5299040f2e/`. RouteA SHA256641c1592fb1bf82af92bed759019453a6dd0d2dab21bd38b0c24d166eb8733b0; RouteB SHA25654834eccce46731c0b25a8f410b1f2f469f121287a2a9b732dfb3e81b34edbd8. Independent review recalculated all six primary hashes and matched actual fixture/action logs and the saved Home request. The draft readback is an actual AT-SPI observation, not a claim that a pre-Send database draft snapshot was captured.
+
+The stream cancellation correction is confined to ResilientProviderRoutingModelClient. For ordinary streams only, it retains the exact canceled raw MoveNext or bounded-channel WriteAsync task, exact frame token and cause, original terminal reader wait, actual producer, iterator disposal and completion continuation. Only after all joins succeed, and the producer preserves that exact cancellation cause, does it return cancellation under the caller's original token. The original combined causes remain diagnostic inner evidence. Faulted OCE tasks, foreign tokens, independent or aliased cleanup failures, callback errors, unconfirmed settlement, canonical frames and early consumer abandonment retain failure behavior. Ordinary/page/ledger rules are unchanged. Parent and independent reviewers inspected the full source (SHA2561b1354b9cd6e2e4fbdcbf588489d83c047be15d4d9b8250c391cb12517cb9d29).
+
+The stronger external-close test also reproduced a separate source/publication wiring error. Ordinary Send had supplied a publication callback for source acquisition; retirement correctly withdrew publication, which unintentionally skipped actual iterator Dispose. The minimal NewChatPage correction captures the same admitted Send original once and uses its existing RunAcceptedSourceCallback for both source acquisition and the existing stream reader. That established callback permits finite source/cleanup work for the same live original during retirement while retaining owner, physical-stack and failure checks. Presentation guards remain unchanged. No general permission to acquire new work after retirement was added.
+
+Final focused validation passed **15/15**, full normal production references and analyzers, guard exit0 in72s, minimum60,297MiB/floor12,288MiB, peak536MiB. Exact three-file hashes and full diff SHA256cdd3f93af808a790b2791bc76edfab798e1fc4d606f2a495773a507b7ce7a840 were identical before and after. Evidence: `work/chat-layered-stop-close-source-callback-20261126/{result.json,test.log,test.log.guard.json,TestResults/layered-stop-close.trx,source-before.json,source-after.json,source.diff}`.
+
+The15 rows comprise nine direct/routed cooperative-stop and faulted/foreign/disposal controls, four real Dulche → production adapter/routers → ordinary page → compiled Send/Cancel → page/composer Close cases, and two exact public-router-enumerator backpressure cases. The same external Close task is pending while exact Stop acknowledgment is held; recovery sends the retained next draft once. The invoked independent cancellation callback belongs to a separately retained page notification original: Send and the compiled action succeed, while actual Close retains its exact IOException. Backpressure is tested at the actual capacity-one router boundary, not by pretending a paused UI stops the page's batched consumer. The same public iterator resumes through buffered output and joins acknowledgment/cleanup, preserving canceled caller-token status or the exact cleanup failure. Parent and independent source reviews covered all inputs.
+
+Earlier10/14,13/15 and13/15 attempts remain in `chat-layered-stop-close-20261126`, `chat-layered-stop-close-recheck-20261126` and `chat-layered-stop-close-external-owner-20261126`. They retain selector/timing/context/injection errors and the genuine close-during-Stop source-wiring regression; no failed run was relabeled as a pass. Final source hashes: Router1b1354b9cd6e2e4fbdcbf588489d83c047be15d4d9b8250c391cb12517cb9d29; NewChatPage3f37c2241fb92b51e534780d8e1dc9df3c6c0899233d4f29212cf63caa3d6a50; owning test3c65b972ad6b52edbdb00f2b910e21420061f7f7be24da0d9f2329409084a314. These are focused, overlapping checks, not a full-suite claim.
+
+Next native gate: publish the clean reviewed Stop candidate, attempt genuine normal reload of529 on the same backed-up profile, and exercise native regeneration/draft, exact settled Stop and next Send. Then perform a second genuine managed reload to prove normal app close after Stop. No native Stop-close pass is claimed by the component checks. Production daemon deployment, inference/model quality, ALORA, weights, training, GPU controls and full visual Atlas acceptance remain outside this qualification.
