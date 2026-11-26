@@ -88,8 +88,25 @@ public sealed class HavenChatSpaceBackend : IChatSpaceBackend
         await RequireActiveSpaceAsync(cancellationToken).ConfigureAwait(false);
         if (registry is null) return await models.GetInventoryAsync(cancellationToken).ConfigureAwait(false);
 
-        var policy = await new SpacePolicyResolver(registry).ResolveAsync(SpaceId, cancellationToken).ConfigureAwait(false);
+        var resolver = new SpacePolicyResolver(registry);
+        var policy = await resolver.ResolveAsync(SpaceId, cancellationToken).ConfigureAwait(false);
         await RequireActiveSpaceAsync(cancellationToken).ConfigureAwait(false);
+        // Do not contact a provider when the current policy already excludes this catalogue.
+        if (policy.ModelsCategoryDisabled || !string.IsNullOrWhiteSpace(policy.Model.ProviderConstraint) &&
+            !StringComparer.OrdinalIgnoreCase.Equals(policy.Model.ProviderConstraint, "ollama"))
+            return FilterInventoryByPolicy(policy, new([], null));
+
+        var result = await models.GetInventoryAsync(cancellationToken).ConfigureAwait(false);
+        // Provider discovery can suspend. Use the policy in force after it returns, not
+        // the earlier snapshot, so revocation during discovery is not silently ignored.
+        await RequireActiveSpaceAsync(cancellationToken).ConfigureAwait(false);
+        policy = await resolver.ResolveAsync(SpaceId, cancellationToken).ConfigureAwait(false);
+        await RequireActiveSpaceAsync(cancellationToken).ConfigureAwait(false);
+        return FilterInventoryByPolicy(policy, result);
+    }
+
+    private static ChatSpaceModelInventory FilterInventoryByPolicy(EffectiveSpacePolicy policy, ChatSpaceModelInventory result)
+    {
         var configured = policy.Model.DefaultModelId is not null || policy.Model.ProviderConstraint is not null ||
             (policy.Model.RequiredCapabilities?.Count ?? 0) != 0 || policy.ModelsCategoryDisabled;
         if (policy.ModelsCategoryDisabled)
@@ -101,8 +118,6 @@ public sealed class HavenChatSpaceBackend : IChatSpaceBackend
             return new([], null, PreventImplicitFallback: true,
                 PolicyNotice: $"This Chat Space's current model catalogue contains Ollama models only; provider '{policy.Model.ProviderConstraint}' is unavailable here.");
 
-        var result = await models.GetInventoryAsync(cancellationToken).ConfigureAwait(false);
-        await RequireActiveSpaceAsync(cancellationToken).ConfigureAwait(false);
         var candidates = result.Models;
 
         var required = new List<ToolCapability>();
@@ -127,6 +142,26 @@ public sealed class HavenChatSpaceBackend : IChatSpaceBackend
                 ? "No currently available model satisfies this Space's effective model policy."
                 : null;
         return new(candidates, preferred, missingConfiguredDefault || configured && candidates.Count == 0, notice);
+    }
+
+    private async Task<ModelDescriptor> RequireEligibleModelAsync(ModelDescriptor selected, CancellationToken cancellationToken)
+    {
+        var inventory = await GetModelInventoryAsync(cancellationToken).ConfigureAwait(false);
+        return inventory.Models.FirstOrDefault(item => item.Name.Equals(selected.Name, StringComparison.OrdinalIgnoreCase))
+            ?? throw new InvalidOperationException("The selected model is no longer available in the governed inventory." +
+                (inventory.PolicyNotice is null ? string.Empty : " " + inventory.PolicyNotice));
+    }
+
+    private async Task RequireCurrentModelPolicyAsync(ModelDescriptor model, CancellationToken cancellationToken)
+    {
+        if (registry is null) return;
+        await RequireActiveSpaceAsync(cancellationToken).ConfigureAwait(false);
+        var policy = await new SpacePolicyResolver(registry).ResolveAsync(SpaceId, cancellationToken).ConfigureAwait(false);
+        await RequireActiveSpaceAsync(cancellationToken).ConfigureAwait(false);
+        var inventory = FilterInventoryByPolicy(policy, new([model], null));
+        if (inventory.Models.Count == 0)
+            throw new InvalidOperationException("The selected model is no longer available in the governed inventory." +
+                (inventory.PolicyNotice is null ? string.Empty : " " + inventory.PolicyNotice));
     }
 
     public async Task<Conversation> CreateChatAsync(CancellationToken cancellationToken)
@@ -238,9 +273,7 @@ public sealed class HavenChatSpaceBackend : IChatSpaceBackend
         var actual = await GetConversationAsync(request.Conversation.Id, cancellationToken).ConfigureAwait(false);
         RequireCurrentBranch(actual, request.BranchId);
         await EnsureMayActAsync(actual.Conversation.Id, "chat.send", cancellationToken).ConfigureAwait(false);
-        var inventory = await models.GetInventoryAsync(cancellationToken).ConfigureAwait(false);
-        var model = inventory.Models.FirstOrDefault(item => item.Name.Equals(request.Model.Name, StringComparison.OrdinalIgnoreCase))
-            ?? throw new InvalidOperationException("The selected model is no longer available in the governed inventory.");
+        var model = await RequireEligibleModelAsync(request.Model, cancellationToken).ConfigureAwait(false);
         // The inventory lookup may await a provider: do not dispatch the earlier membership,
         // branch, attachment or safety snapshot if another action changed it while waiting.
         actual = await GetConversationAsync(request.Conversation.Id, cancellationToken).ConfigureAwait(false);
@@ -251,6 +284,7 @@ public sealed class HavenChatSpaceBackend : IChatSpaceBackend
             throw new InvalidOperationException("A submitted attachment is no longer owned by this conversation.");
         if (request.ExistingUserInput is not null)
             throw new InvalidOperationException("Existing input is admitted only by the canonical regeneration action.");
+        await RequireCurrentModelPolicyAsync(model, cancellationToken).ConfigureAwait(false);
         await turns.ExecuteAsync(request with { Conversation = actual.Conversation, Model = model }, progress, cancellationToken).ConfigureAwait(false);
     }
 
@@ -324,10 +358,9 @@ public sealed class HavenChatSpaceBackend : IChatSpaceBackend
         CancellationToken cancellationToken)
     {
         var actual = await GetConversationAsync(conversationId, cancellationToken).ConfigureAwait(false);
-        var inventory = await models.GetInventoryAsync(cancellationToken).ConfigureAwait(false);
-        model = inventory.Models.FirstOrDefault(item => item.Name.Equals(model.Name, StringComparison.OrdinalIgnoreCase))
-            ?? throw new InvalidOperationException("The selected model is no longer available in the governed inventory.");
+        model = await RequireEligibleModelAsync(model, cancellationToken).ConfigureAwait(false);
         await EnsureMayActAsync(conversationId, "chat.regenerate", cancellationToken).ConfigureAwait(false);
+        await RequireCurrentModelPolicyAsync(model, cancellationToken).ConfigureAwait(false);
         var messages = actual.Messages;
         var index = Array.FindIndex(messages.ToArray(), item => item.Id == assistantMessageId);
         if (index < 0) throw new InvalidOperationException("The response no longer exists in this chat.");
@@ -347,6 +380,7 @@ public sealed class HavenChatSpaceBackend : IChatSpaceBackend
         var admitted = await GetConversationAsync(conversationId, cancellationToken).ConfigureAwait(false);
         RequireCurrentBranch(admitted, branch.Id);
         await EnsureMayActAsync(conversationId, "chat.regenerate", cancellationToken).ConfigureAwait(false);
+        await RequireCurrentModelPolicyAsync(model, cancellationToken).ConfigureAwait(false);
         await turns.ExecuteAsync(
             new ChatSpaceTurnRequest(admitted.Conversation, precedingUser.Content, model,
                 actual.Attachments.Where(item => item.MessageId == precedingUser.Id).Select(item => item.Id).ToArray(), BranchId: branch.Id, ExistingUserInput: precedingUser),
