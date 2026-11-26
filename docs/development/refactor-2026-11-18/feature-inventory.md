@@ -199,3 +199,12 @@ The reviewed repair retains an issuer-owned wrapper/inner/chat target and preser
 **Test:** 15/15 focused cases passed with stable source, full production references/analyzers,72s/minimum60,297MiB/floor12,288MiB. Includes compiled Stop/Close with held exact ACK, next-Send recovery, separately retained callback failure, unset settlement, strict raw-task controls and exact router backpressure/cleanup. Three earlier failed test attempts are retained. Exact hashes and limits are in the continuation handoff.
 
 **Native gate pending for this source checkpoint:** guarded successor publication, actual regeneration/draft and Stop/recovery, then genuine normal managed close/reload. Model acceptance on529 is not a Stop-close pass. Production daemon deployment, real-model quality and full visual Atlas parity remain separate.
+
+
+### Native CPU acceptance completed — 26 November 2026, 12:59 GMT
+
+**Native verified:** source f7cc0c84098f6d5b91b2140ea5f70a72aac26b2d completed actual Send, Re-generate Here with retained native/database draft and unchanged user row, exact settled Stop with retained next draft, and a successful next Send. Its real managed normal close then exited0 and reopened the same immutable candidate/profile. Saved message/branch/draft rows match exactly after reopening, all three tagged user messages are present in the native tree, and no request replay occurred during the check. Model switching was independently accepted on ancestor529 through actual Home review/save and actual provider/persisted-assistant identities.
+
+Current native run14940e96-304b-4bc7-b895-982085bd9d79/PID2036425 remains minimized on the dedicated development profile. Final manifest `work/chat-native-acceptance-f7cc0c8409/final-native-verification.json` SHA256301e202b6e772175217c3499edf021cd543b1874f07521b66474996a427efa60. Fifteen focused source cases passed; full publish passed182.5s/minimum63,663MiB. Both final normal reloads succeeded; all331 files in the last consistent backup were hash verified. The continuation handoff carries exact source/test/runtime/evidence identities and earlier failed attempts.
+
+**Limits retained:** private scripted CPU qualification, no production daemon deployment or trained-model coding-quality claim, no full visual Atlas acceptance or full-suite claim, no full outbound regeneration history capture. Interrupted partial response text has no persisted assistant row. This completion update changes documentation only; the running binary remains the tested f7cc candidate.

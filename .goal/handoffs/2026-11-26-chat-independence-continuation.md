@@ -2,9 +2,11 @@
 
 Jacob explicitly asked this chat to continue Astra 2's development from the supplied handover. At takeover the native candidate was `qualification/independence-20261126` in the owner-converged checkout. Integration subsequently moved to `chat/independence-native-20261126` at `/home/jacob/Documents/GitHub/9to1-worktrees/chat-independence-native-20261126` after unrelated worker edits appeared in the shared checkout. All of those edits were preserved. Main contains separate training and other work and is not the integration source for this pass.
 
-## Latest status — reviewed Stop candidate, native gate pending
+## Latest status — native CPU qualification completed
 
-Native Build CPU protocol qualification, real Spaces ownership import, Send, regeneration/draft, and actual model switching are recorded below. The registered-model native gate passed on529; an acknowledged Stop still caused a normal-close refusal on10fb. The reviewed cancellation/source-retirement repair now passes all15 focused owning cases. Its guarded native publication and actual Stop → next Send → normal managed reload are the remaining gate. Historical failures are retained; this is private CPU-fixture qualification, not real-model coding or visual Atlas acceptance.
+The authorized continuation has completed the native Build fail/repair/test/review/commit trial, real Spaces ownership setup, actual Send/model-switch/regeneration/draft checks, exact settled Stop with next-Send recovery, and a genuine normal app close/reopen after Stop. The running immutable binary is source `f7cc0c84098f6d5b91b2140ea5f70a72aac26b2d`, managed run `14940e96-304b-4bc7-b895-982085bd9d79`, PID2036425. A subsequent documentation-only commit records this evidence without changing that binary. The final evidence manifest is `work/chat-native-acceptance-f7cc0c8409/final-native-verification.json` (SHA256301e202b6e772175217c3499edf021cd543b1874f07521b66474996a427efa60). All historical failures remain retained.
+
+Qualification uses the explicitly labeled private CPU fixture. It establishes the observed workflow and controls, not trained-model coding quality, production daemon deployment, full-suite coverage or visual Atlas parity. Interrupted partial reply text still has no persisted assistant row; the limitations below remain explicit.
 
 ## Observed takeover state
 
@@ -150,3 +152,34 @@ The15 rows comprise nine direct/routed cooperative-stop and faulted/foreign/disp
 Earlier10/14,13/15 and13/15 attempts remain in `chat-layered-stop-close-20261126`, `chat-layered-stop-close-recheck-20261126` and `chat-layered-stop-close-external-owner-20261126`. They retain selector/timing/context/injection errors and the genuine close-during-Stop source-wiring regression; no failed run was relabeled as a pass. Final source hashes: Router1b1354b9cd6e2e4fbdcbf588489d83c047be15d4d9b8250c391cb12517cb9d29; NewChatPage3f37c2241fb92b51e534780d8e1dc9df3c6c0899233d4f29212cf63caa3d6a50; owning test3c65b972ad6b52edbdb00f2b910e21420061f7f7be24da0d9f2329409084a314. These are focused, overlapping checks, not a full-suite claim.
 
 Next native gate: publish the clean reviewed Stop candidate, attempt genuine normal reload of529 on the same backed-up profile, and exercise native regeneration/draft, exact settled Stop and next Send. Then perform a second genuine managed reload to prove normal app close after Stop. No native Stop-close pass is claimed by the component checks. Production daemon deployment, inference/model quality, ALORA, weights, training, GPU controls and full visual Atlas acceptance remain outside this qualification.
+
+
+## Final native acceptance — 12:59 GMT, evidence verified at 13:02 GMT
+
+Clean candidate `f7cc0c84098f6d5b91b2140ea5f70a72aac26b2d` passed full immutable native publish in182.5s, minimum63,663MiB/floor12,000MiB, peak560MiB. Source was clean and unchanged before/after; shared SDK admission and CPU-only environment remained in force. Build receipt `work/qualification-f7cc0c8409-20261126-125203-receipt.json`; guard SHA256ad201766fd6e958651fbc08d1e0fbce6bb45f14db6f70616f2d7d716e9cde5f5. The first genuine normal reload closed529 run68fc86b7-87e6-4d56-975d-37df3ce1729f with actual exit0 and launched f7cc run21732400-3485-44ed-b187-be3139539637/PID2034011 on the same profile. Neither of these final-candidate reloads required a forced exit.
+
+The actual minimized native Spaces controls passed in fresh conversation `0a83313e-2230-49eb-a4a2-205876f7efaa`, branch65b5e6a2-7a21-4361-bea6-2f45eb1f427a:
+
+- Send saved one user input and a qualification-worker assistant reply.
+- Re-generate in current chat produced a second assistant reply with the same one user row and one-user-message backend request. Exact unsent text `native-regenerate-draft-f7cc0c8409` remained in both native composer and persisted draft.
+- Actual Cancel response stopped exact run `qualification-51004a698d6b45fa85c57a6164b1ca44` with `settled:true` and `state:stopped`. The newer draft `native-after-stop-f7cc0c8409` remained in composer and database.
+- The next actual Send committed that draft once and saved its assistant reply. Final persisted counts were three user rows and three assistant rows; composer and draft store were empty. The four actual requests carried user counts1,1,2,3, and no additional provider request appeared after reopening.
+
+A second genuine managed normal reload then closed that same post-Stop f7cc run with actual exit0 at2026-11-26T12:59:17.670083+00:00. It reopened the identical immutable source/runtime/manifest on the same profile as run `14940e96-304b-4bc7-b895-982085bd9d79`, PID2036425, process start_ticks10466524, AT-SPI owner:1.431. Runtime manifest SHA256ae3ac71b73de1e00ed0521d06cba50a89e8da42c4be9b0c645e3af0267cbba6a; Haven.dll SHA256636e0919bc6426b6f85cc16cefb86a557c6027b7e9ef78568cf59d807f0e5339. The native window was minimized by exact owned PID after restart.
+
+The actual post-Stop reload receipt is `work/chat-native-stop-settlement-reload-20261126-125916.json` (SHA2564584e2dd5959801a8b63ee7f1ff290388382eff6443d01272ca25f807a36def7). All331 files in the consistent profile/database backup were independently hash checked by the final verifier; backup manifest SHA2567f9cd20530e55985f8718671dfb0acc02394c5d9a724088eda07f44aa4366e45. The reopened read-only SQLite comparison exactly matches every pre-close message, branch and draft row. The real reopened native tree shows all three tagged user messages and an empty composer.
+
+Final native manifest `work/chat-native-acceptance-f7cc0c8409/final-native-verification.json`, SHA256301e202b6e772175217c3499edf021cd543b1874f07521b66474996a427efa60, indexes18 primary evidence files including controls, raw event/action subsets, both launches, actual exit, normal reload, reopened tree/composer and persisted rows. Primary capture SHA256s:
+
+| Capture | SHA256 |
+| --- | --- |
+| initial-send-completed.json | 57c768ac9c730758f0d2ce4660cd30d30211ced05e312995529d20a85478679a |
+| regenerated-with-draft.json | 08616db966efc5b8528f51a490b6952f7661a8273ecd57bbda556a1e0528d0d4 |
+| stopped-with-next-draft.json | ab654b5c4a22a517767df949ccca0f6f23fdb4d1b128b427b1b7d7dd68fb601c |
+| sent-after-stop.json | a9c91b7302ef1a6b64daac11bb8b95c4737e408dbf4597f5d6a0cd682d05dc6a |
+
+Separate accepted model-switch manifest on529 SHA2565f7267a5440adcf40b1de631962b07afaa43bb4134cda3cb633ff43e95961a40 remains bound to its actual source/run; f7cc includes that reviewed source. Accepted15-case source manifest SHA2568439fcb16183cfae240498b39c9103d91b10699af10a0c28f3c882d809567d61, TRX SHA2563a61f72ba6e005f07d9061c045e61bb3f0e80cf3a201e96f76746fe2b92bb2bd, guard SHA25601a3fd7e2e59b2e002a875c6b8507586757fb0988e2ec004398447398170aab0. Counts from separate overlapping selections and repeated failed attempts are not summed.
+
+An independent read-only audit recalculated all 18 final evidence hashes, matched all 13 native-action rows and five fixture events against the original logs, checked both launches and the exact exit/reload receipts, and confirmed the reopened database/tree comparison. It also verified the referenced model-switch and 15-case source evidence. No source or native-acceptance blocker remained within this explicitly bounded qualification.
+
+Remaining boundaries: all generation and the native Build review-receipt exchange used the private CPU qualification fixture. Production inference/daemon deployment, trained-model coding quality, ALORA/training/weights/GPU changes and full visual Atlas acceptance were not performed. The fixture records outgoing model/request counts, not full regenerated history bytes. The interrupted partial reply was visible before close but has no persisted assistant row; persistence of that partial output is not qualified. The unrelated existing five xUnit1051 Application-test diagnostics remain outside this focused work. The historical blocked Build requirement remains alongside the completed qualification task; it was not relabeled or deleted. The actual running binary stays at f7cc even after the following evidence-only documentation commit.
