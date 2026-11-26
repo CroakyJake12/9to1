@@ -416,8 +416,11 @@ class Handler(BaseHTTPRequestHandler):
             if len(route) == 3 and not get:
                 if route[2] == "stop":
                     with ctx.lock:
-                        ctx.jobs.stop(run=route[1])
+                        receipt = ctx.jobs.request_stop(route[1])
                         ctx.swarm.on_job_stop(route[1])
+                    # Worker cleanup acknowledges the captured control under this
+                    # same lock, so the bounded wait must occur outside it.
+                    return self.send_json(200, receipt.wait())
                 elif route[2] == "resume":
                     ctx.jobs.resume(route[1])
                 elif route[2] == "review":

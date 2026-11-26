@@ -1,6 +1,7 @@
 """Durable local run queue. Only owner-registered recipes may produce OS actions."""
 
 import contextlib
+from dataclasses import dataclass
 import hashlib
 import json
 import os
@@ -20,6 +21,30 @@ from state import Fault, identity
 
 TERMINAL = {"completed", "failed", "stopped", "checkpointed", "review"}
 MAX_STEPS = 128
+
+
+@dataclass(frozen=True)
+class RunStopReceipt:
+    """Settlement of the exact execution captured by one per-run stop request."""
+
+    _scheduler: "Scheduler"
+    _run: str
+    _finished: threading.Event | None
+
+    def wait(self, timeout=2.0):
+        if type(timeout) not in (int, float) or not 0 <= timeout <= 2:
+            raise ValueError("Stop settlement wait must be between zero and two seconds")
+        # Call after releasing the controller/scheduler lock: _execute needs that
+        # same lock to retire its control and acknowledge its own cleanup.
+        acknowledged = self._finished is None or self._finished.wait(timeout)
+        with self._scheduler.cv:
+            status = self._scheduler.state.status(self._run)
+            status["settled"] = (
+                acknowledged
+                and self._run not in self._scheduler.active
+                and status["state"] in TERMINAL
+            )
+            return status
 
 
 class Scheduler:
@@ -540,6 +565,17 @@ class Scheduler:
                     except Fault:
                         pass
                 self.cv.notify_all()
+
+    def request_stop(self, run):
+        """Stop one run and retain its original execution's settlement source."""
+        if not isinstance(run, str) or not run:
+            raise Fault(400, "A run identity is required")
+        with self.cv:
+            control = self.active.get(run)
+            self.stop(run=run)
+            return RunStopReceipt(
+                self, run, control["finished"] if control is not None else None
+            )
 
     def stop(self, run=None, model=None, emergency=True):
         with self.cv, self.state.transaction() as db:
