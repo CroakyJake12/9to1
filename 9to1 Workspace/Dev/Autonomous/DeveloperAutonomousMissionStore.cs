@@ -1,4 +1,6 @@
 using System.Security.Cryptography;
+using System.Collections.Concurrent;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -27,6 +29,15 @@ public sealed class DeveloperAutonomousMissionStore
 
     private readonly string _rootDirectory;
     private readonly object _gate = new();
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> ProcessMissionLeases = new(
+        OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+
+    private const int LockExclusive = 2;
+    private const int LockNonBlocking = 4;
+    private const int LockUnlock = 8;
+
+    [DllImport("libc", EntryPoint = "flock", SetLastError = true)]
+    private static extern int Flock(int fileDescriptor, int operation);
 
     public DeveloperAutonomousMissionStore(string rootDirectory)
     {
@@ -36,6 +47,90 @@ public sealed class DeveloperAutonomousMissionStore
     }
 
     public string RootDirectory => _rootDirectory;
+
+    /// <summary>
+    /// Claims the live-writer lease for a mission. The lock is stored separately from mission.json,
+    /// is exclusive across processes, and is released by the OS if its owner exits unexpectedly.
+    /// </summary>
+    public IDisposable AcquireMissionLease(string missionId)
+    {
+        ValidateId(missionId, nameof(missionId));
+        var leasePath = Path.Combine(_rootDirectory, ".leases", missionId + ".lock");
+        var key = Path.GetFullPath(leasePath);
+        var processLease = ProcessMissionLeases.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
+        if (!processLease.Wait(0))
+            throw new InvalidOperationException($"Mission '{missionId}' is already owned by a live engine in this process.");
+
+        FileStream? stream = null;
+        var flockHeld = false;
+        var byteRangeLockHeld = false;
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(leasePath)!);
+            stream = new FileStream(leasePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+            if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+            {
+                var fd = stream.SafeFileHandle.DangerousGetHandle().ToInt32();
+                if (Flock(fd, LockExclusive | LockNonBlocking) != 0)
+                {
+                    var errno = Marshal.GetLastPInvokeError();
+                    throw new IOException($"Mission lease is held by another process (flock errno {errno}).");
+                }
+                flockHeld = true;
+            }
+            else if (OperatingSystem.IsWindows())
+            {
+                stream.Lock(0, 1);
+                byteRangeLockHeld = true;
+            }
+            else
+            {
+                throw new PlatformNotSupportedException("Mission leases require flock on Unix or byte-range locks on Windows.");
+            }
+            return new MissionLease(stream, processLease, flockHeld, byteRangeLockHeld);
+        }
+        catch (IOException ex)
+        {
+            if (flockHeld) { try { Flock(stream!.SafeFileHandle.DangerousGetHandle().ToInt32(), LockUnlock); } catch { } }
+            if (byteRangeLockHeld && OperatingSystem.IsWindows()) { try { stream!.Unlock(0, 1); } catch { } }
+            stream?.Dispose();
+            processLease.Release();
+            throw new InvalidOperationException($"Mission '{missionId}' is already owned by a live engine.", ex);
+        }
+        catch
+        {
+            if (flockHeld) { try { Flock(stream!.SafeFileHandle.DangerousGetHandle().ToInt32(), LockUnlock); } catch { } }
+            if (byteRangeLockHeld && OperatingSystem.IsWindows()) { try { stream!.Unlock(0, 1); } catch { } }
+            stream?.Dispose();
+            processLease.Release();
+            throw;
+        }
+    }
+
+    private sealed class MissionLease(
+        FileStream stream,
+        SemaphoreSlim processLease,
+        bool flockHeld,
+        bool byteRangeLockHeld) : IDisposable
+    {
+        private int _disposed;
+
+        public void Dispose()
+        {
+            if (Interlocked.Exchange(ref _disposed, 1) != 0) return;
+            try
+            {
+                if (flockHeld) Flock(stream.SafeFileHandle.DangerousGetHandle().ToInt32(), LockUnlock);
+                if (byteRangeLockHeld && OperatingSystem.IsWindows()) stream.Unlock(0, 1);
+            }
+            catch { }
+            finally
+            {
+                stream.Dispose();
+                processLease.Release();
+            }
+        }
+    }
 
     public static string ResolveDefaultRootDirectory() =>
         Path.Combine(

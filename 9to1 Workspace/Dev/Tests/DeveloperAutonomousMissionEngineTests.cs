@@ -231,6 +231,55 @@ public sealed class DeveloperAutonomousMissionEngineTests
     }
 
     [Fact]
+    public async Task Live_mission_lease_rejects_second_engine_without_changing_durable_state_then_allows_resume_after_dispose()
+    {
+        var root = Directory.CreateTempSubdirectory("9to1-auto-lease-");
+        try
+        {
+            var repoDir = Path.Combine(root.FullName, "repo");
+            var progDir = Path.Combine(root.FullName, "programme");
+            var storeDir = Path.Combine(root.FullName, "store");
+            await CreateSampleGitRepoAsync(repoDir);
+            WriteSampleProgramme(progDir);
+            var gateway = new ScriptedDualModelGateway();
+            var options = new DeveloperAutonomousMissionOptions
+            {
+                RepositoryRoot = repoDir,
+                ProgrammeDirectory = progDir,
+                StoreDirectory = storeDir,
+                SdkLockPath = Path.Combine(root.FullName, "sdk.lock"),
+                MissionName = "Lease Proof",
+                MemoryFloorMiB = 256,
+                DiskFloorGiB = 1
+            };
+            var store = new DeveloperAutonomousMissionStore(storeDir);
+            await using var first = new DeveloperAutonomousMissionEngine(options, gateway, store);
+            await using var second = new DeveloperAutonomousMissionEngine(options, gateway, new DeveloperAutonomousMissionStore(storeDir));
+
+            var created = await first.InitializeOrResumeAsync();
+            await first.SaveCheckpointAsync("lease_owner_active");
+            var missionPath = Path.Combine(store.GetMissionDirectory(created.MissionId), "mission.json");
+            var before = await File.ReadAllBytesAsync(missionPath);
+
+            var refused = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                second.InitializeOrResumeAsync(created.MissionId));
+
+            Assert.Contains("already owned", refused.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(before, await File.ReadAllBytesAsync(missionPath));
+            Assert.Equal(created.MissionId, first.CurrentMission!.MissionId);
+
+            await first.DisposeAsync();
+            var resumed = await second.InitializeOrResumeAsync(created.MissionId);
+            Assert.Equal(created.MissionId, resumed.MissionId);
+            Assert.Contains(resumed.Checkpoints, cp => cp.Reason == "lease_owner_active");
+        }
+        finally
+        {
+            try { root.Delete(true); } catch { }
+        }
+    }
+
+    [Fact]
     public async Task Autonomous_mission_progresses_across_two_requirements_with_diagnostics_delegation_review_compaction_and_guarded_integration()
     {
         var root = Directory.CreateTempSubdirectory("9to1-e2e-auto-");
@@ -315,6 +364,7 @@ public sealed class DeveloperAutonomousMissionEngineTests
             Assert.True(store.VerifyTranscriptIntegrity(final.MissionId, out var chainErr));
             Assert.Null(chainErr);
 
+            await engine.DisposeAsync();
             await using var reloadedEngine = new DeveloperAutonomousMissionEngine(options, gateway, store);
             var resumed = await reloadedEngine.InitializeOrResumeAsync(final.MissionId);
             Assert.Equal(final.MissionId, resumed.MissionId);

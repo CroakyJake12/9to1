@@ -86,6 +86,7 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
     private Task? _completionEnded;
     private bool _pauseRequested;
     private bool _disposed;
+    private IDisposable? _missionLease;
 
     public DeveloperAutonomousMissionEngine(
         DeveloperAutonomousMissionOptions options,
@@ -122,6 +123,11 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
         CancellationToken cancellationToken = default,
         bool resumeExistingForRepository = false)
     {
+        if (_missionLease is not null)
+            throw new InvalidOperationException("This engine already owns an initialized mission.");
+        IDisposable? pendingLease = null;
+        try
+        {
         var repoRoot = Path.GetFullPath(_options.RepositoryRoot);
         if (!Directory.Exists(repoRoot))
             throw new DirectoryNotFoundException($"Repository root not found: {repoRoot}");
@@ -134,6 +140,8 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
 
         if (!string.IsNullOrWhiteSpace(resolvedMissionId))
         {
+            // Claim exclusive ownership before reading recovery state or writing the paused snapshot.
+            pendingLease = _store.AcquireMissionLease(resolvedMissionId);
             var loaded = _store.LoadMission(resolvedMissionId)
                 ?? throw new KeyNotFoundException($"Mission '{resolvedMissionId}' was not found.");
             if (!_store.VerifyTranscriptIntegrity(loaded.MissionId, out var integrityError))
@@ -161,6 +169,8 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
             };
             SetMission(resumed, persist: true, restoreCompletionOwnership: true);
             RecordEvent("mission_resumed", $"Resumed durable mission '{resumed.Name}' ({resumed.MissionId}) at revision {resumed.CurrentRevision[..Math.Min(10, resumed.CurrentRevision.Length)]}.");
+            _missionLease = pendingLease;
+            pendingLease = null;
             return resumed;
         }
 
@@ -169,6 +179,7 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
             : await DeveloperAutonomousWorkspaceTools.ResolveHeadRevisionAsync(repoRoot, cancellationToken).ConfigureAwait(false);
 
         var missionId = "m-" + DateTimeOffset.UtcNow.ToString("yyyyMMddHHmmss") + "-" + Guid.NewGuid().ToString("N")[..6];
+        pendingLease = _store.AcquireMissionLease(missionId);
         var branch = !string.IsNullOrWhiteSpace(_options.IntegrationBranch)
             ? _options.IntegrationBranch
             : $"build-mission/{missionId}";
@@ -204,7 +215,15 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
         SetMission(mission, persist: true);
         AppendTranscript("user", $"MISSION INITIALIZED: {mission.Name}\nObjective: {mission.Objective}\nRepository: {mission.RepositoryRoot}\nIntegration branch: {mission.IntegrationBranch} @ {mission.BaseRevision}");
         RecordEvent("mission_created", $"Created autonomous mission '{mission.Name}' (worker={workerModel ?? "unselected"}, supervisor={supervisorModel ?? "unselected"}).");
+        _missionLease = pendingLease;
+        pendingLease = null;
         return CurrentMission!;
+        }
+        catch
+        {
+            pendingLease?.Dispose();
+            throw;
+        }
     }
 
     public async Task<DeveloperDulcheStatus> RefreshModelsAsync(CancellationToken cancellationToken = default)
@@ -2041,11 +2060,18 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
         bool running;
         lock (_gate)
             running = _activeLoop is { IsCompleted: false } || _completionCts is not null;
-        if (running)
+        try
         {
-            try { await StopActiveRunAsync(CancellationToken.None).ConfigureAwait(false); }
-            catch (InvalidOperationException) when (CurrentMission is { CompletionStopUnconfirmed: true }) { }
+            if (running)
+            {
+                try { await StopActiveRunAsync(CancellationToken.None).ConfigureAwait(false); }
+                catch (InvalidOperationException) when (CurrentMission is { CompletionStopUnconfirmed: true }) { }
+            }
         }
-        _runCts?.Dispose();
+        finally
+        {
+            _runCts?.Dispose();
+            Interlocked.Exchange(ref _missionLease, null)?.Dispose();
+        }
     }
 }
