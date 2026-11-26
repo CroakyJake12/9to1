@@ -107,7 +107,8 @@ class ManagedServingTests(unittest.TestCase):
 
     def set_ready(self, **changes):
         atomic_json(self.ready, {"pid": os.getpid(), "model_id": MODEL, "bound_port": self.port,
-                                "bound_host": "127.0.0.1", "api_state": "ready", "model_state": "ready", **changes})
+                                "bound_host": "127.0.0.1", "api_state": "ready", "model_state": "ready",
+                                "schema_version": 1, "instance_id": "a" * 32, **changes})
 
     def tearDown(self):
         self.membership_patch.stop()
@@ -152,11 +153,13 @@ class ManagedServingTests(unittest.TestCase):
         self.assertEqual(self.bridge.status(MODEL)["state"], "loading")
 
     def test_load_starts_only_exact_unit_and_waits_for_acknowledged_ready_state(self):
+        self.ready.unlink()
         self.service_state = dict(self.inactive)
         def run(command, **kwargs):
             self.assertEqual(command, ["systemctl", "--user", "start", UNIT])
             self.assertNotIn("--no-block", command)
             self.assertTrue(kwargs["check"])
+            self.set_ready()
             self.service_state = dict(self.active)
             return subprocess.CompletedProcess(command, 0)
         with mock.patch.object(managed_serving.subprocess, "run", side_effect=run) as called:
@@ -222,8 +225,10 @@ class ManagedServingTests(unittest.TestCase):
             self.assertEqual(command[:3], ["systemctl", "--user", command[2]])
             self.assertEqual(command[3], UNIT)
             if command[2] == "stop":
+                self.ready.unlink()
                 self.service_state = dict(self.inactive)
             elif command[2] == "start":
+                self.set_ready()
                 self.service_state = dict(self.active)
                 self.health["loaded"] = True
             else:
@@ -249,12 +254,14 @@ class ManagedServingTests(unittest.TestCase):
             called.assert_called_once()
 
     def test_wrong_health_after_new_start_is_settled_before_failure_returns(self):
+        self.ready.unlink()
         self.service_state = dict(self.inactive)
         self.health["model"] = "another-model"
         calls = []
         def run(command, **kwargs):
             calls.append(command)
             self.assertEqual(command[3], UNIT)
+            if command[2] == "start": self.set_ready()
             self.service_state = dict(self.active if command[2] == "start" else self.inactive)
             return subprocess.CompletedProcess(command, 0)
         with mock.patch.object(managed_serving.subprocess, "run", side_effect=run):
@@ -334,6 +341,7 @@ class ManagedServingTests(unittest.TestCase):
             self.assertEqual(self.bridge.unload(MODEL)["state"], "unloaded")
 
     def test_start_timeout_cleans_exact_unit_before_propagating_failure(self):
+        self.ready.unlink()
         self.service_state = dict(self.inactive)
         calls = []
         def run(command, **kwargs):
@@ -349,6 +357,7 @@ class ManagedServingTests(unittest.TestCase):
         self.assertEqual([command[2] for command in calls], ["start", "stop"])
 
     def test_start_failure_keeps_uncertain_cleanup_visible(self):
+        self.ready.unlink()
         self.service_state = dict(self.inactive)
         def run(command, **kwargs):
             if command[2] == "start":
@@ -359,6 +368,110 @@ class ManagedServingTests(unittest.TestCase):
         with mock.patch.object(managed_serving.subprocess, "run", side_effect=run):
             with self.assertRaisesRegex(EngineError, "cleanup.*unverified"):
                 self.bridge.load(MODEL)
+
+    def unused_port(self):
+        import socket
+        with socket.socket() as listener:
+            listener.bind(("127.0.0.1", 0))
+            return listener.getsockname()[1]
+
+    def stale_ready(self, **changes):
+        # PID outside Linux's pid_max range; no real process is signalled.
+        cfg = {**self.config, "port": self.unused_port()}
+        self.set_ready(pid=999999999, bound_port=cfg["port"], **changes)
+        self.service_state = dict(self.inactive)
+        return cfg
+
+    def test_stale_ready_is_archived_only_after_settled_owned_custody(self):
+        cfg = self.stale_ready()
+        original = self.ready.read_bytes()
+        self.bridge._retire_ready(MODEL, self.profile, cfg)
+        self.assertFalse(self.ready.exists())
+        archives = list(self.root.glob("ready.json.retired-*"))
+        self.assertEqual(1, len(archives))
+        self.assertEqual(original, archives[0].read_bytes())
+
+    def test_live_or_foreign_ready_receipt_is_preserved(self):
+        for changes in ({"pid": os.getpid()}, {"model_id": "foreign"}, {"bound_host": "0.0.0.0"},
+                        {"schema_version": 2}, {"instance_id": "invalid"}, {"pid": True}):
+            cfg = {**self.config, "port": self.unused_port()}
+            self.set_ready(pid=999999999, bound_port=cfg["port"])
+            value = json.loads(self.ready.read_text())
+            value.update(changes)
+            atomic_json(self.ready, value)
+            self.service_state = dict(self.inactive)
+            original = self.ready.read_bytes()
+            with self.subTest(changes=changes), self.assertRaises(EngineError):
+                self.bridge._retire_ready(MODEL, self.profile, cfg)
+            self.assertEqual(original, self.ready.read_bytes())
+        self.assertEqual([], list(self.root.glob("ready.json.retired-*")))
+
+    def test_malformed_ready_receipt_is_preserved(self):
+        self.service_state = dict(self.inactive)
+        self.ready.write_text("{invalid")
+        with self.assertRaisesRegex(EngineError, "malformed"):
+            self.bridge._retire_ready(MODEL, self.profile, self.config)
+        self.assertEqual("{invalid", self.ready.read_text())
+
+    def test_stale_ready_cannot_be_retired_over_live_port_or_cgroup_child(self):
+        self.set_ready(pid=999999999)
+        self.service_state = dict(self.inactive)
+        original = self.ready.read_bytes()
+        with self.assertRaisesRegex(EngineError, "port is still in use"):
+            self.bridge._retire_ready(MODEL, self.profile, self.config)
+        self.assertEqual(original, self.ready.read_bytes())
+        (self.cgroup / "cgroup.procs").write_text("12345\n")
+        with self.assertRaisesRegex(EngineError, "still contains processes"):
+            self.bridge._retire_ready(MODEL, self.profile, self.config)
+        self.assertEqual(original, self.ready.read_bytes())
+
+    def test_failed_empty_group_uses_only_actual_owned_user_slice(self):
+        self.service_state = {"ActiveState": "failed", "MainPID": "0", "ControlGroup": "",
+                              "Slice": "app.slice", "Result": "exit-code"}
+        parent = f"/user.slice/user-{os.getuid()}.slice/user@{os.getuid()}.service/app.slice"
+        def units(name):
+            if name == "app.slice":
+                return {"ActiveState": "active", "ControlGroup": parent}
+            return self.unit(name)
+        with mock.patch.object(managed_serving, "unit_state", side_effect=units):
+            before = self.bridge._unit(UNIT, recover_empty=True)
+            self.bridge._release_proof(UNIT, before, before)
+            own = self.cgroup_root / parent.lstrip("/") / UNIT
+            own.mkdir(parents=True)
+            (own / "cgroup.procs").write_text("12345\n")
+            with self.assertRaisesRegex(EngineError, "still contains processes"):
+                self.bridge._release_proof(UNIT, before, before)
+
+    def test_failed_empty_group_without_slice_custody_still_refuses_release(self):
+        self.service_state = {"ActiveState": "failed", "MainPID": "0", "ControlGroup": ""}
+        before = self.bridge._unit(UNIT, recover_empty=True)
+        with self.assertRaisesRegex(EngineError, "no verifiable cgroup"):
+            self.bridge._release_proof(UNIT, before, before)
+
+    def test_observed_live_group_survives_systemd_clearing_failed_group(self):
+        self.bridge._unit(UNIT)
+        self.service_state = {"ActiveState": "failed", "MainPID": "0", "ControlGroup": "",
+                              "Result": "exit-code"}
+        with mock.patch.object(managed_serving.subprocess, "run",
+                               return_value=subprocess.CompletedProcess([], 0)):
+            self.bridge.unload(MODEL)
+        (self.cgroup / "cgroup.procs").write_text("12345\n")
+        with mock.patch.object(managed_serving.subprocess, "run",
+                               return_value=subprocess.CompletedProcess([], 0)):
+            with self.assertRaisesRegex(EngineError, "still contains processes"):
+                self.bridge.unload(MODEL)
+
+    def test_failed_start_retains_original_error_after_group_cleared(self):
+        self.ready.unlink()
+        self.service_state = dict(self.inactive)
+        def run(command, **kwargs):
+            self.service_state = {"ActiveState": "failed", "MainPID": "0", "ControlGroup": "",
+                                  "Result": "exit-code"}
+            return subprocess.CompletedProcess(command, 0)
+        with mock.patch.object(managed_serving.subprocess, "run", side_effect=run):
+            with self.assertRaisesRegex(EngineError, "guarded service stopped: exit-code") as caught:
+                self.bridge.load(MODEL)
+        self.assertNotIn("no verifiable cgroup", str(caught.exception))
 
     def test_profile_settings_cannot_silently_reduce_context_or_change_adapter(self):
         self.assertEqual(self.bridge.validate_settings(MODEL, {"context_length": 524288})["context"], 524288)

@@ -27,9 +27,9 @@ class NativeHealthError(EngineError):
     """A proved ready, owned endpoint no longer serves its registered engine."""
 
 
-def verify_released_groups(unit, before, after):
+def verify_released_groups(unit, before, after, *retained):
     """Retain the pre-stop cgroup: systemd can clear ControlGroup on exit."""
-    groups = {state.get("ControlGroup") for state in (before, after) if state.get("ControlGroup")}
+    groups = {state.get("ControlGroup") for state in (before, after, *retained) if state.get("ControlGroup")}
     if not groups:
         if all(state.get("ActiveState") == "inactive" and int(state.get("MainPID", 0)) <= 1
                for state in (before, after)):
@@ -77,7 +77,7 @@ def private_json(path):
 def unit_state(name):
     reply = subprocess.run(["systemctl", "--user", "show", name,
                             "-p", "ActiveState", "-p", "SubState", "-p", "MainPID",
-                            "-p", "ControlGroup", "-p", "Result"],
+                            "-p", "ControlGroup", "-p", "Result", "-p", "Slice"],
                            capture_output=True, text=True, timeout=5)
     if reply.returncode:
         raise EngineError("The registered native service is unavailable")
@@ -88,6 +88,92 @@ class ManagedServing:
     def __init__(self, root):
         self.root = Path(root)
         self.registry = self.root / "managed-serving.json"
+        self._retained_groups = {}
+
+    def _unit(self, name, *, recover_empty=False):
+        state = unit_state(name)
+        group = state.get("ControlGroup")
+        if group:
+            self._retained_groups.setdefault(name, set()).add(group)
+        elif recover_empty and not self._retained_groups.get(name):
+            # A failed Type=simple service may have already lost ControlGroup.
+            # Resolve only its actual owned user slice; never treat an empty
+            # failed-unit observation alone as a release witness.
+            slice_name = state.get("Slice", "")
+            if (state.get("ActiveState") in ("inactive", "failed")
+                    and int(state.get("MainPID", 0)) <= 1
+                    and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*\.slice", slice_name)):
+                parent = unit_state(slice_name)
+                expected_parent = f"/user.slice/user-{os.getuid()}.slice/user@{os.getuid()}.service/"
+                parent_group = parent.get("ControlGroup", "")
+                if (parent.get("ActiveState") == "active"
+                        and parent_group.startswith(expected_parent)
+                        and parent_group.endswith("/" + slice_name)):
+                    self._retained_groups.setdefault(name, set()).add(parent_group + "/" + name)
+        return state
+
+    def _release_proof(self, name, before, after):
+        retained = [{"ControlGroup": group} for group in self._retained_groups.get(name, ())]
+        verify_released_groups(name, before, after, *retained)
+
+    def _retire_ready(self, mid, profile, cfg):
+        path = Path(profile["ready_file"])
+        if not os.path.lexists(path):
+            return
+        state = self._unit(profile["unit"], recover_empty=True)
+        if state.get("ActiveState") not in ("inactive", "failed") or int(state.get("MainPID", 0)) > 1:
+            raise EngineError("A ready receipt cannot be retired before the owned native unit settles")
+        self._release_proof(profile["unit"], state, state)
+        before = path.lstat()
+        directory = path.parent.lstat()
+        if (not stat.S_ISDIR(directory.st_mode) or directory.st_uid != os.getuid()
+                or directory.st_mode & 0o022):
+            raise EngineError("The ready receipt directory is not privately owned")
+        try:
+            ready = private_json(path)
+        except (OSError, ValueError, TypeError) as error:
+            raise EngineError("The existing ready receipt is malformed or unavailable; preserved for review") from error
+        pid = ready.get("pid")
+        if (type(pid) is not int or pid <= 1 or type(ready.get("schema_version")) is not int
+                or ready.get("schema_version") != 1
+                or not re.fullmatch(r"[0-9a-f]{32}", str(ready.get("instance_id", "")))
+                or ready.get("model_id") != mid or ready.get("bound_host") != cfg["host"]
+                or ready.get("bound_port") != cfg["port"]
+                or ready.get("api_state") != "ready" or ready.get("model_state") != "ready"):
+            raise EngineError("The existing ready receipt is not the registered model's exact ready identity; preserved")
+        try:
+            os.stat(f"/proc/{pid}")
+        except FileNotFoundError:
+            pass
+        except OSError as error:
+            raise EngineError("The old ready process cannot be inspected; receipt preserved") from error
+        else:
+            raise EngineError("The old ready process is still present; receipt preserved")
+        # Bind and listen under one local socket: REUSEADDR allows harmless
+        # TIME_WAIT, while a live listener (including a foreign one) still wins.
+        # No REUSEPORT is set. Keep custody until the stale receipt is archived.
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as reservation:
+            reservation.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            try:
+                reservation.bind((cfg["host"], cfg["port"]))
+                reservation.listen(1)
+            except OSError as error:
+                raise EngineError("The registered port is still in use; ready receipt preserved") from error
+            after = path.lstat()
+            if (before.st_dev, before.st_ino, before.st_mtime_ns, before.st_size) != (
+                    after.st_dev, after.st_ino, after.st_mtime_ns, after.st_size):
+                raise EngineError("The ready receipt changed during retirement; preserved")
+            if private_json(path) != ready:
+                raise EngineError("The ready receipt contents changed during retirement; preserved")
+            archive = path.with_name(path.name + ".retired-" + ready["instance_id"] + "-" + str(time.time_ns()))
+            if os.path.lexists(archive):
+                raise EngineError("The ready receipt archive already exists; preserved")
+            os.rename(path, archive)
+            fd = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)
+            try:
+                os.fsync(fd)
+            finally:
+                os.close(fd)
 
     def _entries(self):
         if not self.registry.exists():
@@ -218,7 +304,7 @@ class ManagedServing:
     def status(self, mid):
         spec = self.spec(mid)
         profile, cfg = self._profile(mid)
-        unit = unit_state(profile["unit"])
+        unit = self._unit(profile["unit"])
         health_error = None
         try:
             connection = self._connection(mid, profile, cfg, unit)
@@ -246,18 +332,20 @@ class ManagedServing:
 
     def load(self, mid, settings=None):
         self.validate_settings(mid, settings)
-        profile, _ = self._profile(mid)
+        profile, cfg = self._profile(mid)
         observed = self.status(mid)
         if observed["state"] == "loaded":
             return observed
         for guard in profile["guard_units"]:
             if unit_state(guard).get("ActiveState") != "active":
                 raise EngineError("Required independent guard is not active: " + guard)
-        if observed["state"] == "failed" and unit_state(profile["unit"]).get("ActiveState") == "active":
+        if observed["state"] == "failed" and self._unit(profile["unit"], recover_empty=True).get("ActiveState") == "active":
             # An explicit lifecycle load must settle the failed owned wrapper;
             # systemctl start on an already-active unit would otherwise be a no-op.
             # Automatic recover already calls this same unload in the controller.
             self.unload(mid)
+        self._unit(profile["unit"], recover_empty=True)
+        self._retire_ready(mid, profile, cfg)
         # Type=simple acknowledges the actual start before returning. --no-block
         # can still expose the previous inactive state while the job is queued.
         try:
@@ -270,7 +358,7 @@ class ManagedServing:
             try:
                 self.unload(mid)
             except Exception as cleanup_error:
-                raise EngineError("Native startup failed and cleanup of " + profile["unit"]
+                raise EngineError("Native startup failed (" + str(start_error) + ") and cleanup of " + profile["unit"]
                                   + " is unverified: " + str(cleanup_error)) from start_error
             raise
         deadline = time.monotonic() + 360
@@ -279,8 +367,12 @@ class ManagedServing:
             if row["state"] == "loaded":
                 return row
             if row["state"] not in ("loading",):
-                self.unload(mid)
-                raise EngineError(row.get("error") or "The guarded native startup failed; inspect " + profile["unit"])
+                cause = row.get("error") or "The guarded native startup failed; inspect " + profile["unit"]
+                try:
+                    self.unload(mid)
+                except Exception as cleanup_error:
+                    raise EngineError(cause + "; cleanup is unverified: " + str(cleanup_error)) from cleanup_error
+                raise EngineError(cause)
             time.sleep(0.25)
         self.unload(mid)
         raise EngineError("The guarded native startup exceeded six minutes")
@@ -290,13 +382,13 @@ class ManagedServing:
         # registered service impossible to stop. This command remains confined
         # to its private, validated unit registration.
         profile = self._registration(mid)
-        before = unit_state(profile["unit"])
+        before = self._unit(profile["unit"], recover_empty=True)
         subprocess.run(["systemctl", "--user", "stop", profile["unit"]],
                        check=True, capture_output=True, timeout=30)
-        state = unit_state(profile["unit"])
+        state = self._unit(profile["unit"], recover_empty=True)
         if int(state.get("MainPID", 0)) > 1 or state.get("ActiveState") not in ("inactive", "failed"):
             raise EngineError("The owned native unit has not settled")
-        verify_released_groups(profile["unit"], before, state)
+        self._release_proof(profile["unit"], before, state)
         try:
             return self.status(mid)
         except (EngineError, OSError, ValueError):
