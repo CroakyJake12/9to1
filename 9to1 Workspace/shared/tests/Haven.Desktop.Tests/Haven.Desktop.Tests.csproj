@@ -112,6 +112,7 @@
          canonical permission-caller fixture and its real nested Rig; keep the complete partial. -->
     <Compile Include="ChatCloudPermissionCallerTests.cs;ChatInitialTaskObservationTests.cs;NewChatInitialTaskObservationTests.cs;NewChatTemporarySaveTests.cs" />
     <Compile Include="NewChatOrdinaryStopRecoveryTests.cs" />
+    <Compile Include="NewChatRegenerationTests.cs" />
     <Compile Include="SpaceTaskWidgetPermissionReviewTests.cs" />
     <Compile Include="CanonicalHostedResumeObservationTests.cs" />
     <!-- Canonical workspace-session projection and persistence coverage (same production types). -->
