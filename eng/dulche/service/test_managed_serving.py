@@ -25,6 +25,7 @@ class ManagedServingTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.posts = []
         self.health_calls = []
+        self.health = {"status": "ok", "model": MODEL, "loaded": True, "max_context": 524288}
         owner = self
 
         class Handler(BaseHTTPRequestHandler):
@@ -41,7 +42,7 @@ class ManagedServingTests(unittest.TestCase):
 
             def do_GET(self):
                 owner.health_calls.append(self.path)
-                self.reply({"status": "ok"})
+                self.reply(owner.health)
 
             def do_POST(self):
                 body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
@@ -162,6 +163,104 @@ class ManagedServingTests(unittest.TestCase):
             result = self.bridge.load(MODEL, {"context": 524288})
         self.assertEqual(result["state"], "loaded")
         called.assert_called_once()
+
+    def test_idle_child_loss_is_failed_without_claiming_active_adapter_or_starting_work(self):
+        self.assertEqual(self.bridge.status(MODEL)["state"], "loaded")
+        self.health["loaded"] = False
+        with mock.patch.object(managed_serving.subprocess, "run") as run:
+            observed = self.bridge.status(MODEL)
+            self.assertEqual(observed["state"], "failed")
+            self.assertIn("stopped after reaching readiness", observed["error"])
+            self.assertIsNone(observed["active_adapter"])
+            self.assertIsNone(observed["pid"])
+            # The ready receipt remains evidence even after the daemon recreates
+            # its bridge. No process-local previously-loaded flag is required.
+            self.assertEqual(managed_serving.ManagedServing(self.root).status(MODEL)["state"], "failed")
+            with self.assertRaisesRegex(EngineError, "stopped after reaching readiness"):
+                with self.bridge.generate(MODEL, {"messages": []}):
+                    self.fail("Dead native engine was admitted")
+            run.assert_not_called()
+        self.assertEqual([], self.posts)
+
+    def test_startup_or_unproved_ready_identity_is_not_reported_as_engine_crash(self):
+        self.health["loaded"] = False
+        self.ready.unlink()
+        self.assertEqual(self.bridge.status(MODEL)["state"], "loading")
+        self.set_ready(model_state="loading")
+        self.assertEqual(self.bridge.status(MODEL)["state"], "loading")
+        self.set_ready()
+        self.service_state["MainPID"] = str(os.getpid() + 1)
+        self.assertEqual(self.bridge.status(MODEL)["state"], "loading")
+        self.service_state = dict(self.active)
+        self.service_state["ControlGroup"] = "/a-different-service"
+        self.assertEqual(self.bridge.status(MODEL)["state"], "loading")
+        self.assertEqual([], self.health_calls)
+
+    def test_health_must_confirm_exact_model_context_and_loaded_boolean(self):
+        original = dict(self.health)
+        for change in ({"model": "another-model"}, {"max_context": 8192},
+                       {"max_context": "524288"}, {"max_context": True},
+                       {"max_context": None}, {"loaded": "true"}, {"loaded": None},
+                       {"status": "starting"}):
+            self.health = {**original, **change}
+            with self.subTest(change=change):
+                observed = self.bridge.status(MODEL)
+                self.assertEqual(observed["state"], "failed")
+                self.assertIsNone(observed["active_adapter"])
+                with self.assertRaises(managed_serving.NativeHealthError):
+                    with self.bridge.generate(MODEL, {"messages": []}):
+                        self.fail("Mismatched engine was admitted")
+        self.health = ["not", "a", "health", "object"]
+        self.assertEqual(self.bridge.status(MODEL)["state"], "failed")
+        self.assertEqual([], self.posts)
+
+    def test_explicit_reload_settles_failed_owned_wrapper_before_start(self):
+        self.health["loaded"] = False
+        calls = []
+        def run(command, **kwargs):
+            calls.append(command)
+            self.assertEqual(command[:3], ["systemctl", "--user", command[2]])
+            self.assertEqual(command[3], UNIT)
+            if command[2] == "stop":
+                self.service_state = dict(self.inactive)
+            elif command[2] == "start":
+                self.service_state = dict(self.active)
+                self.health["loaded"] = True
+            else:
+                self.fail("Unexpected service action")
+            return subprocess.CompletedProcess(command, 0)
+        with mock.patch.object(managed_serving.subprocess, "run", side_effect=run):
+            observed = self.bridge.load(MODEL)
+        self.assertEqual([command[2] for command in calls], ["stop", "start"])
+        self.assertEqual(observed["state"], "loaded")
+        self.assertEqual(observed["context"], 524288)
+        self.assertEqual(observed["active_adapter"], "fixture-adapter")
+
+    def test_failed_reload_cannot_restart_over_surviving_owned_child(self):
+        self.health["loaded"] = False
+        (self.cgroup / "cgroup.procs").write_text("999\n")
+        def run(command, **kwargs):
+            self.assertEqual(command, ["systemctl", "--user", "stop", UNIT])
+            self.service_state = dict(self.inactive)
+            return subprocess.CompletedProcess(command, 0)
+        with mock.patch.object(managed_serving.subprocess, "run", side_effect=run) as called:
+            with self.assertRaisesRegex(EngineError, "still contains processes"):
+                self.bridge.load(MODEL)
+            called.assert_called_once()
+
+    def test_wrong_health_after_new_start_is_settled_before_failure_returns(self):
+        self.service_state = dict(self.inactive)
+        self.health["model"] = "another-model"
+        calls = []
+        def run(command, **kwargs):
+            calls.append(command)
+            self.assertEqual(command[3], UNIT)
+            self.service_state = dict(self.active if command[2] == "start" else self.inactive)
+            return subprocess.CompletedProcess(command, 0)
+        with mock.patch.object(managed_serving.subprocess, "run", side_effect=run):
+            with self.assertRaisesRegex(EngineError, "different model"):
+                self.bridge.load(MODEL)
+        self.assertEqual([command[2] for command in calls], ["start", "stop"])
 
     def test_inactive_independent_guard_blocks_load_without_service_action(self):
         self.service_state = dict(self.inactive)

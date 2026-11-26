@@ -23,6 +23,10 @@ from engine_profiles import EngineError, GPU_RTX, GPU_V100
 CGROUP_ROOT = Path("/sys/fs/cgroup")
 
 
+class NativeHealthError(EngineError):
+    """A proved ready, owned endpoint no longer serves its registered engine."""
+
+
 def verify_released_groups(unit, before, after):
     """Retain the pre-stop cgroup: systemd can clear ControlGroup on exit."""
     groups = {state.get("ControlGroup") for state in (before, after) if state.get("ControlGroup")}
@@ -167,7 +171,7 @@ class ManagedServing:
             ready = private_json(profile["ready_file"])
             pid = ready.get("pid")
             group = unit.get("ControlGroup")
-            if (type(pid) is not int or pid <= 1 or not group
+            if (type(pid) is not int or pid <= 1 or pid != int(unit["MainPID"]) or not group
                     or ready.get("model_id") != mid or ready.get("bound_port") != cfg["port"]
                     or ready.get("bound_host") != "127.0.0.1"
                     or ready.get("api_state") != "ready" or ready.get("model_state") != "ready"):
@@ -182,8 +186,30 @@ class ManagedServing:
             try:
                 conn.request("GET", "/health")
                 reply = conn.getresponse()
-                reply.read(65536)
-                return (cfg["port"], cfg["api_key"], pid) if reply.status == 200 else None
+                raw = reply.read(65537)
+                if reply.status != 200:
+                    raise NativeHealthError("The owned native endpoint failed its health check")
+                if len(raw) > 65536:
+                    raise NativeHealthError("The owned native health response exceeded its limit")
+                try:
+                    health = json.loads(raw)
+                except (ValueError, UnicodeError) as error:
+                    raise NativeHealthError("The owned native endpoint returned invalid health JSON") from error
+                if not isinstance(health, dict) or health.get("status") != "ok":
+                    raise NativeHealthError("The owned native endpoint did not confirm healthy status")
+                if health.get("model") != mid:
+                    raise NativeHealthError("The owned native health response identifies a different model")
+                context = health.get("max_context")
+                if type(context) is not int or context != int(self._arg(cfg, "--max-context")):
+                    raise NativeHealthError("The owned native health context differs from the registered context")
+                # Strata keeps its HTTP wrapper alive when the engine child dies.
+                # A matching ready receipt proves this exact wrapper had already
+                # reached model readiness; loaded=false is loss, not cold startup.
+                if health.get("loaded") is False:
+                    raise NativeHealthError("The owned native engine stopped after reaching readiness")
+                if health.get("loaded") is not True:
+                    raise NativeHealthError("The owned native endpoint did not confirm a loaded engine")
+                return cfg["port"], cfg["api_key"], pid
             finally:
                 conn.close()
         except (OSError, ValueError, KeyError, http.client.HTTPException):
@@ -193,15 +219,19 @@ class ManagedServing:
         spec = self.spec(mid)
         profile, cfg = self._profile(mid)
         unit = unit_state(profile["unit"])
-        connection = self._connection(mid, profile, cfg, unit)
+        health_error = None
+        try:
+            connection = self._connection(mid, profile, cfg, unit)
+        except NativeHealthError as error:
+            connection, health_error = None, str(error)
         state = "loaded" if connection else "loading" if unit.get("ActiveState") in ("activating", "active") else "unloaded"
-        if unit.get("ActiveState") == "failed":
+        if health_error or unit.get("ActiveState") == "failed":
             state = "failed"
         return {**spec, "state": state, "managed": True, "ownership": "dulche-managed-service",
                 "pid": connection[2] if connection else None,
                 "settings": self.validate_settings(mid, {}),
                 "active_adapter": profile.get("fixed_adapter") if connection else None,
-                "error": "The guarded service stopped: " + unit.get("Result", "unknown") if state == "failed" else None}
+                "error": health_error or ("The guarded service stopped: " + unit.get("Result", "unknown") if state == "failed" else None)}
 
     def validate_settings(self, mid, settings=None):
         spec = self.spec(mid)
@@ -217,11 +247,17 @@ class ManagedServing:
     def load(self, mid, settings=None):
         self.validate_settings(mid, settings)
         profile, _ = self._profile(mid)
-        if self.status(mid)["state"] == "loaded":
-            return self.status(mid)
+        observed = self.status(mid)
+        if observed["state"] == "loaded":
+            return observed
         for guard in profile["guard_units"]:
             if unit_state(guard).get("ActiveState") != "active":
                 raise EngineError("Required independent guard is not active: " + guard)
+        if observed["state"] == "failed" and unit_state(profile["unit"]).get("ActiveState") == "active":
+            # An explicit lifecycle load must settle the failed owned wrapper;
+            # systemctl start on an already-active unit would otherwise be a no-op.
+            # Automatic recover already calls this same unload in the controller.
+            self.unload(mid)
         # Type=simple acknowledges the actual start before returning. --no-block
         # can still expose the previous inactive state while the job is queued.
         try:
@@ -243,7 +279,8 @@ class ManagedServing:
             if row["state"] == "loaded":
                 return row
             if row["state"] not in ("loading",):
-                raise EngineError("The guarded native startup failed; inspect " + profile["unit"])
+                self.unload(mid)
+                raise EngineError(row.get("error") or "The guarded native startup failed; inspect " + profile["unit"])
             time.sleep(0.25)
         self.unload(mid)
         raise EngineError("The guarded native startup exceeded six minutes")
