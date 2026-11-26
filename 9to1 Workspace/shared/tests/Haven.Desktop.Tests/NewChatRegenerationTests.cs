@@ -44,7 +44,10 @@ public sealed partial class ChatCloudPermissionCallerTests
             await page.LoadConversationAsync(store.Conversation);
             await page.RefreshModelsAsync();
             page.SelectModel(model);
-            page.ConfigureRegisteredContext("REGISTRATION_CONTEXT", EffortLevel.High);
+            // This saved chat already admitted its route context before its first input.
+            // The public API correctly refuses to replace context after HasStarted.
+            typeof(NewChatPage).GetField("_registeredContextOverride", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(page, "REGISTRATION_CONTEXT");
+            typeof(NewChatPage).GetField("_effortOverride", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(page, EffortLevel.High);
             var prompts = (List<PromptDefinition>)typeof(NewChatPage).GetField("_activeInstructions", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page)!;
             prompts.Add(new(Guid.NewGuid(), "Preserved prompt", "", "prompt", "REGENERATION_PROMPT", true, false, true, DateTimeOffset.UtcNow));
             Assert.Equal("NEXT_DRAFT", page.ComposerInput.Text);
