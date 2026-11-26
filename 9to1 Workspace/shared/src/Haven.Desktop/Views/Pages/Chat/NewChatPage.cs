@@ -1519,7 +1519,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
     private Task SubmitCurrentInstructionAsync() => AdmitOriginalSendAsync();
 
-    private async Task SubmitCurrentInstructionOriginalBodyAsync(Conversation originalConversation, long originalGeneration, string originalInstruction)
+    private async Task SubmitCurrentInstructionOriginalBodyAsync(Conversation originalConversation, long originalGeneration, string originalInstruction,
+        OriginalResponseRegeneration? regeneration = null)
     {
         var instruction = originalInstruction;
         RequireChatOriginal().AllowsSourceContextTransition = false;
@@ -1533,7 +1534,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             return; // No Cancel/new Send or provider callback is a same-run continuation.
         }
         if (!await AwaitChatOriginalAsync(EnsureConversationMayActAsync("chat.send"))) return;
-        if (!CanUseSelectedModel)
+        if (regeneration is null && !CanUseSelectedModel)
         {
             _pendingInstruction = instruction;
             _pendingInstructionPreservesDraft = false;
@@ -1542,10 +1543,15 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         }
         // Exact admitted model snapshot: a held retry or a later degraded refresh must not
         // swap the admitted model mid-send across awaits.
-        var admittedModel = _selectedModel!;
+        var admittedModel = regeneration?.Model ?? _selectedModel!;
 
         if (_dual is { IsActive: true })
         {
+            if (regeneration is not null)
+            {
+                SetProjectionStatus("Turn off comparison before regenerating a saved response.");
+                return;
+            }
             if (originalConversation.IsTemporary)
             {
                 SetProjectionStatus("Temporary Chat comparison is unavailable. Turn off comparison to send privately.");
@@ -1580,8 +1586,9 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         // Both the accepted retirement and the attachment association use THIS snapshot, so a
         // newer draft typed or attached while the response streams is never retired or
         // mis-associated with an older user message.
-        var acceptedSend = CaptureOriginalAcceptedSend(draftOwner, sendRevision,
-            _composerInput.Text, _pendingAttachmentIds);
+        var acceptedSend = regeneration is null
+            ? CaptureOriginalAcceptedSend(draftOwner, sendRevision, _composerInput.Text, _pendingAttachmentIds)
+            : null; // Regeneration reuses persisted input and never consumes the composer draft.
         if (originalConversation.IsTemporary && (_attachedImages.Count != 0 || _attachedContext.Count != 0 ||
             _pendingAttachmentIds.Count != 0 || !_taskAttachments.IsEmpty))
             _temporaryAttachmentUse.TryAdd(originalConversation.Id, 0);
@@ -1591,6 +1598,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             // composer must still belong to the conversation that sent it: after a real
             // transition the unsent text stays durable in ITS OWN canonical draft instead of
             // being published into a different conversation's composer.
+            if (acceptedSend is null) return;
             if (Volatile.Read(ref _originalComposerRevision) != sendRevision) return;
             if (OriginalDraftInputOwner.Id != acceptedSend.Target.Id) return;
             RestoreUnsentOriginalInstruction(instruction);
@@ -1609,12 +1617,12 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() =>
         {
             DemandOriginalChatPublication();
-            _pendingInstruction = null;
+            if (regeneration is null) _pendingInstruction = null;
             _redoMessages.Clear();
-            // The send's own programmatic clear is NOT a user edit: it must not queue an autosave
-            // that deletes the canonical draft before the user message is actually accepted.
-            _originalSendInFlight = true;
-            PublishOriginalComposerText(string.Empty, placeCaretAtEnd: false);
+            // Only a new input consumes a draft. Regeneration owns a send, but leaves draft
+            // autosave and pending attachments active until the user explicitly sends them.
+            _originalSendInFlight = regeneration is null;
+            if (regeneration is null) PublishOriginalComposerText(string.Empty, placeCaretAtEnd: false);
             DemandOriginalChatPublication();
             _bus.Fire("Chat.Composer.Send.Click");
             DemandOriginalChatPublication();
@@ -1740,10 +1748,10 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                                null,
                                null,
                                null,
-                               _attachedImages.Count == 0 ? null : _attachedImages.ToArray(),
+                               regeneration is null ? (_attachedImages.Count == 0 ? null : _attachedImages.ToArray()) : regeneration.Images,
                                originalSendToken,
                                prompts: _activeInstructions.Select(item => new ActivePrompt(item.Name, item.IconKey, item.Persists, item.Instructions)).ToArray(),
-                               registeredContext: BuildRegisteredContext(),
+                               registeredContext: regeneration is null ? BuildRegisteredContext() : BuildRegisteredContext(regeneration.AttachmentContext),
                                generationOptions: _preferences.GenerationOptions,
                                filePermission: _preferences.FilePermission,
                                commandPermission: _preferences.CommandPermission,
@@ -1753,6 +1761,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                                    ? TaskRunExecutionIntent.CanonicalAgenticTask : TaskRunExecutionIntent.OrdinaryConversation,
                                userInputCommitted: async (committedInput, commitToken) =>
                                {
+                                   if (acceptedSend is null)
+                                       throw new InvalidOperationException("Regeneration must reuse its original input without committing a new user message.");
                                    // Genuine acceptance from the real owner of the actual writes:
                                    // retire exactly the consumed draft identity (a newer draft
                                    // typed or attached since is preserved) and record the message.
@@ -1772,11 +1782,12 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                                                    ConversationStateChanged?.Invoke(this, EventArgs.Empty);
                                            })).GetTask());
                                    }
-                               }), PublishOriginalStreamEventAsync).ConfigureAwait(false);
+                               }, expectedBranchId: regeneration?.BranchId,
+                               existingUserInput: regeneration?.UserInput), PublishOriginalStreamEventAsync).ConfigureAwait(false);
             }
             if (!_originalWork.IsRetiring)
                 await AwaitOriginalStreamPublicationAsync(FlushDeltasAsync());
-            if (!sendReportedFailure && committedUserMessageId is { } userMessageId && acceptedSend.Consumed.AttachmentIds.Length != 0)
+            if (!sendReportedFailure && committedUserMessageId is { } userMessageId && acceptedSend is { Consumed.AttachmentIds.Length: > 0 })
                 await AwaitChatOriginalAsync(AssociatePendingAttachmentsWithUserMessageAsync(userMessageId, acceptedSend, RequireChatOriginal().Token));
             // A refused preflight or a FAILED write after the presentation-only event never
             // owned a committed user message: keep the unsent text in the composer and in the
@@ -2577,34 +2588,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             content => ApplyMessageEditAsync(message, content, choice));
     }
 
-    private Task RegenerateResponseAsync(ChatMessage message, ResponseRegenerationMode requestedMode) => RunChatNestedOriginalAsync(() => RegenerateResponseOriginalBodyAsync(message, requestedMode));
-
-    private async Task RegenerateResponseOriginalBodyAsync(ChatMessage message, ResponseRegenerationMode requestedMode)
-    {
-        if (!MayOrganizeSavedChat("regenerate a saved response")) return;
-        if (!await AwaitChatOriginalAsync(EnsureConversationMayActAsync("chat.regenerate"))) return;
-        try
-        {
-            var index = _messages.FindIndex(item => item.Id == message.Id);
-            if (index < 0) return;
-            var precedingUser = _messages.Take(index).LastOrDefault(item => item.Role == MessageRole.User)
-                                ?? throw new InvalidOperationException("This response has no preceding user message.");
-            var latestAssistant = _messages.LastOrDefault(item => item.Role == MessageRole.Assistant);
-            var isLatest = latestAssistant?.Id == message.Id;
-            var mode = isLatest ? requestedMode : ResponseRegenerationMode.NewBranch;
-            await AwaitChatOriginalAsync(_versioning.PrepareRegenerationAsync(_conversation.Id, message.Id, isLatest, mode, RequireChatOriginal().Token));
-            var persisted = await AwaitChatOriginalAsync(_conversations.GetMessagesAsync(_conversation.Id, RequireChatOriginal().Token));
-            _messages.Clear();
-            _messages.AddRange(persisted);
-            RefreshMessages();
-            Submit(precedingUser.Content);
-        }
-        catch (Exception exception) when (exception is InvalidOperationException or IOException)
-        {
-            RetainHandledOriginalChatCause(exception);
-            SetProjectionStatus(exception.Message);
-        }
-    }
+    private Task RegenerateResponseAsync(ChatMessage message, ResponseRegenerationMode requestedMode) =>
+        AdmitOriginalSendAsync(message, requestedMode);
 
     private Task ApplyMessageEditAsync(ChatMessage message, string content, MessageEditChoice choice) => RunChatNestedOriginalAsync(() => ApplyMessageEditOriginalBodyAsync(message, content, choice));
 
@@ -2913,7 +2898,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         return allowed.Select(ActiveCapability.FromDefinition).ToArray();
     }
 
-    private string? BuildRegisteredContext()
+    private string? BuildRegisteredContext(IEnumerable<string>? attachmentContext = null)
     {
         var sections = new List<string>();
         if (!string.IsNullOrWhiteSpace(_registeredContextOverride)) sections.Add(_registeredContextOverride);
@@ -2924,7 +2909,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         }
         if (_taskAttachments.BuildAppContext() is { } appContext) sections.Add(appContext);
         if (_taskAttachments.BuildCapabilityContext() is { } capabilityContext) sections.Add(capabilityContext);
-        sections.AddRange(_attachedContext.Values.Where(item => !string.IsNullOrWhiteSpace(item)));
+        sections.AddRange((attachmentContext ?? _attachedContext.Values).Where(item => !string.IsNullOrWhiteSpace(item)));
         sections.Add(GenUiChatDirectiveParser.ModelInstructionFor(_chatGenerativeUiResponseModeOverride ?? GenerativeUiResponseMode.Auto));
         return sections.Count == 0 ? null : string.Join("\n\n", sections);
     }

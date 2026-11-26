@@ -1,6 +1,7 @@
 using System.Runtime.ExceptionServices;
 using System.Runtime.CompilerServices;
 using Avalonia.Threading;
+using Haven.Application;
 using Haven.Core;
 
 namespace Haven.Desktop.Views.Pages.Chat;
@@ -250,7 +251,9 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
         }, priority).GetTask();
     }
 
-    private Task AdmitOriginalSendAsync()
+    private Task AdmitOriginalSendAsync() => AdmitOriginalSendAsync(null, ResponseRegenerationMode.Here);
+
+    private Task AdmitOriginalSendAsync(ChatMessage? regenerationTarget, ResponseRegenerationMode regenerationMode)
     {
         lock (_originalSendGate)
         {
@@ -260,7 +263,9 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
             var generation = _originalPresentationGeneration;
             var instruction = _composerInput.Text.Trim();
             var returned = _originalWork.RunAsync(
-                original => SubmitCurrentInstructionOriginalBodyAsync(conversation, generation, instruction),
+                original => regenerationTarget is null
+                    ? SubmitCurrentInstructionOriginalBodyAsync(conversation, generation, instruction)
+                    : RegenerateResponseOriginalBodyAsync(conversation, generation, regenerationTarget, regenerationMode),
                 actual => _originalSend = actual);
             // This observation owns its actual task as well. The earlier send must unwind
             // before a pending NEW instruction can be admitted; no encompassing self-join.
