@@ -7,6 +7,7 @@ import struct
 import tempfile
 from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 from engine_profiles import (EngineError, apply_native_tuning, atomic_json,
                              native_config_identity, native_tuning_path,
@@ -143,6 +144,35 @@ class InferenceManagementTests(unittest.TestCase):
         with self.assertRaises(Fault) as failure:
             self.start()
         self.assertEqual(422, failure.exception.status)
+        self.assertEqual([], self.ctx.work)
+    def test_catalogue_lookup_refusal_preserves_other_model_capabilities(self):
+        external = "catalogue-only"
+        self.ctx.engines.observed[external] = {"id": external, "state": "external"}
+        original_spec = self.ctx.engines._spec
+        original_adapter = self.ctx.engines.adapter_capability
+        for failure in (EngineError("Unknown engine"), OSError("Source disappeared"),
+                        Fault(404, "Model is no longer registered")):
+            with self.subTest(failure=type(failure).__name__):
+                def spec(mid):
+                    if mid == external:
+                        raise failure
+                    return original_spec(mid)
+                def adapter(mid):
+                    self.ctx.engines._spec(mid)
+                    return original_adapter(mid)
+                with patch.object(self.ctx.engines, "_spec", spec), \
+                     patch.object(self.ctx.engines, "adapter_capability", adapter):
+                    caps = self.manager.capabilities()
+                rows = {row["id"]: row for row in caps["models"]}
+                self.assertEqual(set(self.ctx.engines.observed), set(rows))
+                self.assertTrue(caps["optimise"]["supported"])
+                self.assertTrue(caps["adapters"]["supported"])
+                self.assertTrue(rows["native-base"]["optimise"]["supported"])
+                self.assertTrue(rows["local-base"]["adapters"]["supported"])
+                for control in ("optimise", "adapters"):
+                    self.assertEqual({"supported": False, "reason": str(failure)},
+                                     rows[external][control])
+        self.assertEqual([], self.ctx.calls)
         self.assertEqual([], self.ctx.work)
     def test_context_reduction_rejected_and_duplicate_start_coalesced(self):
         with self.assertRaises(Fault):
@@ -322,6 +352,30 @@ class InferenceManagementTests(unittest.TestCase):
                                       {"binding_id": attached["items"][0]["binding_id"]})
         self.assertEqual((200, []), (status, detached["items"]))
         self.assertEqual([], self.ctx.calls)
+
+    def test_http_capabilities_include_catalogue_only_model_without_service_error(self):
+        external = "local-c1f51015c3da7bed0e122ff3"
+        self.ctx.engines.observed[external] = {"id": external, "state": "external"}
+        original_spec = self.ctx.engines._spec
+        original_adapter = self.ctx.engines.adapter_capability
+        def spec(mid):
+            if mid == external:
+                raise EngineError("Unknown engine model: " + mid)
+            return original_spec(mid)
+        def adapter(mid):
+            self.ctx.engines._spec(mid)
+            return original_adapter(mid)
+        with patch.object(self.ctx.engines, "_spec", spec), \
+             patch.object(self.ctx.engines, "adapter_capability", adapter):
+            status, caps = self.route("/v1/inference/capabilities")
+        self.assertEqual(200, status)
+        rows = {row["id"]: row for row in caps["models"]}
+        self.assertFalse(rows[external]["adapters"]["supported"])
+        self.assertIn(external, rows[external]["adapters"]["reason"])
+        self.assertTrue(rows["local-base"]["adapters"]["supported"])
+        self.assertTrue(rows["native-base"]["optimise"]["supported"])
+        self.assertEqual([], self.ctx.calls)
+        self.assertEqual([], self.ctx.work)
 
     def test_http_training_window_route_and_draining_gate_are_preserved(self):
         self.ctx.training_windows = SimpleNamespace(handle=lambda *args: (202, {"args": args}))

@@ -91,7 +91,12 @@ class InferenceManagement:
         method = getattr(self.ctx.engines, "adapter_capability", None)
         if not callable(method):
             return {"supported": False, "reason": "This engine has no qualified request-scoped LoRA loader."}
-        answer = method(mid)
+        try:
+            answer = method(mid)
+        except (EngineError, OSError, Fault) as exc:
+            # Discovery can include external or stale catalogue rows without a
+            # managed engine. Keep their refusal local to this model's controls.
+            return {"supported": False, "reason": str(exc)}
         if not isinstance(answer, dict) or answer.get("supported") is not True:
             return {"supported": False, "reason": (answer if isinstance(answer, dict) else {}).get("reason", "This backend cannot attach additional LoRA adapters.")}
         if answer.get("backend") != "llama.cpp":
@@ -159,7 +164,7 @@ class InferenceManagement:
     def _optimise_capability(self, mid):
         try:
             target = self._target(mid)
-        except (OSError, ValueError, KeyError, RuntimeError) as exc:
+        except (OSError, ValueError, KeyError, RuntimeError, Fault) as exc:
             return {"supported": False, "reason": str(exc)}
         for method in ("inference_maintenance", "run_inference_tuner"):
             if not callable(getattr(self.ctx, method, None)):

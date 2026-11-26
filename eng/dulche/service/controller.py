@@ -107,6 +107,7 @@ class Controller:
                     "state": "unloaded",
                     "engine": row.get("backend"),
                     "gpu": None,
+                    "serving_supported": False,
                 }
         with self.lock:
             self.cache = observed
@@ -124,6 +125,7 @@ class Controller:
                         "state": "unloaded",
                         "engine": rec.get("backend"),
                         "gpu": "CPU",
+                        "serving_supported": False,
                     }
                 except KeyError:
                     pass
@@ -157,7 +159,8 @@ class Controller:
                 "last_error": recovery.get("last_error"),
             }
             row["can_start"] = bool(
-                self.phase == "ready" and not opts.get("manual")
+                self.phase == "ready" and row.get("serving_supported") is not False
+                and not opts.get("manual")
                 and not opts.get("pressure") and not self.training_windows.reserved(mid)
                 and row["state"] in ("loaded", "unloaded", "failed", "loading", "resuming", "recovering")
                 and mid not in self.errors and not recovery.get("exhausted")
@@ -216,6 +219,8 @@ class Controller:
             if self.phase != "ready" and not (queued and self.phase == "draining"):
                 raise Fault(503, "The service is draining or stopping")
             row = self.model(mid)
+            if row.get("serving_supported") is False:
+                raise Fault(422, "This catalogue entry has no installed serving backend")
             if row["manual_suspended"]:
                 raise Fault(409, "Use Resume to clear manual suspension")
             if row["pressure_suspended"]:
