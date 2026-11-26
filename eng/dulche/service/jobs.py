@@ -17,6 +17,7 @@ import threading
 import time
 
 from state import Fault, identity
+from swarm_recipe_grants import authorize_recipe, recipe_digest
 
 
 TERMINAL = {"completed", "failed", "stopped", "checkpointed", "review"}
@@ -48,9 +49,12 @@ class RunStopReceipt:
 
 
 class Scheduler:
-    def __init__(self, state, engines, permitted, capacity):
+    def __init__(self, state, engines, permitted, capacity, *, admit=None, prepare=None, recover=None):
         self.state, self.engines = state, engines
         self.permitted, self.capacity = permitted, capacity
+        self.admit = admit or permitted
+        self.prepare_model = prepare
+        self.recover = recover
         self.cv = threading.Condition(state.lock)
         self.active = {}
         self.closing = False
@@ -110,10 +114,15 @@ class Scheduler:
             raise Fault(400, "Invalid idempotency key")
         if any(s["type"] == "recipe" for s in steps) and not key:
             raise Fault(400, "Development actions require an Idempotency-Key")
-        body = json.dumps(
-            request, sort_keys=True, separators=(",", ":"), allow_nan=False
-        )
         with self.cv, self.state.transaction() as db:
+            management = getattr(self.engines, "inference_management", None)
+            if management is not None:
+                request = {**request, "steps": [
+                    {**step, "payload": management.snapshot_request(model, step["payload"])}
+                    if step.get("type") == "generate" else dict(step)
+                    for step in request["steps"]
+                ]}
+            body = json.dumps(request, sort_keys=True, separators=(",", ":"), allow_nan=False)
             prior = db.execute(
                 "SELECT id,request FROM runs WHERE key=?", (key,)
             ).fetchone()
@@ -127,7 +136,7 @@ class Scheduler:
                 request.get("kind") != "chat" and self.state.get("stop_all", False)
             ):
                 raise Fault(409, "Agent admission is stopped")
-            self.permitted(model)
+            self.admit(model)
             queued = db.execute(
                 "SELECT COUNT(*) FROM runs WHERE state IN ('queued','running')"
             ).fetchone()[0]
@@ -175,6 +184,15 @@ class Scheduler:
             raise Fault(400, "Recipe must specify an absolute working directory")
         return recipe
 
+    def global_capacity(self, incoming):
+        # Preserve the separately qualified native worker/mentor configuration.
+        worker = "inkling-2-mini-strata-sq-10"
+        mentor = "local-2c31f26c4d698422017d6c14"
+        models = {incoming, *(a["model"] for a in self.active.values())}
+        if worker in models and models <= {worker, mentor}:
+            return max(4, min(32, self.capacity(worker) + (1 if mentor in models else 0)))
+        return 4
+
     def _dispatch(self):
         while True:
             with self.cv:
@@ -186,16 +204,28 @@ class Scheduler:
                     (time.time(),),
                 ).fetchall()
                 for row in tickets:
+                    if row["id"] in self.active:
+                        continue
                     model = row["model"]
                     if (
                         sum(a["model"] == model for a in self.active.values())
                         >= self.capacity(model)
-                        or len(self.active) >= 4
+                        or len(self.active) >= self.global_capacity(model)
                     ):
                         continue
                     try:
+                        if self.prepare_model is not None and not self.prepare_model(model):
+                            continue
                         self.permitted(model, queued=True)
-                    except Fault:
+                    except Fault as exc:
+                        if self.prepare_model is not None:
+                            # A blocked start must become a visible saved outcome, not an
+                            # indefinitely queued request. User suspension remains recoverable.
+                            self.state.db.execute(
+                                "UPDATE runs SET state='failed',reason=?,updated=? WHERE id=? AND state='queued'",
+                                (str(exc)[:1500], time.time(), row["id"]),
+                            )
+                            self.state.record(row["id"], -1, "error", {"message": str(exc)[:1500]})
                         continue
                     run = row["id"]
                     control = {
@@ -294,6 +324,8 @@ class Scheduler:
 
     def _publish(self, run, attempt, kind, value):
         with self.cv:
+            if kind == "chunks" and value and run in self.active:
+                self.active[run]["emitted"] = True
             self.state.record(run, attempt, kind, value)
             self.cv.notify_all()
 
@@ -302,9 +334,10 @@ class Scheduler:
             if control["cancel"].is_set():
                 raise Fault(409, "Execution interrupted")
             recipe = self._recipe(step["name"])
-            digest = hashlib.sha256(
-                json.dumps(recipe, sort_keys=True).encode()
-            ).hexdigest()
+            digest = recipe_digest(recipe)
+            request = self.state.status(run, full=True)["request"]
+            if request.get("kind") == "swarm":
+                authorize_recipe(self.state, request, step["name"], recipe)
             # Pin the operator-approved exact recipe at enqueue time, including its arguments.
             if step.get("recipe_hash") != digest:
                 raise Fault(409, "The registered recipe changed; approve a new run")
@@ -340,7 +373,7 @@ class Scheduler:
                 input_file.write(content.encode())
                 input_file.seek(0)
             if step.get("artifact") is not None:
-                req = self.state.status(run, full=True)["request"]
+                req = request
                 sid, tid = req.get("swarm_id"), req.get("task_id")
                 if (
                     step.get("artifact") is not True
@@ -451,9 +484,9 @@ class Scheduler:
         ):
             if isinstance(step, dict) and step.get("type") == "recipe":
                 recipe = self._recipe(step.get("name"))
-                step["recipe_hash"] = hashlib.sha256(
-                    json.dumps(recipe, sort_keys=True).encode()
-                ).hexdigest()
+                if request.get("kind") == "swarm":
+                    authorize_recipe(self.state, request, step["name"], recipe)
+                step["recipe_hash"] = recipe_digest(recipe)
         return request
 
     def _execute(self, run, control):
@@ -544,13 +577,36 @@ class Scheduler:
                     (time.time(), run),
                 )
         except Exception as exc:
+            recovery = False
+            # Generation is replayable only before any streamed chunk escaped. Tool/recipe
+            # steps retain their existing uncertain-action review and are never replayed here.
+            recover = getattr(self, "recover", None)
+            if (recover is not None and control.get("phase") == "inference"
+                    and not control["cancel"].is_set()):
+                try:
+                    recovery = bool(recover(control["model"], exc))
+                except Exception:
+                    pass  # Original generation error remains the saved cause.
             with self.cv:
-                self.state.db.execute(
-                    """UPDATE runs SET state=CASE WHEN reason='recipe dispatched' THEN 'review'
-                    ELSE 'failed' END,reason=?,updated=? WHERE id=? AND state='running'""",
-                    (str(exc)[:1500], time.time(), run),
-                )
-                self.state.record(run, -1, "error", {"message": str(exc)[:1500]})
+                prior_retries = self.state.get("run-recovery:" + run, 0)
+                retry = (recovery and not control.get("emitted")
+                         and prior_retries < 2 and not self.closing
+                         and not control["cancel"].is_set()
+                         and self.state.status(run)["state"] == "running")
+                if retry:
+                    self.state.set("run-recovery:" + run, prior_retries + 1)
+                    self.state.db.execute(
+                        "UPDATE runs SET state='queued',reason='Recovering inference',updated=? WHERE id=?",
+                        (time.time(), run),
+                    )
+                    self.state.record(run, -1, "recovery_pending", {"attempt": prior_retries + 1, "message": str(exc)[:1500]})
+                else:
+                    self.state.db.execute(
+                        """UPDATE runs SET state=CASE WHEN reason='recipe dispatched' THEN 'review'
+                        ELSE 'failed' END,reason=?,updated=? WHERE id=? AND state='running'""",
+                        (str(exc)[:1500], time.time(), run),
+                    )
+                    self.state.record(run, -1, "error", {"message": str(exc)[:1500], "model_recovering": recovery})
         finally:
             with self.cv:
                 self.active.pop(run, None)
@@ -640,7 +696,7 @@ class Scheduler:
                 return
             if info["state"] not in {"checkpointed", "stopped", "failed"}:
                 raise Fault(409, "This run cannot be resumed without review")
-            self.permitted(info["model"])
+            self.admit(info["model"])
             self.state.db.execute(
                 "UPDATE runs SET state='queued',reason=NULL,updated=? WHERE id=?",
                 (time.time(), run),

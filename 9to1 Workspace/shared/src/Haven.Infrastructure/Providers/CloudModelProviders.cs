@@ -430,7 +430,7 @@ public abstract class OpenAiCompatibleModelProviderBase(
     /// <summary>
     /// Builds tool messages from the currently available inputs.
     /// </summary>
-    internal static IReadOnlyList<object> BuildToolMessages(IReadOnlyList<OllamaToolTurn> messages, string? systemPrompt)
+    public static IReadOnlyList<object> BuildToolMessages(IReadOnlyList<OllamaToolTurn> messages, string? systemPrompt)
     {
         var result = new List<object>();
         if (!string.IsNullOrWhiteSpace(systemPrompt)) result.Add(new { role = "system", content = systemPrompt });

@@ -68,20 +68,24 @@ def run(record_path):
         "--alias",
         config["alias"],
     ]
+    draft = config.get("draft_tokens", 0)
+    if draft:
+        if config.get("alias") != "local-2c31f26c4d698422017d6c14" or draft not in (2,3,4):
+            raise ValueError("MTP profile identity/length mismatch")
+        args += ["--spec-type", "draft-mtp", "--spec-draft-n-max", str(draft),
+                 "--spec-draft-type-k", config["kv_type"], "--spec-draft-type-v", config["kv_type"]]
     runtime = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"))
     stop = threading.Event()
     for sig in (signal.SIGINT, signal.SIGTERM):
         signal.signal(sig, lambda *_: stop.set())
-    fd = os.open(
-        runtime / "dulche-v100-gguf.lock", os.O_CREAT | os.O_NOFOLLOW | os.O_RDWR, 0o600
-    )
-    with os.fdopen(fd, "r+") as lock:
-        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    from pooled_runtime import claim_devices
+    with claim_devices(["v100"], runtime_dir=runtime):
         if not _v100_guard() or _unit("astra-v100-inference.service").get(
             "ActiveState"
         ) in ("activating", "active"):
             raise RuntimeError("The V100 is unavailable or already allocated")
-        if _memory()["MemAvailable"] < 3072 * 1024:
+        host_floor_mib = 8192 if config.get("context", 0) > 32768 else 1536
+        if _memory()["MemAvailable"] < max(3072, host_floor_mib) * 1024:
             raise RuntimeError("Insufficient host RAM to stream model weights")
         env = {
             **os.environ,
@@ -105,7 +109,7 @@ def run(record_path):
                     raise RuntimeError(
                         "Observed V100 allocation exceeded the configured partial-residency limit"
                     )
-                if not reading or _memory()["MemAvailable"] < 1536 * 1024:
+                if not reading or _memory()["MemAvailable"] < host_floor_mib * 1024:
                     raise RuntimeError(
                         "Thermal telemetry, power or host memory guard closed admission"
                     )

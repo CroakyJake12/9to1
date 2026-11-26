@@ -92,6 +92,11 @@ class CycleTests(unittest.TestCase):
     def setUp(self):
         self.scratch = tempfile.TemporaryDirectory()
         self.addCleanup(self.scratch.cleanup)
+        # These protocol fixtures never inspect or change the host's real storage policy.
+        # Keep the artifact budget explicit even on runners without Linux PSI files.
+        disk = patch.object(jobs, "host_sample", return_value={"available_disk_bytes": 100 * jobs.GiB})
+        disk.start()
+        self.addCleanup(disk.stop)
         self.root = Path(self.scratch.name)
         self.now = 100.0
         f = artifact(

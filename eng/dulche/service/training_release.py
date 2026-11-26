@@ -21,6 +21,11 @@ def prepare(source, destination):
         "training_worker_client.py",
         "dulchectl.py",
         "engine_profiles.py",
+        "physical_admission.py",
+        "pooled_runtime.py",
+        "pooled_backend.py",
+        "pooled_budget.py",
+        "pooled_health.py",
     )
     custody = source / "custody"
     if not custody.is_dir():
@@ -51,9 +56,12 @@ def prepare(source, destination):
         subprocess.run(
             [
                 sys.executable,
+                "-I",
                 "-B",
                 "-c",
-                "import training_cycle, training_jobs; training_jobs.custody_path(); import custody.artifacts, custody.provenance",
+                "import sys; from pathlib import Path; sys.path.insert(0, str(Path.cwd())); "
+                "import training_cycle, training_jobs, physical_admission, pooled_runtime; "
+                "training_jobs.custody_path(); import custody.artifacts, custody.provenance",
             ],
             cwd=staging,
             check=True,

@@ -279,6 +279,11 @@ public sealed record ChatDelta(string? Content = null, string? Thinking = null);
 /// </summary>
 public sealed record GenerationOptions(double Temperature = 0.7, int ContextLimit = 32768, int ActionLimit = 24)
 {
+    /// <summary>Canonical selected AgentDefinition identity, captured for this send's
+    /// Specialist adapter selection. Null selects the model default; this grants no authority.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public Guid? SpecialistId { get; init; }
+
     /// <summary>Original current Home/Space policy guard; never serialized as authority.</summary>
     [System.Text.Json.Serialization.JsonIgnore]
     public IOriginalSpacePolicyDispatchGuard? OriginalSpacePolicy { get; init; }

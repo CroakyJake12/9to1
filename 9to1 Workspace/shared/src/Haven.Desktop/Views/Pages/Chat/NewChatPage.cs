@@ -1710,7 +1710,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                 var actualImages = _attachedImages.Count == 0 ? null : _attachedImages.ToArray();
                 var actualPrompts = _activeInstructions.Select(item => new ActivePrompt(item.Name, item.IconKey, item.Persists, item.Instructions)).ToArray();
                 var actualRegisteredContext = BuildRegisteredContext();
-                var actualGenerationOptions = _preferences.GenerationOptions;
+                var actualGenerationOptions = _preferences.GenerationOptions with { SpecialistId = _activeAgent?.Id };
                 var actualFilePermission = _preferences.FilePermission;
                 var actualCommandPermission = _preferences.CommandPermission;
                 var actualBrowserPermission = _preferences.BrowserPermission;
@@ -1755,7 +1755,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                                originalSendToken,
                                prompts: _activeInstructions.Select(item => new ActivePrompt(item.Name, item.IconKey, item.Persists, item.Instructions)).ToArray(),
                                registeredContext: regeneration is null ? BuildRegisteredContext() : BuildRegisteredContext(regeneration.AttachmentContext),
-                               generationOptions: _preferences.GenerationOptions,
+                               generationOptions: _preferences.GenerationOptions with { SpecialistId = _activeAgent?.Id },
                                filePermission: _preferences.FilePermission,
                                commandPermission: _preferences.CommandPermission,
                                browserPermission: _preferences.BrowserPermission,

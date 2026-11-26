@@ -11,7 +11,7 @@ import time
 from functools import lru_cache
 from pathlib import Path
 
-from engine_profiles import CPU, GPU_RTX, GPU_V100, PRIMARY, V100
+from engine_profiles import CPU, GPU_RTX, GPU_V100, PRIMARY, V100, INKLING, INKLING_POOL
 
 CACHE = {}
 LOCK = threading.Lock()
@@ -66,7 +66,9 @@ def configured_placement(model, settings=None, plan=None):
     gpu = settings.get("gpu") or model.get("gpu")
     layers = settings.get("gpu_layers")
     ceiling = settings.get("vram_ceiling_mib")
-    if mid == PRIMARY and gpu == GPU_RTX:
+    if mid == INKLING_POOL:
+        kind = "pooled_gpu_layers"
+    elif mid in (PRIMARY, INKLING) and gpu == GPU_RTX:
         kind = "native_strata_expert_cache"
     elif mid == V100 and gpu == GPU_V100:
         kind = "gpu_layer_offload"
@@ -90,6 +92,9 @@ def configured_placement(model, settings=None, plan=None):
         "source": "registered engine settings" if kind != "unknown" else None,
         "sampled_at": None,
     }
+    if mid == INKLING_POOL:
+        out.update(physical_devices=["rtx5080", "v100"], display_reserved_bytes=1_400_000_000,
+                   hard_reservation_supported=False)
     path = model.get("path")
     size = number(model.get("bytes"))
     if not size and isinstance(path, str) and not MULTIPART.search(path):
@@ -236,7 +241,16 @@ def model_placements(spec, actual, unit, rec, connection, read_json):
         and requested["kind"] != "unknown"
     ):
         port, key, _owner, pid = connection
-        if spec.get("id") == PRIMARY:
+        if spec.get("id") == INKLING_POOL:
+            runtime = actual.get("pool_runtime") or {}
+            if runtime.get("phase") == "running" and runtime.get("dual_allocations_observed") is True:
+                observation = {**requested, "evidence": "observed",
+                               "source": "UUID-pinned host and guest per-process NVML allocations",
+                               "sampled_at": runtime.get("observed_at"),
+                               "devices": (runtime.get("budget") or {}).get("devices", []),
+                               "budget": runtime.get("budget"),
+                               "evidence_note": "Both GPUs have attributable allocations; this does not by itself prove correlated compute or output quality."}
+        elif spec.get("id") in (PRIMARY, INKLING):
             cache_key = (
                 "strata",
                 spec["id"],

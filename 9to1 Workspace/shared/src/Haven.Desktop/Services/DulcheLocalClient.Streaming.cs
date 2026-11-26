@@ -93,7 +93,7 @@ public sealed partial class DulcheLocalClient
                 onChunk?.Invoke(chunk);
             }
         }
-        if (!done)
+        if (!done || string.IsNullOrWhiteSpace(finishReason))
             throw new EndOfStreamException("Dulche disconnected before completing generation. Inspect the saved run.");
         sw.Stop();
         return new DeveloperCompletionResult(

@@ -12,7 +12,6 @@ from pathlib import Path
 import secrets
 import socket
 import subprocess
-import sys
 import threading
 import time
 
@@ -21,7 +20,10 @@ from engine_profiles import (
     CPU,
     GPU_RTX,
     GPU_V100,
+    GPU_POOL,
     PRIMARY,
+    INKLING,
+    INKLING_POOL,
     V100,
     EngineError,
     EngineBusy,
@@ -30,8 +32,45 @@ from engine_profiles import (
     find_native_profile,
     load_json,
     prepare_native,
+    find_inkling_profile,
+    prepare_inkling,
     read_signature,
 )
+
+
+def _pool_chat_payload(model_id, payload):
+    """Use the same pooled chat framing for counting and generation."""
+    data = dict(payload)
+    if model_id != INKLING_POOL:
+        return data
+    template = data.get("chat_template_kwargs")
+    if data.get("reasoning_effort") == "none" or (
+        isinstance(template, dict) and template.get("enable_thinking") is False
+    ):
+        # Preserve either spelling of an explicit caller budget.
+        implicit_budget = "reasoning_budget_tokens" not in data and "thinking_budget_tokens" not in data
+        if implicit_budget:
+            data["reasoning_budget_tokens"] = 0
+        messages = data.get("messages")
+        tools_active = bool(data.get("tools")) and data.get("tool_choice") != "none"
+        # A zero budget can repeatedly close empty thinking blocks. Start an ordinary answer in its text block.
+        if (
+            implicit_budget
+            and "continue_final_message" not in data
+            and "add_generation_prompt" not in data
+            and not any(key in data for key in ("response_format", "grammar", "json_schema"))
+            and not tools_active
+            and isinstance(messages, list) and messages
+            and isinstance(messages[-1], dict) and messages[-1].get("role") == "user"
+            and isinstance(messages[-1].get("content"), str)
+        ):
+            # A typed empty text part is a continuation; an empty string is ignored by this backend.
+            data["messages"] = [*messages, {"role": "assistant", "content": [{"type": "text", "text": ""}]}]
+            data["continue_final_message"] = "content"
+            data["add_generation_prompt"] = False
+            # Close this final content block before the model can reopen an empty thinking block.
+            data.setdefault("stop", ["<|end_message|>"])
+    return data
 
 
 def _command(args, timeout=10, check=True):
@@ -74,6 +113,8 @@ def _unit(name):
             "Description",
             "-p",
             "InvocationID",
+            "-p",
+            "FreezerState",
         ],
         check=False,
     )
@@ -192,20 +233,21 @@ def _native_external():
 
 
 def _v100_guard():
+    from thermal_policy import runtime_core_limit
     try:
         state = load_json(Path.home() / "strata-run/thermal_guard_status.json")
         v = state["devices"]["v100"]
         reading = v["reading_full"]
         if (
             0 <= time.time() - state["ts"] < 6
-            and state["halted"] is False
             and v["telemetry_ok"] is True
             and v["stopped"] is False
+            and v.get("power_limit_verified") is True
             and reading.get("driver_ok") is True
             and reading.get("name") == "Tesla V100-PCIE-16GB"
             and reading.get("power_limit_active") == 165
             and isinstance(reading.get("temp"), (int, float))
-            and reading["temp"] < 68
+            and reading["temp"] < runtime_core_limit(v)
             and isinstance(reading.get("temp_mem"), (int, float))
             and reading["temp_mem"] < 67
         ):
@@ -229,6 +271,39 @@ class EngineManager:
         self.registry = self.root / "registrations.json"
         self.thread_lock = threading.RLock()
         self.catalog = None
+        self.managed = None
+        self.inference_management = None
+
+    def _managed_serving(self):
+        if self.managed is None:
+            from managed_serving import ManagedServing
+            self.managed = ManagedServing(self.root)
+        return self.managed
+
+    def adapter_capability(self, model_id):
+        """Only the qualified local llama.cpp launch accepts request-local GGUF adapters."""
+        if self._managed_serving().handles(model_id) or model_id in (PRIMARY, V100, INKLING, INKLING_POOL):
+            return {"supported": False, "reason": "This managed engine does not support attaching GGUF LoRA adapters"}
+        spec = self._spec(model_id)
+        current = self.status(model_id)
+        if current.get("gpu", spec.get("gpu")) != "CPU":
+            return {"supported": False, "reason": "Adapter loading is not qualified for this device profile"}
+        return {"supported": True, "backend": "llama.cpp"}
+
+    def _adapter_paths(self, model_id, device):
+        manager = self.inference_management
+        if manager is None:
+            return []
+        paths = manager.adapter_paths(model_id)
+        if not paths:
+            return []
+        if device != "CPU" or model_id in (PRIMARY, V100, INKLING, INKLING_POOL):
+            raise EngineError("The selected device profile cannot load these LoRA adapters")
+        if (not isinstance(paths, list) or len(paths) > 16
+                or any(not isinstance(path, str) or not Path(path).is_absolute() for path in paths)
+                or len(set(paths)) != len(paths)):
+            raise EngineError("Invalid managed adapter inventory")
+        return paths
 
     @contextlib.contextmanager
     def _change(self, physical=False):
@@ -263,7 +338,7 @@ class EngineManager:
             not isinstance(model_id, str)
             or not model_id
             or len(model_id) > 250
-            or model_id in (CPU, PRIMARY, V100)
+            or model_id in (CPU, PRIMARY, V100, INKLING, INKLING_POOL)
         ):
             raise EngineError("Invalid local model registration ID")
         real = read_signature(path)
@@ -299,6 +374,18 @@ class EngineManager:
         return self.status(model_id)
 
     def _spec(self, model_id):
+        managed = self._managed_serving()
+        if managed.handles(model_id):
+            return managed.spec(model_id)
+        if model_id == INKLING_POOL:
+            from pooled_engine import specification
+            return specification(self.root, self._record(model_id))
+        if model_id == INKLING:
+            path, cfg = find_inkling_profile(self.root)
+            args = cfg["args"]
+            return dict(id=INKLING, name="Inkling-2-Mini SQ-10 · native Strata (benchmark)", engine="Native Strata / Inkling-2-Mini",
+                        gpu=GPU_RTX, context=int(args[args.index("--max-context") + 1]), slots=cfg.get("parallel", 1),
+                        quantization="SQ-10", native_build="SQ-10", artifact_sha256="ac4d452ad03e4930abd9d46f9c5eec22b2f75a1da45a1e49bd24ccd58b065934", artifact_bytes=10471526400, source=str(path), path=args[args.index("--native") + 1], port=19042)
         _, model = dense_files()
         if model_id == PRIMARY:
             path, cfg = find_native_profile()
@@ -352,6 +439,10 @@ class EngineManager:
         )
 
     def _name(self, model_id):
+        if model_id == INKLING_POOL:
+            return f"dulche-pool-{self.tag}.service"
+        if model_id == INKLING:
+            return f"dulche-inkling-{self.tag}.service"
         if model_id == PRIMARY:
             return f"dulche-primary-{self.tag}.service"
         if model_id == V100:
@@ -375,13 +466,17 @@ class EngineManager:
                 .split("\0")
             )
             exe = (Path("/proc") / str(pid) / "exe").resolve()
-            if spec["id"] == PRIMARY:
+            if spec["id"] == INKLING_POOL:
+                from pooled_engine import owns, private_json
+                return ((Path("/proc") / str(pid)).stat().st_uid == os.getuid()
+                        and owns(self, unit, private_json(self._record(INKLING_POOL)), args, exe))
+            if spec["id"] in (PRIMARY, INKLING):
                 return (
                     exe.name == "python3.12"
                     and "serve.server" in args
                     and "--config" in args
                     and args[args.index("--config") + 1]
-                    == str(self.root / "strata-owned.json")
+                    == str(self.root / ("inkling-owned.json" if spec["id"] == INKLING else "strata-owned.json"))
                 )
             if spec["id"] == V100:
                 return exe.name == "node" and any(
@@ -410,7 +505,7 @@ class EngineManager:
                 and rec.get("path") == spec["path"]
                 and str(self.root / (self._name(spec["id"]) + ".key")) in args
             )
-        except (OSError, IndexError, ValueError):
+        except (OSError, IndexError, ValueError, EngineError):
             return False
 
     def _connection(self, spec, unit, rec, include_external=True):
@@ -418,7 +513,10 @@ class EngineManager:
         pid = int(unit.get("MainPID") or 0)
         port = rec.get("port", spec.get("port"))
         owned = port and self._owns(spec, unit, rec)
-        if owned and rec.get("gpu") == GPU_V100 and mid not in (PRIMARY, V100):
+        if owned and mid == INKLING_POOL:
+            from pooled_engine import connection
+            return connection(self, unit, rec, _members, _listener)
+        if owned and rec.get("gpu") == GPU_V100 and mid not in (PRIMARY, V100, INKLING):
             exe, _ = dense_files()
             for worker in _members(unit):
                 try:
@@ -429,16 +527,16 @@ class EngineManager:
                 except OSError:
                     continue
         if owned and _listener(pid, port):
-            if mid == PRIMARY:
+            if mid in (PRIMARY, INKLING):
                 return (
                     port,
-                    load_json(self.root / "strata-owned.json")["api_key"],
+                    load_json(self.root / ("inkling-owned.json" if mid == INKLING else "strata-owned.json"))["api_key"],
                     "dulche",
                     pid,
                 )
             if mid == V100:
                 return port, None, "astra-v100-service", pid
-            if mid not in (PRIMARY, V100) and rec.get("key"):
+            if mid not in (PRIMARY, V100, INKLING) and rec.get("key"):
                 return port, rec["key"], "dulche", pid
         if include_external and mid == PRIMARY:
             external = _native_external()
@@ -451,7 +549,12 @@ class EngineManager:
         unit = _unit(self._name(mid))
         p = self._record(mid)
         rec = load_json(p) if p.exists() else {}
-        connection = self._connection(spec, unit, rec)
+        parked = (
+            mid == PRIMARY
+            and unit.get("FreezerState") in ("frozen", "freezing")
+            and self._owns(spec, unit, rec)
+        )
+        connection = None if parked else self._connection(spec, unit, rec)
         actual = {
             **spec,
             "state": "unloaded",
@@ -462,21 +565,52 @@ class EngineManager:
         if connection:
             port, key, owner, pid = connection
             health = _payload(port, key=key)
-            match = health.get("status") == "ok" and (
-                (mid not in (PRIMARY, V100)) or health.get("model") == mid
+            native_unloaded = mid in (PRIMARY, INKLING) and health.get("loaded") is False
+            match = (
+                not native_unloaded
+                and health.get("status") == "ok"
+                and ((mid not in (PRIMARY, V100, INKLING)) or health.get("model") == mid)
             )
             actual.update(
-                state="loaded" if match else "loading",
+                state="unloaded"
+                if native_unloaded
+                else "loaded"
+                if match
+                else "loading",
                 managed=owner != "external-strata",
                 ownership=owner,
                 pid=pid,
                 base_url=f"http://127.0.0.1:{port}/v1",
             )
+            if mid == INKLING_POOL and match and rec.get("parallel", 1) > 1:
+                slots = _payload(port, path="/slots", key=key)
+                expected = rec["parallel"]
+                if (not isinstance(slots, list) or len(slots) != expected
+                        or any(not isinstance(slot, dict) or slot.get("n_ctx") != rec.get("context") for slot in slots)):
+                    actual.update(state="loading", detail="Waiting for verified pooled slot count and per-slot context")
+                else:
+                    actual["slots"] = actual["capacity"] = expected
+            if mid == INKLING and match and spec["slots"] > 1:
+                slots = _payload(port, path="/slots", key=key)
+                if (not isinstance(slots,list) or not slots or len(slots)>spec["slots"]
+                        or any(not isinstance(slot,dict) or type(slot.get("n_ctx")) is not int
+                               or not 512 <= slot["n_ctx"] <= spec["context"] for slot in slots)):
+                    actual.update(state="loading", detail="Waiting for native slot verification")
+                else:
+                    actual["slots"] = actual["capacity"] = len(slots)
+                    actual["context"] = min(slot["n_ctx"] for slot in slots)
             if mid == V100 and match:
                 actual["context"] = health["context_per_slot"]
                 actual["slots"] = actual["capacity"] = health["slots"]
-            if mid not in (PRIMARY, V100):
+            if mid not in (PRIMARY, V100, INKLING):
                 actual["context"] = rec.get("context", 32768)
+        elif parked:
+            actual.update(
+                state="unloaded",
+                managed=True,
+                pid=int(unit["MainPID"]),
+                resource_window_parked=True,
+            )
         elif unit.get("ActiveState") in ("activating", "active"):
             controlled = self._owns(spec, unit, rec)
             actual.update(
@@ -497,16 +631,20 @@ class EngineManager:
             actual["detail"] = (
                 "V100 VM, thermal telemetry and privileged passthrough must be restored before load."
             )
-        if mid not in (PRIMARY, V100):
+        if mid not in (PRIMARY, V100, INKLING):
             actual["context"] = rec.get("context", actual["context"])
-        if mid not in (PRIMARY, V100):
+        if mid not in (PRIMARY, V100, INKLING, INKLING_POOL):
             actual["gpu"] = rec.get("gpu", "CPU")
             actual["gpu_options"] = (
                 ["CPU", GPU_V100] if mid.startswith("local-") else ["CPU"]
             )
             if actual["gpu"] == GPU_V100:
                 actual["engine"] = "Lightning / llama.cpp RPC"
-        actual["profile"] = rec.get("profile", "verified")
+        if mid == INKLING_POOL:
+            from pooled_engine import observe
+            observe(actual, self, unit, rec)
+        actual["physical_devices"] = self.physical_devices(spec, actual)
+        actual["profile"] = rec.get("profile", "experimental" if mid == INKLING_POOL else "verified")
         actual["settings"] = {
             "profile": actual["profile"],
             "gpu": actual["gpu"],
@@ -514,13 +652,15 @@ class EngineManager:
             "quantization": spec["quantization"],
             "engine": actual["engine"],
         }
-        if mid not in (PRIMARY, V100):
-            actual["settings"]["threads"] = rec.get("threads", 4)
+        if mid not in (PRIMARY, V100, INKLING):
+            actual["settings"]["threads"] = rec.get("threads", spec.get("threads", 4))
             if actual["gpu"] == GPU_V100:
                 actual["settings"]["kv_type"] = rec.get("kv_type", "q8_0")
                 if rec.get("gpu_layers") is not None:
                     for k in ("gpu_layers", "vram_ceiling_mib"):
                         actual["settings"][k] = rec[k]
+                if rec.get("draft_tokens"):
+                    actual["settings"]["draft_tokens"] = rec["draft_tokens"]
                 reading = _v100_guard() if actual["state"] == "loaded" else {}
                 if reading and rec.get("baseline_v100_mib") is not None:
                     actual["observed_model_vram_mib"] = max(
@@ -530,18 +670,26 @@ class EngineManager:
                         "partial" if rec.get("gpu_layers") is not None else "gpu"
                     )
 
+        actual["adapter_paths"] = list(rec.get("adapter_paths", [])) if actual.get("managed") else []
         actual.update(model_placements(spec, actual, unit, rec, connection, _payload))
         return actual, connection, unit
 
     def status(self, model_id):
+        managed = self._managed_serving()
+        if managed.handles(model_id):
+            return managed.status(model_id)
         return self._observe(self._spec(model_id))[0]
 
     def models(self):
         result = []
         exe, cpu = dense_files()
-        ids = [PRIMARY, V100, CPU, *self._registered()]
-        for mid in ids:
+        managed = self._managed_serving()
+        ids = [PRIMARY, V100, CPU, INKLING, INKLING_POOL, *self._registered(), *managed.ids()]
+        for mid in dict.fromkeys(ids):
             try:
+                if managed.handles(mid):
+                    result.append(managed.status(mid))
+                    continue
                 spec = self._spec(mid)
                 if not Path(spec["path"]).is_file() and not self._record(mid).is_file():
                     continue
@@ -617,6 +765,7 @@ class EngineManager:
             "kv_type",
             "gpu_layers",
             "vram_ceiling_mib",
+            "draft_tokens",
         }
         if unknown:
             raise EngineError(
@@ -655,6 +804,13 @@ class EngineManager:
                 raise EngineError(
                     "A partial V100 profile needs gpu_layers and vram_ceiling_mib (512–16384)"
                 )
+        draft = settings.get("draft_tokens", 0)
+        if type(draft) is not int or draft not in (0, 2, 3, 4):
+            raise EngineError("Unsupported MTP draft length")
+        if draft and (spec["id"] != "local-2c31f26c4d698422017d6c14" or gpu != GPU_V100
+                      or settings.get("gpu_layers") not in range(16, 41)
+                      or settings.get("context") != 262144):
+            raise EngineError("MTP trial requires the pinned Qwen V100 mentor profile")
         kv = settings.get("kv_type")
         if kv is not None and (
             not spec["id"].startswith("local-")
@@ -667,10 +823,10 @@ class EngineManager:
         ).casefold() not in ("verified", "experimental"):
             raise EngineError("Unknown performance profile")
         ctx = settings.get("context", settings.get("context_length", spec["context"]))
-        threads = settings.get("threads", 4)
+        threads = settings.get("threads", spec.get("threads", 4))
         if type(ctx) is not int or type(threads) is not int:
             raise EngineError("Context and CPU thread count must be integers")
-        if spec["id"] in (PRIMARY, V100):
+        if spec["id"] in (PRIMARY, V100, INKLING):
             if ctx != spec["context"] or "threads" in settings:
                 raise EngineError(
                     "This verified device profile preserves its existing context and thread allocation"
@@ -686,6 +842,9 @@ class EngineManager:
 
     def count_prompt(self, model_id, messages, options=None):
         """Count a text-only swarm history without performing a generation."""
+        managed = self._managed_serving()
+        if managed.handles(model_id):
+            return managed.count_prompt(model_id, messages, options)
         if (
             not isinstance(messages, list)
             or not messages
@@ -722,7 +881,7 @@ class EngineManager:
             finally:
                 conn.close()
 
-        if model_id == PRIMARY:
+        if model_id in (PRIMARY, INKLING):
             system = "\n".join(m["content"] for m in messages if m["role"] == "system")
             body = {
                 "messages": [m for m in messages if m["role"] != "system"],
@@ -752,7 +911,7 @@ class EngineManager:
                 "margin_tokens": 32,
             }
         if model_id != V100:
-            rendered = post("/apply-template", {"messages": messages, **options}).get(
+            rendered = post("/apply-template", _pool_chat_payload(model_id, {"messages": messages, **options})).get(
                 "prompt"
             )
             if not isinstance(rendered, str):
@@ -788,6 +947,9 @@ class EngineManager:
         return self.validate_settings(model_id, {})
 
     def validate_settings(self, model_id, settings=None):
+        managed = self._managed_serving()
+        if managed.handles(model_id):
+            return managed.validate_settings(model_id, settings)
         spec = self._spec(model_id)
         ctx, threads = self._settings(spec, settings)
         result = {
@@ -795,14 +957,16 @@ class EngineManager:
             "gpu": spec["gpu"],
             "engine": spec["engine"],
             "quantization": spec["quantization"],
-            "profile": (settings or {}).get("profile", "verified").casefold(),
+            "profile": (settings or {}).get("profile", "experimental" if model_id == INKLING_POOL else "verified").casefold(),
         }
-        if model_id not in (PRIMARY, V100):
+        if model_id not in (PRIMARY, V100, INKLING):
             result["threads"] = threads
             result["gpu"] = (settings or {}).get("gpu", spec["gpu"])
             if result["gpu"] == GPU_V100:
                 result["engine"] = "Lightning / llama.cpp RPC"
                 result["kv_type"] = (settings or {}).get("kv_type", "q8_0")
+                if (settings or {}).get("draft_tokens"):
+                    result["draft_tokens"] = settings["draft_tokens"]
                 if "gpu_layers" in (settings or {}):
                     result["gpu_layers"] = settings["gpu_layers"]
                     result["vram_ceiling_mib"] = settings["vram_ceiling_mib"]
@@ -810,8 +974,14 @@ class EngineManager:
 
     def load(self, model_id, settings=None):
         with self._change(physical=True):
+            managed = self._managed_serving()
+            if managed.handles(model_id):
+                managed.validate_settings(model_id, settings)
+                if managed.status(model_id)["state"] not in ("loaded", "loading"):
+                    self._admit_devices(managed.spec(model_id), settings)
+                return managed.load(model_id, settings)
             spec = self._spec(model_id)
-            current, _, _ = self._observe(spec)
+            current, _, unit = self._observe(spec)
             # A resume without overrides restores the last admitted choices. An explicit profile switch
             # starts from that profile's protected defaults; the broker persists each named profile.
             requested = (
@@ -830,10 +1000,10 @@ class EngineManager:
                     spec,
                     ctx,
                     threads,
-                    requested.get("profile", "verified").lower(),
+                    requested.get("profile", "experimental" if model_id == INKLING_POOL else "verified").lower(),
                     requested,
                 )
-            deadline = time.monotonic() + (300 if model_id == PRIMARY else 150)
+            deadline = time.monotonic() + (300 if model_id in (PRIMARY, INKLING, INKLING_POOL) else 150)
             while time.monotonic() < deadline:
                 current, _, unit = self._observe(spec)
                 if current["state"] == "loaded":
@@ -844,16 +1014,38 @@ class EngineManager:
                         + self._name(model_id)
                     )
                 time.sleep(0.5)
+            if model_id == INKLING_POOL:
+                from pooled_engine import private_json, release
+                release(self, current, unit, private_json(self._record(model_id)),
+                        _command, _unit, _members)
             raise EngineError(
                 "Engine did not become ready within its startup deadline; inspect "
                 + self._name(model_id)
             )
+
+    @staticmethod
+    def physical_devices(spec, settings=None):
+        if spec["id"] == INKLING_POOL:
+            return ["rtx5080", "v100"]
+        gpu = (settings or {}).get("gpu", spec.get("gpu"))
+        return ["rtx5080"] if gpu == GPU_RTX else ["v100"] if gpu == GPU_V100 else []
+
+    def _admit_devices(self, spec, requested=None):
+        """Caller retains _change(physical=True) until the started owner is ready."""
+        from pooled_runtime import assert_devices_available
+        roles = self.physical_devices(spec, requested)
+        if roles:
+            try:
+                assert_devices_available(roles)
+            except RuntimeError as exc:
+                raise EngineBusy(str(exc)) from exc
 
     def _launch(self, spec, ctx, threads, profile, requested=None):
         mid = spec["id"]
         unit = self._name(mid)
         mem = _memory()
         device = (requested or {}).get("gpu", spec["gpu"])
+        self._admit_devices(spec, requested)
         if device == GPU_V100:
             active = _command(
                 [
@@ -878,7 +1070,7 @@ class EngineManager:
                         raise EngineBusy(
                             "Suspend the model currently using the V100 before switching"
                         )
-        if mid in (PRIMARY, V100):
+        if mid in (PRIMARY, V100, INKLING):
             atomic_json(self._record(mid), {"port": spec["port"], "profile": profile})
         if mid == V100:
             if (
@@ -914,11 +1106,24 @@ class EngineManager:
             "-p",
             "TimeoutStopSec=30s",
         ]
-        if mid == PRIMARY:
+        if mid == INKLING_POOL:
+            from pooled_engine import launch
+            return launch(self, spec, ctx, threads, profile, props, _command, _unit)
+        if mid in (PRIMARY, INKLING):
+            guard_unit = "dulche-v100-thermal.service"
+            guard_state = load_json(Path.home() / "strata-run/thermal_guard_status.json")
+            rtx = guard_state["devices"]["rtx5080"]
+            temperature = (rtx.get("reading_full") or {}).get("temp")
+            if (_unit(guard_unit).get("ActiveState") != "active"
+                    or not 0 <= time.time() - guard_state["ts"] < 5
+                    or rtx.get("telemetry_ok") is not True or rtx.get("stopped") is not False
+                    or type(temperature) not in (int, float) or not 0 <= temperature < 80):
+                raise EngineBusy("Native RTX inference requires the fresh, healthy independent thermal guard")
+            props += ["-p", "BindsTo=" + guard_unit, "-p", "After=" + guard_unit]
             # This profile's measured expert arena is ~55 GiB plus vision, host and engine buffers.
-            if mem["MemAvailable"] < 70 * 1024**2:
+            if mem["MemAvailable"] < (32 if mid == INKLING else 70) * 1024**2:
                 raise EngineBusy(
-                    "The saved Flash-Next load requires 70 GiB available host RAM"
+                    "Native Inkling requires 32 GiB available host RAM" if mid == INKLING else "The saved Flash-Next load requires 70 GiB available host RAM"
                 )
             active = _command(
                 [
@@ -929,6 +1134,7 @@ class EngineManager:
                     "--no-legend",
                     "--plain",
                     "dulche-primary-*.service",
+                    "dulche-inkling-*.service",
                 ],
                 check=False,
             ).stdout.strip()
@@ -939,12 +1145,12 @@ class EngineManager:
             with socket.socket() as sock:
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 try:
-                    sock.bind(("127.0.0.1", 18500))
+                    sock.bind(("127.0.0.1", spec["port"]))
                 except OSError as exc:
                     raise EngineBusy(
-                        "Primary port 18500 is occupied by another service"
+                        f"Native engine port {spec['port']} is occupied by another service"
                     ) from exc
-            _, config, control, interpreter, _ = prepare_native(self.root)
+            _, config, control, interpreter, _ = (prepare_inkling(self.root) if mid == INKLING else prepare_native(self.root))
             command = props + [
                 "-p",
                 f"WorkingDirectory={control}",
@@ -958,7 +1164,7 @@ class EngineManager:
                 "--host",
                 "127.0.0.1",
                 "--port",
-                "18500",
+                str(spec["port"]),
                 "--shutdown-timeout",
                 "15",
             ]
@@ -969,13 +1175,16 @@ class EngineManager:
                 raise EngineError(
                     "The installed llama.cpp CPU-capable executable was not found"
                 )
+            adapter_paths = self._adapter_paths(mid, device)
+            # F16 LoRA weights may expand to F32; retain the existing 3 GiB serving reserve.
+            adapter_bytes = 2 * sum(Path(path).stat().st_size for path in adapter_paths)
             plan = {}
             baseline = None
             layers = (requested or {}).get("gpu_layers")
             ceiling = (requested or {}).get("vram_ceiling_mib")
             if device == GPU_V100:
                 guest = _v100_guard()
-                if not guest or _unit("astra-v100-inference.service").get(
+                if not guest or guest["temp"] >= 68 or _unit("astra-v100-inference.service").get(
                     "ActiveState"
                 ) in ("active", "activating"):
                     raise EngineBusy(
@@ -1006,9 +1215,9 @@ class EngineManager:
                     raise EngineBusy(
                         "Insufficient V100 VRAM for the weights and minimum engine buffers"
                     )
-            elif mem["MemAvailable"] * 1024 < spec["bytes"] + 3 * 1024**3:
+            elif mem["MemAvailable"] * 1024 < spec["bytes"] + adapter_bytes + 3 * 1024**3:
                 raise EngineBusy(
-                    "Insufficient host RAM for this GGUF plus serving buffers"
+                    "Insufficient host RAM for this GGUF, selected LoRA adapters and serving buffers"
                 )
             with socket.socket() as sock:
                 sock.bind(("127.0.0.1", 0))
@@ -1018,12 +1227,14 @@ class EngineManager:
                 self._record(mid),
                 dict(
                     path=str(path),
+                    adapter_paths=adapter_paths,
                     gpu=device,
                     alias=mid,
                     gpu_layers=layers,
                     vram_ceiling_mib=ceiling,
                     baseline_v100_mib=baseline,
                     placement_plan=plan,
+                    draft_tokens=(requested or {}).get("draft_tokens", 0),
                     kv_type=(requested or {}).get("kv_type", "q8_0"),
                     port=port,
                     key=key,
@@ -1082,15 +1293,29 @@ class EngineManager:
                 "--api-key-file",
                 str(keyfile),
             ]
+            if adapter_paths:
+                for adapter in adapter_paths:
+                    command.extend(["--lora", adapter])
+                command.append("--lora-init-without-apply")
             if device == GPU_V100:
                 host_weights = plan.get("estimated_cpu_weight_mib", 0)
+                host_ceiling = host_weights + 2304
+                host_high = host_weights + 1856
+                if layers and ctx > 32768:
+                    from gguf_placement import long_context_host_ceiling
+                    host_ceiling = long_context_host_ceiling(path, ctx, (requested or {}).get("kv_type", "q8_0"))
+                    if (requested or {}).get("draft_tokens"):
+                        host_ceiling += 2048
+                    host_high = host_ceiling - 1024
+                    if mem["MemAvailable"] // 1024 < host_ceiling + 8192:
+                        raise EngineBusy("Long-context mentor requires its conservative RAM budget plus 8 GiB reserve")
                 command = props + [
                     "-p",
                     "Nice=8",
                     "-p",
-                    f"MemoryMax={host_weights + 2304}M",
+                    f"MemoryMax={host_ceiling}M",
                     "-p",
-                    f"MemoryHigh={host_weights + 1856}M",
+                    f"MemoryHigh={host_high}M",
                     "-p",
                     "MemorySwapMax=0",
                     "-p",
@@ -1106,8 +1331,16 @@ class EngineManager:
 
     def unload(self, model_id):
         with self._change(physical=True):
+            managed = self._managed_serving()
+            if managed.handles(model_id):
+                return managed.unload(model_id)
             spec = self._spec(model_id)
             current, conn, unit = self._observe(spec)
+            if model_id == INKLING_POOL:
+                from pooled_engine import private_json, release
+                record = self._record(model_id)
+                rec = private_json(record) if record.exists() else {}
+                return release(self, current, unit, rec, _command, _unit, _members)
             if current.get("ownership") == "external-strata":
                 raise EngineError(
                     "Strata Desktop owns this engine. Its own unload control is required to release its GPU memory."
@@ -1127,7 +1360,7 @@ class EngineManager:
                 spec, unit, load_json(recipe) if recipe.exists() else {}
             ):
                 raise EngineError("Cannot prove engine process ownership for unload")
-            before = _gpu_allocations() if model_id == PRIMARY else []
+            before = _gpu_allocations() if model_id in (PRIMARY, INKLING) else []
             owned = sum(mib for pid, _, mib in before if pid in pids)
             guest_before = _v100_guard() if current.get("gpu") == GPU_V100 else {}
             _command(["systemctl", "--user", "stop", self._name(model_id)], timeout=45)
@@ -1141,7 +1374,7 @@ class EngineManager:
                 )
             remaining = (
                 sum(mib for pid, _, mib in _gpu_allocations() if pid in pids)
-                if model_id == PRIMARY
+                if model_id in (PRIMARY, INKLING)
                 else 0
             )
             if current.get("gpu") == GPU_V100:
@@ -1174,6 +1407,13 @@ class EngineManager:
 
     @contextlib.contextmanager
     def generate(self, model_id, payload, stream=False, cancel_event=None):
+        managed = self._managed_serving()
+        if managed.handles(model_id):
+            if self.inference_management is not None:
+                payload = self.inference_management.prepare_request(model_id, payload)
+            with managed.generate(model_id, payload, stream, cancel_event) as response:
+                yield response
+            return
         spec = self._spec(model_id)
         status, conninfo, _ = self._observe(spec)
         if status["state"] != "loaded" or not conninfo:
@@ -1181,7 +1421,9 @@ class EngineManager:
                 "Selected engine is unavailable; load or resume it before generating"
             )
         port, key, _, _ = conninfo
-        data = {**payload, "model": model_id, "stream": bool(stream)}
+        if self.inference_management is not None:
+            payload = self.inference_management.prepare_request(model_id, payload)
+        data = _pool_chat_payload(model_id, {**payload, "model": model_id, "stream": bool(stream)})
         if cancel_event is not None and cancel_event.is_set():
             raise EngineError("Generation was cancelled")
         conn = http.client.HTTPConnection("127.0.0.1", port, timeout=1200)

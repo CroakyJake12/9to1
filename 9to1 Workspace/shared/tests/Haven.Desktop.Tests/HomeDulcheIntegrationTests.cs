@@ -21,6 +21,199 @@ namespace Haven.Desktop.Tests;
 public sealed class HomeDulcheIntegrationTests
 {
     [AvaloniaFact]
+    public async Task UnloadedModelStartsOnSendAndPreservesANewerComposerDraft()
+    {
+        var root = Directory.CreateTempSubdirectory("dulche-cold-send-");
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(12));
+        using var handler = new InferenceManagementHandler();
+        var client = new DulcheLocalClient(new UserPreferencesService(new Paths(root.FullName)), handler);
+        var page = new HomeDiscoverPage(new HomeDiscoverCatalog([]), null, null, client);
+        var window = new Window { Width = 1100, Height = 850, Content = page };
+        try
+        {
+            window.Show();
+            await page.ActivateAsync(timeout.Token);
+            T Named<T>(string name) where T : Control => page.GetVisualDescendants().OfType<T>().Single(c => AutomationProperties.GetName(c) == name);
+            Button ByText(string label) => page.GetVisualDescendants().OfType<Button>().Single(b => b.Content?.ToString() == label);
+            while (!ByText("Send").IsEnabled) await Task.Delay(10, timeout.Token);
+            Assert.Equal(0, handler.CompletionAttempts);
+            var prompt = Named<TextBox>("Dulche prompt");
+            prompt.Text = "First request";
+            ByText("Send").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            var submitted = await handler.Completion.Task.WaitAsync(timeout.Token);
+            Assert.Equal("one", submitted["model"]!.ToString());
+            Assert.Equal("First request", submitted["messages"]![0]!["content"]!.ToString());
+            Assert.Equal("First request", prompt.Text);
+            prompt.Text = "Keep this next request";
+            handler.ReleaseCompletion.TrySetResult();
+            while (Named<TextBlock>("Dulche response").Text != "Completed answer") await Task.Delay(10, timeout.Token);
+            while (!ByText("Send").IsEnabled) await Task.Delay(10, timeout.Token);
+            Assert.Equal("Keep this next request", prompt.Text);
+            Assert.Equal(1, handler.CompletionAttempts);
+            Assert.False(handler.Commands.Reader.TryRead(out _));
+        }
+        finally
+        {
+            handler.ReleaseCompletion.TrySetResult();
+            await page.CloseAndDrainAsync();
+            window.Close();
+            root.Delete(true);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task FailedColdSendKeepsTheOriginalPromptAndUnavailableControlsDisabled()
+    {
+        var root = Directory.CreateTempSubdirectory("dulche-cold-failure-");
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(12));
+        using var handler = new InferenceManagementHandler { FailCompletion = true, ManagementSupported = false };
+        var page = new HomeDiscoverPage(new HomeDiscoverCatalog([]), null, null,
+            new DulcheLocalClient(new UserPreferencesService(new Paths(root.FullName)), handler));
+        var window = new Window { Width = 1100, Height = 850, Content = page };
+        try
+        {
+            window.Show();
+            await page.ActivateAsync(timeout.Token);
+            T Named<T>(string name) where T : Control => page.GetVisualDescendants().OfType<T>().Single(c => AutomationProperties.GetName(c) == name);
+            Button ByText(string label) => page.GetVisualDescendants().OfType<Button>().Single(b => b.Content?.ToString() == label);
+            while (!ByText("Send").IsEnabled) await Task.Delay(10, timeout.Token);
+            Named<TextBox>("Dulche prompt").Text = "Retain the failed request";
+            ByText("Send").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await handler.Completion.Task.WaitAsync(timeout.Token);
+            handler.ReleaseCompletion.TrySetResult();
+            while (!ByText("Send").IsEnabled) await Task.Delay(10, timeout.Token);
+            Assert.Equal("Retain the failed request", Named<TextBox>("Dulche prompt").Text);
+            ByText("Manage models").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.False(ByText("Optimise inference").IsEnabled);
+            Assert.False(ByText("Attach adapter").IsEnabled);
+            Assert.Contains("unavailable", Named<TextBlock>("Inference management availability").Text);
+            Assert.Equal(1, handler.CompletionAttempts);
+        }
+        finally
+        {
+            handler.ReleaseCompletion.TrySetResult();
+            await page.CloseAndDrainAsync();
+            window.Close();
+            root.Delete(true);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task InferenceControlsPreserveCurrentContextAndObserveAdapterAndRollbackState()
+    {
+        var root = Directory.CreateTempSubdirectory("dulche-inference-controls-");
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+        using var handler = new InferenceManagementHandler();
+        var page = new HomeDiscoverPage(new HomeDiscoverCatalog([]), null, null,
+            new DulcheLocalClient(new UserPreferencesService(new Paths(root.FullName)), handler));
+        var window = new Window { Width = 1200, Height = 900, Content = page };
+        try
+        {
+            window.Show();
+            await page.ActivateAsync(timeout.Token);
+            T Named<T>(string name) where T : Control => page.GetVisualDescendants().OfType<T>().Single(c => AutomationProperties.GetName(c) == name);
+            Button ByText(string label) => page.GetVisualDescendants().OfType<Button>().Single(b => b.Content?.ToString() == label);
+            void Click(string label) => ByText(label).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            while (!ByText("Send").IsEnabled) await Task.Delay(10, timeout.Token);
+            Click("Manage models");
+            while (!ByText("Optimise inference").IsEnabled) await Task.Delay(10, timeout.Token);
+            while (Named<ComboBox>("Inference profiles").ItemCount != 1) await Task.Delay(10, timeout.Token);
+            Named<TextBox>("Profile context length").Text = "16384";
+            Click("Optimise inference");
+            var optimise = await handler.Commands.Reader.ReadAsync(timeout.Token);
+            Assert.Equal("/v1/models/one/optimise", optimise.Path);
+            Assert.Equal("start", optimise.Body["action"]!.ToString());
+            Assert.Equal(524288, optimise.Body["context_tokens"]!.GetValue<int>());
+            while (!ByText("Restore previous settings").IsEnabled) await Task.Delay(10, timeout.Token);
+            Assert.Contains("completed", Named<TextBlock>("Inference optimisation status").Text);
+            Click("Restore previous settings");
+            var restore = await handler.Commands.Reader.ReadAsync(timeout.Token);
+            Assert.Equal("restore", restore.Body["action"]!.ToString());
+            Assert.Equal("op-one", restore.Body["operation_id"]!.ToString());
+            while (!ByText("Attach adapter").IsEnabled) await Task.Delay(10, timeout.Token);
+            Named<TextBox>("LoRA adapter path").Text = "/fixtures/adapter.gguf";
+            Named<TextBox>("LoRA adapter scale").Text = "0.75";
+            Named<ComboBox>("LoRA adapter binding scope").SelectedItem = "Specialist";
+            Named<TextBox>("Canonical specialist ID for adapter binding").Text = "specialist:fixture";
+            Click("Attach adapter");
+            var attached = await handler.Commands.Reader.ReadAsync(timeout.Token);
+            Assert.Equal("/v1/models/one/adapters", attached.Path);
+            Assert.Equal("/fixtures/adapter.gguf", attached.Body["path"]!.ToString());
+            Assert.Equal(0.75, attached.Body["scale"]!.GetValue<double>());
+            Assert.Equal("specialist:fixture", attached.Body["specialist_id"]!.ToString());
+            while (!ByText("Detach selected adapter").IsEnabled) await Task.Delay(10, timeout.Token);
+            Assert.Contains("selected", Named<TextBlock>("LoRA adapter runtime status").Text);
+            Assert.DoesNotContain("Active in inference", Named<TextBlock>("LoRA adapter runtime status").Text);
+            Click("Detach selected adapter");
+            var detached = await handler.Commands.Reader.ReadAsync(timeout.Token);
+            Assert.Equal("/v1/models/one/adapters/detach", detached.Path);
+            Assert.Equal("binding-one", detached.Body["binding_id"]!.ToString());
+        }
+        finally
+        {
+            await page.CloseAndDrainAsync();
+            window.Close();
+            root.Delete(true);
+        }
+    }
+
+    private sealed class InferenceManagementHandler : HttpMessageHandler
+    {
+        public bool FailCompletion { get; init; }
+        public bool ManagementSupported { get; init; } = true;
+        public int CompletionAttempts { get; private set; }
+        public TaskCompletionSource<JsonNode> Completion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource ReleaseCompletion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public Channel<(string Path, JsonNode Body)> Commands { get; } = Channel.CreateUnbounded<(string, JsonNode)>();
+        private bool _attached;
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken token)
+        {
+            var path = request.RequestUri!.AbsolutePath;
+            if (path == "/v1/chat/completions")
+            {
+                CompletionAttempts++;
+                Completion.TrySetResult(JsonNode.Parse(await request.Content!.ReadAsStringAsync(token))!);
+                await ReleaseCompletion.Task.WaitAsync(token);
+                return FailCompletion
+                    ? new(HttpStatusCode.ServiceUnavailable) { Content = new StringContent("{\"error\":\"Model startup failed\"}", Encoding.UTF8, "application/json") }
+                    : new(HttpStatusCode.OK) { Content = new StringContent("data: {\"choices\":[{\"delta\":{\"content\":\"Completed answer\"}}]}\n\ndata: [DONE]\n\n", Encoding.UTF8, "text/event-stream") };
+            }
+            string data;
+            if (path == "/v1/status")
+                data = """{"phase":"ready","stop_all":false,"models":[{"id":"one","name":"Model One","state":"unloaded","can_start":true,"context":524288}],"agents":[],"resources":{}}""";
+            else if (path == "/v1/inference/capabilities")
+                data = JsonSerializer.Serialize(new { optimise = new { supported = ManagementSupported }, adapters = new { supported = ManagementSupported } });
+            else if (path == "/v1/models/one/optimise")
+            {
+                var body = JsonNode.Parse(await request.Content!.ReadAsStringAsync(token))!;
+                await Commands.Writer.WriteAsync((path, body), token);
+                data = body["action"]!.ToString() == "start"
+                    ? """{"id":"op-one","state":"queued","context_tokens":524288}"""
+                    : """{"id":"restore-one","state":"completed","message":"Previous settings restored"}""";
+            }
+            else if (path == "/v1/inference/operations/op-one")
+                data = """{"id":"op-one","state":"completed","rollback_available":true,"context_tokens":524288}""";
+            else if (path.StartsWith("/v1/models/one/adapters", StringComparison.Ordinal))
+            {
+                if (request.Method == HttpMethod.Post)
+                {
+                    var body = JsonNode.Parse(await request.Content!.ReadAsStringAsync(token))!;
+                    _attached = !path.EndsWith("/detach", StringComparison.Ordinal);
+                    await Commands.Writer.WriteAsync((path, body), token);
+                }
+                data = _attached
+                    ? """{"items":[{"binding_id":"binding-one","path":"/fixtures/adapter.gguf","scale":0.75,"specialist_id":"specialist:fixture","state":"selected","active":false}]}"""
+                    : """{"items":[]}""";
+            }
+            else if (path.EndsWith("/profiles", StringComparison.Ordinal))
+                data = """{"items":[{"id":"current","name":"Current","settings":{"context":524288}}]}""";
+            else data = "{}";
+            return new(HttpStatusCode.OK) { Content = new StringContent(data, Encoding.UTF8, "application/json") };
+        }
+    }
+
+    [AvaloniaFact]
     public async Task HomeModelsSelectsInstalledModelAndStreamsFromItsIndependentUnixSocket()
     {
         if (!OperatingSystem.IsLinux())

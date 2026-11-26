@@ -74,6 +74,28 @@
           <Input id="dulche-candidate" Type="Select" AccessibleName="Candidate checkpoints" IsVisible="{Binding CandidatesVisible, fallback=false}" />
           <Text id="dulche-benchmark-results" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
           <Input id="dulche-profile-settings" Type="Text" PlaceholderText="Profile settings as JSON" AccessibleName="GPU, context and inference profile settings" />
+          <Text Text="Inference performance" FontSize="18" FontWeight="700" Margin="0 8 0 0" />
+          <Text id="dulche-inference-support" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Inference management availability" />
+          <Container Type="Wrap" CellGap="8">
+            <Button id="dulche-optimise" Content="Optimise inference" AccessibleName="Optimise inference while preserving current context" />
+            <Button id="dulche-optimise-restore" Content="Restore previous settings" AccessibleName="Restore settings before the selected optimisation" />
+          </Container>
+          <Text Text="Optimisation keeps the selected model's current context. Progress and measured results appear below." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          <Text id="dulche-inference-operation" TextWrapping="Wrap" AccessibleName="Inference optimisation status" />
+          <Text Text="LoRA adapters" FontSize="18" FontWeight="700" Margin="0 8 0 0" />
+          <Container Type="Wrap" CellGap="8">
+            <Input id="dulche-adapter-path" Type="Text" Width="300" PlaceholderText="Absolute local adapter path" AccessibleName="LoRA adapter path" />
+            <Input id="dulche-adapter-scale" Type="Text" Width="90" PlaceholderText="Scale" AccessibleName="LoRA adapter scale" />
+            <Input id="dulche-adapter-scope" Type="Select" Width="150" AccessibleName="LoRA adapter binding scope" />
+          </Container>
+          <Input id="dulche-adapter-specialist" Type="Text" PlaceholderText="Canonical specialist ID" AccessibleName="Canonical specialist ID for adapter binding" IsVisible="{Binding SpecialistAdapterScope, fallback=false}" />
+          <Container Type="Wrap" CellGap="8">
+            <Button id="dulche-adapter-attach" Content="Attach adapter" />
+            <Button id="dulche-adapter-refresh" Content="Refresh adapters" />
+            <Input id="dulche-adapters" Type="Select" Width="300" AccessibleName="Attached LoRA adapters" />
+            <Button id="dulche-adapter-detach" Content="Detach selected adapter" />
+          </Container>
+          <Text id="dulche-adapter-status" TextWrapping="Wrap" AccessibleName="LoRA adapter runtime status" Foreground="{Resource CuiTextSoftBrush}" />
           <Text Text="Agents" FontWeight="700" />
           <Container Type="Wrap" CellGap="6">
             <Input id="dulche-agents" Type="Select" Width="250" AccessibleName="Dulche agents and saved runs" />

@@ -800,6 +800,18 @@ class TrainingJobs:
             return self._supervise(id)
 
     def _supervise(self, id):
+        from physical_admission import training_claim
+        saved = json_file(self.job(id) / "status.json")
+        with contextlib.ExitStack() as claims:
+            try:
+                claims.enter_context(training_claim(saved["device"]))
+            except Exception as exc:
+                saved.update(phase="failed", reason="Physical device admission failed: " + str(exc)[:400], ended_epoch=time.time())
+                atomic_json(self.job(id) / "status.json", saved)
+                raise
+            return self._supervise_claimed(id)
+
+    def _supervise_claimed(self, id):
         job = self.job(id)
         path = job / "status.json"
         s = json_file(path)

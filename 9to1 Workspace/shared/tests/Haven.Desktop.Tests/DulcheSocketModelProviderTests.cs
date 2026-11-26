@@ -75,7 +75,7 @@ public sealed class DulcheSocketModelProviderTests
 
         await Assert.ThrowsAsync<NotSupportedException>(() =>
             provider.ChatWithToolsAsync(new("reviewer", [], [], EffortLevel.Medium), token));
-        Assert.Equal(2, handler.Paths.Count);
+        Assert.Equal(3, handler.Paths.Count); // Rich requests recheck the current advertised capability.
     }
 
     [Theory]

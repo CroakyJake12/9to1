@@ -16,6 +16,13 @@ internal sealed partial class HomeDulchePanel
         string modelPath() => $"models/{Esc(model?.Id)}";
         switch (command)
         {
+            case "optimise":
+            case "optimise-restore":
+            case "adapter-attach":
+            case "adapter-detach":
+            case "adapter-refresh":
+                await ManageInferenceAsync(command, token);
+                return;
             case "find":
             case "installed":
                 var remote = command == "find";

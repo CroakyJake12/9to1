@@ -81,12 +81,21 @@ public sealed record DeveloperModelInfo(
     int ContextLength,
     int Slots,
     string? Engine,
-    string? Ownership)
+    string? Ownership,
+    bool? CanStart = null)
 {
     public bool IsLoaded => State.Equals("loaded", StringComparison.OrdinalIgnoreCase)
         || State.Equals("ready", StringComparison.OrdinalIgnoreCase)
         || State.Equals("running", StringComparison.OrdinalIgnoreCase)
         || State.Equals("active", StringComparison.OrdinalIgnoreCase);
+
+    // This is eligibility for the canonical request boundary, not proof of loading.
+    // An explicit daemon decision overrides legacy installed-state inference.
+    public bool IsAvailableForInference => IsLoaded || CanStart == true
+        || (CanStart is null && (State.Equals("installed", StringComparison.OrdinalIgnoreCase)
+            || State.Equals("unloaded", StringComparison.OrdinalIgnoreCase)
+            || State.Equals("stopped", StringComparison.OrdinalIgnoreCase)
+            || State.Equals("idle", StringComparison.OrdinalIgnoreCase)));
 }
 
 public sealed record DeveloperGpuTelemetry(

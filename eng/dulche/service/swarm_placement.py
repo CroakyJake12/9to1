@@ -5,6 +5,10 @@ import math
 from state import Fault
 
 LABELS = {
+    "pooled_gpu_layers": (
+        "pooled_cuda_rpc",
+        "llama.cpp · one model across RTX 5080 and V100",
+    ),
     "native_strata_expert_cache": (
         "strata_ram_experts",
         "Native Strata · host RAM expert arena and GPU expert cache",
@@ -35,7 +39,9 @@ def configured(model, settings):
         "unsloth-ud-iq4_xs",
         "qwen3.8-flash-next-unsloth-ud-iq4_xs",
     ) or arch in ("qwen4exp", "qwen35moe", "inkling2_loop", "hy4")
-    if "strata" in engine.lower() and native:
+    if model.get("id") == "inkling-2-mini-pooled-5080-v100":
+        kind = "pooled_gpu_layers"
+    elif "strata" in engine.lower() and native:
         kind = "native_strata_expert_cache"
     elif "llama" in engine.lower() or "lightning" in engine.lower():
         kind = (
@@ -74,6 +80,8 @@ def configured(model, settings):
         "estimated_gpu_weight_mib": None,
         "artifact_bytes": number(model.get("bytes")),
     }
+    if kind == "pooled_gpu_layers":
+        result["physical_devices"] = ["rtx5080", "v100"]
     for key in (
         "estimated_cpu_weight_mib",
         "estimated_gpu_weight_mib",
@@ -131,6 +139,9 @@ def participant_placement(ctx, p, name):
         "evidence_note": "No model-specific allocation measurement is available.",
     }
     placed = row.get("placement_observation") or {}
+    if live and placed.get("kind") == "pooled_gpu_layers" and placed.get("evidence") == "observed":
+        observed.update({key: placed.get(key) for key in
+                         ("kind", "source", "evidence", "sampled_at", "devices", "budget", "evidence_note")})
     if live and number(row.get("observed_model_vram_mib")) is not None:
         observed.update(
             model_vram_mib=row["observed_model_vram_mib"],

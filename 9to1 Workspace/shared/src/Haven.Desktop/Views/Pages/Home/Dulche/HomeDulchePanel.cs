@@ -30,6 +30,8 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
     private bool _active, _connected, _polling, _generating, _managing, _operating, _projects;
     private string? _loadedProfiles, _removeConfirmation, _inspectedRevision;
     private int _reads;
+    private long _promptRevision;
+    private bool _acceptingRequests;
     private Item? Model => Select("model").SelectedItem as Item;
     private SelectionSnapshot Epoch => new(Model?.Id, _reads);
     private readonly record struct SelectionSnapshot(string? Model, int Generation);
@@ -45,13 +47,13 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
         using var reader = new StreamReader(stream);
         var parser = new CuiRichParser();
         var document = parser.Parse(reader.ReadToEnd(), "Dulche.cui");
-        foreach (var id in new[] { "model", "results", "files", "profiles", "jobs", "agents", "candidate" })
+        foreach (var id in new[] { "model", "results", "files", "profiles", "jobs", "agents", "candidate", "adapters", "adapter-scope" })
             Mount(id, new ComboBox());
-        foreach (var id in new[] { "prompt", "search", "import-path", "import-base", "profile-name", "profile-settings", "profile-device", "profile-context", "filter-architecture", "filter-size", "filter-capability", "filter-quant" })
+        foreach (var id in new[] { "prompt", "search", "import-path", "import-base", "profile-name", "profile-settings", "profile-device", "profile-context", "filter-architecture", "filter-size", "filter-capability", "filter-quant", "adapter-path", "adapter-scale", "adapter-specialist" })
             Mount(id, new TextBox());
-        foreach (var id in new[] { "status", "detail", "output", "message", "catalog-detail", "resources", "benchmark-results" })
+        foreach (var id in new[] { "status", "detail", "output", "message", "catalog-detail", "resources", "benchmark-results", "inference-support", "inference-operation", "adapter-status" })
             Mount(id, new TextBlock());
-        foreach (var id in new[] { "toggle", "unload", "generate", "new", "manage", "swarm", "find", "installed", "inspect", "remove", "download", "import", "pause", "resume", "cancel", "profile-select", "profile-save", "profile-rename", "recover", "stop", "stop-all", "agent-resume", "allow", "benchmarks", "benchmark-start", "candidates", "training" })
+        foreach (var id in new[] { "toggle", "unload", "generate", "new", "manage", "swarm", "find", "installed", "inspect", "remove", "download", "import", "pause", "resume", "cancel", "profile-select", "profile-save", "profile-rename", "recover", "stop", "stop-all", "agent-resume", "allow", "benchmarks", "benchmark-start", "candidates", "training", "optimise", "optimise-restore", "adapter-attach", "adapter-detach", "adapter-refresh" })
         {
             var button = new Button();
             Mount(id, button);
@@ -65,7 +67,19 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
         Content = result.Root;
         _loader.WireBindings(result.Root);
         Select("candidate").SelectionChanged += (_, _) => ShowCandidate();
-        Select("model").SelectionChanged += (_, _) => { _reads++; _loadedProfiles = null; Render(); };
+        Select("model").SelectionChanged += (_, _) =>
+        {
+            _reads++;
+            _loadedProfiles = null;
+            ClearAdapterObservation();
+            Render();
+        };
+        Input("prompt").TextChanged += (_, _) => _promptRevision++;
+        Select("adapter-scope").ItemsSource = new[] { "Model", "Specialist" };
+        Select("adapter-scope").SelectedIndex = 0;
+        Select("adapter-scope").SelectionChanged += (_, _) => RenderInferenceManagement();
+        Select("adapters").SelectionChanged += (_, _) => RenderInferenceManagement();
+        Input("adapter-scale").Text = "1";
         Select("results").SelectionChanged += (_, _) => { _removeConfirmation = null; _inspectedRevision = null; Select("files").ItemsSource = Array.Empty<Item>(); ShowDetails(); };
         Select("profiles").SelectionChanged += (_, _) =>
         {
@@ -93,6 +107,17 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
     private static IEnumerable<JsonNode> Rows(JsonNode? node) => node is JsonArray array ? array.OfType<JsonNode>() : [];
     private static string ModelState(Item? item) => Value(item?.Data, "state").ToLowerInvariant();
     private static bool CanGenerate(string state) => state is "ready" or "loaded" or "running" or "active";
+    private static bool CanRequestInference(Item? item)
+    {
+        if (item is null) return false;
+        var state = ModelState(item);
+        if (item.Data["can_generate"] is JsonValue generate && generate.TryGetValue<bool>(out var allowed) && !allowed)
+            return false;
+        if (CanGenerate(state)) return true;
+        if (item.Data["can_start"] is JsonValue start && start.TryGetValue<bool>(out var canStart))
+            return canStart;
+        return state is "installed" or "unloaded" or "stopped" or "idle";
+    }
     private static (string Label, string? Action) Toggle(string state) => state switch
     {
         "ready" or "loaded" or "running" or "active" => ("Suspend", "suspend"),
@@ -110,12 +135,13 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
         State(_controls["toggle"], "Content", toggle.Label);
         State(_controls["benchmark-start"], "IsEnabled", _connected && !_operating && CanGenerate(state));
         State(_controls["toggle"], "IsEnabled", _connected && !_operating && toggle.Action is not null);
-        State(_controls["generate"], "IsEnabled", _connected && !_generating && CanGenerate(state));
+        State(_controls["generate"], "IsEnabled", _connected && _acceptingRequests && !_generating && !_operating && !HasActiveInferenceOperation && CanRequestInference(selected));
         State(_controls["unload"], "IsEnabled", _connected && !_operating && CanGenerate(state));
         State(_controls["new"], "IsEnabled", !_generating);
         State(_controls["model"], "IsEnabled", !_generating && !_operating);
         var data = selected?.Data;
         Text("detail", data is null ? "" : string.Join(" · ", new[] { Value(data, "engine"), Value(data, "gpu"), Value(data, "quantization"), state == "waiting_for_resources" ? "Suspended — Waiting for Resources" : state }.Where(v => v.Length > 0)));
+        RenderInferenceManagement();
     }
 
     internal void Activate()
@@ -160,6 +186,8 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
                 if (!_active || token.IsCancellationRequested)
                     return;
                 _connected = true;
+                _acceptingRequests = status["stop_all"]?.GetValue<bool>() != true &&
+                    Value(status, "phase") is "" or "ready";
                 var address = Model?.Id;
                 var models = Rows(status["models"]).Select(x => new Item(Value(x, "id"), Value(x, "name") is { Length: > 0 } name ? name : Value(x, "id"), x)).ToArray();
                 Replace("model", models, address);
@@ -172,6 +200,7 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
                     $"{Value(gpu, "name")} {Value(gpu, "used_mib")}/{Value(gpu, "total_mib")} MiB · {Value(gpu, "temperature_c")} °C");
                 Text("resources", string.Join("\n", devices));
                 Text("status", $"Connected · {models.Length} configured model{(models.Length == 1 ? "" : "s")}" + (free.Length > 0 ? $" · {free} MiB RAM available" : ""));
+                await RefreshInferenceManagementAsync(token);
                 if (_showSwarm)
                 {
                     try { await _swarm.RefreshAsync(status,token); }
@@ -281,15 +310,25 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
         switch (command)
         {
             case "generate":
-                if (model is null || !CanGenerate(ModelState(model)))
+                if (model is null || !_acceptingRequests || !CanRequestInference(model) || _operating || HasActiveInferenceOperation)
                     return;
+                var submittedDraft = Input("prompt").Text;
+                var submittedRevision = _promptRevision;
                 var prompt = Need("prompt");
                 var history = _histories.GetValueOrDefault(model.Id) ?? [];
                 var messages = history.Append(new Dictionary<string, string> { { "role", "user" }, { "content", prompt } }).ToList();
                 var answer = new StringBuilder();
                 Text("output", "");
-                Text("message", "Generating…");
-                await foreach (var delta in _client.StreamAsync(model.Id, messages, id => Text("message", "Run " + id), token))
+                Text("message", CanGenerate(ModelState(model)) ? "Generating…" : "Starting inference… Your message is retained while the model loads.");
+                await foreach (var delta in _client.StreamAsync(model.Id, messages, id =>
+                {
+                    // The socket transport invokes admission callbacks off the UI thread.
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        if (!_lifetime.IsCancellationRequested && _generating)
+                            Text("message", "Run " + id);
+                    });
+                }, token))
                 {
                     answer.Append(delta);
                     Text("output", answer.ToString());
@@ -298,7 +337,8 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
                     throw new IOException("The model returned no answer text.");
                 messages.Add(new() { { "role", "assistant" }, { "content", answer.ToString() } });
                 _histories[model.Id] = messages;
-                Input("prompt").Text = "";
+                if (_promptRevision == submittedRevision && string.Equals(Input("prompt").Text, submittedDraft, StringComparison.Ordinal))
+                    Input("prompt").Text = "";
                 Text("message", "Completed.");
                 return;
             case "toggle":

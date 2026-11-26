@@ -304,6 +304,15 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(
                 200, {"items": ctx.state.logs(int(q.get("after", [0])[0]))}
             )
+        if len(route) in (2, 3) and route[:2] == ["resources", "training-window"]:
+            code, data = ctx.training_windows.handle(
+                self.command, route[2] if len(route) == 3 else None, body, q
+            )
+            return self.send_json(code, data)
+        if get and route == ["inference", "capabilities"]:
+            return self.send_json(200, ctx.inference.capabilities())
+        if get and len(route) == 3 and route[:2] == ["inference", "operations"]:
+            return self.send_json(200, ctx.inference.operation(route[2]))
         if get and route == ["resources"]:
             return self.send_json(200, ctx.resources)
         if not get and route == ["resources", "requests"]:
@@ -365,6 +374,17 @@ class Handler(BaseHTTPRequestHandler):
                 )
             if len(route) == 2 and get:
                 return self.send_json(200, ctx.model(route[1]))
+            if len(route) >= 3 and route[2] in ("optimise", "adapters"):
+                if not get and ctx.phase != "ready":
+                    raise Fault(503, "Dulche is draining")
+                if not get and len(route) == 3 and route[2] == "optimise":
+                    return self.send_json(202, ctx.inference.optimise(route[1], body))
+                if len(route) == 3 and route[2] == "adapters":
+                    return self.send_json(200 if get else 201,
+                                          ctx.inference.adapters(route[1]) if get
+                                          else ctx.inference.attach(route[1], body))
+                if not get and len(route) == 4 and route[2:] == ["adapters", "detach"]:
+                    return self.send_json(200, ctx.inference.detach(route[1], body))
             if len(route) >= 3 and route[2] == "profiles":
                 if get and len(route) == 3:
                     return self.send_json(200, {"items": ctx.profiles(route[1])})

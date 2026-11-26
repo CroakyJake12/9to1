@@ -4,6 +4,7 @@
 import argparse
 import contextlib
 import fcntl
+import hashlib
 import json
 import os
 import socket
@@ -14,6 +15,7 @@ import time
 from pathlib import Path
 
 from engine_profiles import atomic_json
+from thermal_policy import active_cooling_rule
 from v100_authority import identity
 from v100_authority import request as authority
 
@@ -193,13 +195,24 @@ def stop_worker():
 def verify_stopped():
     if not owned_vm():
         return
-    r = sample()
-    need(r["util"] == 0, "V100 is still computing")
-    p = ssh("bash ~/strata/v100_worker_ctl.sh status worker", check=False)
-    need(
-        p.returncode == 10 and not ssh("ss -Hlt '( sport = :5555 )'").stdout.strip(),
-        "V100 RPC process is still active",
-    )
+    deadline = time.monotonic() + 7
+    last_ts = None
+    last_error = "V100 idle state was not proven"
+    while time.monotonic() < deadline:
+        try:
+            p = ssh("bash ~/strata/v100_worker_ctl.sh status worker", check=False, timeout=2)
+            need(p.returncode == 10 and not ssh("ss -Hlt '( sport = :5555 )'", timeout=2).stdout.strip(),
+                 "V100 RPC process is still active")
+            reading = sample()
+            need(reading["util"] == 0, "V100 is still computing")
+            if last_ts is not None and reading["ts"] > last_ts:
+                return
+            last_ts = reading["ts"]
+        except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as exc:
+            last_ts = None
+            last_error = str(exc)
+        time.sleep(0.25)
+    raise RuntimeError(last_error)
 
 
 def emergency_detach():
@@ -225,6 +238,27 @@ def other_guard():
     return False
 
 
+def guard_runtime(directory):
+    """Resolve the reviewed persistent sampler without depending on a transient unit."""
+    from pooled_runtime import read_private_json
+
+    source = read_private_json(directory / "thermal-guard-source.json")
+    need(source.get("schema") == "dulche-thermal-runtime/v1", "Unknown thermal runtime registration")
+    root = Path(source["directory"]).resolve(strict=True)
+    allowed = Path.home() / ".local/share/9to1/dulche-bridge"
+    need(root.is_relative_to(allowed.resolve(strict=True)), "Thermal runtime is outside its owned installation")
+    hashes = source.get("files", {})
+    need(set(hashes) == {"serve/__init__.py", "serve/telemetry.py", "serve/thermal_guard.py"},
+         "Thermal runtime manifest is incomplete")
+    for name, expected in hashes.items():
+        file = root / name
+        need(not file.is_symlink() and file.stat().st_uid == os.getuid()
+             and not file.stat().st_mode & 0o022
+             and hashlib.sha256(file.read_bytes()).hexdigest() == expected,
+             "Thermal runtime differs from its reviewed installation")
+    return root
+
+
 def start_guard(directory):
     if active(GUARD_UNIT):
         return
@@ -232,25 +266,33 @@ def start_guard(directory):
         not other_guard(),
         "Another thermal guard is already running, refusing concurrent status writers",
     )
-    config = json.loads((VM / "guard_run.json").read_text())
+    guard_cfg = directory / "v100-guard.json"
+    config = json.loads((guard_cfg if guard_cfg.exists() else VM / "guard_run.json").read_text())
+    need({row["id"] for row in config["devices"]} == {"rtx5080", "v100"}
+         and len(config["devices"]) == 2, "Thermal policy must identify both physical GPUs")
     rule = next(row for row in config["devices"] if row["id"] == "v100")
     need(
-        rule["stop_c"] <= 68
-        and rule["warn_c"] <= 60
+        ((rule["stop_c"] <= 68 and rule["warn_c"] <= 60) or active_cooling_rule(rule, "v100"))
         and rule["power_limit_w"] == 165
         and rule.get("allow_simulated") is False,
         "The prior V100 guard settings need inspection",
     )
+    rtx = next(row for row in config["devices"] if row["id"] == "rtx5080")
+    need(0 < rtx["warn_c"] < rtx["stop_c"] <= 80
+         and rtx.get("allow_simulated") is False and not rtx.get("standby_file"),
+         "The prior RTX thermal policy needs inspection")
+    runtime = guard_runtime(directory)
     for row in config["devices"]:
+        helper = SCRIPT.with_name("native_guard.py" if row["id"] == "rtx5080" else "pooled_guard.py")
+        need(helper.is_file(), "The per-device thermal stop helper is unavailable")
         row.update(
             stop_url=None,
-            stop_cmd=[sys.executable, str(SCRIPT), "stop-worker"],
-            verify_cmd=[sys.executable, str(SCRIPT), "verify-stopped"],
-            kill_cmd=[sys.executable, str(SCRIPT), "emergency-detach"],
+            stop_cmd=["/usr/bin/python3", str(helper), "stop"],
+            verify_cmd=["/usr/bin/python3", str(helper), "verify"],
+            kill_cmd=["/usr/bin/python3", str(helper), "kill"],
         )
     config["status_file"] = str(GUARD)
     config["log"] = str(GUARD.parent / "thermal_events.jsonl")
-    guard_cfg = directory / "v100-guard.json"
     atomic_json(guard_cfg, config)
     run(
         [
@@ -263,8 +305,13 @@ def start_guard(directory):
             "-p",
             "Restart=no",
             "-p",
-            "WorkingDirectory=" + str(STRATA),
-            sys.executable,
+            "WorkingDirectory=" + str(runtime),
+            "-p",
+            "WatchdogSec=20s",
+            "-p",
+            "NotifyAccess=main",
+            "/usr/bin/python3",
+            "-B",
             "-m",
             "serve.thermal_guard",
             "--config",
@@ -410,6 +457,16 @@ def boot_guest(progress):
     )
 
 
+def guard_command_matches(argv, config_path):
+    """Recognize only the maintained module command and its no-bytecode variant."""
+    tail = list(argv[1:])
+    if tail[:1] == [b"-B"]:
+        tail = tail[1:]
+    return tail == [
+        b"-m", b"serve.thermal_guard", b"--config", os.fsencode(config_path)
+    ]
+
+
 def detached_guard_ready(directory):
     """Only the identified live guard may stand by for its detached V100, with RTX supervision intact."""
     config_path = (directory / "v100-guard.json").resolve(strict=True)
@@ -422,20 +479,27 @@ def detached_guard_ready(directory):
     need(
         pid > 1
         and proc.stat().st_uid == os.getuid()
-        and (proc / "cmdline").read_bytes().split(b"\0")[1:5]
-        == [b"-m", b"serve.thermal_guard", b"--config", os.fsencode(config_path)],
+        and (proc / "exe").resolve() == Path("/usr/bin/python3").resolve()
+        and guard_command_matches(
+            (proc / "cmdline").read_bytes().rstrip(b"\0").split(b"\0"),
+            config_path,
+        ),
         "Unverified live watchdog identity",
     )
     cfg = json.loads(config_path.read_text())
     rules = {r["id"]: r for r in cfg["devices"]}
     rtx, v100 = rules["rtx5080"], rules["v100"]
+    # Reuse an active guard only within the operator's persisted RTX-specific limit.
+    # The independently enforced V100 limits remain fixed below.
+    saved_rules = json.loads((VM / "guard_run.json").read_text())["devices"]
+    saved_rtx = next(row for row in saved_rules if row["id"] == "rtx5080")
     need(
         not rtx.get("standby_file")
-        and rtx["stop_c"] <= 68
-        and rtx["warn_c"] <= 60
+        and 0 < rtx["stop_c"] <= min(80, saved_rtx["stop_c"])
+        and (rtx["warn_c"] <= 60 or active_cooling_rule(rtx, "rtx5080"))
         and rtx.get("allow_simulated") is False
         and v100.get("allow_simulated") is False
-        and v100["stop_c"] <= 68
+        and (v100["stop_c"] <= 68 or active_cooling_rule(v100, "v100"))
         and v100["power_limit_w"] == 165
         and Path(v100["standby_file"]) == STANDBY
         and Path(cfg["status_file"]) == GUARD,
@@ -448,7 +512,7 @@ def detached_guard_ready(directory):
         abs(time.time() - status["ts"]) < 5
         and live["telemetry_ok"]
         and live["stopped"] is False
-        and not live["warned"]
+        and (not live["warned"] or live["reading_full"]["temp"] < rtx["warn_c"] - rtx["clear_c"])
         and live["reading_full"]["driver_ok"] is True
         and live["reading_full"]["temp"] < rtx["warn_c"]
         and detached["stopped"] is True
@@ -458,7 +522,7 @@ def detached_guard_ready(directory):
         and authority("status").get("driver") is None,
         "Handoff requires an idle, cool RTX and a halted, physically detached V100 with no telemetry",
     )
-    return pid, rtx["warn_c"]
+    return pid, min(60, rtx["warn_c"] - (rtx["clear_c"] if live["warned"] else 0))
 
 
 def rtx_temperature(limit):
@@ -593,7 +657,7 @@ def detached_boot_standby(directory, progress):
         monitor_thread.join(timeout=4)
 
 
-def up(directory):
+def up(directory, *, start_worker=True):
     # Obtaining status is read-only. No guest, binding or service changes occur without the approved broker.
     authority("status")
     assets()
@@ -618,6 +682,14 @@ def up(directory):
     safe_sensor()
     guarded()
     need(not STANDBY.exists(), "V100 is in operator standby")
+    if not start_worker:
+        return {
+            "ready": True,
+            "scope": "V100 guest transport; RPC remains under the caller's lifecycle control",
+            "pci": "0000:05:00.0",
+            "rpc": "127.0.0.1:19110",
+            "reading": sample(),
+        }
     rc = ssh("bash ~/strata/v100_worker_ctl.sh status worker", check=False).returncode
     need(rc in (0, 10), "Guest worker ownership is uncertain")
     if rc == 10:
@@ -638,6 +710,27 @@ def up(directory):
     }
 
 
+@contextlib.contextmanager
+def cli_physical_admission():
+    """Serialize standalone recovery with Dulche admission; fault stops stay available.
+
+    EngineManager calls up() while holding this lock itself. Only the standalone
+    CLI takes it here, so an imported recovery cannot deadlock its caller.
+    """
+    from pooled_runtime import assert_devices_available
+
+    runtime = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"))
+    directory = runtime / "dulche-engine-admission"
+    directory.mkdir(mode=0o700, exist_ok=True)
+    need(not directory.is_symlink() and directory.stat().st_uid == os.getuid(),
+         "Physical admission directory is not owned")
+    fd = os.open(directory / "resource.lock", os.O_CREAT | os.O_NOFOLLOW | os.O_RDWR, 0o600)
+    with os.fdopen(fd, "a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        assert_devices_available(("v100",), runtime_dir=runtime)
+        yield
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -655,7 +748,7 @@ def main():
             / "engines"
         )
         directory.mkdir(mode=0o700, parents=True, exist_ok=True)
-        with (directory / "v100-recovery.lock").open("a") as lock:
+        with cli_physical_admission(), (directory / "v100-recovery.lock").open("a") as lock:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             print(json.dumps(up(directory)))
     elif args.action == "stop-worker":

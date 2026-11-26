@@ -419,7 +419,7 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
         var current = RequireMission();
         var modelId = current.WorkerModelId ?? throw new InvalidOperationException("No worker model selected.");
         var status = await ReadModelStatusAsync(cancellationToken).ConfigureAwait(false);
-        var worker = RequireLoadedModel(status, modelId, "worker");
+        var worker = RequireInferenceModel(status, modelId, "worker");
         var (_, tokens, epoch) = await _context.BuildWorkingContextAsync(
             current,
             WorkerSystemPrompt,
@@ -454,11 +454,11 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
         var current = RequireMission();
         DemandNoUnconfirmedCompletion(current);
         var modelId = current.SupervisorModelId ?? current.WorkerModelId
-            ?? throw new InvalidOperationException("No Dulche model is loaded for delegation.");
+            ?? throw new InvalidOperationException("No Dulche model is selected for delegation.");
 
         var status = await ReadModelStatusAsync(cancellationToken).ConfigureAwait(false);
         DulcheUnixSocketGateway.DemandHardwareSafeguards(status, _options.MemoryFloorMiB, _options.DiskFloorGiB);
-        var model = RequireLoadedModel(status, modelId, "delegation");
+        var model = RequireInferenceModel(status, modelId, "delegation");
 
         var runId = "del-" + Guid.NewGuid().ToString("N")[..10];
         var startedAt = DateTimeOffset.UtcNow;
@@ -645,7 +645,7 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
                 }
 
                 // 3) Execute one autonomous developer turn for the active task.
-                var activeWorker = RequireLoadedModel(status, worker, "worker");
+                var activeWorker = RequireInferenceModel(status, worker, "worker");
                 TransitionMissionState(DeveloperAutonomousMissionState.Implementing);
                 var taskFinished = await ExecuteWorkerTurnAsync(activeWorker, cancellationToken).ConfigureAwait(false);
 
@@ -1279,7 +1279,7 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
         var reviewer = current.SupervisorModelId ?? workerModelId;
         var status = await ReadModelStatusAsync(cancellationToken).ConfigureAwait(false);
         DulcheUnixSocketGateway.DemandHardwareSafeguards(status, _options.MemoryFloorMiB, _options.DiskFloorGiB);
-        var reviewerModel = RequireLoadedModel(status, reviewer, "supervisor");
+        var reviewerModel = RequireInferenceModel(status, reviewer, "supervisor");
         var bindingDigest = ComputeReviewBindingDigest(task);
 
         var reviewPayload = JsonSerializer.Serialize(new
@@ -1495,6 +1495,34 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
         DeveloperCompletionRequest request,
         CancellationToken cancellationToken)
     {
+        var result = await StreamModelCoreAsync(role, request, cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (string.Equals(result.FinishReason, "stop", StringComparison.OrdinalIgnoreCase))
+            return result;
+
+        // A terminal transport receipt can still represent an incomplete reply. Never
+        // execute partial JSON or accept a partial review, even when it happens to parse.
+        var current = RequireMission();
+        var receiptName = "model-output-incomplete-" + Guid.NewGuid().ToString("N");
+        _store.SaveReceipt(current.MissionId, receiptName, new
+        {
+            role,
+            taskId = current.ActiveTask?.TaskId,
+            request.Objective,
+            completion = result,
+            accepted = false
+        });
+        var message = $"Dulche model '{request.ModelId}' ended with '{result.FinishReason}' instead of a complete reply. "
+            + $"No action or review was applied. Partial output is retained in receipt '{receiptName}'; retry with a shorter response or a suitable output budget.";
+        RecordEvent("model_output_incomplete", message, current.ActiveTask?.TaskId, request.ModelId, receiptName);
+        throw new InvalidDataException(message);
+    }
+
+    private async Task<DeveloperCompletionResult> StreamModelCoreAsync(
+        DeveloperAgentRole role,
+        DeveloperCompletionRequest request,
+        CancellationToken cancellationToken)
+    {
         using var idle = new CancellationTokenSource();
         using var streamCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, idle.Token);
         var ended = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -1679,16 +1707,17 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
         string? preferredWorker,
         string? preferredSupervisor)
     {
-        var loaded = status.Models.Where(m => m.IsLoaded).ToArray();
+        var eligible = status.Models.Where(m => m.IsAvailableForInference).ToArray();
         var workerId = !string.IsNullOrWhiteSpace(preferredWorker)
             ? preferredWorker.Trim()
-            : loaded.OrderByDescending(m => m.Id.Contains("flash", StringComparison.OrdinalIgnoreCase) ? 1 : 0)
+            : eligible.OrderByDescending(m => m.IsLoaded)
+                .ThenByDescending(m => m.Id.Contains("flash", StringComparison.OrdinalIgnoreCase) ? 1 : 0)
                 .ThenByDescending(m => m.ContextLength)
                 .FirstOrDefault()?.Id;
-        var worker = loaded.FirstOrDefault(model => model.Id == workerId);
+        var worker = eligible.FirstOrDefault(model => model.Id == workerId);
         var supervisorId = !string.IsNullOrWhiteSpace(preferredSupervisor)
             ? preferredSupervisor.Trim()
-            : worker is null ? null : loaded.FirstOrDefault(model => model.Id != worker.Id)?.Id ?? worker.Id;
+            : worker is null ? null : eligible.FirstOrDefault(model => model.IsLoaded && model.Id != worker.Id)?.Id ?? worker.Id;
 
         return (workerId, supervisorId, worker is null ? _options.ContextBudgetTokens : GetContextBudget(worker));
     }
@@ -1696,12 +1725,12 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
     private Task<DeveloperDulcheStatus> ReadModelStatusAsync(CancellationToken cancellationToken) =>
         DeveloperMissionContextManager.RetryGatewayReadAsync(_gateway.GetStatusAsync, cancellationToken);
 
-    private static DeveloperModelInfo RequireLoadedModel(DeveloperDulcheStatus status, string? selectedId, string role)
+    private static DeveloperModelInfo RequireInferenceModel(DeveloperDulcheStatus status, string? selectedId, string role)
     {
         if (string.IsNullOrWhiteSpace(selectedId))
-            throw new InvalidOperationException($"No loaded Dulche model is available for the {role}.");
-        return status.Models.FirstOrDefault(model => model.IsLoaded && model.Id == selectedId)
-            ?? throw new InvalidOperationException($"Selected {role} model '{selectedId}' is unavailable or unloaded in Dulche.");
+            throw new InvalidOperationException($"No eligible Dulche model is available for the {role}.");
+        return status.Models.FirstOrDefault(model => model.IsAvailableForInference && model.Id == selectedId)
+            ?? throw new InvalidOperationException($"Selected {role} model '{selectedId}' is unavailable for inference in Dulche.");
     }
 
     private int GetContextBudget(DeveloperModelInfo model) => Math.Min(model.ContextLength, _options.ContextBudgetTokens);

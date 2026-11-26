@@ -148,7 +148,7 @@ public sealed partial class DulcheLocalClient
         using var bounded = CancellationTokenSource.CreateLinkedTokenSource(token);
         var modelTransition = request.Method == HttpMethod.Post &&
             request.RequestUri?.OriginalString.StartsWith("v1/models/", StringComparison.Ordinal) == true;
-        bounded.CancelAfter(modelTransition ? TimeSpan.FromMinutes(6) : TimeSpan.FromSeconds(15));
+        bounded.CancelAfter(modelTransition ? TimeSpan.FromMinutes(8) : TimeSpan.FromSeconds(15));
         using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseContentRead, bounded.Token);
         await DemandSuccess(response, bounded.Token);
         return JsonNode.Parse(await response.Content.ReadAsStringAsync(bounded.Token)) ?? new JsonObject();
@@ -161,8 +161,12 @@ public sealed partial class DulcheLocalClient
     internal IAsyncEnumerable<string> StreamLocalModelAsync(object payload, CancellationToken token) =>
         StreamChatAsync(payload, null, ownsIncompleteRun: true, token);
 
+    internal IAsyncEnumerable<string> StreamLocalToolModelAsync(object payload, Action<JsonNode> observe, CancellationToken token) =>
+        StreamChatAsync(payload, null, ownsIncompleteRun: true, token, observe, allowToolCalls: true);
+
     private async IAsyncEnumerable<string> StreamChatAsync(object payload, Action<string>? runStarted,
-        bool ownsIncompleteRun, [EnumeratorCancellation] CancellationToken token)
+        bool ownsIncompleteRun, [EnumeratorCancellation] CancellationToken token,
+        Action<JsonNode>? observe = null, bool allowToolCalls = false)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, "v1/chat/completions")
         {
@@ -208,7 +212,9 @@ public sealed partial class DulcheLocalClient
                     var data = line[5..].Trim();
                     if (data == "[DONE]")
                     {
-                        if (ownsIncompleteRun && finishReason is not ("stop" or "length"))
+                        if (ownsIncompleteRun && (allowToolCalls
+                            ? finishReason is not ("stop" or "tool_calls")
+                            : finishReason is not ("stop" or "length")))
                             throw new InvalidDataException("Dulche finished without confirming a text response.");
                         // daemon.py emits [DONE] after the job reaches a terminal state.
                         // A finish_reason chunk alone can precede that state transition.
@@ -218,6 +224,7 @@ public sealed partial class DulcheLocalClient
                     if (data.Length == 0) continue;
                     var chunk = JsonNode.Parse(data);
                     if (chunk?["error"] is { } error) throw new IOException(Explain(error));
+                    if (chunk is not null) observe?.Invoke(chunk);
                     var choice = chunk?["choices"]?.AsArray().FirstOrDefault();
                     finishReason = choice?["finish_reason"]?.GetValue<string>() ?? finishReason;
                     content = choice?["delta"]?["content"]?.GetValue<string>();

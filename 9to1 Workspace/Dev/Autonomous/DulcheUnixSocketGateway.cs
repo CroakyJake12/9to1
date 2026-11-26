@@ -96,7 +96,8 @@ public sealed class DulcheUnixSocketGateway : IDeveloperModelGateway, IDisposabl
         ArgumentException.ThrowIfNullOrWhiteSpace(modelId);
         ArgumentNullException.ThrowIfNull(messages);
         using var bounded = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        bounded.CancelAfter(TimeSpan.FromSeconds(30));
+        // Cold-start admission includes verified source hashes and model loading.
+        bounded.CancelAfter(TimeSpan.FromMinutes(8));
         var payload = new
         {
             messages = messages.Select(m => new { role = m.Role, content = m.Content }).ToArray()
@@ -324,6 +325,9 @@ public sealed class DulcheUnixSocketGateway : IDeveloperModelGateway, IDisposabl
                 var slots = TryReadInt(row["slots"]) ?? 1;
                 var engine = row["engine"]?.ToString();
                 var ownership = row["ownership"]?.ToString();
+                bool? canStart = row.ContainsKey("can_start")
+                    ? row["can_start"] is JsonValue canStartValue && canStartValue.TryGetValue<bool>(out var allowed) && allowed
+                    : null;
                 models.Add(new DeveloperModelInfo(
                     id,
                     string.IsNullOrWhiteSpace(name) ? id : name,
@@ -332,7 +336,8 @@ public sealed class DulcheUnixSocketGateway : IDeveloperModelGateway, IDisposabl
                     context,
                     slots,
                     engine,
-                    ownership));
+                    ownership,
+                    canStart));
             }
         }
 

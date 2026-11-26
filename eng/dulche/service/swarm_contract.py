@@ -6,6 +6,7 @@ from pathlib import Path
 
 from state import Fault
 from swarm_placement import configured
+from swarm_recipe_grants import recipe_digest
 
 STRATEGIES = ("resident", "alternating", "partial")
 PRESETS = {
@@ -282,18 +283,21 @@ def configuration(ctx, raw):
             raise Fault(
                 400, "The verification recipe must be in the explicit permission list"
             )
+        recipe_hashes = {}
         for recipe in allowed:
             registered = ctx.jobs._recipe(recipe)
             if not Path(registered["cwd"]).resolve().is_relative_to(wd):
                 raise Fault(
                     403, "Recipe working directory is outside the authorized workspace"
                 )
+            recipe_hashes[recipe] = recipe_digest(registered)
         roles.append(
             {
                 **w,
                 "role": role,
                 "autonomy": autonomy,
                 "recipes": allowed,
+                "recipe_hashes": recipe_hashes,
                 "verify_recipe": verify,
                 "specialization": text(
                     chosen.get("specialization", role), "specialization", 512

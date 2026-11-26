@@ -84,7 +84,7 @@
     <Compile Include="WorkspaceWindowPersistenceTests.cs" />
     <Compile Include="SharedControlStateParityContractTests.cs" />
     <Compile Include="LinuxWorkspaceBoundaryAbiTests.cs" />
-    <Compile Include="UnifiedHomeContentTests.cs;HomeDulcheIntegrationTests.cs;DulcheSocketModelProviderTests.cs;UnifiedHomeContentTests.Accent.cs;UnifiedHomeContentTests.ThemeOptions.cs;DesktopOriginalShutdownSequenceTests.cs" />
+    <Compile Include="UnifiedHomeContentTests.cs;HomeDulcheIntegrationTests.cs;DulcheSocketModelProviderTests.cs;DulcheMigrationProviderTests.cs;UnifiedHomeContentTests.Accent.cs;UnifiedHomeContentTests.ThemeOptions.cs;DesktopOriginalShutdownSequenceTests.cs" />
     <Compile Include="NewTabBackgroundAssetsTests.cs" />
     <Compile Include="UnifiedHomeContentTests.SettingsCatalog.cs;UnifiedHomeContentTests.NewTabCustomisation.cs;UnifiedHomeContentTests.NewTabShortcuts.cs;UnifiedHomeContentTests.NewTabShortcutDrag.cs;UnifiedHomeContentTests.NewTabWidgets.cs" />
     <Compile Include="UnifiedHomeContentTests.SettingsKeyboard.cs" />

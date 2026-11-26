@@ -48,11 +48,11 @@ public sealed class DeveloperMissionReliabilityTests
     [Theory]
     [InlineData("unloaded-worker", "reviewer", false)]
     [InlineData("worker", "unloaded-reviewer", true)]
-    public async Task An_unloaded_selected_model_is_never_dispatched_or_replaced(
+    public async Task An_unavailable_selected_model_is_never_dispatched_or_replaced(
         string workerId, string supervisorId, bool delegation)
     {
         using var fixture = await MissionFixture.CreateAsync();
-        var gateway = new ScriptedGateway();
+        var gateway = new ScriptedGateway { ColdState = "failed" };
         var options = fixture.Options with { WorkerModelId = workerId, SupervisorModelId = supervisorId };
         await using var engine = new DeveloperAutonomousMissionEngine(options, gateway);
         await engine.InitializeOrResumeAsync();
@@ -73,6 +73,72 @@ public sealed class DeveloperMissionReliabilityTests
         Assert.Equal(workerId, engine.CurrentMission!.WorkerModelId);
         Assert.Equal(supervisorId, engine.CurrentMission.SupervisorModelId);
         Assert.Empty(gateway.Requests);
+    }
+
+    [Theory]
+    [InlineData("installed")]
+    [InlineData("unloaded")]
+    [InlineData("stopped")]
+    [InlineData("idle")]
+    public async Task Selected_installed_model_reaches_canonical_inference_without_loading_on_selection(string state)
+    {
+        using var fixture = await MissionFixture.CreateAsync();
+        var gateway = new ScriptedGateway { ColdState = state };
+        var options = fixture.Options with
+        {
+            WorkerModelId = "unloaded-worker",
+            SupervisorModelId = "unloaded-worker"
+        };
+        await using var engine = new DeveloperAutonomousMissionEngine(options, gateway);
+        await engine.InitializeOrResumeAsync();
+        await engine.RefreshModelsAsync();
+        Assert.Empty(gateway.Requests);
+        Assert.Empty(gateway.Measurements);
+
+        gateway.Reply("""{"op":"git_diff"}""");
+        await engine.RunSingleStepAsync(); // Admit without dispatching.
+        Assert.Empty(gateway.Requests);
+        await engine.RunSingleStepAsync();
+
+        Assert.Equal("unloaded-worker", Assert.Single(gateway.Requests).ModelId);
+        Assert.Equal("unloaded-worker", engine.CurrentMission!.WorkerModelId);
+        Assert.Equal("unloaded-worker", engine.CurrentMission.SupervisorModelId);
+        Assert.Equal(1, engine.CurrentMission.ActiveTask!.TurnCount);
+
+        gateway.Reply("Use the retained build evidence.");
+        var delegated = await engine.DelegateToSupervisorAsync("Review the current task.");
+        Assert.Equal("unloaded-worker", delegated.ModelId);
+        Assert.All(gateway.Requests, request => Assert.Equal("unloaded-worker", request.ModelId));
+    }
+
+    [Theory]
+    [InlineData("failed", true, true)]
+    [InlineData("unloaded", false, false)]
+    [InlineData("failed", null, false)]
+    [InlineData("missing", null, false)]
+    [InlineData("downloading", null, false)]
+    [InlineData("unknown", null, false)]
+    [InlineData("ready", false, true)]
+    public void Model_eligibility_respects_explicit_daemon_capability_and_unavailable_states(
+        string state, bool? canStart, bool expected)
+    {
+        var model = new JsonObject { ["id"] = "selected", ["state"] = state, ["context"] = 32_768 };
+        if (canStart.HasValue)
+            model["can_start"] = canStart.Value;
+        var status = DulcheUnixSocketGateway.ParseStatus(new JsonObject { ["models"] = new JsonArray(model) });
+        var parsed = Assert.Single(status.Models);
+        Assert.Equal(canStart, parsed.CanStart);
+        Assert.Equal(expected, parsed.IsAvailableForInference);
+    }
+
+    [Fact]
+    public void Invalid_start_capability_does_not_fall_back_to_legacy_unloaded_state()
+    {
+        var model = new JsonObject { ["id"] = "selected", ["state"] = "unloaded", ["can_start"] = "false" };
+        var status = DulcheUnixSocketGateway.ParseStatus(new JsonObject { ["models"] = new JsonArray(model) });
+        var parsed = Assert.Single(status.Models);
+        Assert.Equal(false, parsed.CanStart);
+        Assert.False(parsed.IsAvailableForInference);
     }
 
     [Theory]
@@ -206,6 +272,109 @@ public sealed class DeveloperMissionReliabilityTests
         Assert.Empty(gateway.Requests);
     }
 
+    [Fact]
+    public async Task Failed_compaction_keeps_active_epoch_and_history_and_can_be_retried()
+    {
+        using var fixture = await MissionFixture.CreateAsync();
+        var gateway = new ScriptedGateway();
+        await using var engine = new DeveloperAutonomousMissionEngine(fixture.Options, gateway, fixture.Store);
+        var mission = await engine.InitializeOrResumeAsync();
+        var previous = await engine.CompactContextAsync("baseline");
+        fixture.Store.AppendTranscriptMessage(mission.MissionId, "user", "Keep the remaining obligation and its evidence.");
+        var before = fixture.Store.ReadTranscript(mission.MissionId).ToArray();
+        gateway.Measure = (_, _) => 32_700;
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => engine.CompactContextAsync("capacity failure"));
+
+        Assert.Equal(previous.EpochId, engine.CurrentMission!.ActiveEpochId);
+        Assert.Equal(previous.EpochId, fixture.Store.LoadMission(mission.MissionId)!.ActiveEpochId);
+        Assert.NotNull(fixture.Store.LoadContextEpoch(mission.MissionId, previous.EpochId));
+        Assert.Equal(before, fixture.Store.ReadTranscript(mission.MissionId).ToArray());
+        Assert.Empty(gateway.Requests);
+
+        gateway.Measure = (_, _) => 64;
+        var recovered = await engine.CompactContextAsync("retry after capacity correction");
+        Assert.NotEqual(previous.EpochId, recovered.EpochId);
+        Assert.Equal(recovered.EpochId, fixture.Store.LoadMission(mission.MissionId)!.ActiveEpochId);
+        Assert.Equal(before.Length, recovered.CoveredMessageCount);
+        Assert.Equal(before, fixture.Store.ReadTranscript(mission.MissionId).ToArray());
+        Assert.Contains(recovered.ProjectedMessages, message => message.Content.Contains("remaining obligation"));
+    }
+
+    [Fact]
+    public async Task Output_limit_preserves_partial_receipt_without_applying_valid_json_and_allows_retry()
+    {
+        using var fixture = await MissionFixture.CreateAsync();
+        var gateway = new ScriptedGateway();
+        const string partial = """{"op":"edit_file","edits":[{"path":"tests/Acceptance.cs","old":"// baseline","new":"// must not apply"}],"memory":{"finding":"Unconfirmed result"}}""";
+        gateway.Responses.Enqueue((request, _, _, _) => Task.FromResult(
+            Completion(request, partial) with { FinishReason = "length" }));
+        await using var engine = new DeveloperAutonomousMissionEngine(fixture.Options, gateway, fixture.Store);
+        var mission = await engine.InitializeOrResumeAsync();
+        await engine.RunSingleStepAsync();
+        var worktree = engine.CurrentMission!.ActiveTask!.WorktreePath!;
+
+        var failure = await Assert.ThrowsAsync<InvalidDataException>(() => engine.RunSingleStepAsync());
+
+        Assert.Contains("length", failure.Message);
+        Assert.Equal("// baseline\n", await File.ReadAllTextAsync(Path.Combine(worktree, "tests", "Acceptance.cs")));
+        Assert.Empty(engine.CurrentMission!.Notes);
+        Assert.Equal(0, engine.CurrentMission.ActiveTask!.TurnCount);
+        Assert.False(fixture.Store.LoadMission(mission.MissionId)!.CompletionStopUnconfirmed);
+        Assert.DoesNotContain(fixture.Store.ReadTranscript(mission.MissionId), item => item.Role == "assistant");
+        var incomplete = Assert.Single(fixture.Store.ReadEvents(mission.MissionId), item => item.Kind == "model_output_incomplete");
+        var receipt = JsonNode.Parse(await File.ReadAllTextAsync(Path.Combine(
+            fixture.Store.GetMissionDirectory(mission.MissionId), "receipts", incomplete.Details + ".json")))!;
+        Assert.False(receipt["accepted"]!.GetValue<bool>());
+        Assert.Equal(partial, receipt["completion"]!["content"]!.GetValue<string>());
+        Assert.Empty(gateway.StoppedRuns); // Terminal transport already confirmed the owned run ended.
+
+        gateway.Reply("""{"op":"git_diff"}""");
+        await engine.RunSingleStepAsync();
+        Assert.Equal(1, engine.CurrentMission.ActiveTask!.TurnCount);
+        Assert.Equal(DeveloperAutonomousMissionState.Paused, engine.CurrentMission.State);
+    }
+
+    [Fact]
+    public async Task Output_limited_review_cannot_approve_the_patch()
+    {
+        using var fixture = await MissionFixture.CreateAsync();
+        var gateway = new ScriptedGateway();
+        gateway.Reply("""{"op":"complete_task","summary":"Verified change"}""");
+        gateway.Responses.Enqueue((request, _, _, _) =>
+        {
+            var payload = JsonNode.Parse(request.Messages[^1].Content)!.AsObject();
+            var answer = $$"""{"approve":true,"sha256":"{{payload["binding_digest"]}}","reason":"Partial review"}""";
+            return Task.FromResult(Completion(request, answer) with { FinishReason = "length" });
+        });
+        var initial = await fixture.SeedVerifiedTaskAsync(gateway);
+        await using var engine = new DeveloperAutonomousMissionEngine(fixture.Options, gateway, fixture.Store);
+        await engine.InitializeOrResumeAsync(initial.MissionId);
+
+        await Assert.ThrowsAsync<InvalidDataException>(() => engine.RunSingleStepAsync());
+
+        Assert.Null(engine.CurrentMission!.ActiveTask!.Review);
+        Assert.Empty(engine.CurrentMission.CompletedTasks);
+        Assert.Empty(engine.CurrentMission.CompletedRecordIds);
+        Assert.Contains(fixture.Store.ReadEvents(initial.MissionId), item => item.Kind == "model_output_incomplete");
+    }
+
+    [Theory]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(false, false)]
+    public async Task Gateway_rejects_early_eof_without_both_terminal_choice_and_done(bool terminal, bool done)
+    {
+        var choice = new JsonObject { ["delta"] = new JsonObject { ["content"] = "partial" } };
+        if (terminal)
+            choice["finish_reason"] = "stop";
+        var body = "data: " + new JsonObject { ["choices"] = new JsonArray(choice) }.ToJsonString() + "\n\n"
+            + (done ? "data: [DONE]\n\n" : "");
+        using var gateway = new DulcheUnixSocketGateway(new SseHandler(body), disposeHandler: true);
+        await Assert.ThrowsAsync<EndOfStreamException>(() => gateway.StreamCompletionAsync(
+            new DeveloperCompletionRequest("worker", [new("user", "Continue.")])));
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
@@ -295,12 +464,19 @@ public sealed class DeveloperMissionReliabilityTests
     private static DeveloperCompletionResult Completion(DeveloperCompletionRequest request, string answer) =>
         new("finished", request.ModelId, answer, "", "stop", 0, 0, null, TimeSpan.Zero);
 
+    private sealed class SseHandler(string body) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(body) });
+    }
+
     private sealed class ScriptedGateway : IDeveloperModelGateway
     {
         public int StatusFailures { get; init; }
         public int StatusCalls { get; private set; }
         public int TokenFailures { get; init; }
         public int ReviewerContext { get; init; } = 32_768;
+        public string ColdState { get; init; } = "unloaded";
         public Func<string, IReadOnlyList<DeveloperChatMessage>, int> Measure { get; set; } = (_, _) => 64;
         public Func<string, Task> Stop { get; set; } = _ => Task.CompletedTask;
         public List<DeveloperCompletionRequest> Requests { get; } = [];
@@ -321,8 +497,8 @@ public sealed class DeveloperMissionReliabilityTests
                 [
                     new("worker", "Worker", "loaded", null, 32_768, 1, null, null),
                     new("reviewer", "Reviewer", "loaded", null, ReviewerContext, 1, null, null),
-                    new("unloaded-worker", "Unloaded worker", "unloaded", null, 32_768, 1, null, null),
-                    new("unloaded-reviewer", "Unloaded reviewer", "unloaded", null, 32_768, 1, null, null)
+                    new("unloaded-worker", "Unloaded worker", ColdState, null, 32_768, 1, null, null),
+                    new("unloaded-reviewer", "Unloaded reviewer", ColdState, null, 32_768, 1, null, null)
                 ],
                 new(24_000, 64_000, 100L * 1024 * 1024 * 1024, null, []), 0));
         }

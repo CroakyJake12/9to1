@@ -330,19 +330,19 @@ public sealed partial class DeveloperProjectWorkbenchPage
                         await PublishAsync(original, () =>
                         {
                             _autonomousDulcheStatus = status;
-                            var loaded = status.Models.Where(m => m.IsLoaded).ToArray();
-                            if (string.IsNullOrWhiteSpace(_missionWorkerModel) && loaded.Length > 0)
+                            var available = status.Models.Where(m => m.IsAvailableForInference).ToArray();
+                            if (string.IsNullOrWhiteSpace(_missionWorkerModel) && available.Length > 0)
                             {
-                                var worker = loaded.OrderByDescending(m => m.Id.Contains("flash", StringComparison.OrdinalIgnoreCase) ? 1 : 0)
+                                var worker = available.OrderByDescending(m => m.Id.Contains("flash", StringComparison.OrdinalIgnoreCase) ? 1 : 0)
                                     .ThenByDescending(m => m.ContextLength).First();
                                 _missionWorkerModel = worker.Id;
                             }
-                            if (string.IsNullOrWhiteSpace(_missionSupervisorModel) && loaded.Length > 0)
+                            if (string.IsNullOrWhiteSpace(_missionSupervisorModel) && available.Length > 0)
                             {
-                                var sup = loaded.FirstOrDefault(m => m.Id != _missionWorkerModel) ?? loaded[0];
+                                var sup = available.FirstOrDefault(m => m.Id != _missionWorkerModel) ?? available[0];
                                 _missionSupervisorModel = sup.Id;
                             }
-                            _status = $"Connected to Dulche: {loaded.Length} loaded model(s), {status.Resources.HostAvailableMiB} MiB RAM available.";
+                            _status = $"Connected to Dulche: {available.Length} available model(s), {available.Count(m => m.IsLoaded)} loaded; {status.Resources.HostAvailableMiB} MiB RAM available. Eligible models start when the mission requests inference.";
                         }).ConfigureAwait(false);
                         break;
                     }
@@ -697,13 +697,13 @@ public sealed partial class DeveloperProjectWorkbenchPage
     {
         if (_autonomousDulcheStatus is null)
             return $"Worker: {(string.IsNullOrWhiteSpace(_missionWorkerModel) ? "(auto from Dulche)" : _missionWorkerModel)} · Supervisor: {(string.IsNullOrWhiteSpace(_missionSupervisorModel) ? "(auto opposite model)" : _missionSupervisorModel)}";
-        var loaded = _autonomousDulcheStatus.Models.Where(m => m.IsLoaded)
-            .Select(m => $"{m.Name} ({m.Gpu ?? "local"}, {m.ContextLength / 1024}K ctx)")
+        var available = _autonomousDulcheStatus.Models.Where(m => m.IsAvailableForInference)
+            .Select(m => $"{m.Name} ({m.Gpu ?? "local"}, {m.ContextLength / 1024}K ctx, {(m.IsLoaded ? "loaded" : "starts on request")})")
             .ToArray();
         var gpus = string.Join(" | ", _autonomousDulcheStatus.Resources.Gpus.Select(g =>
             $"{g.Name}: {g.UsedMiB}/{g.TotalMiB} MiB" + (g.TemperatureC is { } t ? $" {t:0}°C" : "")));
         return $"Dulche ({_autonomousDulcheStatus.Phase}): "
-            + (loaded.Length == 0 ? "No loaded models" : string.Join("; ", loaded))
+            + (available.Length == 0 ? "No eligible models" : string.Join("; ", available))
             + $"\nRAM free: {_autonomousDulcheStatus.Resources.HostAvailableMiB} MiB"
             + (string.IsNullOrEmpty(gpus) ? "" : $" · {gpus}");
     }

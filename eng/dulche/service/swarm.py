@@ -185,6 +185,13 @@ class Swarm:
                     409, "One swarm already owns the workstation scheduling window"
                 )
             cfg = configuration(self.ctx, body)
+            window = getattr(self.ctx, "training_windows", None)
+            if window and any(
+                window.reserved(p["model"]) for p in [cfg["mentor"], *cfg["workers"]]
+            ):
+                raise Fault(
+                    409, "A selected participant is reserved for a training window"
+                )
             cfg["project_state"] = project_snapshot(
                 Path(cfg["working_directory"]), cfg["references"]
             )
