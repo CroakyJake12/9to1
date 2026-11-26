@@ -196,7 +196,7 @@ public sealed class DulcheSocketModelProviderTests
         }
         finally
         {
-            headers.TrySetCanceled();
+            headers.TrySetCanceled(token);
             _ = await Record.ExceptionAsync(() => move);
         }
     }
