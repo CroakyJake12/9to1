@@ -80,10 +80,15 @@ public sealed class DulcheSocketModelProviderTests
 
     [Theory]
     [InlineData("{}")]
-    [InlineData("{\"id\":\"other\",\"state\":\"stopped\"}")]
-    [InlineData("{\"id\":\"run-local-1\",\"state\":\"running\"}")]
-    [InlineData("{\"id\":\"run-local-1\",\"state\":true}")]
-    public async Task HttpSuccessWithoutExactTerminalRunCannotAcknowledgeStop(string reply)
+    [InlineData("{\"id\":\"other\",\"state\":\"stopped\",\"settled\":true}")]
+    [InlineData("{\"id\":\"run-local-1\",\"state\":\"running\",\"settled\":true}")]
+    [InlineData("{\"id\":\"run-local-1\",\"state\":true,\"settled\":true}")]
+    [InlineData("{\"id\":\"run-local-1\",\"state\":\"stopped\"}")]
+    [InlineData("{\"id\":\"run-local-1\",\"state\":\"stopped\",\"settled\":false}")]
+    [InlineData("{\"id\":\"run-local-1\",\"state\":\"stopped\",\"settled\":null}")]
+    [InlineData("{\"id\":\"run-local-1\",\"state\":\"stopped\",\"settled\":\"true\"}")]
+    [InlineData("{\"id\":\"run-local-1\",\"state\":\"stopped\",\"settled\":1}")]
+    public async Task HttpSuccessWithoutExactSettledTerminalRunCannotAcknowledgeStop(string reply)
     {
         using var handler = new ProtocolHandler { StopReply = reply };
         var provider = CreateProvider(handler);
@@ -109,7 +114,7 @@ public sealed class DulcheSocketModelProviderTests
         using var handler = new ProtocolHandler
         {
             StopFailure = kind == "transport" ? transport : null,
-            StopReply = kind == "json" ? "{invalid json" : "{\"id\":\"run-local-1\",\"state\":\"stopped\"}",
+            StopReply = kind == "json" ? "{invalid json" : "{\"id\":\"run-local-1\",\"state\":\"stopped\",\"settled\":true}",
             StopStatus = kind == "http" ? HttpStatusCode.ServiceUnavailable : HttpStatusCode.OK,
             WaitForStopTimeout = kind == "timeout"
         };
@@ -142,6 +147,58 @@ public sealed class DulcheSocketModelProviderTests
         Assert.Null(failure.RunId);
         Assert.Equal(new[] { "/v1/chat/completions" }, handler.Paths);
         Assert.Equal(1, handler.CompletionStreamDisposals);
+    }
+
+    [Fact]
+    public async Task CancellationBeforeDispatchRemainsOrdinaryAndStartsNoRequest()
+    {
+        using var handler = new ProtocolHandler();
+        using var generation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        generation.Cancel();
+        await using var stream = CreateProvider(handler).StreamChatAsync(
+            new("reviewer", [new("user", "Hello")], EffortLevel.Medium), generation.Token)
+            .GetAsyncEnumerator(generation.Token);
+        var move = stream.MoveNextAsync().AsTask();
+        var failure = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => move);
+        Assert.Equal(generation.Token, failure.CancellationToken);
+        Assert.True(move.IsCanceled);
+        Assert.Empty(handler.Paths);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task FailureAfterDispatchBeforeHeadersRetainsUnknownStopAndExactCause(bool canceled)
+    {
+        var token = TestContext.Current.CancellationToken;
+        using var generation = CancellationTokenSource.CreateLinkedTokenSource(token);
+        var headers = new TaskCompletionSource<HttpResponseMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var handler = new ProtocolHandler { CompletionBeforeHeaders = headers.Task };
+        await using var stream = CreateProvider(handler).StreamChatAsync(
+            new("reviewer", [new("user", "Hello")], EffortLevel.Medium), generation.Token)
+            .GetAsyncEnumerator(generation.Token);
+        var move = stream.MoveNextAsync().AsTask();
+        try
+        {
+            await handler.CompletionDispatched.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
+            Assert.False(move.IsCompleted);
+            if (canceled) generation.Cancel();
+            Exception original = canceled
+                ? new OperationCanceledException("Controlled cancellation before response headers", generation.Token)
+                : new HttpRequestException("Controlled transport failure before response headers");
+            headers.SetException(original);
+            var failure = await Assert.ThrowsAsync<DulcheRunStopUnconfirmedException>(() => move);
+            Assert.Null(failure.RunId);
+            Assert.Same(original, failure.InnerException);
+            Assert.True(move.IsFaulted); // Must not qualify as an acknowledged ordinary user stop.
+            Assert.Equal(new[] { "/v1/chat/completions" }, handler.Paths);
+            Assert.Equal(0, handler.CompletionStreamDisposals);
+        }
+        finally
+        {
+            headers.TrySetCanceled();
+            _ = await Record.ExceptionAsync(() => move);
+        }
     }
 
     [Fact]
@@ -216,9 +273,11 @@ public sealed class DulcheSocketModelProviderTests
         public List<string> Paths { get; } = [];
         public JsonElement LastCompletion { get; private set; }
         public string[] RunIds { get; init; } = ["run-local-1"];
-        public string StopReply { get; init; } = "{\"id\":\"run-local-1\",\"state\":\"stopped\"}";
+        public string StopReply { get; init; } = "{\"id\":\"run-local-1\",\"state\":\"stopped\",\"settled\":true}";
         public HttpStatusCode StopStatus { get; init; } = HttpStatusCode.OK;
         public Exception? StopFailure { get; init; }
+        public Task<HttpResponseMessage>? CompletionBeforeHeaders { get; init; }
+        public TaskCompletionSource CompletionDispatched { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public bool WaitForStopTimeout { get; init; }
         public bool StopTokenWasCanceled { get; private set; }
         public bool StopSawDisposedResponse { get; private set; }
@@ -251,6 +310,8 @@ public sealed class DulcheSocketModelProviderTests
             {
                 using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(cancellationToken));
                 LastCompletion = body.RootElement.Clone();
+                CompletionDispatched.TrySetResult();
+                if (CompletionBeforeHeaders is { } held) return await held;
                 var response = new HttpResponseMessage(HttpStatusCode.OK)
                 {
                     Content = new StreamContent(new ObservedStream(Encoding.UTF8.GetBytes(Stream), () => CompletionStreamDisposals++)),

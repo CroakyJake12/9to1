@@ -112,15 +112,16 @@ public sealed partial class DulcheLocalClient
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(runId);
         var response = await PostAsync($"agents/{Uri.EscapeDataString(runId)}/stop", new { }, token).ConfigureAwait(false);
-        // daemon.py returns state.status(the requested run), not a boolean HTTP ACK.
-        // Match the same explicit terminal-state contract as DulcheUnixSocketGateway.
+        // A terminal state can be persisted before a stopped worker exits. The daemon
+        // must also acknowledge that this exact run's admitted execution has settled.
         var state = response as JsonObject;
         var returnedId = state?["id"] is JsonValue id && id.TryGetValue<string>(out var identity) ? identity : null;
         var terminal = state?["state"] is JsonValue value && value.TryGetValue<string>(out var status) ? status : null;
-        if (!StringComparer.Ordinal.Equals(returnedId, runId) ||
+        var settled = state?["settled"] is JsonValue proof && proof.TryGetValue<bool>(out var acknowledged) && acknowledged;
+        if (!StringComparer.Ordinal.Equals(returnedId, runId) || !settled ||
             terminal is not ("stopped" or "completed" or "failed" or "cancelled" or "review"))
             throw new DulcheRunStopUnconfirmedException(runId,
-                "Dulche did not acknowledge a terminal state for the exact requested run; its remote stop is unconfirmed.");
+                "Dulche did not acknowledge a settled terminal state for the exact requested run; its remote stop is unconfirmed.");
     }
 
     /// <summary>Exposes this SAME singleton DulcheLocalClient as an IDeveloperModelGateway for 9to1 Build.</summary>

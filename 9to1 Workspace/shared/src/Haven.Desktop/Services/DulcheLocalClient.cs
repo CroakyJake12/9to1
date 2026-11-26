@@ -168,7 +168,16 @@ public sealed partial class DulcheLocalClient
         {
             Content = JsonContent.Create(payload),
         };
-        var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
+        // A cancellation already present cannot have dispatched this request. After the
+        // attempt begins, transport failure alone cannot disprove daemon job admission.
+        token.ThrowIfCancellationRequested();
+        HttpResponseMessage response;
+        try { response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false); }
+        catch (Exception failure) when (ownsIncompleteRun && (failure is HttpRequestException or IOException or OperationCanceledException))
+        {
+            throw new DulcheRunStopUnconfirmedException(null,
+                "Dulche did not return a run identity after the completion request was attempted; its remote stop is unconfirmed.", failure);
+        }
         StreamReader? reader = null;
         string? runId = null;
         var accepted = false;
