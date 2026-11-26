@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Threading;
 using Haven.Application;
+using Haven.Application.Haven;
 using Haven.Core;
 using Haven.Desktop.Views.Shell;
 using HavenOS.Apps.Browse;
@@ -45,6 +46,22 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
     internal bool HasImplementation(ModeDefinition app) => app.IsEnabled
         && _bindings.TryGetValue(app.Key.ToLowerInvariant(), out var binding)
         && IsCurrentApp(app, binding);
+
+    /// <summary>A receipt issued only by a current registered native owner. It keeps the
+    /// outer Browse session identity without exposing or unwrapping the owned app.</summary>
+    internal interface IOriginalChatModelTarget
+    {
+        IBrowseAppContentSession OriginalSession { get; }
+        void Apply(HavenModelProjectionSnapshot? snapshot, AuthenticatedResourceActor actor);
+    }
+
+    internal static IOriginalChatModelTarget? CaptureOriginalChatModelTarget(
+        IBrowseAppContentSession originalSession, Guid tabId, string profileId)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        return originalSession is RegisteredSession registered
+            ? registered.CaptureOriginalChatModelTarget(tabId, profileId) : null;
+    }
 
     public IBrowseAppContentSession CreateSession(BrowseAppContentRequest request)
     {
@@ -142,6 +159,49 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
                 if (!IsPublicationCurrent || _initialization is not { IsCompletedSuccessfully: true } || _inner is null)
                     throw new InvalidOperationException("The original native app view is not ready for publication.");
                 return _inner.OriginalNativeView;
+            }
+        }
+
+        internal IOriginalChatModelTarget? CaptureOriginalChatModelTarget(Guid tabId, string profileId)
+        {
+            Dispatcher.UIThread.VerifyAccess();
+            using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+            lock (_gate)
+            {
+                if (_request.TabId != tabId ||
+                    !string.Equals(_request.ProfileId, profileId, StringComparison.Ordinal) ||
+                    _inner is not SpacesBrowseAppContentSession spaces) return null;
+                var address = WithinOriginal(() => spaces.Address);
+                if (!IsExactOwnerCurrent(spaces, address)) return null;
+                var target = WithinOriginal(spaces.CaptureSelectedChatModelTarget);
+                if (target is null || !IsExactOwnerCurrent(spaces, address)) return null;
+                return new RegisteredChatModelTarget(this, spaces, address, target, tabId, profileId);
+            }
+        }
+
+        private sealed class RegisteredChatModelTarget(RegisteredSession owner,
+            SpacesBrowseAppContentSession spaces, AppContentAddress address,
+            SpacesBrowseAppContentSession.OriginalModelTarget target, Guid tabId, string profileId)
+            : IOriginalChatModelTarget
+        {
+            public IBrowseAppContentSession OriginalSession => owner;
+
+            public void Apply(HavenModelProjectionSnapshot? snapshot, AuthenticatedResourceActor actor)
+            {
+                Dispatcher.UIThread.VerifyAccess();
+                using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(owner);
+                lock (owner._gate)
+                {
+                    if (owner._request.TabId != tabId ||
+                        !string.Equals(owner._request.ProfileId, profileId, StringComparison.Ordinal) ||
+                        !string.Equals(actor.ProfileId, profileId, StringComparison.Ordinal) ||
+                        !owner.IsExactOwnerCurrent(spaces, address)) return;
+                    owner.WithinOriginal(() =>
+                    {
+                        spaces.ApplySelectedChatModelTarget(target, snapshot, actor);
+                        return true;
+                    });
+                }
             }
         }
 

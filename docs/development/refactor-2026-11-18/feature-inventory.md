@@ -181,3 +181,10 @@ Focused source reproduction retained the exact native failure (6 failed / 1 pass
 Actual native Send reached the real ownership boundary and correctly refused the unbound existing store; its aggregate error exposed a lost uncommitted draft. The revision-aware draft fix passed the full focused 29-case compiled-control selection. The candidate now supplies the missing same-instance Spaces evidence provider and genuine Home Settings import/review/completion flow. Strict primary inspection performs no identity initialization, backup restoration or ownership binding. Approval alone does not import.
 
 Twelve owning Spaces cases plus the existing embedded Permissions layout regression passed 13/13 with full production references. Tests cover the actual App/DI registration, compiled review controls, stale evidence, canonical audit-only recovery and the mixed independent-failure refusal. The earlier 9/11 audit failures remain retained. Native publication and the real Home ownership/Send/model/Regenerate/Stop sequence are still pending; see the continuation handoff for exact evidence hashes.
+
+
+### Registered native model-route delivery — 26 November 2026
+
+Native10fb verified genuine existing Spaces ownership review/import, actual Send, Regenerate with preserved draft/user rows, exact settled Stop and Send afterwards. The real model-switch gate failed despite a correct saved Home route and header: the picker expected an inner Spaces session while production Browse exposes its registered native wrapper.
+
+The reviewed repair retains an issuer-owned wrapper/inner/chat target and preserves all original owner, tab, actor, conversation and revision checks. Nine focused component cases passed, including the actual wrapped Spaces/compiled Send and real page/tab retirement. A replacement native run must still prove the actual saved route reaches both the next provider request and persisted assistant model. CPU fixture, visual and stopped-partial-persistence limits are recorded in the continuation handoff.

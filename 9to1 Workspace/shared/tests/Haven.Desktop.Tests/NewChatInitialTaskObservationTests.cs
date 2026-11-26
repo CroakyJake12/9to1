@@ -1,5 +1,8 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Avalonia;
+using Avalonia.Headless;
+using Avalonia.Input;
 using Avalonia.Automation;
 using Avalonia.Automation.Peers;
 using Avalonia.Automation.Provider;
@@ -15,6 +18,12 @@ using Haven.Desktop.Views.Pages.Chat;
 using Xunit;
 using Avalonia.Headless.XUnit;
 using Haven.Desktop.Events;
+using Haven.Browser;
+using Haven.Desktop.Views.Pages.Spaces;
+using Haven.Infrastructure;
+using HavenOS.Apps.Browse;
+using HavenOS.Home.Core;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Desktop.Tests;
 
@@ -377,6 +386,281 @@ public sealed partial class ChatCloudPermissionCallerTests
             window.Close();
             Directory.Delete(directory, true);
         }
+    }
+
+    [AvaloniaFact]
+    public async Task Registered_Spaces_home_model_change_reaches_the_next_compiled_send_and_preserves_active_request_and_draft()
+    {
+        await WithRegisteredSpacesChatAsync(async fixture =>
+        {
+            var token = TestContext.Current.CancellationToken;
+            var page = await fixture.NewChatAsync();
+            var conversationId = page.ConversationId;
+            var original = fixture.OriginalSession;
+            var tab = fixture.Chrome.State.SelectedTabId;
+            Assert.IsNotType<SpacesBrowseAppContentSession>(original);
+            Assert.Equal(fixture.First.Name, page.SelectedModelName);
+            var entered = new TaskCompletionSource<OllamaChatRequest>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var calls = new List<OllamaChatRequest>();
+            fixture.Rig.Client.OrdinaryProviderBody = async (request, sourceToken) =>
+            {
+                calls.Add(request);
+                if (calls.Count == 1)
+                {
+                    entered.TrySetResult(request);
+                    await release.Task.WaitAsync(sourceToken);
+                }
+                return false;
+            };
+            try
+            {
+                var composer = await fixture.ComposerAsync(page);
+                fixture.Input(composer).Text = "Admitted request stays on model A";
+                var firstSend = fixture.InvokeSend(composer);
+                await Task.WhenAny(entered.Task, firstSend).WaitAsync(RegisteredSpacesChatBound, token);
+                if (firstSend.IsCompleted) await firstSend;
+                Assert.True(entered.Task.IsCompletedSuccessfully,
+                    "The registered Spaces Send settled before reaching its guarded provider.");
+                var admitted = await entered.Task;
+                Assert.Equal(fixture.First.Name, admitted.Model);
+                Assert.True(page.IsSending);
+                Assert.False(firstSend.IsCompleted);
+
+                // Capture AFTER the first committed input has published its actual conversation
+                // address. This is the same outer session that Browse and the App retain.
+                var target = Assert.IsAssignableFrom<NativeAppContentRegistry.IOriginalChatModelTarget>(
+                    NativeAppContentRegistry.CaptureOriginalChatModelTarget(original, tab, fixture.Actor.ProfileId));
+                Assert.Same(original, target.OriginalSession);
+                fixture.Input(composer).Text = "Next draft uses model B exactly once";
+                target.Apply(fixture.SecondSnapshot(), fixture.Actor);
+
+                Assert.Same(original, fixture.Chrome.ObserveOriginalAppContent(tab));
+                Assert.Equal(fixture.Second.Name, page.SelectedModelName);
+                Assert.Equal("Next draft uses model B exactly once", page.ComposerInput.Text);
+                Assert.Equal(conversationId, page.ConversationId);
+                Assert.Equal(fixture.First.Name, Assert.Single(calls).Model);
+                Assert.False(firstSend.IsCompleted);
+                release.TrySetResult();
+                await firstSend.WaitAsync(RegisteredSpacesChatBound, token);
+                await page.JoinAdmittedOriginalWorkAsync().WaitAsync(RegisteredSpacesChatBound, token);
+                Assert.Equal("Next draft uses model B exactly once", page.ComposerInput.Text);
+
+                await fixture.InvokeSend(await fixture.ComposerAsync(page)).WaitAsync(RegisteredSpacesChatBound, token);
+                await page.JoinAdmittedOriginalWorkAsync().WaitAsync(RegisteredSpacesChatBound, token);
+                Assert.Equal(new[] { fixture.First.Name, fixture.Second.Name }, calls.Select(request => request.Model));
+                Assert.All(calls, request =>
+                {
+                    Assert.True(request.Options!.RequireOriginalSpacePolicy);
+                    Assert.NotNull(request.Options.OriginalSpacePolicy);
+                    Assert.Equal(fixture.SpaceId, request.Options.RequestedSpacePolicyLineage!.SpaceId);
+                });
+                var inputs = fixture.Rig.Conversations.Messages.Where(message => message.Role == MessageRole.User).ToArray();
+                Assert.Equal(new[] { "Admitted request stays on model A", "Next draft uses model B exactly once" },
+                    inputs.Select(message => message.Content));
+                Assert.All(inputs, message => Assert.Equal(conversationId, message.ConversationId));
+                Assert.Equal(conversationId, page.ConversationId);
+                Assert.Equal(2, fixture.Policy.Captures);
+                Assert.Equal(2, fixture.Client.GuardedDispatches);
+                Assert.Equal(2, fixture.Rig.Client.Dispatches);
+                Assert.Equal(2, fixture.Rig.Client.StreamDisposals);
+                Assert.False(page.IsSending);
+                Assert.Empty(page.ComposerInput.Text ?? string.Empty);
+            }
+            finally { release.TrySetResult(); }
+        });
+    }
+
+    [AvaloniaTheory]
+    [InlineData("new-chat")]
+    [InlineData("closed-tab")]
+    public async Task Registered_Spaces_home_model_target_cannot_change_a_replaced_chat_or_retired_outer(string transition)
+    {
+        await WithRegisteredSpacesChatAsync(async fixture =>
+        {
+            var token = TestContext.Current.CancellationToken;
+            var oldPage = await fixture.NewChatAsync();
+            var oldId = oldPage.ConversationId;
+            var original = fixture.OriginalSession;
+            var tab = fixture.Chrome.State.SelectedTabId;
+            oldPage.ComposerInput.Text = "Preserve the original ordinary draft";
+            var target = Assert.IsAssignableFrom<NativeAppContentRegistry.IOriginalChatModelTarget>(
+                NativeAppContentRegistry.CaptureOriginalChatModelTarget(original, tab, fixture.Actor.ProfileId));
+            Assert.Same(original, target.OriginalSession);
+            Assert.Null(NativeAppContentRegistry.CaptureOriginalChatModelTarget(original, Guid.NewGuid(), fixture.Actor.ProfileId));
+            Assert.Null(NativeAppContentRegistry.CaptureOriginalChatModelTarget(original, tab, "another-profile"));
+            target.Apply(fixture.SecondSnapshot(), fixture.Actor with { AuthenticationRevision = "another-authentication" });
+            Assert.Equal(fixture.First.Name, oldPage.SelectedModelName);
+
+            if (transition == "closed-tab")
+            {
+                await fixture.Chrome.CloseTabAsync(tab, token).WaitAsync(RegisteredSpacesChatBound, token);
+                Assert.True(original.CanRetireOriginalView);
+                Assert.DoesNotContain(fixture.Chrome.State.Tabs, item => item.Id == tab);
+                Assert.Null(NativeAppContentRegistry.CaptureOriginalChatModelTarget(original, tab, fixture.Actor.ProfileId));
+                fixture.Window.Content = null;
+                await fixture.Chrome.OpenContentAsync(fixture.SpaceAddress, cancellationToken: token)
+                    .WaitAsync(RegisteredSpacesChatBound, token);
+                Assert.NotSame(original, fixture.OriginalSession);
+            }
+
+            // New Chat is the actual authored Spaces button. It retires the old page;
+            // the closed-tab row also acquires an entirely new registered outer owner.
+            var replacement = await fixture.NewChatAsync();
+            Assert.NotEqual(oldId, replacement.ConversationId);
+            Assert.Equal(oldId, Assert.IsType<ConversationDraft>(fixture.Drafts.Last).ConversationId);
+            Assert.Equal("Preserve the original ordinary draft", fixture.Drafts.Last!.Content);
+            if (transition == "new-chat") Assert.Same(original, fixture.OriginalSession);
+            replacement.ComposerInput.Text = "Keep the replacement draft";
+            target.Apply(fixture.SecondSnapshot(), fixture.Actor);
+
+            Assert.Equal(fixture.First.Name, replacement.SelectedModelName);
+            Assert.Equal(fixture.First.Name, oldPage.SelectedModelName);
+            Assert.Equal("Keep the replacement draft", replacement.ComposerInput.Text);
+            Assert.Equal(0, fixture.Rig.Client.Dispatches);
+            Assert.Empty(fixture.Rig.Conversations.Messages);
+        });
+    }
+
+    private static readonly TimeSpan RegisteredSpacesChatBound = TimeSpan.FromSeconds(20);
+
+    private static async Task WithRegisteredSpacesChatAsync(Func<RegisteredSpacesChatFixture, Task> body)
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig(temporary: false);
+        using var paths = new ObservationPaths();
+        Directory.CreateDirectory(paths.DataDirectory);
+        if (OperatingSystem.IsLinux())
+            File.SetUnixFileMode(paths.DataDirectory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        var principal = new OperatingSystemPrincipalSource();
+        await using var home = new HomeNativeWindowsComposition(
+            new FileHomeCoreStateStore(Path.Combine(paths.DataDirectory, "home.json")), principal, paths,
+            new("9to1.home.spaces.model-route." + Guid.NewGuid().ToString("N")));
+        var spaces = new SpaceRegistry(new ObservationSettings());
+        var space = await spaces.CreateAsync("Registered model-route Space", cancellationToken: token);
+        var first = rig.Provider.Model.Model with
+        {
+            Name = rig.Provider.Id + ":route-a",
+            Capabilities = new HashSet<ToolCapability> { ToolCapability.Text }
+        };
+        var second = first with { Name = rig.Provider.Id + ":route-b" };
+        rig.Client.AvailableModels = [first, second];
+        var policy = new CompiledComposerSpacePolicySource(spaces);
+        var client = new CompiledComposerGuardedClient(rig.Client, rig.Provider);
+        var sessions = new ChatSessionService(rig.Conversations, client, new CapabilityPreflightService(), new Safety(),
+            new WorkspaceToolRuntime(new Workspace()), new ComputerToolRuntime(new Computer()));
+        sessions.BindOriginalSpacePolicySource(policy);
+        var drafts = new NativeComposerDraftStore();
+        var settings = new UserPreferencesService(paths);
+        Assert.Null(settings.GenerationOptions.RequestedRoutingConstraints);
+        var services = new ServiceCollection();
+        services.AddHavenInfrastructure();
+        services.AddHavenOwnedWindowsHomeDomain(home, paths, principal);
+        services.AddSingleton(spaces);
+        services.AddSingleton<HavenEventBus>();
+        services.AddSingleton(sessions);
+        services.AddSingleton<IConversationSafetyService>(new Safety());
+        services.AddSingleton<IConversationRepository>(rig.Conversations);
+        services.AddSingleton(drafts.Source);
+        services.AddSingleton(settings);
+        services.AddSingleton<IProviderModelClient>(client);
+        await using var provider = services.BuildServiceProvider();
+        using var app = new CancellationTokenSource();
+        using var host = new CancellationTokenSource();
+        await provider.GetRequiredService<IAppDatabase>().InitializeAsync(token);
+        await home.StartOriginalAsync().WaitAsync(RegisteredSpacesChatBound, token);
+        var actor = (await home.Profiles.GetCurrentAsync(token))!;
+        var spaceAddress = AppContentAddress.Parse($"9to1://spaces/selected/{space.Id:D}");
+        var spacesFactory = SpacesBrowseAppContentFactory.BindOriginalSameProcess(provider, home, app.Token, host.Token);
+        var definition = BuiltInModeSeed.Modes.Single(mode => mode.Key == "spaces");
+        var modes = NativeComposerProxy<IModeRegistry>((name, arguments) => name switch
+        {
+            "GetModeByIdAsync" => Task.FromResult<ModeDefinition?>((Guid)arguments![0]! == definition.Id ? definition : null),
+            "GetModeByKeyAsync" => Task.FromResult<ModeDefinition?>((string)arguments![0]! == definition.Key ? definition : null),
+            "GetModesAsync" => Task.FromResult<IReadOnlyList<ModeDefinition>>([definition]),
+            _ => throw new InvalidOperationException("Unexpected registered app mutation: " + name)
+        });
+        var unused = new UnusedRegisteredChatFactory();
+        var registry = new NativeAppContentRegistry(modes,
+            NativeAppContentRegistry.NativeAppContentRegistrations.Build(unused, spacesFactory, unused),
+            () => !app.IsCancellationRequested && !host.IsCancellationRequested);
+        var chrome = await BrowseChrome.CreateAsync(paths, cancellationToken: token,
+            appContentFactory: registry, homeProfileId: actor.ProfileId);
+        var window = new Window { Width = 1200, Height = 900 };
+        var failures = new List<Exception>();
+        try
+        {
+            await chrome.OpenContentAsync(spaceAddress, cancellationToken: token).WaitAsync(RegisteredSpacesChatBound, token);
+            await body(new(chrome, window, actor, spaceAddress, space.Id, rig, policy, client, drafts, first, second));
+        }
+        catch (Exception error) { failures.Add(error); }
+        try { await chrome.DisposeAsync().AsTask().WaitAsync(RegisteredSpacesChatBound, token); }
+        catch (Exception error) { failures.Add(error); }
+        finally { window.Content = null; window.Close(); }
+        if (failures.Count != 0) throw new AggregateException("Registered Spaces journey or original close failed.", failures);
+    }
+
+    private sealed record RegisteredSpacesChatFixture(BrowseChrome Chrome, Window Window, AuthenticatedResourceActor Actor,
+        AppContentAddress SpaceAddress, Guid SpaceId, Rig Rig, CompiledComposerSpacePolicySource Policy,
+        CompiledComposerGuardedClient Client, NativeComposerDraftStore Drafts, ModelDescriptor First, ModelDescriptor Second)
+    {
+        internal IBrowseNativeAppContentSession OriginalSession =>
+            Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Chrome.ObserveOriginalAppContent(Chrome.State.SelectedTabId));
+
+        internal HavenModelProjectionSnapshot SecondSnapshot() =>
+            HavenModelProjectionSnapshot.CreateValidated(Actor, Actor.AuthenticationRevision, "User", Actor.ProfileId,
+                "registered-chat-route", 2, 1, Rig.Provider.Id, "route-b", true, true, [], null);
+
+        internal async Task<NewChatPage> NewChatAsync()
+        {
+            var root = OriginalSession.OriginalNativeView;
+            Window.Content = root;
+            Window.Show();
+            Dispatcher.UIThread.RunJobs();
+            Window.UpdateLayout();
+            var spaces = Assert.Single(root.GetVisualDescendants().OfType<SpacesHomePage>());
+            var button = Assert.Single(root.GetVisualDescendants().OfType<Button>(),
+                control => AutomationProperties.GetAutomationId(control) == "space-new-chat");
+            var center = button.TranslatePoint(new Point(button.Bounds.Width / 2, button.Bounds.Height / 2), Window)!.Value;
+            Window.MouseDown(center, MouseButton.Left);
+            Window.MouseUp(center, MouseButton.Left);
+            await spaces.CaptureTaskSidebarActionsAsync().WaitAsync(RegisteredSpacesChatBound, TestContext.Current.CancellationToken);
+            var page = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            Assert.Equal(SpaceId, page.CurrentConversation.SpaceId);
+            return page;
+        }
+
+        internal async Task<ChatComposerCuiView> ComposerAsync(NewChatPage page)
+        {
+            Dispatcher.UIThread.RunJobs();
+            Window.UpdateLayout();
+            var composer = Assert.Single(page.GetVisualDescendants().OfType<ChatComposerCuiView>());
+            await composer.InitializeAsync().WaitAsync(RegisteredSpacesChatBound, TestContext.Current.CancellationToken);
+            return composer;
+        }
+
+        internal TextBox Input(ChatComposerCuiView composer) =>
+            Assert.Single(composer.GetVisualDescendants().OfType<TextBox>(),
+                control => AutomationProperties.GetAutomationId(control) == "composer-input");
+
+        internal Task InvokeSend(ChatComposerCuiView composer)
+        {
+            Dispatcher.UIThread.RunJobs();
+            Window.UpdateLayout();
+            var send = Assert.Single(composer.GetVisualDescendants().OfType<Button>(),
+                control => AutomationProperties.GetAutomationId(control) == "send-button");
+            Assert.True(send.IsEffectivelyVisible);
+            Assert.True(send.IsEnabled);
+            var peer = Assert.IsAssignableFrom<AutomationPeer>(ControlAutomationPeer.CreatePeerForElement(send));
+            Assert.IsAssignableFrom<IInvokeProvider>(peer.GetProvider<IInvokeProvider>()).Invoke();
+            return composer.CaptureOriginalActionSettlement();
+        }
+    }
+
+    private sealed class UnusedRegisteredChatFactory : IBrowseAppContentFactory
+    {
+        public IBrowseAppContentSession CreateSession(BrowseAppContentRequest request) =>
+            throw new InvalidOperationException("The registered Spaces journey cannot acquire another app factory.");
     }
 
     [AvaloniaFact]
@@ -1345,7 +1629,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         }
     }
 
-    private sealed class CompiledComposerGuardedClient(Client inner, IModelProvider provider) : IOriginalPrivateContextModelClient
+    private sealed class CompiledComposerGuardedClient(Client inner, IModelProvider provider) : IOriginalPrivateContextModelClient, IProviderModelClient
     {
         internal int CatalogueReads;
         internal int GuardedDispatches;

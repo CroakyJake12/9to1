@@ -1048,9 +1048,17 @@ public sealed partial class App
                 // to be selected when its asynchronous model resolution completes.
                 var originalChrome = _chrome;
                 var originalTab = originalChrome?.State.SelectedTabId;
-                var originalSpaces = originalTab is { } tabId
-                    ? originalChrome?.ObserveOriginalAppContent(tabId) as SpacesBrowseAppContentSession : null;
-                var originalChat = originalSpaces?.CaptureSelectedChatModelTarget();
+                NativeAppContentRegistry.IOriginalChatModelTarget? originalChat = null;
+                if (originalChrome is not null && originalTab is { } tabId &&
+                    originalChrome.ObserveOriginalAppContent(tabId) is { } originalSession)
+                {
+                    originalChat = NativeAppContentRegistry.CaptureOriginalChatModelTarget(
+                        originalSession, tabId, actor.ProfileId);
+                    if (originalChat is not null &&
+                        (originalChrome.State.SelectedTabId != tabId ||
+                         !ReferenceEquals(originalChrome.ObserveOriginalAppContent(tabId), originalChat.OriginalSession)))
+                        originalChat = null;
+                }
                 HomeModelPickerOriginalSessionProvider session;
                 try
                 {
@@ -1066,11 +1074,11 @@ public sealed partial class App
                         var source = _homeModelSelectionSource ?? _services.GetService<HomeModelSelectionSource>();
                         source?.NotifyRouteCommitted();
                         if (source is not null && originalChrome is not null && originalTab is { } tab &&
-                            originalSpaces is not null && originalChat is not null)
+                            originalChat is not null)
                         {
                             var commit = Interlocked.Increment(ref _chatRouteCommitGeneration);
                             Track(ApplyCommittedRouteToOriginalChatAsync(source, originalChrome, tab,
-                                originalSpaces, originalChat, actor, commit, ModelProjectionToken));
+                                originalChat, actor, commit, ModelProjectionToken));
                         }
                     });
                     session = new HomeModelPickerOriginalSessionProvider(notifying, _home.Profiles);
@@ -1118,8 +1126,8 @@ public sealed partial class App
         }
 
         private async Task ApplyCommittedRouteToOriginalChatAsync(HomeModelSelectionSource source,
-            HavenOS.Apps.Browse.BrowseChrome chrome, Guid tab, SpacesBrowseAppContentSession spaces,
-            SpacesBrowseAppContentSession.OriginalModelTarget target, AuthenticatedResourceActor actor,
+            HavenOS.Apps.Browse.BrowseChrome chrome, Guid tab,
+            NativeAppContentRegistry.IOriginalChatModelTarget target, AuthenticatedResourceActor actor,
             long commit, CancellationToken token)
         {
             try
@@ -1130,11 +1138,11 @@ public sealed partial class App
                     snapshot is not null && snapshot.Actor != actor) return;
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    if (!IsCurrent || token.IsCancellationRequested ||
+                    if (!IsCurrent || token.IsCancellationRequested || _actor != actor ||
                         commit != Volatile.Read(ref _chatRouteCommitGeneration) ||
                         !ReferenceEquals(_chrome, chrome) || chrome.State.SelectedTabId != tab ||
-                        !ReferenceEquals(chrome.ObserveOriginalAppContent(tab), spaces)) return;
-                    spaces.ApplySelectedChatModelTarget(target, snapshot, actor);
+                        !ReferenceEquals(chrome.ObserveOriginalAppContent(tab), target.OriginalSession)) return;
+                    target.Apply(snapshot, actor);
                 });
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested) { }
