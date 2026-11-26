@@ -88,6 +88,7 @@
     <Compile Include="NewTabBackgroundAssetsTests.cs" />
     <Compile Include="UnifiedHomeContentTests.SettingsCatalog.cs;UnifiedHomeContentTests.NewTabCustomisation.cs;UnifiedHomeContentTests.NewTabShortcuts.cs;UnifiedHomeContentTests.NewTabShortcutDrag.cs;UnifiedHomeContentTests.NewTabWidgets.cs" />
     <Compile Include="UnifiedHomeContentTests.SettingsKeyboard.cs" />
+    <Compile Include="EmbeddedSettingsSceneLayoutTests.cs" />
     <Compile Include="UnifiedHomeContentTests.Rail.cs;UnifiedHomeContentTests.InterfaceScale.cs;UnifiedHomeContentTests.HomeInterfaceScale.cs" />
     <Compile Include="FilesWorkspaceSetupTests.cs;OriginalTabTransientPresentationTests.cs" />
     <Compile Include="DesktopBorrowerOriginalLifetimeTests.cs" />

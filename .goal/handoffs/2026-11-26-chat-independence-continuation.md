@@ -59,3 +59,12 @@ Finish the native failure/repair/test/review/commit trial; review and integrate 
 The original regeneration run retained three fixture-setup failures; its seven corrected cases passed. The first extended provider test compile retained an xUnit cancellation-token analyzer error, corrected without changing production code; all26 cases then passed. No broad unrelated test repair was imported. Counts above belong to separate focused runs and overlap; do not sum them into a unique test total.
 
 Native source publish/acceptance remains pending at this documentation checkpoint. Current runtime still91d36a7 until the managed lifecycle records its actual replacement. The private qualification backend now returns settlement only after its exact CPU handler's finished event; it never forwards to production inference.
+
+
+## Native publish and discovered blocker at 10:10 GMT
+
+The full clean-source9d2a41cffe publish passed the real guard (157.7s, minimum67,967MiB available RAM) and immutable-manifest validation. The prior91d runtime refused its normal close lease;86 profile/mission/worktree evidence files and a consistent database snapshot were backed up and hash verified. Only its verified owned process group received the authorised SIGTERM. The real exit-15 was reviewed through recover-failed; it was not labelled clean. Successor run9e76cb2f-adb1-48a5-acdd-f8d636bfcb54 started09:54 with the same profile and the private labelled CPU fixture.
+
+Actual native model-route Save reached Home review. Desktop focus was shared with another task, so subsequent functional checks used the app's real AT-SPI controls, validated against its process identity; no accessibility dispatch is claimed as completion by itself. Opening Home Settings Permissions at10:10:20 caused actual exit1: ShowAtlasSection assigned `0 1fr`, which the native HavenLength parser rejects. Crash log, launch/exit receipts, action log, Home state and consistent SQLite snapshot were retained under qualification work/chat-native-permissions-crash-20261126-101020.
+
+The minimal correction is `0px 1fr`. A focused owning regression now exercises the embedded Permissions scene through actual HavenSceneControl.Measure/Arrange. Its execution and replacement publish/native acceptance are pending at this commit. Do not claim native model switching, regeneration, Stop or current rendering acceptance yet. Production inference/training remains unchanged.

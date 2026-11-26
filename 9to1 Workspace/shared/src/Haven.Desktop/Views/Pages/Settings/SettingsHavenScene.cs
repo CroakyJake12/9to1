@@ -329,7 +329,7 @@ internal sealed partial class SettingsHavenScene : IDisposable
     internal void ShowAtlasSection(string key)
     {
         NavigateTo(key);
-        Root.Columns = "0 1fr";
+        Root.Columns = "0px 1fr";
         foreach (var node in new HavenElement[] { Sidebar, CompactNavigation, PageTitle, PageDescription, _searchRow })
             node.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         Content.SetValue(HavenProperties.Padding, HavenThickness.Parse("0px"));

@@ -163,3 +163,7 @@ The native Build CPU qualification now completed a real 9to1 source edit, an int
 - Dulche: owned stop requires exact ID, terminal state and explicit settlement. Source daemon contract captures the worker's real finished event and bounds its wait outside locks. Production daemon deployment and real-model qualification remain pending; no training/GPU/service mutation.
 - Build CUI: independently reviewed Antigravity grouping/promoted mission controls; all existing actions, bindings and IDs preserved; bounded header Wrap rows and earlier manual-project access. Full Atlas pane layout remains unimplemented.
 - Focused guarded checks: recovery25; Stop/modelroute15; retrycache4; regeneration7; provider26; CUI41. Separate runs, with overlapping scope; full evidence in `.goal/handoffs/2026-11-26-chat-independence-continuation.md`. Native rendering/actual successor run must be recorded separately after publish.
+
+### Native review-flow blocker found at 10:10 GMT
+
+The9d2a41cffe candidate published and launched under managed custody. Actual Home Settings Permissions navigation then crashed during first layout because embedded SettingsHavenScene supplied a unitless zero column. The focused correction uses0px and an owning native-scene measure/arrange regression. Runtime exit1 and profile evidence remain retained; the failed run is not acceptance of model selection/Stop/Regenerate. Replacement validation remains pending at this checkpoint.
