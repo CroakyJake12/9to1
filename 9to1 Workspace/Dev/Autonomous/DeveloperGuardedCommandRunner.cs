@@ -13,6 +13,17 @@ namespace HavenOS.Apps.Dev.Autonomous;
 /// </summary>
 public sealed class DeveloperGuardedCommandRunner
 {
+    private readonly TimeSpan _sdkLockWaitTimeout;
+
+    public DeveloperGuardedCommandRunner() : this(TimeSpan.FromSeconds(120)) { }
+
+    public DeveloperGuardedCommandRunner(TimeSpan sdkLockWaitTimeout)
+    {
+        if (sdkLockWaitTimeout <= TimeSpan.Zero || sdkLockWaitTimeout > TimeSpan.FromSeconds(120))
+            throw new ArgumentOutOfRangeException(nameof(sdkLockWaitTimeout), "SDK lock wait must be positive and no longer than 120 seconds.");
+        _sdkLockWaitTimeout = sdkLockWaitTimeout;
+    }
+
     private static readonly Regex MsBuildDiagnosticRegex = new(
         @"^(?<file>.+?)\((?<line>\d+),(?<col>\d+)\):\s+(?<sev>error|warning)\s+(?<code>[A-Z0-9]+):\s+(?<msg>.*?)(?:\s+\[.*\])?$",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -70,7 +81,34 @@ public sealed class DeveloperGuardedCommandRunner
         var sdkLockPath = string.IsNullOrWhiteSpace(options.SdkLockPath)
             ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "state", "9to1-sdk.lock")
             : options.SdkLockPath;
-        await using var sdkLock = await AcquireSdkLockAsync(sdkLockPath, Emit, TimeSpan.FromSeconds(120), cancellationToken).ConfigureAwait(false);
+        IAsyncDisposable acquiredLock;
+        try
+        {
+            acquiredLock = await AcquireSdkLockAsync(sdkLockPath, Emit, _sdkLockWaitTimeout, cancellationToken).ConfigureAwait(false);
+        }
+        catch (SdkLockTimeoutException ex)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Emit($"[SDK LOCK] {ex.Message} No build or test process was started; verification may be retried.");
+            sw.Stop();
+            return new DeveloperBuildVerificationReport(
+                BuildSucceeded: false,
+                TestsSucceeded: false,
+                BuildExitCode: 124,
+                TestExitCode: -1,
+                TestsPassed: 0,
+                TestsFailed: 0,
+                TestsSkipped: 0,
+                BuildProject: cleanBuild,
+                TestProject: cleanTest,
+                TestFilter: testFilter,
+                CombinedOutput: combined.ToString(),
+                Diagnostics: [],
+                VerifiedAt: DateTimeOffset.UtcNow,
+                SourceDiffSha256: sourceDiffSha256,
+                DurationSeconds: Math.Round(sw.Elapsed.TotalSeconds, 2));
+        }
+        await using var sdkLock = acquiredLock;
 
         var buildArgs = new List<string>
         {
@@ -434,50 +472,77 @@ public sealed class DeveloperGuardedCommandRunner
         Directory.CreateDirectory(Path.GetDirectoryName(full)!);
         var deadline = Stopwatch.GetTimestamp() + (long)(waitTimeout.TotalSeconds * Stopwatch.Frequency);
         var announced = false;
+        IOException? lastContention = null;
         while (true)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            if (Stopwatch.GetTimestamp() >= deadline)
+                throw LockTimeout();
+
+            FileStream? stream = null;
             try
             {
                 // Existing development scripts use POSIX flock(LOCK_EX). FileShare.None does not
                 // reliably interoperate with that advisory lock on Linux, so acquire the same flock.
-                var stream = new FileStream(full, FileMode.OpenOrCreate, FileAccess.ReadWrite,
+                stream = new FileStream(full, FileMode.OpenOrCreate, FileAccess.ReadWrite,
                     OperatingSystem.IsLinux() ? FileShare.ReadWrite : FileShare.None);
-                if (!OperatingSystem.IsLinux()) return new FileLockHandle(stream, flockHeld: false);
+                if (!OperatingSystem.IsLinux())
+                {
+                    var handle = new FileLockHandle(stream, flockHeld: false);
+                    stream = null; // Ownership transfers to the returned lease.
+                    return handle;
+                }
                 var fd = checked((int)stream.SafeFileHandle.DangerousGetHandle());
                 if (Flock(fd, LockExclusive | LockNonBlocking) == 0)
-                    return new FileLockHandle(stream, flockHeld: true);
+                {
+                    var handle = new FileLockHandle(stream, flockHeld: true);
+                    stream = null;
+                    return handle;
+                }
 
                 var errno = Marshal.GetLastPInvokeError();
-                stream.Dispose();
                 if (errno is not (11 or 35 or 4))
                     throw new InvalidOperationException($"Could not acquire SDK flock (errno {errno}).");
-
-                if (!announced)
-                {
-                    emit($"[SDK LOCK] Waiting for serial SDK lock {full} (bounded to {waitTimeout.TotalSeconds:0}s)...");
-                    announced = true;
-                }
-                var remaining = TimeSpan.FromSeconds((deadline - Stopwatch.GetTimestamp()) / (double)Stopwatch.Frequency);
-                if (remaining <= TimeSpan.Zero)
-                    throw new TimeoutException($"Timed out waiting for serial SDK lock {full} after {waitTimeout.TotalSeconds:0}s.");
-                await Task.Delay(remaining < TimeSpan.FromMilliseconds(250) ? remaining : TimeSpan.FromMilliseconds(250), cancellationToken).ConfigureAwait(false);
-                continue;
             }
-            catch (IOException) when (Stopwatch.GetTimestamp() < deadline)
+            catch (IOException ex) when (IsSdkLockContention(ex))
             {
-                if (!announced)
-                {
-                    emit($"[SDK LOCK] Waiting for serial SDK lock {full} (bounded to {waitTimeout.TotalSeconds:0}s)...");
-                    announced = true;
-                }
-                var remaining = TimeSpan.FromSeconds((deadline - Stopwatch.GetTimestamp()) / (double)Stopwatch.Frequency);
-                await Task.Delay(remaining < TimeSpan.FromMilliseconds(250) ? remaining : TimeSpan.FromMilliseconds(250), cancellationToken).ConfigureAwait(false);
+                // FileStream can report sharing contention before the explicit flock. Normalize
+                // exhaustion even when this final open fails at the deadline; other IO errors escape.
+                lastContention = ex;
             }
-            if (Stopwatch.GetTimestamp() >= deadline)
-                throw new TimeoutException($"Timed out waiting for serial SDK lock {full} after {waitTimeout.TotalSeconds:0}s.");
+            finally
+            {
+                stream?.Dispose();
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!announced)
+            {
+                emit($"[SDK LOCK] Waiting for serial SDK lock {full} (bounded to {waitTimeout.TotalSeconds:0.###}s)...");
+                announced = true;
+            }
+            var remaining = TimeSpan.FromSeconds((deadline - Stopwatch.GetTimestamp()) / (double)Stopwatch.Frequency);
+            if (remaining <= TimeSpan.Zero)
+                throw LockTimeout();
+            await Task.Delay(remaining < TimeSpan.FromMilliseconds(250) ? remaining : TimeSpan.FromMilliseconds(250), cancellationToken).ConfigureAwait(false);
         }
+
+        SdkLockTimeoutException LockTimeout() => new(
+            $"Timed out waiting for serial SDK lock {full} after {waitTimeout.TotalSeconds:0.###}s.", lastContention);
     }
+
+    private static bool IsSdkLockContention(IOException exception)
+    {
+        // Windows sharing/lock HRESULTs may also be used by a managed IO layer on Unix.
+        if (unchecked((uint)exception.HResult) is 0x80070020u or 0x80070021u) return true;
+        var nativeError = exception.HResult & 0xffff;
+        return OperatingSystem.IsWindows() ? nativeError is 32 or 33
+            : OperatingSystem.IsLinux() ? nativeError == 11
+            : (OperatingSystem.IsMacOS() || OperatingSystem.IsFreeBSD()) && nativeError == 35;
+    }
+
+    private sealed class SdkLockTimeoutException(string message, IOException? lastContention)
+        : TimeoutException(message, lastContention) { }
 
     private const int LockExclusive = 2;
     private const int LockNonBlocking = 4;
