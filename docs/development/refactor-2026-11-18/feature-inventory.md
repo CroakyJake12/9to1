@@ -154,3 +154,12 @@ Native Build project-open status is positioned beside its action; existing missi
 ## Native independence continuation — 26 November 2026
 
 The native Build CPU qualification now completed a real 9to1 source edit, an intended failing regression followed by a passing result, full-diff review-receipt exchange, and a guarded Git commit (`77a77ec7c8`). The produced repair reconciles partial edit-batch progress against the actual source diff, restoring fresh reads and edit checkpoints after a later item fails. The SDK runner now reports lock-wait exhaustion as transient verification exit124 without starting a command; it preserves serial access, bounded waits and cancellation. Focused owning checks accompany both repairs. This establishes the native workflow with a scripted CPU backend; real model coding quality and the broader independence acceptance remain separate.
+
+
+### Chat continuation — native independence controls (2026-11-26)
+
+- Build: native CPU-scripted fail/repair/test/review/commit cycle completed at77a77ec7c8, integrated94c62c08c; SDK admission124 remains recoverable, and read-only retry does not poison dedup or reset idle progress. Historical failed requirement retained.
+- Spaces: acknowledged ordinary Stop joins exact source cleanup; Home model route remains bound to originating conversation. Regenerate uses existing branch-bound input and preserves branch drafts/attachments; queued messages prevent branch-changing regeneration before side effects.
+- Dulche: owned stop requires exact ID, terminal state and explicit settlement. Source daemon contract captures the worker's real finished event and bounds its wait outside locks. Production daemon deployment and real-model qualification remain pending; no training/GPU/service mutation.
+- Build CUI: independently reviewed Antigravity grouping/promoted mission controls; all existing actions, bindings and IDs preserved; bounded header Wrap rows and earlier manual-project access. Full Atlas pane layout remains unimplemented.
+- Focused guarded checks: recovery25; Stop/modelroute15; retrycache4; regeneration7; provider26; CUI41. Separate runs, with overlapping scope; full evidence in `.goal/handoffs/2026-11-26-chat-independence-continuation.md`. Native rendering/actual successor run must be recorded separately after publish.

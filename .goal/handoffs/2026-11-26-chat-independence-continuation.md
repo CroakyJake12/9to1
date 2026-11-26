@@ -1,6 +1,6 @@
 # Chat continuation — 26 November 2026
 
-Jacob explicitly asked this chat to continue Astra 2's development from the supplied handover. The native candidate remains `qualification/independence-20261126` in the owner-converged checkout. Main contains separate training and other work and is not the integration source for this pass.
+Jacob explicitly asked this chat to continue Astra 2's development from the supplied handover. At takeover the native candidate was `qualification/independence-20261126` in the owner-converged checkout. Integration subsequently moved to `chat/independence-native-20261126` at `/home/jacob/Documents/GitHub/9to1-worktrees/chat-independence-native-20261126` after unrelated worker edits appeared in the shared checkout. All of those edits were preserved. Main contains separate training and other work and is not the integration source for this pass.
 
 ## Observed takeover state
 
@@ -37,3 +37,25 @@ Finish the native failure/repair/test/review/commit trial; review and integrate 
 - Parent reviewed the complete produced commit and integrated it as `94c62c08c25a11acee2266820ae9bc2ad6cc32a6`, preserving the failure-cache, lock-recovery and Spaces commits.
 - Focused integrated recovery test run completed with guard exit0, 10.2 seconds, minimum available RAM72,277MiB. Raw log: existing qualification `work/autonomy-tests/chat-continuation-recovery-1.log`; TRX alongside. Covers command-runner contention/cancellation, mission reliability and failed-verification reuse.
 - Mission shows one completed task and the separately retained first blocked attempt. The current trial requirement completed; its historical failed requirement was not deleted or relabelled.
+
+## Integrated source and validation at 09:47 GMT
+
+- Ordinary chat cancellation now joins the exact original source and cleanup before qualifying expected user Stop. Foreign/faulted same-token cancellation and independent cleanup failures remain observable. Integrated `5ccfd1bde` with portable test include `55a1c7222`.
+- Regeneration now reuses the prepared branch and original persisted user input through the full send path. Here preserves the composer and pending attachments. A new branch preserves the outgoing branch draft and restores the target branch draft; parked queued inputs block branch-changing regeneration before mutation. Integrated `15fe3b19d`; fixture context admission corrected in `64ab19dad`.
+- Build read-only verification does not cache transient124 or call it progress; identical retries remain bounded by the idle limit. Hard outcomes remain deduplicated (`d4531e642`).
+- Owned Dulche stop now requires the exact issued identity, accepted terminal state and JSON boolean `settled:true`. Cancellation before dispatch remains ordinary; uncertain dispatch before headers faults explicitly without inventing a run ID. The client joins its HTTP response before its independent bounded stop (`b8c356865`, `e9b5cf805`, test cleanup `3ef6140f9`).
+- Source-only daemon change `41a9ce4a6` captures the exact worker finished event, releases the shared lock before a bounded two-second wait, then checks no active replacement and terminal state. Ten new deterministic Python tests plus one existing stop-all regression passed in the isolated worker checkout. These prove daemon worker retirement after engine-context cleanup, not independent GPU quiescence. **The running production daemon was not restarted or updated.** Older daemon replies without settlement proof remain explicitly unconfirmed in this client.
+- Antigravity's two-file Build CUI snapshot was independently reviewed and integrated in `2f3537a46`: grouped sections and promoted mission controls, all41/157 existing IDs and9/82 actions retained. Parent corrected unconstrained header action rows and moved manual project opening before the saved list. This is not a sticky header, collapsible explorer or full Atlas v4 workspace layout. No draft Atlas v5/training asset change.
+
+| Focused run | Result | Guard elapsed | Minimum available RAM | Raw log under qualification work |
+|---|---:|---:|---:|---|
+| Integrated recovery | 25 passed | 10.2 s | 72,277 MiB | `autonomy-tests/chat-continuation-recovery-1.log` |
+| Ordinary Stop and model routing | 15 passed | 228.7 s | 67,951 MiB | `baseline/chat-spaces-stop-1.log` |
+| Transient verification cache | 4 passed | 7.8 s | 66,757 MiB | `baseline/chat-transient-cache-1.log` |
+| Native regeneration | 7 passed | 16.5 s | 68,721 MiB | `baseline/chat-regeneration-2.log` |
+| Dulche stop provider | 26 passed | 19.0 s | 68,692 MiB | `baseline/chat-provider-3.log` |
+| Build CUI document and transport | 41 passed | 9.3 s | 69,200 MiB | `baseline/chat-build-cui-tests-1.log` |
+
+The original regeneration run retained three fixture-setup failures; its seven corrected cases passed. The first extended provider test compile retained an xUnit cancellation-token analyzer error, corrected without changing production code; all26 cases then passed. No broad unrelated test repair was imported. Counts above belong to separate focused runs and overlap; do not sum them into a unique test total.
+
+Native source publish/acceptance remains pending at this documentation checkpoint. Current runtime still91d36a7 until the managed lifecycle records its actual replacement. The private qualification backend now returns settlement only after its exact CPU handler's finished event; it never forwards to production inference.
