@@ -13,317 +13,411 @@
     <Action name="dev.mission-open-changed-file" command="dev.mission-open-changed-file" parameter="{Binding changedFile.SelectionKey}" />
   </Actions>
   <Page>
-    <Container id="dev-workbench" margin="16" accessible-name="Development project workspace" Type="Vertical Stack" CellGap="12" VerticalScrolling="True" HorizontalScrolling="False">
-      <Text id="dev-project-title" text="{Binding ProjectTitle}" font-size="24" text-wrapping="Wrap" />
-      <Text text="{Binding ProjectSummary}" text-wrapping="Wrap" accessible-name="Existing project and task" />
-      <Container Type="Wrap">
-        <Button id="dev-refresh" action="dev.refresh" content="Refresh project" />
-        <Button id="dev-tree" action="dev.tree" content="Project files" />
-        <Button id="dev-git-status" action="dev.git-status" content="Git status" Interactive="{Binding CanInspectGit}" />
-        <Button id="dev-git-diff" action="dev.git-diff" content="Working-tree diff" Interactive="{Binding CanInspectGit}" />
-        <Button id="dev-git-branches" action="dev.git-branches" content="Branches" Interactive="{Binding CanInspectGit}" />
-      </Container>
-      <Text text="Git shows saved files. Unsaved editor changes are kept separately." text-wrapping="Wrap" />
-      <Text text="{Binding Files}" text-wrapping="Wrap" accessible-name="Observed project file tree" IsVisible="{Binding ShowLegacyFiles}" />
-      <Container Type="Vertical Stack" CellGap="6" IsVisible="{Binding ShowProjectExplorer}" accessible-name="Project explorer">
-        <Container Type="Wrap" CellGap="6">
-          <Text text="{Binding ProjectFolder}" font-size="18" />
-          <Button id="dev-project-folder-up" action="dev.project-folder-up" content="Parent folder" Interactive="{Binding CanProjectFolderUp}" />
-        </Container>
-        <Repeat id="dev-project-entries" Source="{Binding ProjectEntries}" As="item" Key="{Binding item.SelectionKey}">
-          <Container Type="Horizontal Stack" CellGap="8">
-            <Button id="dev-open-project-entry" action="dev.open-project-entry" content="{Binding item.Name}" accessible-name="{Binding item.AccessibleName}" Interactive="{Binding item.CanOpen}" />
-            <Text text="{Binding item.Details}" foreground="{Resource CuiTextSoftBrush}" />
+    <Container id="dev-workbench" margin="16" accessible-name="Development project workspace" Type="Vertical Stack" CellGap="16" VerticalScrolling="True" HorizontalScrolling="False">
+
+      <!-- Workbench Header & Top-Level Context Bar -->
+      <Container id="dev-workbench-header" Type="Vertical Stack" CellGap="6" Background="{Resource CuiPanelBrush}" CornerRadius="12" Padding="16">
+        <Container Type="Vertical Stack" CellGap="8">
+          <Container Type="Vertical Stack" CellGap="2">
+            <Text id="dev-project-title" text="{Binding ProjectTitle}" font-size="24" font-weight="800" text-wrapping="Wrap" />
+            <Text text="{Binding ProjectSummary}" text-wrapping="Wrap" accessible-name="Existing project and task" foreground="{Resource CuiTextSoftBrush}" />
           </Container>
-        </Repeat>
-        <Container Type="Wrap" CellGap="6">
-          <Button id="dev-project-entries-previous" action="dev.project-entries-previous" content="Previous files" Interactive="{Binding CanProjectEntriesPrevious}" />
-          <Button id="dev-project-entries-next" action="dev.project-entries-next" content="Next files" Interactive="{Binding CanProjectEntriesNext}" />
+          <Container Type="Wrap" CellGap="6">
+            <Button id="dev-refresh" action="dev.refresh" content="Refresh project" />
+            <Button id="dev-tree" action="dev.tree" content="Project files" />
+            <Button id="dev-git-status" action="dev.git-status" content="Git status" Interactive="{Binding CanInspectGit}" />
+            <Button id="dev-git-diff" action="dev.git-diff" content="Working-tree diff" Interactive="{Binding CanInspectGit}" />
+            <Button id="dev-git-branches" action="dev.git-branches" content="Branches" Interactive="{Binding CanInspectGit}" />
+          </Container>
         </Container>
-        <Text text="{Binding ProjectExplorerStatus}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+        <Text text="Git shows saved files. Unsaved editor changes are kept separately." text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+        <Container Type="Wrap" CellGap="8" Margin="0 4 0 0">
+          <Input id="dev-branch-name" placeholdertext="Literal branch name" accessible-name="Git branch name" Type="Text" Value="{Binding BranchName}" />
+          <Button id="dev-create-branch" action="dev.create-branch" content="Create branch" />
+          <Button id="dev-switch-branch" action="dev.switch-branch" content="Switch branch" />
+        </Container>
       </Container>
-      <Text text="New source file" font-size="18" />
-      <Text text="Create one file directly in the selected project root. New directories, nested paths and multi-file project templates are not supported here." text-wrapping="Wrap" />
-      <Input id="dev-new-file-name" Type="Text" Value="{Binding NewFileName}" placeholdertext="Page.cui" accessible-name="New direct-root file name" Interactive="{Binding CanConfigureNewFile}" />
-      <Input id="dev-new-file-cui-template" Type="Checkbox" Checked="{Binding NewFileCuiTemplate}" content="Start with a CUI page (clear for an empty source file)" Interactive="{Binding CanConfigureNewFile}" />
-      <Button id="dev-review-new-source-file" action="dev.review-new-source-file" content="Review new file" HorizontalAlignment="Left" Interactive="{Binding CanReviewNewFile}" />
-      <Text text="{Binding NewFileReview}" text-wrapping="Wrap" accessible-name="Reviewed new-file path root template byte length and source hash" />
-      <Object id="dev-new-file-source" type="ReadOnlyText" text="{Binding NewFileSource}" font-family="monospace" min-height="100" accessible-name="Exact reviewed source to create; blank for an empty source file" />
-      <Button id="dev-create-new-source-file" action="dev.create-new-source-file" content="Create reviewed file" HorizontalAlignment="Left" Interactive="{Binding CanCreateNewFile}" />
-      <Text id="dev-template-import-status" text="{Binding TemplateImportStatus}" text-wrapping="Wrap" accessible-name="Template file creation outcomes" />
-      <Text text="{Binding NewFileStatus}" text-wrapping="Wrap" accessible-name="Actual reviewed CREATE and cold source open status" />
-      <Text text="Go to file" font-size="18" />
-      <Input id="dev-file-navigation-query" Type="Text" Value="{Binding FileNavigationQuery}" placeholdertext="Literal filename or path fragment" accessible-name="Find an existing file across the current project" />
-      <Button id="dev-find-project-file" action="dev.find-project-file" content="Find files" HorizontalAlignment="Left" Interactive="{Binding CanFindProjectFile}" />
-      <Text text="{Binding FileNavigationStatus}" text-wrapping="Wrap" accessible-name="Project file search status" />
-      <Container Type="Vertical Stack" CellGap="4" max-height="240" VerticalScrolling="True" accessible-name="Matching project files">
-        <Repeat id="dev-file-navigation-matches" Source="{Binding FileNavigationMatches}" As="fileMatch" Key="{Binding fileMatch.SelectionKey}">
-          <Button id="dev-open-file-navigation-result" action="dev.open-file-navigation-result" content="{Binding fileMatch.RelativePath}" accessible-name="{Binding fileMatch.AccessibleName}" Interactive="{Binding fileMatch.CanOpen}" horizontal-content-alignment="Left" />
-        </Repeat>
+
+      <!-- Autonomous Mission Command Deck (Promoted to Top for Immediate Access) -->
+      <Container id="dev-autonomous-mission-card" Type="Vertical Stack" CellGap="12" Background="{Resource CuiPanelBrush}" CornerRadius="12" Padding="16" BorderColor="{Resource CuiLineBrush}" BorderThickness="1">
+        <Container Type="Vertical Stack" CellGap="8">
+          <Text text="Autonomous development" font-size="20" font-weight="800" text-wrapping="Wrap" />
+          <Container Type="Wrap" CellGap="6">
+            <Button id="dev-mission-refresh-models" action="dev.mission-refresh-models" content="Refresh Dulche models" Interactive="{Binding CanRefreshMissionModels}" />
+            <Button id="dev-mission-load-programme" action="dev.mission-load-programme" content="Load programme" Interactive="{Binding CanLoadMissionProgramme}" />
+            <Button id="dev-mission-start" action="dev.mission-start" content="Start autonomous mission" Interactive="{Binding CanStartMission}" />
+            <Button id="dev-mission-step" action="dev.mission-step" content="Run next step" Interactive="{Binding CanStepMission}" />
+            <Button id="dev-mission-pause" action="dev.mission-pause" content="Pause mission" Interactive="{Binding CanPauseMission}" />
+            <Button id="dev-mission-resume" action="dev.mission-resume" content="Resume mission" Interactive="{Binding CanResumeMission}" />
+            <Button id="dev-mission-stop" action="dev.mission-stop" content="Stop active run" Interactive="{Binding CanStopMission}" />
+            <Button id="dev-mission-checkpoint" action="dev.mission-checkpoint" content="Save checkpoint" Interactive="{Binding CanCheckpointMission}" />
+            <Button id="dev-mission-compact" action="dev.mission-compact" content="Compact context" Interactive="{Binding CanCompactMission}" />
+          </Container>
+        </Container>
+
+        <!-- Mission Objective & Models -->
+        <Input id="dev-mission-objective" Type="Text" Value="{Binding MissionObjective}" placeholdertext="Persistent mission objective" accessible-name="Autonomous mission objective" />
+        <Input id="dev-mission-programme-path" Type="Text" Value="{Binding MissionProgrammePath}" placeholdertext="Programme manifest or docs/specification path" accessible-name="Specification implementation programme path" />
+
+        <Container Type="Wrap" CellGap="8">
+          <Input id="dev-mission-worker-model" Type="Text" Value="{Binding MissionWorkerModel}" placeholdertext="Primary worker model ID" accessible-name="Primary Dulche worker model" />
+          <Input id="dev-mission-supervisor-model" Type="Text" Value="{Binding MissionSupervisorModel}" placeholdertext="Supervisor / reviewer model ID" accessible-name="Independent Dulche supervisor model" />
+        </Container>
+
+        <Container Type="Wrap" CellGap="8">
+          <Input id="dev-mission-auto-advance" Type="Checkbox" content="Auto-advance requirements" Checked="{Binding MissionAutoAdvance, mode=TwoWay}" accessible-name="Automatically progress to subsequent specification requirements" />
+          <Input id="dev-mission-guarded-integration" Type="Checkbox" content="Guarded auto-integration" Checked="{Binding MissionGuardedIntegration, mode=TwoWay}" accessible-name="Commit verified and reviewed changes to isolated mission branch" />
+          <Input id="dev-mission-enable-reasoning" Type="Checkbox" content="Stream reasoning" Checked="{Binding MissionEnableReasoning, mode=TwoWay}" accessible-name="Stream live model reasoning output where available" />
+        </Container>
+
+        <!-- Mission Status Summaries -->
+        <Container Type="Vertical Stack" CellGap="4" Padding="10 8" Background="{Resource CuiInputSurfaceBrush}" CornerRadius="8">
+          <Text id="dev-mission-status" text="{Binding MissionStatusSummary}" text-wrapping="Wrap" accessible-name="Autonomous mission state, branch, revision and progress" font-weight="600" />
+          <Text id="dev-mission-models" text="{Binding MissionModelsSummary}" text-wrapping="Wrap" accessible-name="Connected Dulche models and hardware telemetry" foreground="{Resource CuiTextSoftBrush}" />
+          <Text id="dev-mission-context" text="{Binding MissionContextSummary}" text-wrapping="Wrap" accessible-name="Context window usage, compaction epoch and durable checkpoint count" foreground="{Resource CuiTextSoftBrush}" />
+        </Container>
+
+        <!-- Tasks and Activity -->
+        <Text text="Specification tasks" font-size="16" font-weight="700" />
+        <Text id="dev-mission-active-task" text="{Binding MissionActiveTaskSummary}" text-wrapping="Wrap" accessible-name="Active requirement specification, acceptance criteria and verification state" font-weight="600" />
+        <Container Type="Vertical Stack" CellGap="4" max-height="160" VerticalScrolling="True" accessible-name="Autonomous mission task ledger">
+          <Repeat id="dev-mission-tasks" Source="{Binding MissionTasks}" As="missionTask" Key="{Binding missionTask.SelectionKey}">
+            <Button id="dev-mission-select-task" action="dev.mission-select-task" content="{Binding missionTask.Label}" accessible-name="{Binding missionTask.AccessibleName}" Interactive="{Binding missionTask.CanSelect}" horizontal-content-alignment="Left" />
+          </Repeat>
+        </Container>
+
+        <!-- Live Model Reasoning & Output -->
+        <Container Type="Vertical Stack" CellGap="4">
+          <Text text="Live model reasoning" font-size="14" font-weight="700" />
+          <Object type="ReadOnlyText" id="dev-mission-live-reasoning" text="{Binding MissionLiveReasoning}" font-family="monospace" min-height="100" max-height="220" accessible-name="Live streaming model reasoning output" />
+          <Text text="Live model output" font-size="14" font-weight="700" />
+          <Object type="ReadOnlyText" id="dev-mission-live-output" text="{Binding MissionLiveOutput}" font-family="monospace" min-height="100" max-height="220" accessible-name="Live streaming model generation output" />
+        </Container>
+
+        <!-- Autonomous Diff Review -->
+        <Container Type="Vertical Stack" CellGap="4">
+          <Text text="Autonomous diff review" font-size="14" font-weight="700" />
+          <Container Type="Wrap" CellGap="6">
+            <Repeat id="dev-mission-changed-files" Source="{Binding MissionChangedFiles}" As="changedFile" Key="{Binding changedFile.SelectionKey}">
+              <Button id="dev-mission-open-changed-file" action="dev.mission-open-changed-file" content="{Binding changedFile.Label}" accessible-name="{Binding changedFile.AccessibleName}" Interactive="{Binding changedFile.CanOpen}" />
+            </Repeat>
+          </Container>
+          <Object type="ReadOnlyText" id="dev-mission-diff-review" text="{Binding MissionDiffReview}" font-family="monospace" min-height="120" max-height="260" accessible-name="Live unified diff for active autonomous task" />
+        </Container>
+
+        <!-- Guarded Build & Test Log -->
+        <Container Type="Vertical Stack" CellGap="4">
+          <Text text="Guarded build and test log" font-size="14" font-weight="700" />
+          <Object type="ReadOnlyText" id="dev-mission-terminal-log" text="{Binding MissionBuildOutput}" font-family="monospace" min-height="120" max-height="240" accessible-name="Live guarded compilation and test output" />
+        </Container>
+
+        <!-- Supervision, Delegation, Checkpoints & Events -->
+        <Container Type="Vertical Stack" CellGap="6">
+          <Text text="Agent delegation and supervision" font-size="14" font-weight="700" />
+          <Input id="dev-mission-delegate-prompt" Type="Text" Value="{Binding MissionDelegatePrompt}" placeholdertext="Delegate a question or review objective to the supervisor model" accessible-name="Supervisor delegation prompt" />
+          <Container Type="Wrap" CellGap="6">
+            <Button id="dev-mission-delegate" action="dev.mission-delegate" content="Delegate to supervisor" Interactive="{Binding CanDelegateMission}" />
+            <Button id="dev-mission-approve-integration" action="dev.mission-approve-integration" content="Approve and integrate" Interactive="{Binding CanApproveMissionIntegration}" />
+            <Button id="dev-mission-reject-integration" action="dev.mission-reject-integration" content="Request rework" Interactive="{Binding CanRejectMissionIntegration}" />
+          </Container>
+          <Object type="ReadOnlyText" id="dev-mission-delegation-log" text="{Binding MissionDelegationLog}" font-family="monospace" min-height="100" max-height="200" accessible-name="Supervisor reviews and delegated subagent runs" />
+          <Text text="Checkpoints and activity" font-size="14" font-weight="700" />
+          <Object type="ReadOnlyText" id="dev-mission-checkpoints" text="{Binding MissionCheckpointsSummary}" font-family="monospace" min-height="80" max-height="160" accessible-name="Durable mission checkpoints and integration receipts" />
+          <Object type="ReadOnlyText" id="dev-mission-events" text="{Binding MissionEventLog}" font-family="monospace" min-height="80" max-height="160" accessible-name="Autonomous mission activity log" />
+        </Container>
       </Container>
-      <Container Type="Wrap" CellGap="6">
-        <Button id="dev-file-navigation-previous" action="dev.file-navigation-previous" content="Previous matching files" Interactive="{Binding CanFileNavigationPrevious}" />
-        <Button id="dev-file-navigation-next" action="dev.file-navigation-next" content="Next matching files" Interactive="{Binding CanFileNavigationNext}" />
+
+      <!-- Project Explorer & Navigation -->
+      <Container id="dev-explorer-section" Type="Vertical Stack" CellGap="10" Background="{Resource CuiPanelBrush}" CornerRadius="12" Padding="16">
+        <Text text="Files and Explorer" font-size="18" font-weight="750" />
+        <Text text="{Binding Files}" text-wrapping="Wrap" accessible-name="Observed project file tree" IsVisible="{Binding ShowLegacyFiles}" />
+        <Container Type="Vertical Stack" CellGap="6" IsVisible="{Binding ShowProjectExplorer}" accessible-name="Project explorer">
+          <Container Type="Wrap" CellGap="6">
+            <Text text="{Binding ProjectFolder}" font-size="16" font-weight="700" />
+            <Button id="dev-project-folder-up" action="dev.project-folder-up" content="Parent folder" Interactive="{Binding CanProjectFolderUp}" />
+          </Container>
+          <Repeat id="dev-project-entries" Source="{Binding ProjectEntries}" As="item" Key="{Binding item.SelectionKey}">
+            <Container Type="Horizontal Stack" CellGap="8">
+              <Button id="dev-open-project-entry" action="dev.open-project-entry" content="{Binding item.Name}" accessible-name="{Binding item.AccessibleName}" Interactive="{Binding item.CanOpen}" />
+              <Text text="{Binding item.Details}" foreground="{Resource CuiTextSoftBrush}" />
+            </Container>
+          </Repeat>
+          <Container Type="Wrap" CellGap="6">
+            <Button id="dev-project-entries-previous" action="dev.project-entries-previous" content="Previous files" Interactive="{Binding CanProjectEntriesPrevious}" />
+            <Button id="dev-project-entries-next" action="dev.project-entries-next" content="Next files" Interactive="{Binding CanProjectEntriesNext}" />
+          </Container>
+          <Text text="{Binding ProjectExplorerStatus}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+        </Container>
+
+        <!-- New Source File -->
+        <Text text="New source file" font-size="16" font-weight="700" Margin="0 4 0 0" />
+        <Text text="Create one file directly in the selected project root. New directories, nested paths and multi-file project templates are not supported here." text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+        <Input id="dev-new-file-name" Type="Text" Value="{Binding NewFileName}" placeholdertext="Page.cui" accessible-name="New direct-root file name" Interactive="{Binding CanConfigureNewFile}" />
+        <Input id="dev-new-file-cui-template" Type="Checkbox" Checked="{Binding NewFileCuiTemplate}" content="Start with a CUI page (clear for an empty source file)" Interactive="{Binding CanConfigureNewFile}" />
+        <Button id="dev-review-new-source-file" action="dev.review-new-source-file" content="Review new file" HorizontalAlignment="Left" Interactive="{Binding CanReviewNewFile}" />
+        <Text text="{Binding NewFileReview}" text-wrapping="Wrap" accessible-name="Reviewed new-file path root template byte length and source hash" />
+        <Object id="dev-new-file-source" type="ReadOnlyText" text="{Binding NewFileSource}" font-family="monospace" min-height="100" accessible-name="Exact reviewed source to create; blank for an empty source file" />
+        <Button id="dev-create-new-source-file" action="dev.create-new-source-file" content="Create reviewed file" HorizontalAlignment="Left" Interactive="{Binding CanCreateNewFile}" />
+        <Text id="dev-template-import-status" text="{Binding TemplateImportStatus}" text-wrapping="Wrap" accessible-name="Template file creation outcomes" />
+        <Text text="{Binding NewFileStatus}" text-wrapping="Wrap" accessible-name="Actual reviewed CREATE and cold source open status" />
+
+        <!-- Find / Go to File -->
+        <Text text="Go to file" font-size="16" font-weight="700" Margin="0 4 0 0" />
+        <Input id="dev-file-navigation-query" Type="Text" Value="{Binding FileNavigationQuery}" placeholdertext="Literal filename or path fragment" accessible-name="Find an existing file across the current project" />
+        <Button id="dev-find-project-file" action="dev.find-project-file" content="Find files" HorizontalAlignment="Left" Interactive="{Binding CanFindProjectFile}" />
+        <Text text="{Binding FileNavigationStatus}" text-wrapping="Wrap" accessible-name="Project file search status" />
+        <Container Type="Vertical Stack" CellGap="4" max-height="200" VerticalScrolling="True" accessible-name="Matching project files">
+          <Repeat id="dev-file-navigation-matches" Source="{Binding FileNavigationMatches}" As="fileMatch" Key="{Binding fileMatch.SelectionKey}">
+            <Button id="dev-open-file-navigation-result" action="dev.open-file-navigation-result" content="{Binding fileMatch.RelativePath}" accessible-name="{Binding fileMatch.AccessibleName}" Interactive="{Binding fileMatch.CanOpen}" horizontal-content-alignment="Left" />
+          </Repeat>
+        </Container>
+        <Container Type="Wrap" CellGap="6">
+          <Button id="dev-file-navigation-previous" action="dev.file-navigation-previous" content="Previous matching files" Interactive="{Binding CanFileNavigationPrevious}" />
+          <Button id="dev-file-navigation-next" action="dev.file-navigation-next" content="Next matching files" Interactive="{Binding CanFileNavigationNext}" />
+        </Container>
+        <Input id="dev-source-path" placeholdertext="Select an existing project file" accessible-name="Project-relative source file" Type="Text" Value="{Binding SourcePath}" />
+        <Button id="dev-open-source" action="dev.open-source" content="Open source" HorizontalAlignment="Left" Interactive="{Binding CanOpenSource}" />
+
+        <!-- Text Search in Files -->
+        <Text text="Search in files" font-size="16" font-weight="700" Margin="0 4 0 0" />
+        <Input id="dev-search-query" placeholdertext="Search project text" accessible-name="Project search query" Type="Text" Value="{Binding SearchQuery}" />
+        <Container Type="Wrap" CellGap="8">
+          <Input id="dev-search-match-case" Type="Checkbox" content="Match case" Checked="{Binding SearchMatchCase, mode=TwoWay}" Interactive="{Binding CanStructuredSearch}" />
+          <Input id="dev-search-regex" Type="Checkbox" content="Regular expression" Checked="{Binding SearchUseRegex, mode=TwoWay}" Interactive="{Binding CanStructuredSearch}" accessible-name="Search saved source with a per-line regular expression" />
+          <Button id="dev-search" action="dev.search" content="Search files" />
+        </Container>
+        <Text text="{Binding SearchResults}" text-wrapping="Wrap" accessible-name="Actual file search results" />
+        <Container Type="Vertical Stack" CellGap="4" max-height="200" VerticalScrolling="True" accessible-name="Matching saved source files">
+          <Repeat id="dev-search-matches" Source="{Binding ProjectSearchMatches}" As="searchHit" Key="{Binding searchHit.SelectionKey}">
+            <Button id="dev-open-search-result" action="dev.open-search-result" accessible-name="{Binding searchHit.AccessibleName}" Interactive="{Binding searchHit.CanOpen}" horizontal-content-alignment="Left">
+              <Text text="{Binding searchHit.Label}" text-wrapping="Wrap" />
+            </Button>
+          </Repeat>
+        </Container>
       </Container>
-      <Input id="dev-source-path" placeholdertext="Select an existing project file" accessible-name="Project-relative source file" Type="Text" Value="{Binding SourcePath}" />
-      <Button id="dev-open-source" action="dev.open-source" content="Open source" HorizontalAlignment="Left" Interactive="{Binding CanOpenSource}" />
-      <Input id="dev-search-query" placeholdertext="Search project text" accessible-name="Project search query" Type="Text" Value="{Binding SearchQuery}" />
-      <Container Type="Wrap" CellGap="8">
-        <Input id="dev-search-match-case" Type="Checkbox" content="Match case" Checked="{Binding SearchMatchCase, mode=TwoWay}" Interactive="{Binding CanStructuredSearch}" />
-        <Input id="dev-search-regex" Type="Checkbox" content="Regular expression" Checked="{Binding SearchUseRegex, mode=TwoWay}" Interactive="{Binding CanStructuredSearch}" accessible-name="Search saved source with a per-line regular expression" />
-        <Button id="dev-search" action="dev.search" content="Search files" />
+
+      <!-- Source Editor & Draft Management -->
+      <Container id="dev-editor-section" Type="Vertical Stack" CellGap="10" Background="{Resource CuiPanelBrush}" CornerRadius="12" Padding="16">
+        <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="6" accessible-name="Open source documents">
+          <Container Column="0" Type="Wrap" CellGap="6" HorizontalAlignment="Center">
+            <Repeat id="dev-source-tabs" Source="{Binding SourceTabs}" As="item" Key="{Binding item.SelectionKey}">
+              <Container Type="Horizontal Stack" CellGap="2">
+                <Button id="dev-select-source-tab" action="dev.select-source-tab" content="{Binding item.Label}" accessible-name="{Binding item.AccessibleName}" Interactive="{Binding item.CanSelect}" />
+                <Button id="dev-close-source-tab" action="dev.close-source-tab" content="×" accessible-name="{Binding item.CloseAccessibleName}" Interactive="{Binding item.CanClose}" />
+              </Container>
+            </Repeat>
+          </Container>
+          <Button id="dev-pin-source-tab" Column="1" action="dev.toggle-source-tab-pin" content="{Binding SourceTabPinLabel}" accessible-name="Pin or unpin the selected source tab" Interactive="{Binding CanPinSourceTab}" />
+        </Container>
+        <Text text="{Binding SourceTabsStatus}" foreground="{Resource CuiTextSoftBrush}" text-wrapping="Wrap" accessible-name="Open source document status" />
+        <Text text="{Binding EditorTitle}" text-wrapping="Wrap" accessible-name="Selected source and draft revision" font-weight="700" />
+
+        <!-- Protected Draft Recovery / Conflict Resolution -->
+        <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding HasRecoveredConflicts}" accessible-name="Protected drafts requiring explicit reconciliation" Padding="10 8" Background="{Resource CuiInputSurfaceBrush}" CornerRadius="8">
+          <Text text="Your saved drafts are safe. Source changed while they were closed." font-size="16" font-weight="750" text-wrapping="Wrap" />
+          <Repeat id="dev-recovered-drafts" Source="{Binding RecoveredDraftCandidates}" As="recovered" Key="{Binding recovered.SelectionKey}">
+            <Button id="dev-inspect-recovered-draft" action="dev.inspect-recovered-draft" content="{Binding recovered.Label}" accessible-name="{Binding recovered.AccessibleName}" Interactive="{Binding recovered.CanInspect}" />
+          </Repeat>
+          <Text text="{Binding RecoveredDraftSummary}" text-wrapping="Wrap" accessible-name="Current source and retained draft revision identities" />
+          <Text text="Current source" font-weight="700" />
+          <Object type="ReadOnlyText" id="dev-recovery-current" text="{Binding RecoveredCurrentSource}" font-family="monospace" min-height="100" accessible-name="Freshly authorised current source for recovery comparison" />
+          <Text text="Your retained draft" font-weight="700" />
+          <Object type="ReadOnlyText" id="dev-recovery-retained" text="{Binding RecoveredRetainedDraft}" font-family="monospace" min-height="100" accessible-name="Protected unsaved draft for recovery comparison" />
+          <Text text="Merge your changes" font-weight="700" />
+          <Input id="dev-recovery-merged" Type="Text" Value="{Binding RecoveredMergedDraft}" Multiline="true" font-family="monospace" min-height="160" accessible-name="Editable merged recovery draft; current source and original retained draft stay unchanged" Interactive="{Binding CanEditRecoveryMerge}" />
+          <Container Type="Wrap" CellGap="6">
+            <Button id="dev-use-merged-recovered-draft" action="dev.use-merged-recovered-draft" content="Use merged draft" HorizontalAlignment="Left" accessible-name="Use this merged draft against freshly read current source; review is required before saving" Interactive="{Binding CanUseMergedRecoveredDraft}" />
+            <Button id="dev-reconcile-recovered-draft" action="dev.reconcile-recovered-draft" content="Use recovered draft against current source" HorizontalAlignment="Left" accessible-name="Explicitly reconcile this retained draft against freshly read current source; review is still required before writing" Interactive="{Binding CanReconcileRecoveredDraft}" />
+          </Container>
+        </Container>
+
+        <!-- Navigation and Find/Replace in Draft -->
+        <Container Type="Horizontal Stack" CellGap="8">
+          <Input id="dev-source-location" Type="Text" Value="{Binding SourceLocation}" placeholdertext="Line or line:column" accessible-name="Source line and optional column" />
+          <Button id="dev-go-to-source-location" action="dev.go-to-source-location" content="Go to" accessible-name="Go to line and column in the current source draft" Interactive="{Binding CanGoToSourceLocation}" />
+        </Container>
+        <Text text="Find and replace literal text" font-weight="700" />
+        <Container Type="Wrap" CellGap="8">
+          <Input id="dev-source-find" Type="Text" Value="{Binding SourceFindQuery}" placeholdertext="Find in this draft" accessible-name="Literal text to find in the current source draft" />
+          <Input id="dev-source-find-case" Type="Checkbox" Checked="{Binding SourceFindMatchCase}" Content="Match case" accessible-name="Match literal text case" />
+          <Button id="dev-find-previous-source" action="dev.find-previous-source" content="Find previous" Interactive="{Binding CanFindSourceText}" />
+          <Button id="dev-find-next-source" action="dev.find-next-source" content="Find next" Interactive="{Binding CanFindSourceText}" />
+        </Container>
+        <Container Type="Wrap" CellGap="8">
+          <Input id="dev-source-replacement" Type="Text" Value="{Binding SourceReplaceText}" placeholdertext="Replacement text" accessible-name="Literal replacement text; an empty value removes the found text" />
+          <Button id="dev-replace-source-match" action="dev.replace-source-match" content="Replace found match" Interactive="{Binding CanReplaceSourceMatch}" />
+          <Button id="dev-replace-all-source" action="dev.replace-all-source" content="Replace all in draft" Interactive="{Binding CanFindSourceText}" />
+        </Container>
+        <Text text="{Binding SourceFindStatus}" text-wrapping="Wrap" accessible-name="Current draft find and replace result" />
+
+        <!-- Code Editor Surface -->
+        <Input id="dev-code-editor" font-family="monospace" min-height="320" accessible-name="Complete source editor" Type="Text" Value="{Binding DraftText}" TextSelection="{Binding EditorTextSelection}" Multiline="true" Interactive="{Binding CanEditSource}" />
+        <Text text="{Binding LineEndingsStatus}" text-wrapping="Wrap" accessible-name="Current draft line endings" />
+        <Container Type="Wrap" CellGap="6">
+          <Button id="dev-check-line-endings" action="dev.check-line-endings" content="Check line endings" Interactive="{Binding CanCheckLineEndings}" />
+          <Button id="dev-use-lf-endings" action="dev.use-lf-endings" content="Use LF in draft" Interactive="{Binding CanUseLfEndings}" />
+          <Button id="dev-use-crlf-endings" action="dev.use-crlf-endings" content="Use CRLF in draft" Interactive="{Binding CanUseCrLfEndings}" />
+        </Container>
+        <Container Type="Wrap" CellGap="6">
+          <Button id="dev-undo-source-edit" action="dev.undo-source-edit" content="Undo draft edit" accessible-name="Undo the last edit in this document; saving still requires review" Interactive="{Binding CanUndoSourceEdit}" />
+          <Button id="dev-redo-source-edit" action="dev.redo-source-edit" content="Redo draft edit" accessible-name="Redo the next edit in this document; saving still requires review" Interactive="{Binding CanRedoSourceEdit}" />
+          <Button id="dev-preview-edit" action="dev.preview-edit" content="Review this edit" Interactive="{Binding CanPreview}" />
+          <Button id="dev-apply-edit" action="dev.apply-edit" content="Apply reviewed edit" Interactive="{Binding CanApply}" />
+          <Button id="dev-save-reviewed" action="dev.save-reviewed" content="Save reviewed" accessible-name="Save all current reviewed drafts through individual Home write approvals" Interactive="{Binding CanSaveReviewed}" />
+          <Button id="dev-revert-pass" action="dev.revert-pass" content="Prepare last pass revert" Interactive="{Binding CanRevert}" />
+        </Container>
+        <Text text="{Binding SaveReviewedStatus}" text-wrapping="Wrap" accessible-name="Actual per-file save outcomes" />
+        <Text text="{Binding ReviewSummary}" text-wrapping="Wrap" accessible-name="This edit pass only" />
+        <Text text="Before this pass" font-weight="700" />
+        <Object type="ReadOnlyText" id="dev-pass-before" text="{Binding BeforeText}" font-family="monospace" min-height="80" accessible-name="Exact source before this pass" />
+        <Text text="After this pass" font-weight="700" />
+        <Object type="ReadOnlyText" id="dev-pass-after" text="{Binding AfterText}" font-family="monospace" min-height="80" accessible-name="Exact proposed source after this pass" />
       </Container>
-      <Text text="{Binding SearchResults}" text-wrapping="Wrap" accessible-name="Actual file search results" />
-      <Container Type="Vertical Stack" CellGap="4" max-height="240" VerticalScrolling="True" accessible-name="Matching saved source files">
-        <Repeat id="dev-search-matches" Source="{Binding ProjectSearchMatches}" As="searchHit" Key="{Binding searchHit.SelectionKey}">
-          <Button id="dev-open-search-result" action="dev.open-search-result" accessible-name="{Binding searchHit.AccessibleName}" Interactive="{Binding searchHit.CanOpen}" horizontal-content-alignment="Left">
-            <Text text="{Binding searchHit.Label}" text-wrapping="Wrap" />
-          </Button>
-        </Repeat>
-      </Container>
-      <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="6" accessible-name="Open source documents">
-        <Container Column="0" Type="Wrap" CellGap="6" HorizontalAlignment="Center">
-          <Repeat id="dev-source-tabs" Source="{Binding SourceTabs}" As="item" Key="{Binding item.SelectionKey}">
-            <Container Type="Horizontal Stack" CellGap="2">
-              <Button id="dev-select-source-tab" action="dev.select-source-tab" content="{Binding item.Label}" accessible-name="{Binding item.AccessibleName}" Interactive="{Binding item.CanSelect}" />
-              <Button id="dev-close-source-tab" action="dev.close-source-tab" content="×" accessible-name="{Binding item.CloseAccessibleName}" Interactive="{Binding item.CanClose}" />
+
+      <!-- Live Preview & Visual CUI Builder -->
+      <Container id="dev-cui-designer-section" Type="Vertical Stack" CellGap="10" Background="{Resource CuiPanelBrush}" CornerRadius="12" Padding="16">
+        <Text text="Static CUI draft preview" font-size="18" font-weight="750" />
+        <Text text="{Binding CuiDraftPreviewSubset}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+        <Button id="dev-preview-cui-draft" action="dev.preview-cui-draft" content="Preview current draft" HorizontalAlignment="Left" Interactive="{Binding CanPreviewCuiDraft}" />
+        <Text text="{Binding CuiDraftPreviewStatus}" text-wrapping="Wrap" accessible-name="Preview status" />
+        <Object id="dev-cui-draft-preview" type="DeveloperCuiDraftPreview" min-height="200" max-height="500" accessible-name="Static CUI draft preview" />
+        <Object id="dev-cui-preview-diagnostics" type="ReadOnlyText" text="{Binding CuiDraftPreviewDiagnostics}" max-height="180" font-family="monospace" accessible-name="Preview problems" />
+        <Button id="dev-analyze-cui-draft" action="dev.analyze-cui-draft" content="Check CUI draft" HorizontalAlignment="Left" Interactive="{Binding CanAnalyzeCuiDraft}" />
+        <Text text="{Binding CuiDraftAnalysisStatus}" text-wrapping="Wrap" accessible-name="CUI draft syntax checks and component outline availability" />
+
+        <Text text="CUI draft Problems" font-size="14" font-weight="700" />
+        <Container Type="Vertical Stack" max-height="160" VerticalScrolling="True" accessible-name="CUI draft Problems">
+          <Repeat id="dev-cui-problems" Source="{Binding CuiDraftProblems}" As="problem" Key="{Binding problem.SelectionKey}">
+            <Button id="dev-go-to-cui-problem" action="dev.go-to-cui-problem" accessible-name="{Binding problem.AccessibleName}" Interactive="{Binding problem.CanNavigate}" horizontal-content-alignment="Left">
+              <Text text="{Binding problem.Label}" text-wrapping="Wrap" />
+            </Button>
+          </Repeat>
+        </Container>
+
+        <Text text="CUI draft component outline" font-size="14" font-weight="700" />
+        <Container Type="Vertical Stack" max-height="160" VerticalScrolling="True" accessible-name="CUI draft component outline">
+          <Repeat id="dev-cui-outline" Source="{Binding CuiDraftOutline}" As="element" Key="{Binding element.SelectionKey}">
+            <Button id="dev-go-to-cui-element" action="dev.go-to-cui-element" content="{Binding element.Label}" accessible-name="{Binding element.AccessibleName}" Interactive="{Binding element.CanNavigate}" horizontal-content-alignment="Left" />
+          </Repeat>
+        </Container>
+
+        <!-- CUI Component Properties -->
+        <Text text="CUI component properties" font-size="16" font-weight="700" Margin="0 4 0 0" />
+        <Text text="{Binding CuiPropertyStatus}" text-wrapping="Wrap" accessible-name="CUI component property inspection status and unsupported syntax limits" foreground="{Resource CuiTextSoftBrush}" />
+        <Container Type="Vertical Stack" max-height="160" VerticalScrolling="True" accessible-name="Existing CUI component attributes">
+          <Repeat id="dev-cui-properties" Source="{Binding CuiInspectableProperties}" As="property" Key="{Binding property.SelectionKey}">
+            <Container Type="Vertical Stack" CellGap="2">
+              <Button id="dev-select-cui-property" action="dev.select-cui-property" content="{Binding property.Label}" accessible-name="{Binding property.Label}" Interactive="{Binding property.CanSelect}" horizontal-content-alignment="Left" />
+              <Text text="{Binding property.Details}" text-wrapping="Wrap" />
             </Container>
           </Repeat>
         </Container>
-        <Button id="dev-pin-source-tab" Column="1" action="dev.toggle-source-tab-pin" content="{Binding SourceTabPinLabel}" accessible-name="Pin or unpin the selected source tab" Interactive="{Binding CanPinSourceTab}" />
+        <Text text="{Binding CuiSelectedProperty}" accessible-name="Selected component and registered property type" font-weight="600" />
+        <Input id="dev-cui-property-value" Type="Text" Value="{Binding CuiPropertyDraftValue}" Multiline="true" accessible-name="New literal attribute value; bindings and resources remain code-defined" Interactive="{Binding CanEditCuiProperty}" />
+        <Button id="dev-change-cui-property" action="dev.change-cui-property" content="Update property in draft" HorizontalAlignment="Left" Interactive="{Binding CanChangeCuiProperty}" />
+
+        <!-- Text Hierarchy & Child Editing -->
+        <Text text="Text hierarchy" font-size="16" font-weight="700" Margin="0 4 0 0" />
+        <Text text="Move a self-closing literal Text across an adjacent literal Text, or remove it from the draft. Surrounding comments and spacing stay in place. Other constructs stay in source." text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+        <Container Type="Wrap" CellGap="6">
+          <Button id="dev-move-cui-text-up" action="dev.move-cui-text-up" content="Move Text up" Interactive="{Binding CanMoveCuiTextUp}" />
+          <Button id="dev-move-cui-text-down" action="dev.move-cui-text-down" content="Move Text down" Interactive="{Binding CanMoveCuiTextDown}" />
+          <Button id="dev-remove-cui-text" action="dev.remove-cui-text" content="Remove Text from draft" Interactive="{Binding CanRemoveCuiText}" />
+        </Container>
+        <Text text="{Binding CuiTextEditingStatus}" text-wrapping="Wrap" accessible-name="Text hierarchy editing status" />
+
+        <Text text="Add a Text child" font-size="16" font-weight="700" Margin="0 4 0 0" />
+        <Text text="Adds fixed text inside the selected Page or layout Container. Templates, repeating content, theme scopes, custom controls and shorthand stay in source." text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+        <Input id="dev-cui-new-text-id" Type="Text" Value="{Binding CuiNewTextId}" placeholdertext="new-text" accessible-name="Unique ID for the new Text component" Interactive="{Binding CanConfigureCuiTextChild}" />
+        <Input id="dev-cui-new-text-value" Type="Text" Value="{Binding CuiNewTextValue}" Multiline="true" accessible-name="Fixed text for the new component" Interactive="{Binding CanConfigureCuiTextChild}" />
+        <Button id="dev-add-cui-text-child" action="dev.add-cui-text-child" content="Add Text to draft" HorizontalAlignment="Left" Interactive="{Binding CanAddCuiTextChild}" />
+        <Text text="{Binding CuiTextChildStatus}" text-wrapping="Wrap" accessible-name="Add Text result" />
       </Container>
-      <Text text="{Binding SourceTabsStatus}" foreground="{Resource CuiTextSoftBrush}" text-wrapping="Wrap" accessible-name="Open source document status" />
-      <Text text="{Binding EditorTitle}" text-wrapping="Wrap" accessible-name="Selected source and draft revision" />
-      <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding HasRecoveredConflicts}" accessible-name="Protected drafts requiring explicit reconciliation">
-        <Text text="Your saved drafts are safe. Source changed while they were closed." font-size="18" text-wrapping="Wrap" />
-        <Repeat id="dev-recovered-drafts" Source="{Binding RecoveredDraftCandidates}" As="recovered" Key="{Binding recovered.SelectionKey}">
-          <Button id="dev-inspect-recovered-draft" action="dev.inspect-recovered-draft" content="{Binding recovered.Label}" accessible-name="{Binding recovered.AccessibleName}" Interactive="{Binding recovered.CanInspect}" />
-        </Repeat>
-        <Text text="{Binding RecoveredDraftSummary}" text-wrapping="Wrap" accessible-name="Current source and retained draft revision identities" />
-        <Text text="Current source" />
-        <Object type="ReadOnlyText" id="dev-recovery-current" text="{Binding RecoveredCurrentSource}" font-family="monospace" min-height="100" accessible-name="Freshly authorised current source for recovery comparison" />
-        <Text text="Your retained draft" />
-        <Object type="ReadOnlyText" id="dev-recovery-retained" text="{Binding RecoveredRetainedDraft}" font-family="monospace" min-height="100" accessible-name="Protected unsaved draft for recovery comparison" />
-        <Text text="Merge your changes" />
-        <Input id="dev-recovery-merged" Type="Text" Value="{Binding RecoveredMergedDraft}" Multiline="true" font-family="monospace" min-height="160" accessible-name="Editable merged recovery draft; current source and original retained draft stay unchanged" Interactive="{Binding CanEditRecoveryMerge}" />
-        <Button id="dev-use-merged-recovered-draft" action="dev.use-merged-recovered-draft" content="Use merged draft" HorizontalAlignment="Left" accessible-name="Use this merged draft against freshly read current source; review is required before saving" Interactive="{Binding CanUseMergedRecoveredDraft}" />
-        <Button id="dev-reconcile-recovered-draft" action="dev.reconcile-recovered-draft" content="Use recovered draft against current source" HorizontalAlignment="Left" accessible-name="Explicitly reconcile this retained draft against freshly read current source; review is still required before writing" Interactive="{Binding CanReconcileRecoveredDraft}" />
-      </Container>
-      <Container Type="Horizontal Stack" CellGap="8">
-        <Input id="dev-source-location" Type="Text" Value="{Binding SourceLocation}" placeholdertext="Line or line:column" accessible-name="Source line and optional column" />
-        <Button id="dev-go-to-source-location" action="dev.go-to-source-location" content="Go to" accessible-name="Go to line and column in the current source draft" Interactive="{Binding CanGoToSourceLocation}" />
-      </Container>
-      <Text text="Find and replace literal text" />
-      <Container Type="Wrap" CellGap="8">
-        <Input id="dev-source-find" Type="Text" Value="{Binding SourceFindQuery}" placeholdertext="Find in this draft" accessible-name="Literal text to find in the current source draft" />
-        <Input id="dev-source-find-case" Type="Checkbox" Checked="{Binding SourceFindMatchCase}" Content="Match case" accessible-name="Match literal text case" />
-        <Button id="dev-find-previous-source" action="dev.find-previous-source" content="Find previous" Interactive="{Binding CanFindSourceText}" />
-        <Button id="dev-find-next-source" action="dev.find-next-source" content="Find next" Interactive="{Binding CanFindSourceText}" />
-      </Container>
-      <Container Type="Wrap" CellGap="8">
-        <Input id="dev-source-replacement" Type="Text" Value="{Binding SourceReplaceText}" placeholdertext="Replacement text" accessible-name="Literal replacement text; an empty value removes the found text" />
-        <Button id="dev-replace-source-match" action="dev.replace-source-match" content="Replace found match" Interactive="{Binding CanReplaceSourceMatch}" />
-        <Button id="dev-replace-all-source" action="dev.replace-all-source" content="Replace all in draft" Interactive="{Binding CanFindSourceText}" />
-      </Container>
-      <Text text="{Binding SourceFindStatus}" text-wrapping="Wrap" accessible-name="Current draft find and replace result" />
-      <Text text="Static CUI draft preview" font-size="18" />
-      <Text text="{Binding CuiDraftPreviewSubset}" text-wrapping="Wrap" />
-      <Button id="dev-preview-cui-draft" action="dev.preview-cui-draft" content="Preview current draft" HorizontalAlignment="Left" Interactive="{Binding CanPreviewCuiDraft}" />
-      <Text text="{Binding CuiDraftPreviewStatus}" text-wrapping="Wrap" accessible-name="Preview status" />
-      <Object id="dev-cui-draft-preview" type="DeveloperCuiDraftPreview" min-height="180" max-height="480" accessible-name="Static CUI draft preview" />
-      <Object id="dev-cui-preview-diagnostics" type="ReadOnlyText" text="{Binding CuiDraftPreviewDiagnostics}" max-height="180" font-family="monospace" accessible-name="Preview problems" />
-      <Button id="dev-analyze-cui-draft" action="dev.analyze-cui-draft" content="Check CUI draft" HorizontalAlignment="Left" Interactive="{Binding CanAnalyzeCuiDraft}" />
-      <Text text="{Binding CuiDraftAnalysisStatus}" text-wrapping="Wrap" accessible-name="CUI draft syntax checks and component outline availability" />
-      <Container Type="Vertical Stack" max-height="200" VerticalScrolling="True" accessible-name="CUI draft Problems">
-        <Repeat id="dev-cui-problems" Source="{Binding CuiDraftProblems}" As="problem" Key="{Binding problem.SelectionKey}">
-          <Button id="dev-go-to-cui-problem" action="dev.go-to-cui-problem" accessible-name="{Binding problem.AccessibleName}" Interactive="{Binding problem.CanNavigate}" horizontal-content-alignment="Left">
-            <Text text="{Binding problem.Label}" text-wrapping="Wrap" />
-          </Button>
-        </Repeat>
-      </Container>
-      <Container Type="Vertical Stack" max-height="200" VerticalScrolling="True" accessible-name="CUI draft component outline">
-        <Repeat id="dev-cui-outline" Source="{Binding CuiDraftOutline}" As="element" Key="{Binding element.SelectionKey}">
-          <Button id="dev-go-to-cui-element" action="dev.go-to-cui-element" content="{Binding element.Label}" accessible-name="{Binding element.AccessibleName}" Interactive="{Binding element.CanNavigate}" horizontal-content-alignment="Left" />
-        </Repeat>
-      </Container>
-      <Text text="CUI component properties" font-size="18" />
-      <Text text="{Binding CuiPropertyStatus}" text-wrapping="Wrap" accessible-name="CUI component property inspection status and unsupported syntax limits" />
-      <Container Type="Vertical Stack" max-height="200" VerticalScrolling="True" accessible-name="Existing CUI component attributes">
-        <Repeat id="dev-cui-properties" Source="{Binding CuiInspectableProperties}" As="property" Key="{Binding property.SelectionKey}">
-          <Container Type="Vertical Stack" CellGap="2">
-            <Button id="dev-select-cui-property" action="dev.select-cui-property" content="{Binding property.Label}" accessible-name="{Binding property.Label}" Interactive="{Binding property.CanSelect}" horizontal-content-alignment="Left" />
-            <Text text="{Binding property.Details}" text-wrapping="Wrap" />
+
+      <!-- Run Targets, Stages, Terminal & Tests -->
+      <Container id="dev-runtime-section" Type="Vertical Stack" CellGap="10" Background="{Resource CuiPanelBrush}" CornerRadius="12" Padding="16">
+        <Text text="Console &amp; Execution Targets" font-size="18" font-weight="750" />
+        <Text text="{Binding RunTargetsStatus}" text-wrapping="Wrap" accessible-name="Declared Run target availability and unsupported provider limits" foreground="{Resource CuiTextSoftBrush}" />
+        <Repeat id="dev-run-targets" Source="{Binding RunTargets}" As="target" Key="{Binding target.SelectionKey}">
+          <Container Type="Vertical Stack" CellGap="2" Padding="4 2">
+            <Button id="dev-select-run-target" action="dev.select-run-target" content="{Binding target.Label}" Interactive="{Binding target.CanSelect}" accessible-name="{Binding target.Label}" HorizontalAlignment="Left" />
+            <Text text="{Binding target.Details}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
           </Container>
         </Repeat>
-      </Container>
-      <Text text="{Binding CuiSelectedProperty}" accessible-name="Selected component and registered property type" />
-      <Input id="dev-cui-property-value" Type="Text" Value="{Binding CuiPropertyDraftValue}" Multiline="true" accessible-name="New literal attribute value; bindings and resources remain code-defined" Interactive="{Binding CanEditCuiProperty}" />
-      <Button id="dev-change-cui-property" action="dev.change-cui-property" content="Update property in draft" HorizontalAlignment="Left" Interactive="{Binding CanChangeCuiProperty}" />
-      <Text text="Text hierarchy" font-size="18" />
-      <Text text="Move a self-closing literal Text across an adjacent literal Text, or remove it from the draft. Surrounding comments and spacing stay in place. Other constructs stay in source." text-wrapping="Wrap" />
-      <Container Type="Wrap" CellGap="6">
-        <Button id="dev-move-cui-text-up" action="dev.move-cui-text-up" content="Move Text up" Interactive="{Binding CanMoveCuiTextUp}" />
-        <Button id="dev-move-cui-text-down" action="dev.move-cui-text-down" content="Move Text down" Interactive="{Binding CanMoveCuiTextDown}" />
-        <Button id="dev-remove-cui-text" action="dev.remove-cui-text" content="Remove Text from draft" Interactive="{Binding CanRemoveCuiText}" />
-      </Container>
-      <Text text="{Binding CuiTextEditingStatus}" text-wrapping="Wrap" accessible-name="Text hierarchy editing status" />
-      <Text text="Add a Text child" font-size="18" />
-      <Text text="Adds fixed text inside the selected Page or layout Container. Templates, repeating content, theme scopes, custom controls and shorthand stay in source." text-wrapping="Wrap" />
-      <Input id="dev-cui-new-text-id" Type="Text" Value="{Binding CuiNewTextId}" placeholdertext="new-text" accessible-name="Unique ID for the new Text component" Interactive="{Binding CanConfigureCuiTextChild}" />
-      <Input id="dev-cui-new-text-value" Type="Text" Value="{Binding CuiNewTextValue}" Multiline="true" accessible-name="Fixed text for the new component" Interactive="{Binding CanConfigureCuiTextChild}" />
-      <Button id="dev-add-cui-text-child" action="dev.add-cui-text-child" content="Add Text to draft" HorizontalAlignment="Left" Interactive="{Binding CanAddCuiTextChild}" />
-      <Text text="{Binding CuiTextChildStatus}" text-wrapping="Wrap" accessible-name="Add Text result" />
-      <Input id="dev-code-editor" font-family="monospace" min-height="280" accessible-name="Complete source editor" Type="Text" Value="{Binding DraftText}" TextSelection="{Binding EditorTextSelection}" Multiline="true" Interactive="{Binding CanEditSource}" />
-      <Text text="{Binding LineEndingsStatus}" text-wrapping="Wrap" accessible-name="Current draft line endings" />
-      <Container Type="Wrap" CellGap="6">
-        <Button id="dev-check-line-endings" action="dev.check-line-endings" content="Check line endings" Interactive="{Binding CanCheckLineEndings}" />
-        <Button id="dev-use-lf-endings" action="dev.use-lf-endings" content="Use LF in draft" Interactive="{Binding CanUseLfEndings}" />
-        <Button id="dev-use-crlf-endings" action="dev.use-crlf-endings" content="Use CRLF in draft" Interactive="{Binding CanUseCrLfEndings}" />
-      </Container>
-      <Container Type="Wrap">
-        <Button id="dev-undo-source-edit" action="dev.undo-source-edit" content="Undo draft edit" accessible-name="Undo the last edit in this document; saving still requires review" Interactive="{Binding CanUndoSourceEdit}" />
-        <Button id="dev-redo-source-edit" action="dev.redo-source-edit" content="Redo draft edit" accessible-name="Redo the next edit in this document; saving still requires review" Interactive="{Binding CanRedoSourceEdit}" />
-        <Button id="dev-preview-edit" action="dev.preview-edit" content="Review this edit" Interactive="{Binding CanPreview}" />
-        <Button id="dev-apply-edit" action="dev.apply-edit" content="Apply reviewed edit" Interactive="{Binding CanApply}" />
-        <Button id="dev-save-reviewed" action="dev.save-reviewed" content="Save reviewed" accessible-name="Save all current reviewed drafts through individual Home write approvals" Interactive="{Binding CanSaveReviewed}" />
-        <Button id="dev-revert-pass" action="dev.revert-pass" content="Prepare last pass revert" Interactive="{Binding CanRevert}" />
-      </Container>
-      <Text text="{Binding SaveReviewedStatus}" text-wrapping="Wrap" accessible-name="Actual per-file save outcomes" />
-      <Text text="{Binding ReviewSummary}" text-wrapping="Wrap" accessible-name="This edit pass only" />
-      <Text text="Before this pass" font-size="18" />
-      <Object type="ReadOnlyText" id="dev-pass-before" text="{Binding BeforeText}" font-family="monospace" min-height="100" accessible-name="Exact source before this pass" />
-      <Text text="After this pass" font-size="18" />
-      <Object type="ReadOnlyText" id="dev-pass-after" text="{Binding AfterText}" font-family="monospace" min-height="100" accessible-name="Exact proposed source after this pass" />
-      <Text text="Declared Run targets" font-size="18" />
-      <Text text="{Binding RunTargetsStatus}" text-wrapping="Wrap" accessible-name="Declared Run target availability and unsupported provider limits" />
-      <Repeat id="dev-run-targets" Source="{Binding RunTargets}" As="target" Key="{Binding target.SelectionKey}">
-        <Container Type="Vertical Stack" CellGap="4">
-          <Button id="dev-select-run-target" action="dev.select-run-target" content="{Binding target.Label}" Interactive="{Binding target.CanSelect}" accessible-name="{Binding target.Label}" />
-          <Text text="{Binding target.Details}" text-wrapping="Wrap" />
+        <Text text="{Binding SelectedRunTargetSummary}" text-wrapping="Wrap" accessible-name="Selected exact Run target and execution admission" font-weight="600" />
+
+        <Container Type="Wrap" CellGap="6">
+          <Button id="dev-new-run-target" action="dev.new-run-target" content="New target" Interactive="{Binding CanConfigureRunTarget}" />
+          <Button id="dev-edit-run-target" action="dev.edit-run-target" content="Edit selected target" Interactive="{Binding CanEditRunTarget}" />
         </Container>
-      </Repeat>
-      <Text text="{Binding SelectedRunTargetSummary}" text-wrapping="Wrap" accessible-name="Selected exact Run target and execution admission" />
-      <Text text="Configure a console target" font-size="18" />
-      <Container Type="Wrap" CellGap="6">
-        <Button id="dev-new-run-target" action="dev.new-run-target" content="New target" Interactive="{Binding CanConfigureRunTarget}" />
-        <Button id="dev-edit-run-target" action="dev.edit-run-target" content="Edit selected target" Interactive="{Binding CanEditRunTarget}" />
-      </Container>
-      <Input id="dev-run-edit-id" Type="Text" Value="{Binding RunEditId}" accessible-name="Stable console target ID" Interactive="{Binding CanConfigureRunTarget}" />
-      <Input id="dev-run-edit-command" Type="Text" Value="{Binding RunEditCommand}" accessible-name="Exact saved console command; saving does not execute" Interactive="{Binding CanConfigureRunTarget}" />
-      <Input id="dev-run-edit-timeout" Type="Text" Value="{Binding RunEditTimeout}" accessible-name="Console timeout in seconds from 1 to 900" Interactive="{Binding CanConfigureRunTarget}" />
-      <Button id="dev-review-run-target" action="dev.review-run-target" content="Review declaration" HorizontalAlignment="Left" Interactive="{Binding CanReviewRunTarget}" />
-      <Object id="dev-run-edit-review" type="ReadOnlyText" text="{Binding RunEditReview}" accessible-name="Exact reviewed declaration and recovery migration limits" />
-      <Button id="dev-save-run-target" action="dev.save-run-target" content="Save reviewed declaration" HorizontalAlignment="Left" Interactive="{Binding CanSaveRunTarget}" />
-      <Text text="{Binding RunEditStatus}" text-wrapping="Wrap" />
-      <Button id="dev-run-selected-target" action="dev.run-selected-target" content="Run selected target" HorizontalAlignment="Left" Interactive="{Binding CanRunSelectedTarget}" />
-      <Input id="dev-terminal-command" placeholdertext="Explicit command in this project" accessible-name="Terminal command" Type="Text" Value="{Binding Command}" />
-      <Button id="dev-terminal-run" action="dev.run-command" content="Run command" HorizontalAlignment="Left" />
-      <Input id="dev-test-command" placeholdertext="Explicit test command" accessible-name="Test command" Type="Text" Value="{Binding TestCommand}" />
-      <Button id="dev-test-run" action="dev.run-tests" content="Run tests" HorizontalAlignment="Left" />
-      <Text text="Saved build stages" font-size="18" />
-      <Text text="{Binding SavedBuildStagesStatus}" text-wrapping="Wrap" accessible-name="Saved build stage availability" />
-      <Repeat id="dev-saved-build-stages" Source="{Binding SavedBuildStages}" As="stage" Key="{Binding stage.SelectionKey}">
-        <Container Type="Vertical Stack" CellGap="4">
-          <Button id="dev-select-build-stage" action="dev.select-build-stage" content="{Binding stage.Label}" accessible-name="{Binding stage.AccessibleName}" Interactive="{Binding stage.CanSelect}" />
-          <Text text="{Binding stage.Details}" text-wrapping="Wrap" />
+        <Input id="dev-run-edit-id" Type="Text" Value="{Binding RunEditId}" accessible-name="Stable console target ID" Interactive="{Binding CanConfigureRunTarget}" />
+        <Input id="dev-run-edit-command" Type="Text" Value="{Binding RunEditCommand}" accessible-name="Exact saved console command; saving does not execute" Interactive="{Binding CanConfigureRunTarget}" />
+        <Input id="dev-run-edit-timeout" Type="Text" Value="{Binding RunEditTimeout}" accessible-name="Console timeout in seconds from 1 to 900" Interactive="{Binding CanConfigureRunTarget}" />
+        <Button id="dev-review-run-target" action="dev.review-run-target" content="Review declaration" HorizontalAlignment="Left" Interactive="{Binding CanReviewRunTarget}" />
+        <Object id="dev-run-edit-review" type="ReadOnlyText" text="{Binding RunEditReview}" accessible-name="Exact reviewed declaration and recovery migration limits" />
+        <Button id="dev-save-run-target" action="dev.save-run-target" content="Save reviewed declaration" HorizontalAlignment="Left" Interactive="{Binding CanSaveRunTarget}" />
+        <Text text="{Binding RunEditStatus}" text-wrapping="Wrap" />
+        <Button id="dev-run-selected-target" action="dev.run-selected-target" content="Run selected target" HorizontalAlignment="Left" Interactive="{Binding CanRunSelectedTarget}" />
+
+        <!-- Ad-hoc Command and Test Runner -->
+        <Text text="Terminal &amp; Test Execution" font-size="16" font-weight="700" Margin="0 4 0 0" />
+        <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
+          <Input id="dev-terminal-command" placeholdertext="Explicit command in this project" accessible-name="Terminal command" Type="Text" Value="{Binding Command}" Column="0" />
+          <Button id="dev-terminal-run" action="dev.run-command" content="Run command" Column="1" />
         </Container>
-      </Repeat>
-      <Text text="{Binding SelectedBuildStageSummary}" text-wrapping="Wrap" accessible-name="Selected saved stage command environment revision and dependencies" />
-      <Text text="Configure a Compile or Test stage" font-size="18" />
-      <Text text="{Binding StageEditStatus}" text-wrapping="Wrap" />
-      <Container Type="Wrap" CellGap="6">
-        <Button id="dev-new-compile-stage" action="dev.new-compile-stage" content="New Compile task" Interactive="{Binding CanConfigureBuildStage}" />
-        <Button id="dev-new-test-stage" action="dev.new-test-stage" content="New Test task" Interactive="{Binding CanConfigureBuildStage}" />
-        <Button id="dev-edit-build-stage" action="dev.edit-build-stage" content="Edit selected stage" Interactive="{Binding CanEditBuildStage}" />
-      </Container>
-      <Text text="{Binding StageEditKind}" accessible-name="Stage kind" />
-      <Input id="dev-stage-edit-task" Type="Text" Value="{Binding StageEditTaskId}" accessible-name="Stable saved task ID" Interactive="{Binding CanConfigureBuildStage}" />
-      <Input id="dev-stage-edit-id" Type="Text" Value="{Binding StageEditStageId}" accessible-name="Stable stage ID" Interactive="{Binding CanConfigureBuildStage}" />
-      <Input id="dev-stage-edit-command" Type="Text" Value="{Binding StageEditCommand}" accessible-name="Exact stage command; saving does not execute" Interactive="{Binding CanConfigureBuildStage}" />
-      <Input id="dev-stage-edit-timeout" Type="Text" Value="{Binding StageEditTimeout}" accessible-name="Stage timeout in seconds from 1 to 900" Interactive="{Binding CanConfigureBuildStage}" />
-      <Button id="dev-review-build-stage" action="dev.review-build-stage" content="Review stage" HorizontalAlignment="Left" Interactive="{Binding CanReviewBuildStage}" />
-      <Object id="dev-stage-edit-review" type="ReadOnlyText" text="{Binding StageEditReview}" accessible-name="Reviewed stage declaration and recovery migration" />
-      <Button id="dev-save-build-stage" action="dev.save-build-stage" content="Save reviewed stage" HorizontalAlignment="Left" Interactive="{Binding CanSaveBuildStage}" />
-      <Input id="dev-stage-task" placeholdertext="Saved build task ID" accessible-name="Saved build task ID" Type="Text" Value="{Binding StageTaskId}" />
-      <Input id="dev-stage-id" placeholdertext="Saved build stage ID" accessible-name="Saved build stage ID" Type="Text" Value="{Binding StageId}" />
-      <Button id="dev-build-stage" action="dev.run-stage" content="Run selected saved stage" HorizontalAlignment="Left" Interactive="{Binding CanRunSavedStage}" />
-      <Input id="dev-branch-name" placeholdertext="Literal branch name" accessible-name="Git branch name" Type="Text" Value="{Binding BranchName}" />
-      <Container Type="Wrap">
-        <Button id="dev-create-branch" action="dev.create-branch" content="Create branch" />
-        <Button id="dev-switch-branch" action="dev.switch-branch" content="Switch branch" />
-      </Container>
-      <Button id="dev-stop-manual-run" action="dev.stop-manual-run" content="Stop command" HorizontalAlignment="Left" Interactive="{Binding CanStopManualRun}" />
-      <Text text="{Binding ProcessStatus}" text-wrapping="Wrap" accessible-name="Observed command exit and timeout" />
-      <Text text="Reported problems" font-size="18" />
-      <Text text="{Binding BuildProblemsStatus}" text-wrapping="Wrap" accessible-name="Reported build problems status and source limitations" />
-      <Container Type="Vertical Stack" max-height="240" VerticalScrolling="True" accessible-name="Reported command problems in .NET or MSBuild format">
-        <Repeat id="dev-build-problems" Source="{Binding BuildProblems}" As="problem" Key="{Binding problem.SelectionKey}">
-          <Button id="dev-open-build-problem" action="dev.open-build-problem" content="{Binding problem.Label}" accessible-name="{Binding problem.AccessibleName}" Interactive="{Binding problem.CanOpen}" horizontal-content-alignment="Left" />
+        <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
+          <Input id="dev-test-command" placeholdertext="Explicit test command" accessible-name="Test command" Type="Text" Value="{Binding TestCommand}" Column="0" />
+          <Button id="dev-test-run" action="dev.run-tests" content="Run tests" Column="1" />
+        </Container>
+        <Button id="dev-stop-manual-run" action="dev.stop-manual-run" content="Stop command" HorizontalAlignment="Left" Interactive="{Binding CanStopManualRun}" />
+        <Text text="{Binding ProcessStatus}" text-wrapping="Wrap" accessible-name="Observed command exit and timeout" font-weight="600" />
+        <Object type="ReadOnlyText" id="dev-terminal-output" text="{Binding ProcessOutput}" font-family="monospace" min-height="160" accessible-name="Actual standard output and error" />
+
+        <!-- Saved Build Stages -->
+        <Text text="Saved build stages" font-size="16" font-weight="700" Margin="0 4 0 0" />
+        <Text text="{Binding SavedBuildStagesStatus}" text-wrapping="Wrap" accessible-name="Saved build stage availability" foreground="{Resource CuiTextSoftBrush}" />
+        <Repeat id="dev-saved-build-stages" Source="{Binding SavedBuildStages}" As="stage" Key="{Binding stage.SelectionKey}">
+          <Container Type="Vertical Stack" CellGap="2">
+            <Button id="dev-select-build-stage" action="dev.select-build-stage" content="{Binding stage.Label}" accessible-name="{Binding stage.AccessibleName}" Interactive="{Binding stage.CanSelect}" HorizontalAlignment="Left" />
+            <Text text="{Binding stage.Details}" text-wrapping="Wrap" />
+          </Container>
         </Repeat>
+        <Text text="{Binding SelectedBuildStageSummary}" text-wrapping="Wrap" accessible-name="Selected saved stage command environment revision and dependencies" font-weight="600" />
+        <Container Type="Wrap" CellGap="6">
+          <Button id="dev-new-compile-stage" action="dev.new-compile-stage" content="New Compile task" Interactive="{Binding CanConfigureBuildStage}" />
+          <Button id="dev-new-test-stage" action="dev.new-test-stage" content="New Test task" Interactive="{Binding CanConfigureBuildStage}" />
+          <Button id="dev-edit-build-stage" action="dev.edit-build-stage" content="Edit selected stage" Interactive="{Binding CanEditBuildStage}" />
+        </Container>
+        <Text text="{Binding StageEditKind}" accessible-name="Stage kind" />
+        <Input id="dev-stage-edit-task" Type="Text" Value="{Binding StageEditTaskId}" accessible-name="Stable saved task ID" Interactive="{Binding CanConfigureBuildStage}" />
+        <Input id="dev-stage-edit-id" Type="Text" Value="{Binding StageEditStageId}" accessible-name="Stable stage ID" Interactive="{Binding CanConfigureBuildStage}" />
+        <Input id="dev-stage-edit-command" Type="Text" Value="{Binding StageEditCommand}" accessible-name="Exact stage command; saving does not execute" Interactive="{Binding CanConfigureBuildStage}" />
+        <Input id="dev-stage-edit-timeout" Type="Text" Value="{Binding StageEditTimeout}" accessible-name="Stage timeout in seconds from 1 to 900" Interactive="{Binding CanConfigureBuildStage}" />
+        <Button id="dev-review-build-stage" action="dev.review-build-stage" content="Review stage" HorizontalAlignment="Left" Interactive="{Binding CanReviewBuildStage}" />
+        <Object id="dev-stage-edit-review" type="ReadOnlyText" text="{Binding StageEditReview}" accessible-name="Reviewed stage declaration and recovery migration" />
+        <Button id="dev-save-build-stage" action="dev.save-build-stage" content="Save reviewed stage" HorizontalAlignment="Left" Interactive="{Binding CanSaveBuildStage}" />
+        <Input id="dev-stage-task" placeholdertext="Saved build task ID" accessible-name="Saved build task ID" Type="Text" Value="{Binding StageTaskId}" />
+        <Input id="dev-stage-id" placeholdertext="Saved build stage ID" accessible-name="Saved build stage ID" Type="Text" Value="{Binding StageId}" />
+        <Button id="dev-build-stage" action="dev.run-stage" content="Run selected saved stage" HorizontalAlignment="Left" Interactive="{Binding CanRunSavedStage}" />
+        <Text text="{Binding StageEditStatus}" text-wrapping="Wrap" />
+
+        <!-- Problems & Test Outcomes -->
+        <Text text="Reported problems" font-size="16" font-weight="700" Margin="0 4 0 0" />
+        <Text text="{Binding BuildProblemsStatus}" text-wrapping="Wrap" accessible-name="Reported build problems status and source limitations" />
+        <Container Type="Vertical Stack" max-height="180" VerticalScrolling="True" accessible-name="Reported command problems in .NET or MSBuild format">
+          <Repeat id="dev-build-problems" Source="{Binding BuildProblems}" As="problem" Key="{Binding problem.SelectionKey}">
+            <Button id="dev-open-build-problem" action="dev.open-build-problem" content="{Binding problem.Label}" accessible-name="{Binding problem.AccessibleName}" Interactive="{Binding problem.CanOpen}" horizontal-content-alignment="Left" />
+          </Repeat>
+        </Container>
+
+        <Text text="Recorded test outcomes" font-size="16" font-weight="700" Margin="0 4 0 0" />
+        <Button id="dev-inspect-saved-test-report" action="dev.inspect-saved-test-report" content="Inspect open test report" HorizontalAlignment="Left" Interactive="{Binding CanInspectSavedTestReport}" />
+        <Text text="{Binding SavedTestReportStatus}" text-wrapping="Wrap" accessible-name="Saved test report provenance and outcomes" />
+        <Object type="ReadOnlyText" id="dev-saved-test-report-details" text="{Binding SavedTestReportDetails}" font-family="monospace" max-height="200" accessible-name="Individual recorded test outcomes" />
+
+        <Text text="{Binding Status}" text-wrapping="Wrap" accessible-name="Development operation status" font-weight="600" />
       </Container>
-      <Text text="Recorded test outcomes" font-size="18" />
-      <Button id="dev-inspect-saved-test-report" action="dev.inspect-saved-test-report" content="Inspect open test report" HorizontalAlignment="Left" Interactive="{Binding CanInspectSavedTestReport}" />
-      <Text text="{Binding SavedTestReportStatus}" text-wrapping="Wrap" accessible-name="Saved test report provenance and outcomes" />
-      <Object type="ReadOnlyText" id="dev-saved-test-report-details" text="{Binding SavedTestReportDetails}" font-family="monospace" max-height="240" accessible-name="Individual recorded test outcomes" />
-      <Object type="ReadOnlyText" id="dev-terminal-output" text="{Binding ProcessOutput}" font-family="monospace" min-height="180" accessible-name="Actual standard output and error" />
-      <Text text="Autonomous development" font-size="20" />
-      <Text id="dev-mission-status" text="{Binding MissionStatusSummary}" text-wrapping="Wrap" accessible-name="Autonomous mission state, branch, revision and progress" />
-      <Text id="dev-mission-models" text="{Binding MissionModelsSummary}" text-wrapping="Wrap" accessible-name="Connected Dulche models and hardware telemetry" />
-      <Text id="dev-mission-context" text="{Binding MissionContextSummary}" text-wrapping="Wrap" accessible-name="Context window usage, compaction epoch and durable checkpoint count" />
-      <Input id="dev-mission-objective" Type="Text" Value="{Binding MissionObjective}" placeholdertext="Persistent mission objective" accessible-name="Autonomous mission objective" />
-      <Input id="dev-mission-programme-path" Type="Text" Value="{Binding MissionProgrammePath}" placeholdertext="Programme manifest or docs/specification path" accessible-name="Specification implementation programme path" />
-      <Container Type="Wrap" CellGap="8">
-        <Input id="dev-mission-worker-model" Type="Text" Value="{Binding MissionWorkerModel}" placeholdertext="Primary worker model ID" accessible-name="Primary Dulche worker model" />
-        <Input id="dev-mission-supervisor-model" Type="Text" Value="{Binding MissionSupervisorModel}" placeholdertext="Supervisor / reviewer model ID" accessible-name="Independent Dulche supervisor model" />
-      </Container>
-      <Container Type="Wrap" CellGap="8">
-        <Input id="dev-mission-auto-advance" Type="Checkbox" content="Auto-advance requirements" Checked="{Binding MissionAutoAdvance, mode=TwoWay}" accessible-name="Automatically progress to subsequent specification requirements" />
-        <Input id="dev-mission-guarded-integration" Type="Checkbox" content="Guarded auto-integration" Checked="{Binding MissionGuardedIntegration, mode=TwoWay}" accessible-name="Commit verified and reviewed changes to isolated mission branch" />
-        <Input id="dev-mission-enable-reasoning" Type="Checkbox" content="Stream reasoning" Checked="{Binding MissionEnableReasoning, mode=TwoWay}" accessible-name="Stream live model reasoning output where available" />
-      </Container>
-      <Container Type="Wrap" CellGap="6">
-        <Button id="dev-mission-refresh-models" action="dev.mission-refresh-models" content="Refresh Dulche models" Interactive="{Binding CanRefreshMissionModels}" />
-        <Button id="dev-mission-load-programme" action="dev.mission-load-programme" content="Load programme" Interactive="{Binding CanLoadMissionProgramme}" />
-        <Button id="dev-mission-start" action="dev.mission-start" content="Start autonomous mission" Interactive="{Binding CanStartMission}" />
-        <Button id="dev-mission-step" action="dev.mission-step" content="Run next step" Interactive="{Binding CanStepMission}" />
-        <Button id="dev-mission-pause" action="dev.mission-pause" content="Pause mission" Interactive="{Binding CanPauseMission}" />
-        <Button id="dev-mission-resume" action="dev.mission-resume" content="Resume mission" Interactive="{Binding CanResumeMission}" />
-        <Button id="dev-mission-stop" action="dev.mission-stop" content="Stop active run" Interactive="{Binding CanStopMission}" />
-        <Button id="dev-mission-checkpoint" action="dev.mission-checkpoint" content="Save checkpoint" Interactive="{Binding CanCheckpointMission}" />
-        <Button id="dev-mission-compact" action="dev.mission-compact" content="Compact context" Interactive="{Binding CanCompactMission}" />
-      </Container>
-      <Text text="Specification tasks" font-size="18" />
-      <Text id="dev-mission-active-task" text="{Binding MissionActiveTaskSummary}" text-wrapping="Wrap" accessible-name="Active requirement specification, acceptance criteria and verification state" />
-      <Container Type="Vertical Stack" CellGap="4" max-height="200" VerticalScrolling="True" accessible-name="Autonomous mission task ledger">
-        <Repeat id="dev-mission-tasks" Source="{Binding MissionTasks}" As="missionTask" Key="{Binding missionTask.SelectionKey}">
-          <Button id="dev-mission-select-task" action="dev.mission-select-task" content="{Binding missionTask.Label}" accessible-name="{Binding missionTask.AccessibleName}" Interactive="{Binding missionTask.CanSelect}" horizontal-content-alignment="Left" />
-        </Repeat>
-      </Container>
-      <Text text="Live model reasoning" font-size="18" />
-      <Object type="ReadOnlyText" id="dev-mission-live-reasoning" text="{Binding MissionLiveReasoning}" font-family="monospace" min-height="120" max-height="260" accessible-name="Live streaming model reasoning output" />
-      <Text text="Live model output" font-size="18" />
-      <Object type="ReadOnlyText" id="dev-mission-live-output" text="{Binding MissionLiveOutput}" font-family="monospace" min-height="120" max-height="260" accessible-name="Live streaming model generation output" />
-      <Text text="Autonomous diff review" font-size="18" />
-      <Container Type="Wrap" CellGap="6">
-        <Repeat id="dev-mission-changed-files" Source="{Binding MissionChangedFiles}" As="changedFile" Key="{Binding changedFile.SelectionKey}">
-          <Button id="dev-mission-open-changed-file" action="dev.mission-open-changed-file" content="{Binding changedFile.Label}" accessible-name="{Binding changedFile.AccessibleName}" Interactive="{Binding changedFile.CanOpen}" />
-        </Repeat>
-      </Container>
-      <Object type="ReadOnlyText" id="dev-mission-diff-review" text="{Binding MissionDiffReview}" font-family="monospace" min-height="140" max-height="320" accessible-name="Live unified diff for active autonomous task" />
-      <Text text="Guarded build and test log" font-size="18" />
-      <Object type="ReadOnlyText" id="dev-mission-terminal-log" text="{Binding MissionBuildOutput}" font-family="monospace" min-height="140" max-height="280" accessible-name="Live guarded compilation and test output" />
-      <Text text="Agent delegation and supervision" font-size="18" />
-      <Input id="dev-mission-delegate-prompt" Type="Text" Value="{Binding MissionDelegatePrompt}" placeholdertext="Delegate a question or review objective to the supervisor model" accessible-name="Supervisor delegation prompt" />
-      <Container Type="Wrap" CellGap="6">
-        <Button id="dev-mission-delegate" action="dev.mission-delegate" content="Delegate to supervisor" Interactive="{Binding CanDelegateMission}" />
-        <Button id="dev-mission-approve-integration" action="dev.mission-approve-integration" content="Approve and integrate" Interactive="{Binding CanApproveMissionIntegration}" />
-        <Button id="dev-mission-reject-integration" action="dev.mission-reject-integration" content="Request rework" Interactive="{Binding CanRejectMissionIntegration}" />
-      </Container>
-      <Object type="ReadOnlyText" id="dev-mission-delegation-log" text="{Binding MissionDelegationLog}" font-family="monospace" min-height="120" max-height="240" accessible-name="Supervisor reviews and delegated subagent runs" />
-      <Text text="Checkpoints and activity" font-size="18" />
-      <Object type="ReadOnlyText" id="dev-mission-checkpoints" text="{Binding MissionCheckpointsSummary}" font-family="monospace" min-height="100" max-height="200" accessible-name="Durable mission checkpoints and integration receipts" />
-      <Object type="ReadOnlyText" id="dev-mission-events" text="{Binding MissionEventLog}" font-family="monospace" min-height="100" max-height="200" accessible-name="Autonomous mission activity log" />
-      <Text text="{Binding Status}" text-wrapping="Wrap" accessible-name="Development operation status" />
+
     </Container>
   </Page>
 </Cui>
