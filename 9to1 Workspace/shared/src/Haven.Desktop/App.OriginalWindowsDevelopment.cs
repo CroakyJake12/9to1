@@ -98,7 +98,8 @@ public sealed partial class App
             services.AddHavenOwnedDeveloperSetups(home,
                 provider => provider.GetRequiredService<FilesDeveloperOriginalSetupScopeSource>(),
                 provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
-                provider => provider.GetRequiredService<FilesDeveloperOriginalFolderSetupProducer>(), _windowsDeveloperSetupPolicy!);
+                _ => _windowsDeveloperSteps ?? throw new InvalidOperationException("The SAME configured Files step outcome owner is not captured."),
+                _windowsDeveloperSetupPolicy!);
             services.AddFilesOriginalDeveloperSetups(_windowsDeveloperDestinationResolver!, provider =>
                 (provider.GetRequiredService<IWorkspaceToolService>() as WorkspaceToolService
                     ?? throw new InvalidOperationException("The SAME actual Windows workspace kernel is required."))

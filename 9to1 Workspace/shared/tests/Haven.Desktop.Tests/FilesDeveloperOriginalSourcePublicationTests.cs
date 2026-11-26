@@ -6,12 +6,19 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading.Channels;
+using Avalonia.Controls;
+using Avalonia.Headless.XUnit;
+using Avalonia.Interactivity;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Haven.Application;
 using Haven.Infrastructure;
 using HavenOS.Apps.Dev;
 using HavenOS.Files;
 using HavenOS.Files.NativeHost;
 using HavenOS.Home.Core;
+using HavenOS.Home.NativeUI;
 using HavenOS.Home.PermissionsTrustNotifications;
 using Microsoft.Extensions.DependencyInjection;
 using HomePermissionRequest = HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequest;
@@ -29,8 +36,88 @@ namespace Haven.Desktop.Tests;
 /// </summary>
 public sealed class FilesDeveloperOriginalSourcePublicationTests
 {
+    [Fact]
+    public void Native_permission_settings_construct_with_valid_lengths()
+    {
+        using var scene = new Haven.Desktop.Views.Pages.Settings.SettingsHavenScene();
+        scene.NavigateTo("permissions");
+        Assert.Equal("permissions", scene.ActiveSection);
+        Assert.NotNull(scene.FilePermissionSelect);
+        Assert.NotNull(scene.SavePermissionsButton);
+    }
+
     private const string Target = "site.project.json";
     private const string Reviewed = "{\"source\":\"reviewed\",\"revision\":1}\n";
+
+    public static bool UsesLinuxManualApprovalFixture => OperatingSystem.IsLinux();
+
+    [AvaloniaFact(SkipUnless = nameof(UsesLinuxManualApprovalFixture), Skip = "The real project capture fixture requires Linux.")]
+    public async Task Manual_Build_registration_presents_and_waits_for_both_original_Home_approvals()
+    {
+        await using var rig = await Rig.CreateAsync(canonicalSavedProject: true, enableActualProjectSetup: true);
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(rig.Token);
+        deadline.CancelAfter(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        var home = rig.Home;
+        await using var runtime = new HomeCoreRuntime(
+            [new HomeCoreStateService(home.StateStore), new HomePermissionsCoreService(home.Permissions, home.Profiles)]);
+        var approvals = new HomeNativeApprovalWindowOwner(runtime, home.Profiles, home.Permissions);
+        var presented = Channel.CreateUnbounded<string>();
+        var root = Directory.CreateDirectory(Path.Combine(Directory.GetParent(rig.ProjectRoot)!.FullName, "manual-native-review")).FullName;
+        File.WriteAllText(Path.Combine(root, "existing.txt"), "Original project bytes.");
+        var graph = rig.Graph;
+        var workspace = (await graph.GetRequiredService<NativeFilesWorkspaceAuthority>().GetCurrentAsync(token))!;
+        var manual = new DeveloperManualProjectEntryAdapter(rig.Selections, rig.Reads,
+            graph.GetRequiredService<FilesDeveloperOriginalSetupScopeSource>(),
+            graph.GetRequiredService<HomeDeveloperProjectSetupJournal>(),
+            graph.GetRequiredService<IDeveloperProjectOriginalSetupPermissionSource>(),
+            graph.GetRequiredService<FilesDeveloperOriginalFolderSetupProducer>(), rig.SavedStore,
+            async (requestId, cancellation) =>
+            {
+                await Dispatcher.UIThread.InvokeAsync<Task>(() => approvals.OpenOriginalAsync(requestId, token),
+                    priority: DispatcherPriority.Normal, cancellationToken: cancellation).GetTask().Unwrap();
+                await presented.Writer.WriteAsync(requestId, cancellation);
+            });
+        try
+        {
+            var operation = rig.Keep(manual.RegisterExistingFolderAsync(workspace.Configuration.StoreId,
+                workspace.Configuration.AppFolders["write"].Value, root, token));
+            var read = await AcceptDisplayedAsync(HomeDeveloperProjectReadAdmissionSource.ReadAction);
+            var setup = await AcceptDisplayedAsync(HomeDeveloperProjectSetupPermissionSource.SetupAction);
+            Assert.NotEqual(read, setup);
+
+            var reference = await operation.WaitAsync(token);
+            Assert.Equal(manual.RetainedWorkspaceId, reference.WorkspaceId);
+            Assert.True((await rig.SavedStore.GetAsync(reference.WorkspaceId, token)).Succeeded);
+            Assert.Equal("Original project bytes.", await File.ReadAllTextAsync(Path.Combine(root, "existing.txt"), token));
+            var receipt = await home.Permissions.GetSnapshotAsync(cancellationToken: token);
+            Assert.Empty(receipt.Grants);
+            Assert.Equal(HomePermissionRequestState.Succeeded,
+                (await home.Permissions.ReadRequestObservationAsync(read, token))!.State);
+            Assert.Equal(HomePermissionRequestState.Succeeded,
+                (await home.Permissions.ReadRequestObservationAsync(setup, token))!.State);
+
+            async Task<string> AcceptDisplayedAsync(string action)
+            {
+                var id = await presented.Reader.ReadAsync(token);
+                var request = Assert.IsType<HomePermissionRequest>(await home.Permissions.ReadRequestObservationAsync(id, token));
+                Assert.Equal(action, request.Scope.ActionName);
+                Assert.Contains(root, request.Impact.ChangePreview);
+                Assert.Equal(HomePermissionRequestState.PendingApproval, request.State);
+                Assert.False(operation.IsCompleted);
+                var window = Assert.IsAssignableFrom<Window>(approvals.OriginalWindow);
+                window.UpdateLayout();
+                Dispatcher.UIThread.RunJobs();
+                var surface = Assert.IsType<HomeApprovalCuiSurface>(approvals.OriginalSurface);
+                Assert.Contains(surface.GetVisualDescendants().OfType<TextBlock>(),
+                    control => control.Text?.Contains(root, StringComparison.Ordinal) == true);
+                var button = Assert.Single(surface.GetVisualDescendants().OfType<Button>(), item => item.Name == "approval-accept");
+                button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                return id;
+            }
+        }
+        finally { await approvals.CloseAndDrainAsync(); }
+    }
 
     [LinuxPublicationFact]
     public Task Accepted_create_uses_distinct_absent_write_and_cold_captured_read_preserves_exact_bytes() => Run(async rig =>
@@ -1065,6 +1152,10 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
         private NativeFilesWorkspace _workspace = null!;
         private string _root = null!;
         private FileDeveloperWorkspaceStore? _savedStore;
+        private HomeDeveloperProjectSetupPermissionSource? _setupPermissions;
+        private HomeDeveloperProjectSetupJournal? _setupJournal;
+        private FilesDeveloperOriginalSetupScopeSource? _setupScopes;
+        private FilesDeveloperOriginalFolderSetupProducer? _setupSteps;
         private DeveloperResolvedProject? _savedProject;
         private HostedItemId _savedFolder;
         private string? _savedRegistryPath;
@@ -1151,7 +1242,8 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
                     services.AddHavenOwnedDeveloperSetups(rig.Home,
                         provider => provider.GetRequiredService<FilesDeveloperOriginalSetupScopeSource>(),
                         provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
-                        provider => provider.GetRequiredService<FilesDeveloperOriginalFolderSetupProducer>(), setupPolicy);
+                        _ => rig._setupSteps ?? throw new InvalidOperationException("The SAME retained Files step outcome owner is unavailable."),
+                        setupPolicy);
                 services.AddSingleton<DeveloperManualProjectProcessOwner>(provider => new(provider.GetRequiredService<NativeFilesWorkspaceService>(),
                     provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(), provider.GetRequiredService<HomeDeveloperProjectReadAdmissionSource>(),
                     provider.GetRequiredService<HomeDeveloperManualProjectExecutionAdmissionSource>(),
@@ -1165,9 +1257,9 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
                     if (enableActualProjectSetup)
                         return workspaceTool.CreateOriginalDeveloperCaptureSource(
                             provider.GetRequiredService<IDeveloperProjectOriginalReadAdmissionSource>(), selections,
-                            () => provider.GetRequiredService<HomeDeveloperProjectSetupPermissionSource>(),
-                            () => provider.GetRequiredService<FileDeveloperWorkspaceStore>(),
-                            () => provider.GetRequiredService<FilesDeveloperOriginalFolderSetupProducer>(),
+                            () => rig._setupPermissions ?? throw new InvalidOperationException("The SAME retained Home setup permission owner is unavailable."),
+                            () => rig.SavedStore,
+                            () => rig._setupSteps ?? throw new InvalidOperationException("The SAME retained Files execution-binding owner is unavailable."),
                             provider.GetRequiredService<IDeveloperProjectOriginalEditAdmissionSource>());
                     return workspaceTool.CreateOriginalDeveloperCaptureSource(
                         provider.GetRequiredService<IDeveloperProjectOriginalReadAdmissionSource>(), selections,
@@ -1202,6 +1294,13 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
                 rig.ProcessOwner = rig._graph.GetRequiredService<DeveloperManualProjectProcessOwner>();
                 rig.Kernel = rig._graph.GetRequiredService<IDeveloperProjectOriginalPhysicalCaptureSource>();
                 rig.Selections = rig._graph.GetRequiredService<FilesDeveloperOriginalSourceSelection>();
+                if (enableActualProjectSetup)
+                {
+                    rig._setupPermissions = rig._graph.GetRequiredService<HomeDeveloperProjectSetupPermissionSource>();
+                    rig._setupJournal = rig._graph.GetRequiredService<HomeDeveloperProjectSetupJournal>();
+                    rig._setupScopes = rig._graph.GetRequiredService<FilesDeveloperOriginalSetupScopeSource>();
+                    rig._setupSteps = rig._graph.GetRequiredService<FilesDeveloperOriginalFolderSetupProducer>();
+                }
                 Assert.Same(rig.Edits, rig._graph.GetRequiredService<IWorkspaceManualEditFinalFenceValidator>());
                 Assert.Same(rig.Reads, rig._graph.GetRequiredService<IDeveloperProjectOriginalReadAdmissionSource>());
                 var filesRoot = Directory.CreateDirectory(Path.Combine(rig._root, "chosen-files")).FullName;
@@ -1543,6 +1642,10 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
             foreach (var source in _registeredNativeSources) await Close(() => Keep(source.CloseAndDrainOriginalAsync()));
             if (ProcessOwner is not null) await Close(ProcessOwner.CloseAndDrainOriginalAsync);
             if (Runs is not null) await Close(Runs.CloseAndDrainOriginalManualExecutionsAsync);
+            if (_setupPermissions is not null) await Close(_setupPermissions.CloseAndDrainOriginalSetupsAsync);
+            if (_setupSteps is not null) await Close(_setupSteps.CloseAndDrainOriginalFolderSetupsAsync);
+            if (_setupScopes is not null) await Close(_setupScopes.CloseAndDrainOriginalSetupScopesAsync);
+            if (_setupJournal is not null) await Close(_setupJournal.CloseAndDrainAsync);
             if (Edits is not null) await Close(Edits.CloseAndDrainOriginalEditsAsync);
             if (Reads is not null) await Close(Reads.CloseAndDrainOriginalReadsAsync);
             if (Selections is not null) await Close(Selections.CloseAndDrainOriginalSelectionsAsync);

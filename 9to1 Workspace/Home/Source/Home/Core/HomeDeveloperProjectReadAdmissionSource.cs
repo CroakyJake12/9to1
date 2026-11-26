@@ -58,6 +58,10 @@ public sealed class HomeDeveloperProjectReadAdmissionSource : IDeveloperProjectO
     }
     public ValueTask DisposeAsync() => new(CloseAndDrainOriginalReadsAsync());
     public Task<IDeveloperProjectOriginalReadAdmission> AcquireOriginalAsync(IDeveloperProjectOriginalReadSelection selection, CancellationToken token)
+        => AcquireOriginalAsync(selection, token, presentReview: null);
+
+    public Task<IDeveloperProjectOriginalReadAdmission> AcquireOriginalAsync(IDeveloperProjectOriginalReadSelection selection,
+        CancellationToken token, Func<string, CancellationToken, Task>? presentReview)
     {
         DemandExternalOriginalReadAdmissionJoin();
         lock (_sync)
@@ -65,7 +69,7 @@ public sealed class HomeDeveloperProjectReadAdmissionSource : IDeveloperProjectO
             if (_sealed) throw new ObjectDisposedException(nameof(HomeDeveloperProjectReadAdmissionSource));
             if (_reads.TryGetValue(selection, out var original)) return original.OriginalAcquisition;
             if (_reads.Count >= 128) throw new InvalidOperationException("Unresolved original READ custody is full.");
-            var read = new Read(this, selection); _reads.Add(selection, read); return read.Start(token);
+            var read = new Read(this, selection, presentReview); _reads.Add(selection, read); return read.Start(token);
         }
     }
     public Task ValidateOriginalAsync(IDeveloperProjectOriginalReadSelection selection, IDeveloperProjectOriginalReadAdmission admission, CancellationToken token)
@@ -88,7 +92,7 @@ public sealed class HomeDeveloperProjectReadAdmissionSource : IDeveloperProjectO
         }
     }
     private sealed class Read(HomeDeveloperProjectReadAdmissionSource owner,
-        IDeveloperProjectOriginalReadSelection selection)
+        IDeveloperProjectOriginalReadSelection selection, Func<string, CancellationToken, Task>? presentReview)
         : IDeveloperProjectOriginalReadAdmission
     {
         private readonly object _gate = new(); private readonly CloudflareOriginalTaskLedger _stages = new();
@@ -159,11 +163,18 @@ public sealed class HomeDeveloperProjectReadAdmissionSource : IDeveloperProjectO
                 lock (_gate) _scopes = scopes;
                 var arguments = JsonSerializer.SerializeToElement(new { sourceSelection = scopes[0].Id, sourceRevision = scopes[0].Revision,
                     limits = "64 files/64 folders; 4 MiB per file; 16 MiB total; no copy or mutation" });
+                var projectPath = _stages.Invoke(() => _source.GetOriginalProjectPathForReview(selection));
+                var preview = projectPath is null
+                    ? "Read the explicitly selected original project beneath your verified Files root."
+                    : $"Read the existing Build project at {projectPath}.";
                 _review = _stages.Invoke(() => owner._broker.PrepareReviewForActor(_actor, "dev", ReadAction, scopes, arguments,
-                    "Read the explicitly selected original project beneath your verified Files root. The later project setup needs its own review.", null,
+                    preview + " This reads files only. Project registration requires a separate approval.", null,
                     "dev:source:" + _actor.AuthenticationRevision));
                 var observed = await _stages.AwaitAsync(_stages.Invoke(() => owner._broker.AuthorizePreparedReviewAsync(_review, _stop.Token))).ConfigureAwait(false);
                 var deadline = DateTimeOffset.UtcNow.AddMinutes(5);
+                if (observed.State == HomePreparedReviewState.RequestObserved
+                    && observed.Request?.State == HomePermissionRequestState.PendingApproval && presentReview is not null)
+                    await _stages.AwaitAsync(_stages.Invoke(() => presentReview(_review.RequestId, _stop.Token))).ConfigureAwait(false);
                 while (observed.State == HomePreparedReviewState.RequestObserved && observed.Request?.State == HomePermissionRequestState.PendingApproval)
                 {
                     if (DateTimeOffset.UtcNow >= deadline) throw new UnauthorizedAccessException("DEV_SOURCE_READ_APPROVAL_REQUIRED: Accept the exact selected project READ in Home; no manifest was read.");

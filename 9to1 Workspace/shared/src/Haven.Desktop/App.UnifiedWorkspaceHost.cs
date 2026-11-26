@@ -449,6 +449,14 @@ public sealed partial class App
                     () => ActivatorUtilities.CreateInstance<Haven.Desktop.Views.Pages.Settings.SettingsHavenPage>(_services))
                 {
                     NativeAppAvailable = apps.HasImplementation,
+                    OpenPermissionReviewAsync = async token =>
+                    {
+                        await AdmitHomeSettingsAsync(request, token);
+                        var approvals = _services.GetRequiredService<HomeNativeApprovalWindowOwner>();
+                        if (!approvals.IsBoundToOriginalComposition(_home))
+                            throw new UnauthorizedAccessException("The original Home approval surface is unavailable.");
+                        await approvals.OpenOriginalAsync(cancellationToken: _windowLifetime);
+                    },
                     OpenOwnerAsync = async (owner, token) =>
                     {
                         await AdmitHomeSettingsAsync(request, token);

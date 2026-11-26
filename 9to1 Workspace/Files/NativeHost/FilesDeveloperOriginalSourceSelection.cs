@@ -159,6 +159,8 @@ public sealed partial class FilesDeveloperOriginalSourceSelection
         => value is Selection selection && ReferenceEquals(selection.Root, root) && IsIssuedOriginal(value);
     public IReadOnlyList<ResourceScope> GetOriginalReadScopes(IDeveloperProjectOriginalReadSelection value)
     { var selection = Require(value); return [selection.Scope]; }
+    public string GetOriginalProjectPathForReview(IDeveloperProjectOriginalReadSelection value) =>
+        Require(value).Root.OriginalProjectRoot;
     public Task RevalidateOriginalAsync(IDeveloperProjectOriginalReadSelection value, AuthenticatedResourceActor actor, CancellationToken token)
         => Start(async sources => { await RevalidateBody(Require(value), actor, sources, token).ConfigureAwait(false); return true; });
     private async Task RevalidateBody(Selection selection, AuthenticatedResourceActor actor, FilesOriginalReadSourceScope sources, CancellationToken token)

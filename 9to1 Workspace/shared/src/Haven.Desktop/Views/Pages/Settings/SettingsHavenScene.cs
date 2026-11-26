@@ -332,7 +332,7 @@ internal sealed partial class SettingsHavenScene : IDisposable
         Root.Columns = "0 1fr";
         foreach (var node in new HavenElement[] { Sidebar, CompactNavigation, PageTitle, PageDescription, _searchRow })
             node.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
-        Content.SetValue(HavenProperties.Padding, HavenThickness.Parse("0"));
+        Content.SetValue(HavenProperties.Padding, HavenThickness.Parse("0px"));
     }
 
     public void NavigateTo(string key)

@@ -1,3 +1,4 @@
+using Avalonia.Threading;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
 using Haven.Browser;
@@ -8,6 +9,7 @@ using HavenOS.Apps.Spaces.Development;
 using HavenOS.Apps.Spaces.Tasks;
 using HavenOS.Files.NativeHost;
 using HavenOS.Home.Core;
+using HavenOS.Home.NativeUI;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Desktop.Services;
@@ -151,6 +153,7 @@ internal sealed class BuildBrowseAppContentFactory : IBrowseAppContentFactory
             // Retain ONE adapter per session so a partially effected manual attempt keeps its
             // once-created setup/workspace identity across a user retry (no remint, no duplicate).
             var files = _services.GetRequiredService<NativeFilesWorkspaceService>();
+            var approvals = _services.GetService<HomeNativeApprovalWindowOwner>();
             var manualAdapter = new DeveloperManualProjectEntryAdapter(
                 _services.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
                 _services.GetRequiredService<IDeveloperProjectOriginalReadAdmissionSource>(),
@@ -158,7 +161,8 @@ internal sealed class BuildBrowseAppContentFactory : IBrowseAppContentFactory
                 _services.GetRequiredService<HomeDeveloperProjectSetupJournal>(),
                 _services.GetRequiredService<IDeveloperProjectOriginalSetupPermissionSource>(),
                 _services.GetRequiredService<FilesDeveloperOriginalFolderSetupProducer>(),
-                _services.GetRequiredService<IDeveloperWorkspaceStore>());
+                _services.GetRequiredService<IDeveloperWorkspaceStore>(),
+                approvals is null ? null : PresentOriginalReviewAsync);
             session.AttachManualEntryAgent(async (root, ct) =>
             {
                 var configuration = await files.GetConfigurationAsync(ct)
@@ -180,6 +184,16 @@ internal sealed class BuildBrowseAppContentFactory : IBrowseAppContentFactory
                 },
                 session.OpenExistingManualTemplateProjectAsync);
             return session;
+
+            Task PresentOriginalReviewAsync(string requestId, CancellationToken token) =>
+                Dispatcher.UIThread.InvokeAsync<Task>(() =>
+                {
+                    token.ThrowIfCancellationRequested();
+                    lifetime.Token.ThrowIfCancellationRequested();
+                    if (!approvals!.IsBoundToOriginalComposition(_home))
+                        throw new UnauthorizedAccessException("The original Home approval surface is unavailable.");
+                    return approvals.OpenOriginalAsync(requestId, _hostLifetime);
+                }, DispatcherPriority.Normal, token).GetTask().Unwrap();
         }
         catch { lifetime.Dispose(); throw; }
     }

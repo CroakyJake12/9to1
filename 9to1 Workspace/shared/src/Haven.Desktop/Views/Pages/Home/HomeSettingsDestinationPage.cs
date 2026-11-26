@@ -146,6 +146,7 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
     internal bool NewTabCustomisationAvailable { get; set; }
     internal Func<ModeDefinition, bool>? NativeAppAvailable { get; set; }
     internal Func<HomeSettingsOwner, CancellationToken, Task<HavenSharedOpenResult>>? OpenOwnerAsync { get; set; }
+    internal Func<CancellationToken, Task>? OpenPermissionReviewAsync { get; set; }
     private bool CreatorOpen => _bindings.Get("HomeThemeCreatorOpen") is true;
     internal string CategoryTitle => _category switch
     {
@@ -342,6 +343,7 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
         "SettingsOpenBrowseGeneral" => NavigateContentAsync is not null && _category == "haven-general",
         "SettingsOpenBrowseBookmarks" => NavigateContentAsync is not null && _category == "haven-bookmarks",
         "SettingsOpenBrowseHistory" => NavigateContentAsync is not null && _category == "haven-history",
+        "SettingsReviewPermissions" => _category == "security-permissions" && OpenPermissionReviewAsync is not null,
         "ApplyHomeAppearance" or "RefreshHomeAppearance" or "HomeCreateTheme" => !IsBusy && !_unavailable,
         _ when PolicyFor(command) is not null => _dulche is not null && IsDulcheLifecyclePage && !IsBusy && !_unavailable,
         _ => false
@@ -352,6 +354,8 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
         Dispatcher.UIThread.VerifyAccess();
         if (_work.IsRetiring) return ValueTask.CompletedTask; // Already queued presentation acquires no new business work.
         if (IsActionAvailable(command) != true) throw new InvalidOperationException("This Home Settings action is unavailable.");
+        if (command == "SettingsReviewPermissions")
+            return new(RunAuthorizedAsync(OpenPermissionReviewAsync!, cancellationToken));
         if (_dulche is not null && PolicyFor(command) is { } selected)
         {
             return new(_work.RunAsync(async original =>
@@ -734,6 +738,7 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
         _bindings.Set("SettingsDulcheLifecycleVisible", _dulche is not null && IsDulcheLifecyclePage);
         _bindings.Set("SettingsDulcheProviderVisible", _external is not null && _category == "ai-providers");
         _bindings.Set("SettingsLegacyOwnerVisible", _legacyFactory is not null && LegacySection(_category) is not null);
+        _bindings.Set("SettingsPermissionReviewAvailable", _category == "security-permissions" && OpenPermissionReviewAsync is not null);
         _bindings.Set("SettingsHasCatalogAvailability", item.Availability is not null &&
             !(_dulche is not null && IsDulcheLifecyclePage) &&
             !(_external is not null && _category == "ai-providers") &&
@@ -1161,6 +1166,7 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
         ContentAvailable = null;
         NativeAppAvailable = null;
         OpenOwnerAsync = null;
+        OpenPermissionReviewAsync = null;
         Content = null; return Task.CompletedTask;
     }
 }

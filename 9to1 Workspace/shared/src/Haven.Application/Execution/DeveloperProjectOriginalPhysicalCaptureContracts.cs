@@ -7,6 +7,7 @@ public interface IDeveloperProjectOriginalPhysicalReadSelectionSource : IDevelop
     void DemandExternalOriginalReadSelectionJoin();
     bool IsIssuedOriginalPhysicalBinding(IDeveloperProjectOriginalReadSelection sameSelection,
         IDeveloperProjectOriginalPhysicalSelection samePhysicalSelection);
+    string? GetOriginalProjectPathForReview(IDeveloperProjectOriginalReadSelection sameSelection) => null;
 }
 public interface IDeveloperProjectOriginalPhysicalSelection : IAsyncDisposable
 {

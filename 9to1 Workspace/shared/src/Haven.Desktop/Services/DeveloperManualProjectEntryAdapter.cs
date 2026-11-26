@@ -41,7 +41,8 @@ public sealed class DeveloperManualProjectEntryAdapter(
     HomeDeveloperProjectSetupJournal journal,
     IDeveloperProjectOriginalSetupPermissionSource permissions,
     FilesDeveloperOriginalFolderSetupProducer steps,
-    IDeveloperWorkspaceStore workspaces)
+    IDeveloperWorkspaceStore workspaces,
+    Func<string, CancellationToken, Task>? presentReview = null)
 {
     private readonly object _gate = new();
     private readonly SemaphoreSlim _registrationGate = new(1, 1);
@@ -158,7 +159,9 @@ public sealed class DeveloperManualProjectEntryAdapter(
         bool completionMaterialized = false;
         try
         {
-            read = await reads.AcquireOriginalAsync(selection, token).ConfigureAwait(false);
+            read = await (presentReview is not null && reads is HomeDeveloperProjectReadAdmissionSource homeReads
+                ? homeReads.AcquireOriginalAsync(selection, token, presentReview)
+                : reads.AcquireOriginalAsync(selection, token)).ConfigureAwait(false);
             var capture = await selections.CaptureOriginalAsync(selection, read, token).ConfigureAwait(false);
             if (!selections.IsIssuedOriginal(capture) || capture.OriginalExistingProjectRoot != root)
                 throw new UnauthorizedAccessException("The configured Files owner did not issue the exact selected project capture.");
@@ -193,7 +196,9 @@ public sealed class DeveloperManualProjectEntryAdapter(
                 destination.OriginalFolderId, destination.OriginalFolderRevision, capture, workspaceId, 0,
                 Path.GetFileName(root), token).ConfigureAwait(false);
             await scopes.BindOriginalAsync(destination, prepared, capture, token).ConfigureAwait(false);
-            permission = await permissions.AcquireOriginalAsync(prepared.Intent, capture, token).ConfigureAwait(false);
+            permission = await (presentReview is not null && permissions is HomeDeveloperProjectSetupPermissionSource homeSetup
+                ? homeSetup.AcquireOriginalAsync(prepared.Intent, capture, token, presentReview)
+                : permissions.AcquireOriginalAsync(prepared.Intent, capture, token)).ConfigureAwait(false);
 
             FilesDeveloperOriginalFolderSetupProducer.WorkspaceMetadataStep? savedStep = null;
             foreach (var step in prepared.Intent.Steps)

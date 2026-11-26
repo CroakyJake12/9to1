@@ -65,6 +65,9 @@
               <Text Text="{Binding SettingsCatalogDescription}" IsVisible="{Binding SettingsShowCatalogDescription}"
                     TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
             </Container>
+            <Button id="home-settings-review-permissions" Action="SettingsReviewPermissions"
+                    Content="Review pending requests" HorizontalAlignment="Left"
+                    IsVisible="{Binding SettingsPermissionReviewAvailable, fallback=false}" />
             <Container id="home-settings-keyboard-host" Type="Overlay" IsVisible="{Binding SettingsCatalogHasKeyboard, fallback=false}" />
             <Container id="home-settings-dulche-provider-host" Type="Overlay" IsVisible="{Binding SettingsDulcheProviderVisible, fallback=false}" />
             <Container id="home-settings-legacy-owner-host" Type="Overlay" IsVisible="{Binding SettingsLegacyOwnerVisible, fallback=false}" />

@@ -42,6 +42,10 @@ public sealed partial class HomeDeveloperProjectSetupPermissionSource : IDevelop
     }
     public Task<IDeveloperProjectOriginalSetupPermission> AcquireOriginalAsync(DeveloperProjectSetupIntent intent,
         IDeveloperProjectOriginalSourceCapture capture, CancellationToken token)
+        => AcquireOriginalAsync(intent, capture, token, presentReview: null);
+
+    public Task<IDeveloperProjectOriginalSetupPermission> AcquireOriginalAsync(DeveloperProjectSetupIntent intent,
+        IDeveloperProjectOriginalSourceCapture capture, CancellationToken token, Func<string, CancellationToken, Task>? presentReview)
     {
         ArgumentNullException.ThrowIfNull(intent); ArgumentNullException.ThrowIfNull(capture);
         DemandExternalOriginalSetupJoin();
@@ -54,7 +58,7 @@ public sealed partial class HomeDeveloperProjectSetupPermissionSource : IDevelop
                 return original.Acquisition;
             }
             if (_originals.Count >= 128) throw new InvalidOperationException("Retained original setup custody is full.");
-            var permission = new Permission(this, intent, capture); _originals.Add(intent, permission);
+            var permission = new Permission(this, intent, capture, presentReview); _originals.Add(intent, permission);
             return permission.Start(token);
         }
     }
@@ -101,7 +105,8 @@ public sealed partial class HomeDeveloperProjectSetupPermissionSource : IDevelop
     public ValueTask DisposeAsync() => new(CloseAndDrainOriginalSetupsAsync());
 
     private sealed partial class Permission(HomeDeveloperProjectSetupPermissionSource owner,
-        DeveloperProjectSetupIntent intent, IDeveloperProjectOriginalSourceCapture capture) : IDeveloperProjectOriginalSetupPermission
+        DeveloperProjectSetupIntent intent, IDeveloperProjectOriginalSourceCapture capture,
+        Func<string, CancellationToken, Task>? presentReview) : IDeveloperProjectOriginalSetupPermission
     {
         private HomeDeveloperProjectSetupPermissionSource Owner => owner;
         private DeveloperProjectSetupIntent OriginalIntent => intent;
@@ -186,11 +191,15 @@ public sealed partial class HomeDeveloperProjectSetupPermissionSource : IDevelop
                 await ValidateSourcesAsync(_stop.Token).ConfigureAwait(false);
                 var args = JsonSerializer.SerializeToElement(new { intent, digest = intent.Digest(),
                     originalEffectLimits = "512 distinct once-issued steps; no command trust, model permission, copy replay or source READ grant" });
-                _review = _sources.Invoke(() => owner._broker.PrepareReviewForActor(intent.OriginalActor, "dev", SetupAction, _scopes, args,
-                    "Commit only the reviewed original project setup steps at this owned Files destination. Partial or unknown work retains the same IDs.",
+                var preview = intent.OriginalExistingProjectRoot is { } projectPath
+                    ? $"Register the existing Build project at {projectPath}. Record {intent.Files.Length} files and {intent.Folders.Length} folders in Files and save its Build workspace. No source files are overwritten."
+                    : "Commit only the reviewed original project setup steps at this owned Files destination. Partial or unknown work retains the same IDs.";
+                _review = _sources.Invoke(() => owner._broker.PrepareReviewForActor(intent.OriginalActor, "dev", SetupAction, _scopes, args, preview,
                     null, "dev:setup:" + intent.OriginalActor.AuthenticationRevision));
                 var observed = await _sources.AwaitAsync(_sources.Invoke(() => owner._broker.AuthorizePreparedReviewAsync(_review, _stop.Token))).ConfigureAwait(false);
                 var deadline = DateTimeOffset.UtcNow.AddMinutes(5);
+                if (observed.Request?.State == HomePermissionRequestState.PendingApproval && presentReview is not null)
+                    await _sources.AwaitAsync(_sources.Invoke(() => presentReview(_review.RequestId, _stop.Token))).ConfigureAwait(false);
                 while (observed.Request?.State == HomePermissionRequestState.PendingApproval)
                 {
                     if (DateTimeOffset.UtcNow >= deadline) throw new UnauthorizedAccessException("DEV_SETUP_APPROVAL_REQUIRED: accept the original high-risk intent in Home before any step.");
