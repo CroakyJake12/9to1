@@ -102,22 +102,99 @@ public sealed class DeveloperAutonomousWorkspaceTools
         string baseRevision,
         CancellationToken cancellationToken = default)
     {
+        var fullRepository = Path.GetFullPath(repositoryRoot);
         var fullWorktree = Path.GetFullPath(worktreePath);
-        if (Directory.Exists(fullWorktree) && Directory.Exists(Path.Combine(fullWorktree, ".git"))
-            || File.Exists(Path.Combine(fullWorktree, ".git")))
+        var parentTop = await ResolveWorktreeTopAsync(fullRepository, cancellationToken).ConfigureAwait(false);
+        var parentCommon = await ResolveGitCommonDirectoryAsync(fullRepository, cancellationToken).ConfigureAwait(false);
+        var resolvedBase = await RunGitAsync(fullRepository, ["rev-parse", "--verify", baseRevision + "^{commit}"], 30, cancellationToken).ConfigureAwait(false);
+        var gitMarker = Path.Combine(fullWorktree, ".git");
+        if (Directory.Exists(fullWorktree) && (Directory.Exists(gitMarker) || File.Exists(gitMarker)))
         {
+            await ValidateExistingWorktreeAsync(fullWorktree, parentTop, parentCommon, resolvedBase, cancellationToken).ConfigureAwait(false);
             return fullWorktree;
         }
 
         Directory.CreateDirectory(Path.GetDirectoryName(fullWorktree)!);
         await RunGitAsync(
-            repositoryRoot,
+            fullRepository,
             ["worktree", "add", "--detach", fullWorktree, baseRevision],
             timeoutSeconds: 180,
             cancellationToken: cancellationToken).ConfigureAwait(false);
-        await MaterializeLocalBuildSubmodulesAsync(repositoryRoot, fullWorktree, cancellationToken).ConfigureAwait(false);
+
+        // Verify the newly registered checkout is a distinct child of this exact repository before
+        // touching sparse-checkout state. Disabling it then affects only this child's worktree config.
+        await ValidateExistingWorktreeAsync(fullWorktree, parentTop, parentCommon, resolvedBase, cancellationToken).ConfigureAwait(false);
+        await DisableSparseCheckoutForNewChildAsync(fullRepository, fullWorktree, cancellationToken).ConfigureAwait(false);
+        await MaterializeLocalBuildSubmodulesAsync(fullRepository, fullWorktree, cancellationToken).ConfigureAwait(false);
         return fullWorktree;
     }
+
+    private static async Task ValidateExistingWorktreeAsync(
+        string worktreePath,
+        string expectedParentTop,
+        string expectedCommonDirectory,
+        string expectedHead,
+        CancellationToken cancellationToken)
+    {
+        var top = await ResolveWorktreeTopAsync(worktreePath, cancellationToken).ConfigureAwait(false);
+        if (!PathEquals(top, worktreePath))
+            throw new InvalidOperationException($"Existing worktree path resolves to a different checkout: {top}");
+        if (PathEquals(top, expectedParentTop))
+            throw new InvalidOperationException("An isolated worktree must be distinct from its repository root.");
+
+        var common = await ResolveGitCommonDirectoryAsync(worktreePath, cancellationToken).ConfigureAwait(false);
+        if (!PathEquals(common, expectedCommonDirectory))
+            throw new InvalidOperationException("Existing worktree belongs to a different Git repository.");
+
+        var head = await ResolveHeadRevisionAsync(worktreePath, cancellationToken).ConfigureAwait(false);
+        if (!StringComparer.Ordinal.Equals(head, expectedHead))
+            throw new InvalidOperationException($"Existing worktree HEAD {head} does not match requested base {expectedHead}; existing work is preserved.");
+    }
+
+    private static async Task DisableSparseCheckoutForNewChildAsync(
+        string parentRepository,
+        string childWorktree,
+        CancellationToken cancellationToken)
+    {
+        var childSparse = await ReadBooleanGitConfigAsync(childWorktree, "core.sparseCheckout", cancellationToken).ConfigureAwait(false);
+        if (!StringComparer.OrdinalIgnoreCase.Equals(childSparse, "true")) return;
+
+        var worktreeConfig = await ReadBooleanGitConfigAsync(childWorktree, "extensions.worktreeConfig", cancellationToken).ConfigureAwait(false);
+        if (!StringComparer.OrdinalIgnoreCase.Equals(worktreeConfig, "true"))
+            throw new InvalidOperationException("Cannot safely disable inherited sparse checkout: Git worktree-specific config is not enabled.");
+
+        var parentSparseBefore = await ReadBooleanGitConfigAsync(parentRepository, "core.sparseCheckout", cancellationToken).ConfigureAwait(false);
+        await RunGitAsync(childWorktree, ["sparse-checkout", "disable"], 60, cancellationToken).ConfigureAwait(false);
+        var parentSparseAfter = await ReadBooleanGitConfigAsync(parentRepository, "core.sparseCheckout", cancellationToken).ConfigureAwait(false);
+        if (!StringComparer.Ordinal.Equals(parentSparseBefore, parentSparseAfter))
+            throw new InvalidOperationException("Disabling sparse checkout in the child changed the parent worktree configuration.");
+
+        var childSparseAfter = await ReadBooleanGitConfigAsync(childWorktree, "core.sparseCheckout", cancellationToken).ConfigureAwait(false);
+        if (StringComparer.OrdinalIgnoreCase.Equals(childSparseAfter, "true"))
+            throw new InvalidOperationException("Sparse checkout remains enabled in the new child worktree.");
+    }
+
+    private static async Task<string?> ReadBooleanGitConfigAsync(string repository, string key, CancellationToken cancellationToken)
+    {
+        var result = await RunGitDetailedAsync(repository, ["config", "--bool", key], 20, cancellationToken).ConfigureAwait(false);
+        if (result.ExitCode == 1) return null;
+        if (result.ExitCode != 0) throw new InvalidOperationException($"Could not read Git config '{key}': {result.StdErr}");
+        return result.StdOut.Trim();
+    }
+
+    private static async Task<string> ResolveWorktreeTopAsync(string repository, CancellationToken cancellationToken) =>
+        Path.GetFullPath(await RunGitAsync(repository, ["rev-parse", "--show-toplevel"], 20, cancellationToken).ConfigureAwait(false));
+
+    private static async Task<string> ResolveGitCommonDirectoryAsync(string repository, CancellationToken cancellationToken)
+    {
+        var common = await RunGitAsync(repository, ["rev-parse", "--git-common-dir"], 20, cancellationToken).ConfigureAwait(false);
+        return Path.GetFullPath(Path.Combine(repository, common));
+    }
+
+    private static bool PathEquals(string left, string right) =>
+        string.Equals(Path.TrimEndingDirectorySeparator(Path.GetFullPath(left)),
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(right)),
+            OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 
     private static readonly string[] LocalBuildSubmodules =
     [
@@ -134,29 +211,71 @@ public sealed class DeveloperAutonomousWorkspaceTools
         string worktreePath,
         CancellationToken cancellationToken)
     {
+        var commonDir = await ResolveGitCommonDirectoryAsync(repositoryRoot, cancellationToken).ConfigureAwait(false);
+        var canonicalRoot = Directory.GetParent(commonDir)?.FullName
+            ?? throw new InvalidOperationException("Could not derive the canonical checkout from Git common-dir.");
         foreach (var relative in LocalBuildSubmodules)
         {
-            var source = Path.Combine(repositoryRoot, relative);
             var target = Path.Combine(worktreePath, relative);
-            if (!Directory.Exists(source) || (!File.Exists(Path.Combine(source, ".git")) && !Directory.Exists(Path.Combine(source, ".git"))))
-                continue;
-            if (File.Exists(Path.Combine(target, ".git")) || Directory.Exists(Path.Combine(target, ".git")))
-                continue;
             var check = await RunGitDetailedAsync(worktreePath, ["ls-tree", "HEAD", "--", relative], 20, cancellationToken).ConfigureAwait(false);
-            if (check.ExitCode != 0 || string.IsNullOrWhiteSpace(check.StdOut))
+            if (check.ExitCode != 0)
+                throw new InvalidOperationException($"Could not inspect pinned submodule '{relative}': {check.StdErr}");
+            if (string.IsNullOrWhiteSpace(check.StdOut))
                 continue;
-            await RunGitDetailedAsync(
+
+            var header = check.StdOut.Split('\t', 2)[0].Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (header.Length != 3 || header[0] != "160000" || header[1] != "commit")
+                continue;
+            var pinnedCommit = header[2];
+
+            if (File.Exists(Path.Combine(target, ".git")) || Directory.Exists(Path.Combine(target, ".git")))
+            {
+                var targetHead = await ResolveHeadRevisionAsync(target, cancellationToken).ConfigureAwait(false);
+                if (!StringComparer.Ordinal.Equals(targetHead, pinnedCommit))
+                    throw new InvalidOperationException($"Initialized child submodule '{relative}' is at {targetHead}, expected pinned gitlink {pinnedCommit}.");
+                continue;
+            }
+
+            var candidates = new[] { Path.Combine(repositoryRoot, relative), Path.Combine(canonicalRoot, relative) }
+                .Distinct(PathComparer())
+                .ToArray();
+            string? source = null;
+            foreach (var candidate in candidates)
+            {
+                var marker = Path.Combine(candidate, ".git");
+                if (!Directory.Exists(candidate) || (!File.Exists(marker) && !Directory.Exists(marker))) continue;
+                var sourceTop = await ResolveWorktreeTopAsync(candidate, cancellationToken).ConfigureAwait(false);
+                if (!PathEquals(sourceTop, candidate)) continue;
+                var objectCheck = await RunGitDetailedAsync(candidate, ["cat-file", "-e", pinnedCommit + "^{commit}"], 20, cancellationToken).ConfigureAwait(false);
+                if (objectCheck.ExitCode == 0)
+                {
+                    source = candidate;
+                    break;
+                }
+            }
+            if (source is null)
+                throw new InvalidOperationException($"Pinned submodule commit {pinnedCommit} for '{relative}' is unavailable in initialized local sources; network fetch is prohibited.");
+
+            var update = await RunGitDetailedAsync(
                 worktreePath,
                 [
                     "-c", "protocol.file.allow=always",
                     "-c", $"submodule.{relative}.active=true",
                     "-c", $"submodule.{relative}.url={source}",
-                    "submodule", "update", "--no-fetch", "--", relative
+                    "submodule", "update", "--init", "--no-fetch", "--", relative
                 ],
                 timeoutSeconds: 90,
                 cancellationToken: cancellationToken).ConfigureAwait(false);
+            if (update.ExitCode != 0)
+                throw new InvalidOperationException($"Could not materialize pinned local submodule '{relative}': {update.StdErr} {update.StdOut}");
+
+            var materializedHead = await ResolveHeadRevisionAsync(target, cancellationToken).ConfigureAwait(false);
+            if (!StringComparer.Ordinal.Equals(materializedHead, pinnedCommit))
+                throw new InvalidOperationException($"Materialized submodule '{relative}' is at {materializedHead}, expected {pinnedCommit}.");
         }
     }
+
+    private static StringComparer PathComparer() => OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
 
     public static async Task RemoveWorktreeAsync(
         string repositoryRoot,
