@@ -51,6 +51,78 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
 
     public static bool UsesLinuxManualApprovalFixture => OperatingSystem.IsLinux();
 
+    [AvaloniaFact(SkipUnless = nameof(UsesLinuxManualApprovalFixture), Skip = "The real manual project fixture requires Linux.")]
+    public async Task Manual_Build_empty_restore_skips_source_review_and_native_decisions_admit_edit_and_Run()
+    {
+        var presented = Channel.CreateUnbounded<string>();
+        HomeNativeApprovalWindowOwner? approvalOwner = null;
+        await using var rig = await Rig.CreateWithManualReviewAsync(canonicalSavedProject: true,
+            manualRunCommand: "printf 'native-approved-run'",
+            presentManualReview: async (id, caller) =>
+            {
+                await Dispatcher.UIThread.InvokeAsync<Task>(() => approvalOwner!.OpenOriginalAsync(id),
+                    DispatcherPriority.Normal, caller).GetTask().Unwrap();
+                await presented.Writer.WriteAsync(id, caller);
+            });
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(rig.Token);
+        deadline.CancelAfter(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        var home = rig.Home;
+        await using var runtime = new HomeCoreRuntime(
+            [new HomeCoreStateService(home.StateStore), new HomePermissionsCoreService(home.Permissions, home.Profiles)]);
+        var approvals = approvalOwner = new HomeNativeApprovalWindowOwner(runtime, home.Profiles, home.Permissions);
+        try
+        {
+            var files = rig.Graph.GetRequiredService<NativeFilesWorkspaceService>();
+            var reader = new DeveloperManualSourceReadOwner(files, rig.Selections, rig.Reads, rig.Kernel);
+            var emptyEditor = await reader.RestoreCleanEditorSessionAsync(rig.SavedStore, rig.Saved, token);
+            Assert.True(emptyEditor.Succeeded, emptyEditor.Error?.Message);
+            Assert.Null(emptyEditor.Value);
+            var paths = rig.Graph.GetRequiredService<IAppPaths>();
+            using var keys = new LinuxProviderSecretStore(paths);
+            var emptyDraft = await reader.RestoreManualDraftRecoveryAsync(rig.SavedStore, keys, paths, rig.Saved, token);
+            Assert.True(emptyDraft.Succeeded, emptyDraft.Error?.Message);
+            Assert.Null(approvals.OriginalWindow);
+            Assert.Empty((await home.Permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
+
+            var editor = new DeveloperManualSourceEditOwner(files, rig.Selections, rig.Reads, rig.Edits, rig.Kernel);
+            var baseline = await File.ReadAllTextAsync(rig.SeedPath, token);
+            const string edited = "source edited through Home review";
+            var apply = rig.Keep(editor.ApplyAsync(rig.Saved, "seed.txt", Hash(baseline), edited, token));
+            await AcceptAsync(apply, HomeDeveloperProjectReadAdmissionSource.ReadAction, rig.ProjectRoot);
+            Assert.Equal(baseline, await File.ReadAllTextAsync(rig.SeedPath, token));
+            await AcceptAsync(apply, HomeDeveloperProjectEditAdmissionSource.EditAction, "seed.txt");
+            Assert.Equal(Hash(edited), await apply.WaitAsync(token));
+            Assert.Equal(edited, await File.ReadAllTextAsync(rig.SeedPath, token));
+
+            var target = Assert.Single(DeveloperRunConfigurationSelection.Observe(rig.Saved).Value!);
+            var run = rig.Keep(rig.ProcessOwner.RunAsync(rig.Saved, target, action => action(), token));
+            await AcceptAsync(run, HomeDeveloperProjectReadAdmissionSource.ReadAction, rig.ProjectRoot);
+            await AcceptAsync(run, HomeDeveloperManualProjectExecutionAdmissionSource.RunAction, "printf 'native-approved-run'");
+            var process = await run.WaitAsync(token);
+            Assert.True(process.ProcessSucceeded);
+            Assert.Equal("native-approved-run", process.Process!.StandardOutput);
+            Assert.Empty((await home.Permissions.GetSnapshotAsync(cancellationToken: token)).Grants);
+        }
+        finally { await approvals.CloseAndDrainAsync(); }
+
+        async Task AcceptAsync(Task operation, string action, string preview)
+        {
+            var id = await presented.Reader.ReadAsync(token);
+            var request = Assert.IsType<HomePermissionRequest>(await home.Permissions.ReadRequestObservationAsync(id, token));
+            Assert.Equal(action, request.Scope.ActionName);
+            Assert.Contains(preview, request.Impact.ChangePreview);
+            Assert.Equal(HomePermissionRequestState.PendingApproval, request.State);
+            Assert.False(operation.IsCompleted);
+            var window = Assert.IsAssignableFrom<Window>(approvals.OriginalWindow);
+            window.UpdateLayout();
+            Dispatcher.UIThread.RunJobs();
+            var surface = Assert.IsType<HomeApprovalCuiSurface>(approvals.OriginalSurface);
+            var button = Assert.Single(surface.GetVisualDescendants().OfType<Button>(), item => item.Name == "approval-accept");
+            button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        }
+    }
+
     [AvaloniaFact(SkipUnless = nameof(UsesLinuxManualApprovalFixture), Skip = "The real project capture fixture requires Linux.")]
     public async Task Manual_Build_registration_presents_and_waits_for_both_original_Home_approvals()
     {
@@ -1172,9 +1244,16 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
             Saved.Reference.WorkspaceId.ToString("N") + ".json");
         internal string SavedRegistryPath => _savedRegistryPath ?? throw new InvalidOperationException("No actual project registry observation was captured.");
 
-        internal static async Task<Rig> CreateAsync(string? existingTarget = null,
+        internal static Task<Rig> CreateAsync(string? existingTarget = null,
             bool canonicalSavedProject = false, bool registerSavedProject = true, bool bindSavedStore = true,
-            string? manualRunCommand = null, bool enableActualProjectSetup = false)
+            string? manualRunCommand = null, bool enableActualProjectSetup = false) =>
+            CreateWithManualReviewAsync(existingTarget, canonicalSavedProject, registerSavedProject,
+                bindSavedStore, manualRunCommand, enableActualProjectSetup);
+
+        internal static async Task<Rig> CreateWithManualReviewAsync(string? existingTarget = null,
+            bool canonicalSavedProject = false, bool registerSavedProject = true, bool bindSavedStore = true,
+            string? manualRunCommand = null, bool enableActualProjectSetup = false,
+            Func<string, CancellationToken, Task>? presentManualReview = null)
         {
             if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("This fixture requires the genuine Linux Home/Files native owners.");
             if (enableActualProjectSetup && (!canonicalSavedProject || !bindSavedStore))
@@ -1233,11 +1312,11 @@ public sealed class FilesDeveloperOriginalSourcePublicationTests
                 services.AddSingleton(files!); services.AddSingleton(authority!);
                 services.AddFilesNativeHost();
                 services.AddHavenOwnedDeveloperSourceReads(rig.Home,
-                    provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(), readResolver, readPolicy);
+                    provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(), readResolver, readPolicy, presentManualReview);
                 services.AddHavenOwnedDeveloperSourceEdits(rig.Home,
-                    provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(), editResolver, editPolicy);
+                    provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(), editResolver, editPolicy, presentManualReview);
                 services.AddHavenOwnedDeveloperManualExecution(rig.Home,
-                    provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(), runResolver, runPolicy);
+                    provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(), runResolver, runPolicy, presentManualReview);
                 if (setupPolicy is not null)
                     services.AddHavenOwnedDeveloperSetups(rig.Home,
                         provider => provider.GetRequiredService<FilesDeveloperOriginalSetupScopeSource>(),

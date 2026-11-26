@@ -14,16 +14,18 @@ public sealed class HomeDeveloperProjectReadAdmissionSource : IDeveloperProjectO
     private readonly HomeResourceOperationBroker _broker;
     private readonly HomePermissionTrustService _permissions;
     private readonly Func<IDeveloperProjectOriginalPhysicalReadSelectionSource> _selections;
+    private readonly Func<string, CancellationToken, Task>? _presentReview;
     private readonly object _sync = new();
     private readonly Dictionary<IDeveloperProjectOriginalReadSelection, Read> _reads = new(ReferenceEqualityComparer.Instance);
     private volatile bool _sealed; private Task? _close; private readonly CloudflareOriginalTaskLedger _closeStages = new();
     public HomeDeveloperProjectReadAdmissionSource(FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
         HomeResourceOperationBroker broker, HomePermissionTrustService permissions,
-        Func<IDeveloperProjectOriginalPhysicalReadSelectionSource> selections)
+        Func<IDeveloperProjectOriginalPhysicalReadSelectionSource> selections,
+        Func<string, CancellationToken, Task>? presentReview = null)
     {
         if (!profiles.IsBoundToStore(store) || !permissions.IsBoundToStore(store) || !broker.IsBoundToPermissions(permissions))
             throw new InvalidOperationException("SAME actual Home store/profile/broker/policy required.");
-        _profiles = profiles; _broker = broker; _permissions = permissions; _selections = selections;
+        _profiles = profiles; _broker = broker; _permissions = permissions; _selections = selections; _presentReview = presentReview;
     }
     public string ResourceKind => "dev.project.source";
     public void DemandExternalOriginalReadAdmissionJoin()
@@ -69,7 +71,7 @@ public sealed class HomeDeveloperProjectReadAdmissionSource : IDeveloperProjectO
             if (_sealed) throw new ObjectDisposedException(nameof(HomeDeveloperProjectReadAdmissionSource));
             if (_reads.TryGetValue(selection, out var original)) return original.OriginalAcquisition;
             if (_reads.Count >= 128) throw new InvalidOperationException("Unresolved original READ custody is full.");
-            var read = new Read(this, selection, presentReview); _reads.Add(selection, read); return read.Start(token);
+            var read = new Read(this, selection, presentReview ?? _presentReview); _reads.Add(selection, read); return read.Start(token);
         }
     }
     public Task ValidateOriginalAsync(IDeveloperProjectOriginalReadSelection selection, IDeveloperProjectOriginalReadAdmission admission, CancellationToken token)

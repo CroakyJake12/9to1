@@ -60,6 +60,8 @@ public sealed partial class App : Avalonia.Application
         collection.AddHavenOriginalTaskExecutionServices();
         collection.AddSingleton<UserPreferencesService>();
         collection.AddSingleton<DulcheLocalClient>();
+        if (OperatingSystem.IsLinux())
+            collection.AddSingleton<IModelProvider, DulcheSocketModelProvider>();
         collection.AddSingleton<Services.AvatarStore>();
         collection.AddSingleton<Services.OllamaWakeService>();
         collection.AddSingleton<ProjectCreationService>();

@@ -1,4 +1,5 @@
 #if !ANDROID
+using Avalonia.Threading;
 using Haven.Application;
 using Haven.Desktop.Services;
 using Haven.Infrastructure;
@@ -88,13 +89,13 @@ public sealed partial class App
                 ?? throw new InvalidOperationException("The explicit Windows recovery configuration was not captured."));
             services.AddHavenOwnedDeveloperSourceReads(home,
                 provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
-                _windowsDeveloperReadResolver!, _windowsDeveloperReadPolicy!);
+                _windowsDeveloperReadResolver!, _windowsDeveloperReadPolicy!, PresentManualProjectReviewAsync);
             services.AddHavenOwnedDeveloperSourceEdits(home,
                 provider => provider.GetRequiredService<IDeveloperProjectOriginalEditScopeSource>(),
-                _windowsDeveloperEditResolver!, _windowsDeveloperEditPolicy!);
+                _windowsDeveloperEditResolver!, _windowsDeveloperEditPolicy!, PresentManualProjectReviewAsync);
             services.AddHavenOwnedDeveloperManualExecution(home,
                 provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
-                _windowsManualRunResolver!, _windowsManualRunPolicy!);
+                _windowsManualRunResolver!, _windowsManualRunPolicy!, PresentManualProjectReviewAsync);
             services.AddHavenOwnedDeveloperSetups(home,
                 provider => provider.GetRequiredService<FilesDeveloperOriginalSetupScopeSource>(),
                 provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
@@ -146,6 +147,15 @@ public sealed partial class App
             original.DemandPublication();
             return true;
         }));
+
+        Task PresentManualProjectReviewAsync(string requestId, CancellationToken token) =>
+            Dispatcher.UIThread.InvokeAsync<Task>(() =>
+            {
+                token.ThrowIfCancellationRequested();
+                if (_actualNativeHomeApprovals is not { } approvals || !approvals.IsBoundToOriginalComposition(home))
+                    throw new UnauthorizedAccessException("The original Home approval surface is unavailable.");
+                return approvals.OpenOriginalAsync(requestId);
+            }, DispatcherPriority.Normal, token).GetTask().Unwrap();
     }
 
     private void CaptureOriginalWindowsDeveloperBorrowers(IServiceProvider provider)

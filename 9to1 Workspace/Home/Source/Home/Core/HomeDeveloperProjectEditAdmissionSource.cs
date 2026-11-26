@@ -20,18 +20,20 @@ public sealed class HomeDeveloperProjectEditAdmissionSource : IDeveloperProjectO
     private readonly HomeResourceOperationBroker _broker;
     private readonly HomePermissionTrustService _permissions;
     private readonly Func<IDeveloperProjectOriginalEditScopeSource> _edits;
+    private readonly Func<string, CancellationToken, Task>? _presentReview;
     private readonly object _sync = new();
     private readonly List<Edit> _originals = [];
     private volatile bool _sealed; private Task? _close; private readonly CloudflareOriginalTaskLedger _closeStages = new();
 
     public HomeDeveloperProjectEditAdmissionSource(FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
         HomeResourceOperationBroker broker, HomePermissionTrustService permissions,
-        Func<IDeveloperProjectOriginalEditScopeSource> edits, WorkspaceTaskRunEffectAuthority effectAuthority)
+        Func<IDeveloperProjectOriginalEditScopeSource> edits, WorkspaceTaskRunEffectAuthority effectAuthority,
+        Func<string, CancellationToken, Task>? presentReview = null)
     {
         if (!profiles.IsBoundToStore(store) || !permissions.IsBoundToStore(store) || !broker.IsBoundToPermissions(permissions))
             throw new InvalidOperationException("SAME actual Home store/profile/broker/policy required.");
         ArgumentNullException.ThrowIfNull(effectAuthority);
-        _store = store; _profiles = profiles; _broker = broker; _permissions = permissions; _edits = edits;
+        _store = store; _profiles = profiles; _broker = broker; _permissions = permissions; _edits = edits; _presentReview = presentReview;
     }
     public void DemandExternalOriginalEditAdmissionJoin()
     {
@@ -314,11 +316,14 @@ public sealed class HomeDeveloperProjectEditAdmissionSource : IDeveloperProjectO
                         : "single file; 4 MiB per file; exact reviewed SHA-256; atomic replace" });
                 _review = _stages.Invoke(() => owner._broker.PrepareReviewForActor(_actor, "dev", Action, scopes, arguments,
                     requiresAbsentTarget
-                        ? "Create the exactly reviewed new source file beneath your verified Files root. An existing file, including an empty file, will never be replaced. READ approval does not authorize this WRITE."
-                        : "Replace the exactly reviewed source file beneath your verified Files root with the reviewed text. READ approval does not authorize this WRITE.", null,
+                        ? $"Create {relativePath} in {capture.OriginalExistingProjectRoot} with the reviewed text. Create requires an absent destination."
+                        : $"Replace {relativePath} in {capture.OriginalExistingProjectRoot} with the reviewed text. Expected revision: {expectedSha256}.", null,
                     (requiresAbsentTarget ? "dev:create:" : "dev:edit:") + _actor.AuthenticationRevision));
                 var observed = await _stages.AwaitAsync(_stages.Invoke(() => owner._broker.AuthorizePreparedReviewAsync(_review, _stop.Token))).ConfigureAwait(false);
                 var deadline = DateTimeOffset.UtcNow.AddMinutes(5);
+                if (observed.State == HomePreparedReviewState.RequestObserved
+                    && observed.Request?.State == HomePermissionRequestState.PendingApproval && owner._presentReview is { } present)
+                    await _stages.AwaitAsync(_stages.Invoke(() => present(_review.RequestId, _stop.Token))).ConfigureAwait(false);
                 while (observed.State == HomePreparedReviewState.RequestObserved && observed.Request?.State == HomePermissionRequestState.PendingApproval)
                 {
                     if (DateTimeOffset.UtcNow >= deadline) throw new UnauthorizedAccessException("DEV_SOURCE_EDIT_APPROVAL_REQUIRED: Accept the exact selected project file WRITE in Home; no bytes were written.");

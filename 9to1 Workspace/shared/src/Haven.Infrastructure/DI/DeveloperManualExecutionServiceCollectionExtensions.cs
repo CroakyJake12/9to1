@@ -11,18 +11,20 @@ public static class DeveloperManualExecutionServiceCollectionExtensions
 {
     public static IServiceCollection AddHavenOwnedDeveloperManualExecution(this IServiceCollection services,
         HomeNativeWindowsComposition sameHome, Func<IServiceProvider, IDeveloperProjectOriginalManualExecutionSource> actualFiles,
-        HomeDeveloperManualProjectExecutionResourceResolver originalResolver, HomeDeveloperManualProjectExecutionActionPolicySource originalPolicy)
+        HomeDeveloperManualProjectExecutionResourceResolver originalResolver, HomeDeveloperManualProjectExecutionActionPolicySource originalPolicy,
+        Func<string, CancellationToken, Task>? presentReview = null)
     {
         ArgumentNullException.ThrowIfNull(sameHome);
         if (!HomeLocalReadComposition.IsBound(sameHome.StateStore, sameHome.Profiles, sameHome.Ownership))
             throw new InvalidOperationException("The original Windows Home store/profile/ownership tuple is required.");
         Same(services, typeof(HomeNativeWindowsComposition), sameHome);
         return Register(services, sameHome.StateStore, sameHome.Profiles, sameHome.Broker, sameHome.Permissions,
-            sameHome.Resources, actualFiles, originalResolver, originalPolicy);
+            sameHome.Resources, actualFiles, originalResolver, originalPolicy, presentReview);
     }
     public static IServiceCollection AddHavenOwnedDeveloperManualExecution(this IServiceCollection services,
         HomeLocalDomainComposition sameHome, Func<IServiceProvider, IDeveloperProjectOriginalManualExecutionSource> actualFiles,
-        HomeDeveloperManualProjectExecutionResourceResolver originalResolver, HomeDeveloperManualProjectExecutionActionPolicySource originalPolicy)
+        HomeDeveloperManualProjectExecutionResourceResolver originalResolver, HomeDeveloperManualProjectExecutionActionPolicySource originalPolicy,
+        Func<string, CancellationToken, Task>? presentReview = null)
     {
         ArgumentNullException.ThrowIfNull(sameHome);
         if (!OperatingSystem.IsLinux() || !sameHome.IsBoundToOriginalComposition(sameHome.StateStore, sameHome.Profiles,
@@ -30,12 +32,13 @@ public static class DeveloperManualExecutionServiceCollectionExtensions
             throw new InvalidOperationException("The original Linux Home domain tuple is required.");
         Same(services, typeof(HomeLocalDomainComposition), sameHome);
         return Register(services, sameHome.StateStore, sameHome.Profiles, sameHome.Broker, sameHome.Permissions,
-            sameHome.Resources, actualFiles, originalResolver, originalPolicy);
+            sameHome.Resources, actualFiles, originalResolver, originalPolicy, presentReview);
     }
     private static IServiceCollection Register(IServiceCollection services, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
         HomeResourceOperationBroker broker, HomePermissionTrustService permissions, ResourceAuthorizationService resources,
         Func<IServiceProvider, IDeveloperProjectOriginalManualExecutionSource> actualFiles,
-        HomeDeveloperManualProjectExecutionResourceResolver resolver, HomeDeveloperManualProjectExecutionActionPolicySource policy)
+        HomeDeveloperManualProjectExecutionResourceResolver resolver, HomeDeveloperManualProjectExecutionActionPolicySource policy,
+        Func<string, CancellationToken, Task>? presentReview)
     {
         ArgumentNullException.ThrowIfNull(actualFiles); ArgumentNullException.ThrowIfNull(resolver); ArgumentNullException.ThrowIfNull(policy);
         if (!resources.IsBoundToActorSource(profiles) || !broker.IsBoundToOriginalComposition(resources, permissions))
@@ -53,7 +56,7 @@ public static class DeveloperManualExecutionServiceCollectionExtensions
         services.AddSingleton<HomeDeveloperManualProjectExecutionAdmissionSource>(provider => new(store, profiles, broker, permissions,
             () => actualFiles(provider) ?? throw new InvalidOperationException("The genuine Files manual process source is unavailable."),
             () => provider.GetRequiredService<IWorkspaceToolService>() as IWorkspaceOriginalInvocationSource
-                ?? throw new NotSupportedException("The SAME maintained original workspace process owner is required.")));
+                ?? throw new NotSupportedException("The SAME maintained original workspace process owner is required."), presentReview));
         services.AddSingleton<IDeveloperProjectOriginalManualExecutionAdmissionSource>(provider => provider.GetRequiredService<HomeDeveloperManualProjectExecutionAdmissionSource>());
         services.AddSingleton<IWorkspaceManualProcessFinalFenceValidator>(provider => provider.GetRequiredService<HomeDeveloperManualProjectExecutionAdmissionSource>());
         services.AddSingleton<Func<IWorkspaceManualProcessFinalFenceValidator>>(provider => () => provider.GetRequiredService<HomeDeveloperManualProjectExecutionAdmissionSource>());

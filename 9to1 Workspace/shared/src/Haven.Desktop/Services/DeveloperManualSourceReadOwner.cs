@@ -160,9 +160,17 @@ public sealed partial class DeveloperManualSourceReadOwner(
         ArgumentNullException.ThrowIfNull(store);
         try
         {
-            await using var lease = await AcquireAsync(project, token).ConfigureAwait(false);
-            var profile = DemandEditorSessionStore(store, lease);
+            var selection = await SelectRegisteredAsync(project, token).ConfigureAwait(false);
+            var profile = DemandEditorSessionStore(store, selection);
             var loaded = await store.GetEditorSessionAsync(project, profile, token).ConfigureAwait(false);
+            if (!loaded.Succeeded) return SessionError<DeveloperRestoredCleanEditorSession?>(loaded.Error!);
+            if (loaded.Value is null)
+            {
+                await RevalidateRegisteredAsync(selection, token).ConfigureAwait(false);
+                return DeveloperOperationResult<DeveloperRestoredCleanEditorSession?>.Success(null);
+            }
+            await using var lease = await AcquireAsync(selection, token).ConfigureAwait(false);
+            loaded = await store.GetEditorSessionAsync(project, profile, token).ConfigureAwait(false);
             if (!loaded.Succeeded) return SessionError<DeveloperRestoredCleanEditorSession?>(loaded.Error!);
             if (loaded.Value is not { } session)
                 return DeveloperOperationResult<DeveloperRestoredCleanEditorSession?>.Success(null);
@@ -248,10 +256,13 @@ public sealed partial class DeveloperManualSourceReadOwner(
         finally { reservation?.Dispose(); }
     }
 
-    private Guid DemandEditorSessionStore(FileDeveloperWorkspaceStore store, ManualReadLease lease)
+    private Guid DemandEditorSessionStore(FileDeveloperWorkspaceStore store, ManualReadLease lease) =>
+        DemandEditorSessionStore(store, lease.Selection);
+
+    private Guid DemandEditorSessionStore(FileDeveloperWorkspaceStore store, IDeveloperProjectOriginalReadSelection selection)
     {
-        var descriptor = selections.GetOriginalRegisteredDescriptor(lease.Selection);
-        if (!selections.IsIssuedOriginalRegisteredDescriptor(lease.Selection, descriptor) ||
+        var descriptor = selections.GetOriginalRegisteredDescriptor(selection);
+        if (!selections.IsIssuedOriginalRegisteredDescriptor(selection, descriptor) ||
             !ReferenceEquals(descriptor.OriginalStore, store) || descriptor.OriginalActor.AccountId is not null ||
             descriptor.OriginalActor.OrganisationId is not null ||
             !Guid.TryParse(descriptor.OriginalActor.ProfileId, out var profile) || profile == Guid.Empty)
@@ -262,11 +273,21 @@ public sealed partial class DeveloperManualSourceReadOwner(
     private static DeveloperOperationResult<T> SessionError<T>(DeveloperOperationError error) =>
         DeveloperOperationResult<T>.Failure(error.Code, error.Message, error.TargetId, error.Recoverable, error.Retryable);
 
-    private async Task<ManualReadLease> AcquireAsync(DeveloperResolvedProject project, CancellationToken token)
+    private async Task<IDeveloperProjectOriginalReadSelection> SelectRegisteredAsync(DeveloperResolvedProject project, CancellationToken token)
     {
         var configuration = await files.GetConfigurationAsync(token).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("The original configured Files workspace is unavailable.");
-        var selection = await selections.SelectOriginalRegisteredProjectAsync(configuration.StoreId, project, token).ConfigureAwait(false);
+        return await selections.SelectOriginalRegisteredProjectAsync(configuration.StoreId, project, token).ConfigureAwait(false);
+    }
+
+    private Task RevalidateRegisteredAsync(IDeveloperProjectOriginalReadSelection selection, CancellationToken token) =>
+        selections.RevalidateOriginalAsync(selection, selections.GetOriginalRegisteredDescriptor(selection).OriginalActor, token);
+
+    private async Task<ManualReadLease> AcquireAsync(DeveloperResolvedProject project, CancellationToken token) =>
+        await AcquireAsync(await SelectRegisteredAsync(project, token).ConfigureAwait(false), token).ConfigureAwait(false);
+
+    private async Task<ManualReadLease> AcquireAsync(IDeveloperProjectOriginalReadSelection selection, CancellationToken token)
+    {
         var admission = await reads.AcquireOriginalAsync(selection, token).ConfigureAwait(false);
         try
         {

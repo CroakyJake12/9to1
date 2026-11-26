@@ -154,35 +154,75 @@ public sealed partial class DulcheLocalClient
         return JsonNode.Parse(await response.Content.ReadAsStringAsync(bounded.Token)) ?? new JsonObject();
     }
 
-    public async IAsyncEnumerable<string> StreamAsync(string model, IReadOnlyList<Dictionary<string, string>> messages,
-        Action<string> runStarted, [EnumeratorCancellation] CancellationToken token)
+    public IAsyncEnumerable<string> StreamAsync(string model, IReadOnlyList<Dictionary<string, string>> messages,
+        Action<string> runStarted, CancellationToken token) =>
+        StreamChatAsync(new { model, messages, stream = true }, runStarted, ownsIncompleteRun: false, token);
+
+    internal IAsyncEnumerable<string> StreamLocalModelAsync(object payload, CancellationToken token) =>
+        StreamChatAsync(payload, null, ownsIncompleteRun: true, token);
+
+    private async IAsyncEnumerable<string> StreamChatAsync(object payload, Action<string>? runStarted,
+        bool ownsIncompleteRun, [EnumeratorCancellation] CancellationToken token)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, "v1/chat/completions")
         {
-            Content = JsonContent.Create(new { model, messages, stream = true })
+            Content = JsonContent.Create(payload),
         };
-        using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
-        await DemandSuccess(response, token);
-        if (response.Headers.TryGetValues("X-Dulche-Run-Id", out var ids) && ids.FirstOrDefault() is { } id)
-            runStarted(id);
-        using var reader = new StreamReader(await response.Content.ReadAsStreamAsync(token));
-        while (await reader.ReadLineAsync(token) is { } line)
+        using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
+        await DemandSuccess(response, token).ConfigureAwait(false);
+
+        var runId = response.Headers.TryGetValues("X-Dulche-Run-Id", out var ids) ? ids.FirstOrDefault() : null;
+        var completed = false;
+        string? finishReason = null;
+        try
         {
-            if (!line.StartsWith("data:", StringComparison.Ordinal))
-                continue;
-            var data = line[5..].Trim();
-            if (data == "[DONE]")
-                yield break;
-            if (data.Length == 0)
-                continue;
-            var chunk = JsonNode.Parse(data);
-            if (chunk?["error"] is { } error)
-                throw new IOException(Explain(error));
-            var content = chunk?["choices"]?.AsArray().FirstOrDefault()?["delta"]?["content"]?.GetValue<string>();
-            if (!string.IsNullOrEmpty(content))
-                yield return content;
+            if (runId is not null) runStarted?.Invoke(runId);
+            using var reader = new StreamReader(await response.Content.ReadAsStreamAsync(token).ConfigureAwait(false));
+            while (await reader.ReadLineAsync(token).ConfigureAwait(false) is { } line)
+            {
+                if (!line.StartsWith("data:", StringComparison.Ordinal))
+                    continue;
+                var data = line[5..].Trim();
+                if (data == "[DONE]")
+                {
+                    if (ownsIncompleteRun && finishReason is not ("stop" or "length"))
+                        throw new InvalidDataException("Dulche finished without confirming a text response.");
+                    completed = true;
+                    yield break;
+                }
+                if (data.Length == 0)
+                    continue;
+                var chunk = JsonNode.Parse(data);
+                if (chunk?["error"] is { } error)
+                    throw new IOException(Explain(error));
+                var choice = chunk?["choices"]?.AsArray().FirstOrDefault();
+                finishReason = choice?["finish_reason"]?.GetValue<string>() ?? finishReason;
+                var content = choice?["delta"]?["content"]?.GetValue<string>();
+                if (!string.IsNullOrEmpty(content))
+                    yield return content;
+            }
+            throw new EndOfStreamException("Dulche disconnected before the response completed. Open the saved run for its outcome.");
         }
-        throw new EndOfStreamException("Dulche disconnected before the response completed. Open the saved run for its outcome.");
+        finally
+        {
+            if (ownsIncompleteRun && !completed && !string.IsNullOrWhiteSpace(runId))
+            {
+                // Retire the stream before stopping its exact daemon job. The caller's cancelled
+                // token must not cancel the separate, bounded stop request.
+                response.Dispose();
+                await StopIncompleteRunAsync(runId).ConfigureAwait(false);
+            }
+        }
+    }
+
+    private async Task StopIncompleteRunAsync(string runId)
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+        try { await StopRunAsync(runId, timeout.Token).ConfigureAwait(false); }
+        catch (Exception error) when (error is HttpRequestException or IOException or OperationCanceledException or JsonException)
+        {
+            System.Diagnostics.Trace.TraceWarning("Dulche could not confirm stop of the incomplete local chat run.");
+        }
     }
 
     private static async Task DemandSuccess(HttpResponseMessage response, CancellationToken token)

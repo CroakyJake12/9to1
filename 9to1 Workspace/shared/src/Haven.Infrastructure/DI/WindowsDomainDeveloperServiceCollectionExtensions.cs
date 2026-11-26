@@ -15,7 +15,8 @@ public static class WindowsDomainDeveloperServiceCollectionExtensions
         HomeNativeWindowsComposition sameHome,
         Func<IServiceProvider, IDeveloperProjectOriginalPhysicalReadSelectionSource> actualSelections,
         HomeDeveloperProjectReadResourceResolver originalResolver,
-        HomeDeveloperProjectReadActionPolicySource originalPolicy)
+        HomeDeveloperProjectReadActionPolicySource originalPolicy,
+        Func<string, CancellationToken, Task>? presentReview = null)
     {
         ArgumentNullException.ThrowIfNull(actualSelections); ArgumentNullException.ThrowIfNull(originalResolver);
         ArgumentNullException.ThrowIfNull(originalPolicy); RequireDomain(services, sameHome);
@@ -25,7 +26,7 @@ public static class WindowsDomainDeveloperServiceCollectionExtensions
         services.AddSingleton(originalResolver); services.AddSingleton(originalPolicy);
         services.AddSingleton<HomeDeveloperProjectReadAdmissionSource>(provider =>
             new(sameHome.StateStore, sameHome.Profiles, sameHome.Broker, sameHome.Permissions,
-                () => actualSelections(provider) ?? throw new InvalidOperationException("The actual Files source selection owner is unavailable.")));
+                () => actualSelections(provider) ?? throw new InvalidOperationException("The actual Files source selection owner is unavailable."), presentReview));
         services.AddSingleton<IDeveloperProjectOriginalReadAdmissionSource>(provider => provider.GetRequiredService<HomeDeveloperProjectReadAdmissionSource>());
         services.AddSingleton<IDeveloperProjectOriginalReadRetirementSource>(provider => provider.GetRequiredService<HomeDeveloperProjectReadAdmissionSource>());
         services.AddSingleton<IDeveloperProjectOriginalReadAdmissionJoinGuard>(provider => provider.GetRequiredService<HomeDeveloperProjectReadAdmissionSource>());
@@ -65,7 +66,8 @@ public static class WindowsDomainDeveloperServiceCollectionExtensions
         HomeNativeWindowsComposition sameHome,
         Func<IServiceProvider, IDeveloperProjectOriginalEditScopeSource> actualEdits,
         HomeDeveloperProjectEditResourceResolver originalResolver,
-        HomeDeveloperProjectEditActionPolicySource originalPolicy)
+        HomeDeveloperProjectEditActionPolicySource originalPolicy,
+        Func<string, CancellationToken, Task>? presentReview = null)
     {
         ArgumentNullException.ThrowIfNull(actualEdits); ArgumentNullException.ThrowIfNull(originalResolver);
         ArgumentNullException.ThrowIfNull(originalPolicy); RequireDomain(services, sameHome);
@@ -77,7 +79,7 @@ public static class WindowsDomainDeveloperServiceCollectionExtensions
         services.AddSingleton<HomeDeveloperProjectEditAdmissionSource>(provider =>
             new(sameHome.StateStore, sameHome.Profiles, sameHome.Broker, sameHome.Permissions,
                 () => actualEdits(provider) ?? throw new InvalidOperationException("The actual Files edit-scope owner is unavailable."),
-                provider.GetRequiredService<WorkspaceTaskRunEffectAuthority>()));
+                provider.GetRequiredService<WorkspaceTaskRunEffectAuthority>(), presentReview));
         services.AddSingleton<IDeveloperProjectOriginalEditAdmissionSource>(provider => provider.GetRequiredService<HomeDeveloperProjectEditAdmissionSource>());
         services.AddSingleton<IWorkspaceManualEditFinalFenceValidator>(provider => provider.GetRequiredService<HomeDeveloperProjectEditAdmissionSource>());
         services.AddSingleton<Func<IWorkspaceManualEditFinalFenceValidator>>(provider => () => provider.GetRequiredService<HomeDeveloperProjectEditAdmissionSource>());

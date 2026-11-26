@@ -20,6 +20,7 @@ using Haven.UI;
 using Haven.UI.Components;
 using Microsoft.Extensions.DependencyInjection;
 using HavenOS.Apps.Assistants.Contracts;
+using HavenOS.Home.Core;
 
 namespace Haven.Desktop.Views.Pages.Chat;
 
@@ -32,6 +33,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     private readonly HavenEventBus _bus;
     private readonly IConversationRepository _conversations;
     private readonly IOllamaClient _ollama;
+    private readonly HomeModelSelectionSource? _homeModels;
     private readonly ChatSessionService _sessions;
     private readonly IConversationSafetyService _safety;
     private readonly IConversationVersioningService _versioning;
@@ -136,11 +138,13 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         CustomTemplateRuntime customTemplate,
         IMessageAttachmentService? messageAttachments = null,
         IConversationProductionRepository? conversationProduction = null,
-        bool enableFreshChatTemporaryLifecycle = false)
+        bool enableFreshChatTemporaryLifecycle = false,
+        HomeModelSelectionSource? homeModels = null)
     {
         _bus = bus;
         _conversations = conversations;
         _ollama = ollama;
+        _homeModels = homeModels;
         _sessions = sessions;
         _safety = safety;
         _versioning = versioning;
@@ -406,13 +410,28 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         }
 
         var models = outcome.Value ?? [];
+        string? homeDefault = null;
+        if (_homeModels is not null && _selectedModel is null &&
+            models.Any(model => model.Name.StartsWith(DulcheSocketModelProvider.ProviderId + ":", StringComparison.Ordinal)))
+        {
+            var observed = await AwaitChatOriginalAsync(_homeModels.ResolveAsync(_originalPresentationGeneration, original.Token));
+            if (observed is { ScopeName: "User", Actor: { } actor, ProviderId: DulcheSocketModelProvider.ProviderId, ModelId: { } modelId } &&
+                string.Equals(observed.ScopeId, actor.ProfileId, StringComparison.Ordinal))
+                homeDefault = $"{observed.ProviderId}:{modelId}";
+        }
         await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() =>
         {
             // Bind every later selection/admission to THIS successful catalogue snapshot.
             // An older picker's removed descriptor is no longer a member and stays unusable.
             _admittedCatalogue = models;
-            var selectedName = _selectedModel?.Name ?? _preferences.DefaultModel;
-            _selectedModel = models.FirstOrDefault(model => model.Name.Equals(selectedName, StringComparison.OrdinalIgnoreCase)) ?? models.FirstOrDefault();
+            if (_selectedModel is null && homeDefault is not null)
+                _selectedModel = models.FirstOrDefault(model => string.Equals(model.Name, homeDefault, StringComparison.Ordinal));
+            else
+            {
+                var selectedName = _selectedModel?.Name ?? _preferences.DefaultModel;
+                _selectedModel = models.FirstOrDefault(model => model.Name.Equals(selectedName, StringComparison.OrdinalIgnoreCase)) ??
+                    models.FirstOrDefault();
+            }
             _modelAvailability = _selectedModel is null ? ChatModelAvailability.Unavailable : ChatModelAvailability.Available;
             _modelAvailabilityCause = null;
             SetProjectionStatus(_selectedModel is null ? NoLocalModelStatus : null);

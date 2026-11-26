@@ -39,10 +39,18 @@ public sealed partial class DeveloperManualSourceReadOwner
         try
         {
             DemandOriginalRecoveryKeys(keys, actualPaths);
-            await using var lease = await AcquireAsync(project, token).ConfigureAwait(false);
-            var profile = DemandEditorSessionStore(store, lease);
+            var selection = await SelectRegisteredAsync(project, token).ConfigureAwait(false);
+            var profile = DemandEditorSessionStore(store, selection);
             var scope = new DeveloperDraftRecoveryScope(profile, Guid.Empty, Guid.Empty, Guid.Empty, IsManual: true);
             var loaded = await store.GetDraftRecoveryAsync(project, scope, token).ConfigureAwait(false);
+            if (!loaded.Succeeded) return SessionError<DeveloperManualRecoveryState>(loaded.Error!);
+            if (loaded.Value is null)
+            {
+                await RevalidateRegisteredAsync(selection, token).ConfigureAwait(false);
+                return DeveloperOperationResult<DeveloperManualRecoveryState>.Success(new(scope, 0, [], null, false));
+            }
+            await using var lease = await AcquireAsync(selection, token).ConfigureAwait(false);
+            loaded = await store.GetDraftRecoveryAsync(project, scope, token).ConfigureAwait(false);
             if (!loaded.Succeeded) return SessionError<DeveloperManualRecoveryState>(loaded.Error!);
             if (loaded.Value is not { } snapshot)
             {

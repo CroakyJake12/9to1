@@ -17,6 +17,7 @@ public sealed partial class HomeDeveloperManualProjectExecutionAdmissionSource :
     private readonly HomePermissionTrustService _permissions;
     private readonly Func<IDeveloperProjectOriginalManualExecutionSource> _files;
     private readonly Func<IWorkspaceOriginalInvocationSource> _physical;
+    private readonly Func<string, CancellationToken, Task>? _presentReview;
     private readonly object _sync = new();
     private readonly List<Run> _runs = [];
     private readonly List<Task> _acquisitions = [];
@@ -24,11 +25,13 @@ public sealed partial class HomeDeveloperManualProjectExecutionAdmissionSource :
     private volatile bool _sealed; private Task? _close;
     public HomeDeveloperManualProjectExecutionAdmissionSource(FileHomeCoreStateStore store,
         HomeLocalProfileIdentity profiles, HomeResourceOperationBroker broker, HomePermissionTrustService permissions,
-        Func<IDeveloperProjectOriginalManualExecutionSource> files, Func<IWorkspaceOriginalInvocationSource> physical)
+        Func<IDeveloperProjectOriginalManualExecutionSource> files, Func<IWorkspaceOriginalInvocationSource> physical,
+        Func<string, CancellationToken, Task>? presentReview = null)
     {
         if (!profiles.IsBoundToStore(store) || !permissions.IsBoundToStore(store) || !broker.IsBoundToPermissions(permissions))
             throw new InvalidOperationException("SAME actual Home store/profile/broker/policy required.");
         _store = store; _profiles = profiles; _broker = broker; _permissions = permissions; _files = files; _physical = physical;
+        _presentReview = presentReview;
     }
     public void DemandExternalOriginalManualExecutionJoin()
     {
@@ -180,9 +183,13 @@ public sealed partial class HomeDeveloperManualProjectExecutionAdmissionSource :
                 lock (_gate) _scopes = scopes;
                 var arguments = _sources.Invoke(() => binding.ReviewArguments(OperationId, scopes[0]));
                 var review = _sources.Invoke(() => owner._broker.PrepareReviewForActor(_actor, "dev", RunAction, scopes, arguments,
-                    binding.ReviewText, null, binding.ReceiptPrefix + _actor.AuthenticationRevision));
+                    $"{binding.ReviewText}\nProject: {binding.CanonicalRoot}\nCommand: {binding.Command}\nTimeout: {binding.TimeoutSeconds} seconds.",
+                    null, binding.ReceiptPrefix + _actor.AuthenticationRevision));
                 var observed = await _sources.AwaitAsync(_sources.Invoke(() => owner._broker.AuthorizePreparedReviewAsync(review, _stop.Token))).ConfigureAwait(false);
                 var deadline = DateTimeOffset.UtcNow.AddMinutes(5);
+                if (observed.State == HomePreparedReviewState.RequestObserved
+                    && observed.Request?.State == HomePermissionRequestState.PendingApproval && owner._presentReview is { } present)
+                    await _sources.AwaitAsync(_sources.Invoke(() => present(review.RequestId, _stop.Token))).ConfigureAwait(false);
                 while (observed.State == HomePreparedReviewState.RequestObserved && observed.Request?.State == HomePermissionRequestState.PendingApproval)
                 {
                     if (DateTimeOffset.UtcNow >= deadline) throw new UnauthorizedAccessException("Accept the exact manual console Run in Home. No process was started.");
