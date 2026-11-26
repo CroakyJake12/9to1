@@ -271,6 +271,27 @@ public sealed class DeveloperMissionReliabilityTests
         Assert.Empty(gateway.StoppedRuns);
     }
 
+    [Fact]
+    public async Task Partial_edit_failure_allows_rereading_the_changed_source()
+    {
+        using var fixture = await MissionFixture.CreateAsync();
+        var gateway = new ScriptedGateway();
+        gateway.Reply("""{"op":"read_file","path":"tests/Acceptance.cs"}""");
+        gateway.Reply("""{"op":"edit_file","edits":[{"path":"tests/Acceptance.cs","old":"// baseline","new":"// recovered"},{"path":"tests/Acceptance.cs","old":"missing old text","new":"unused"}]}""");
+        gateway.Reply("""{"op":"read_file","path":"tests/Acceptance.cs"}""");
+        await using var engine = new DeveloperAutonomousMissionEngine(fixture.Options, gateway, fixture.Store);
+        var mission = await engine.InitializeOrResumeAsync();
+        await engine.RunSingleStepAsync();
+        await engine.RunSingleStepAsync();
+        await engine.RunSingleStepAsync();
+        await engine.RunSingleStepAsync();
+        var receipt = fixture.Store.ReadTranscript(mission.MissionId).Last(message => message.Role == "user").Content;
+        Assert.Contains("// recovered", receipt);
+        Assert.DoesNotContain("Rejected: identical", receipt);
+        Assert.Equal("// recovered\n", await File.ReadAllTextAsync(
+            Path.Combine(engine.CurrentMission!.ActiveTask!.WorktreePath!, "tests", "Acceptance.cs")));
+    }
+
     private static DeveloperCompletionResult Completion(DeveloperCompletionRequest request, string answer) =>
         new("finished", request.ModelId, answer, "", "stop", 0, 0, null, TimeSpan.Zero);
 

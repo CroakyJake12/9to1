@@ -1442,6 +1442,10 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
     {
         var worktree = task.WorktreePath!;
         var (changedPaths, unifiedDiff, diffSha) = await DeveloperAutonomousWorkspaceTools.CaptureDiffAsync(worktree, cancellationToken).ConfigureAwait(false);
+        // An earlier item in an edit batch may have succeeded before a later item failed.
+        // Invalidate stale read receipts whenever the actual source changed.
+        changed |= (changedPaths.Count > 0 || task.ChangedPaths.Count > 0)
+            && !StringComparer.Ordinal.Equals(task.DiffSha256, diffSha);
         var visited = changed
             ? Array.Empty<string>()
             : visitedDigest is not null
