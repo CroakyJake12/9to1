@@ -885,6 +885,7 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
         string receipt;
         var changed = false;
         var freshRead = false;
+        string? visitedDigest = mutatingOp ? null : actionDigest;
 
         try
         {
@@ -974,7 +975,10 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
                     var filter = action["filter"]?.ToString() ?? task.TestFilter;
                     var report = await RunVerificationForTaskAsync(task, buildProj, testProj, filter, cancellationToken).ConfigureAwait(false);
                     receipt = FormatVerificationReceipt(report);
-                    freshRead = true;
+                    freshRead = !IsTransientVerificationFailure(report);
+                    // Resource admission and timeout failures supply no reusable verification.
+                    // Keep the identical action retryable, subject to the existing idle limit.
+                    if (!freshRead) visitedDigest = null;
                     break;
                 }
                 case "programme_list":
@@ -1064,7 +1068,7 @@ public sealed class DeveloperAutonomousMissionEngine : IAsyncDisposable
         }
 
         await AdvanceTurnAsync(RequireMission().ActiveTask ?? task, changed, freshRead, op, receipt,
-            mutatingOp ? null : actionDigest, cancellationToken).ConfigureAwait(false);
+            visitedDigest, cancellationToken).ConfigureAwait(false);
         return RequireMission().ActiveTask is null;
     }
 

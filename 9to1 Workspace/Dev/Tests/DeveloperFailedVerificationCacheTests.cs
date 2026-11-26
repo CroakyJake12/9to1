@@ -12,7 +12,7 @@ public sealed class DeveloperFailedVerificationCacheTests
         if (!OperatingSystem.IsLinux()) return;
         using var fixture = new MissionFixture();
         var (mission, task, failure) = await fixture.SeedMissionAsync();
-        var engine = new DeveloperAutonomousMissionEngine(fixture.Options, new CompleteTaskGateway(), fixture.Store);
+        var engine = new DeveloperAutonomousMissionEngine(fixture.Options, new RepeatedActionGateway(), fixture.Store);
         var verificationStarted = 0;
         engine.EventRecorded += ev => { if (ev.Kind == "verification_started") verificationStarted++; };
         await using (engine)
@@ -35,7 +35,7 @@ public sealed class DeveloperFailedVerificationCacheTests
         using var fixture = new MissionFixture();
         var (mission, task, _) = await fixture.SeedMissionAsync();
         await File.AppendAllTextAsync(Path.Combine(fixture.Repository, "src", "Code.cs"), "// changed\n");
-        var engine = new DeveloperAutonomousMissionEngine(fixture.Options, new CompleteTaskGateway(), fixture.Store);
+        var engine = new DeveloperAutonomousMissionEngine(fixture.Options, new RepeatedActionGateway(), fixture.Store);
         var verificationStarted = 0;
         engine.EventRecorded += ev => { if (ev.Kind == "verification_started") verificationStarted++; };
         await using (engine)
@@ -48,6 +48,45 @@ public sealed class DeveloperFailedVerificationCacheTests
         }
     }
 
+    [Theory]
+    [InlineData("run_build")]
+    [InlineData("run_tests")]
+    public async Task Transient_verification_allows_identical_retry_until_a_hard_result_is_cached(string operation)
+    {
+        if (!OperatingSystem.IsLinux()) return;
+        using var fixture = new MissionFixture(transientFirst: true);
+        var (mission, _, _) = await fixture.SeedMissionAsync();
+        await using var engine = new DeveloperAutonomousMissionEngine(fixture.Options, new RepeatedActionGateway(operation), fixture.Store);
+        var verificationStarted = 0;
+        engine.EventRecorded += ev => { if (ev.Kind == "verification_started") verificationStarted++; };
+        await engine.InitializeOrResumeAsync(mission.MissionId);
+
+        await engine.RunSingleStepAsync();
+        var transient = engine.CurrentMission!.ActiveTask!;
+        Assert.Equal(124, transient.Verification!.BuildExitCode);
+        Assert.Equal(3, transient.IdleTurns);
+        Assert.Empty(transient.VisitedActionDigests);
+        Assert.Equal(1, verificationStarted);
+        Assert.Single(File.ReadAllLines(fixture.LaunchMarkerPath));
+
+        await engine.RunSingleStepAsync();
+        var hard = engine.CurrentMission!.ActiveTask!;
+        Assert.Equal(1, hard.Verification!.BuildExitCode);
+        Assert.Equal(0, hard.IdleTurns);
+        var retainedDigest = Assert.Single(hard.VisitedActionDigests);
+        Assert.Equal(2, verificationStarted);
+        Assert.Equal(2, File.ReadAllLines(fixture.LaunchMarkerPath).Length);
+
+        await engine.RunSingleStepAsync();
+        var duplicate = engine.CurrentMission!.ActiveTask!;
+        Assert.Same(hard.Verification, duplicate.Verification);
+        Assert.Equal(1, duplicate.IdleTurns);
+        Assert.Equal(retainedDigest, Assert.Single(duplicate.VisitedActionDigests));
+        Assert.Equal(2, verificationStarted);
+        Assert.Equal(2, File.ReadAllLines(fixture.LaunchMarkerPath).Length);
+        Assert.Contains("identical read-only action", fixture.Store.ReadTranscript(mission.MissionId)[^1].Content);
+    }
+
     private sealed class MissionFixture : IDisposable
     {
         public string Root { get; } = Directory.CreateTempSubdirectory("mission-verification-cache-").FullName;
@@ -57,7 +96,7 @@ public sealed class DeveloperFailedVerificationCacheTests
         public DeveloperAutonomousMissionStore Store { get; }
         public DeveloperAutonomousMissionOptions Options { get; }
 
-        public MissionFixture()
+        public MissionFixture(bool transientFirst = false)
         {
             Directory.CreateDirectory(Path.Combine(Repository, "src"));
             Directory.CreateDirectory(Path.Combine(Repository, "tests"));
@@ -73,7 +112,10 @@ public sealed class DeveloperFailedVerificationCacheTests
             Store = new DeveloperAutonomousMissionStore(StoreDirectory);
 
             var fakeDotnet = Path.Combine(Root, "fake-dotnet.sh");
-            File.WriteAllText(fakeDotnet, $"#!/bin/sh\necho launched >> '{LaunchMarkerPath}'\necho 'NU1008: The Include attribute is reserved for implicit items.'\nexit 1\n");
+            var admission = transientFirst
+                ? $"if [ ! -e '{LaunchMarkerPath}' ]; then\necho launched >> '{LaunchMarkerPath}'\necho 'Controlled transient verification admission timeout'\nexit 124\nfi\n"
+                : string.Empty;
+            File.WriteAllText(fakeDotnet, $"#!/bin/sh\n{admission}echo launched >> '{LaunchMarkerPath}'\necho 'NU1008: The Include attribute is reserved for implicit items.'\nexit 1\n");
             if (OperatingSystem.IsLinux())
                 File.SetUnixFileMode(fakeDotnet, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
             Options = new DeveloperAutonomousMissionOptions
@@ -176,7 +218,7 @@ public sealed class DeveloperFailedVerificationCacheTests
         }
     }
 
-    private sealed class CompleteTaskGateway : IDeveloperModelGateway
+    private sealed class RepeatedActionGateway(string operation = "complete_task") : IDeveloperModelGateway
     {
         public Task<DeveloperDulcheStatus> GetStatusAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(new DeveloperDulcheStatus("ready", false,
@@ -194,7 +236,7 @@ public sealed class DeveloperFailedVerificationCacheTests
         {
             var runId = "test-run";
             onRunStarted?.Invoke(runId);
-            var content = "{\"op\":\"complete_task\",\"summary\":\"retry same verification\",\"build_project\":\"src/Build.csproj\",\"test_project\":\"tests/Tests.csproj\",\"test_filter\":\"FullyQualifiedName~CodeTests\"}";
+            var content = $$"""{"op":"{{operation}}","summary":"retry same verification","build_project":"src/Build.csproj","test_project":"tests/Tests.csproj","test_filter":"FullyQualifiedName~CodeTests","filter":"FullyQualifiedName~CodeTests"}""";
             return Task.FromResult(new DeveloperCompletionResult(runId, request.ModelId, content, "", "stop", 128, 32, null, TimeSpan.FromMilliseconds(1)));
         }
 
