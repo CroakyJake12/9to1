@@ -617,6 +617,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         private readonly Capture _capture = capture;
         public int Dispatches; public int StreamDisposals;
         public IReadOnlyList<ModelDescriptor> AvailableModels = [];
+        public Func<CancellationToken, Task<IReadOnlyList<ModelDescriptor>>>? ModelDiscovery;
         public bool RunApprovedOwnedFrame;
         public Func<OllamaChatRequest, CancellationToken, Task<bool>>? OrdinaryProviderBody;
         public Task? OriginalDispose;
@@ -626,7 +627,8 @@ public sealed partial class ChatCloudPermissionCallerTests
         public Action? OriginalToolCallback = null;
         public TaskCompletionSource DisposeEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Task<bool> IsAvailableAsync(CancellationToken token) => Task.FromResult(true);
-        public Task<IReadOnlyList<ModelDescriptor>> GetModelsAsync(CancellationToken token) => Task.FromResult(AvailableModels);
+        public Task<IReadOnlyList<ModelDescriptor>> GetModelsAsync(CancellationToken token) =>
+            ModelDiscovery?.Invoke(token) ?? Task.FromResult(AvailableModels);
         public Task<string> CompleteAsync(OllamaChatRequest request, CancellationToken token) => throw new InvalidOperationException("No nonowned compatibility provider call");
         public Task<OllamaToolResponse> ChatWithToolsAsync(OllamaToolRequest request, CancellationToken token)
         {

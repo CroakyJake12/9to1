@@ -86,7 +86,12 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     private string? _registeredContextOverride;
     private EffortLevel? _effortOverride;
     private ModelDescriptor? _selectedModel;
+    private bool _hasCommittedHomeRoute;
+    private string? _committedHomeModelName;
+    private long _modelSelectionRevision;
+    private long _modelCatalogueGeneration;
     private IReadOnlyList<ModelDescriptor> _admittedCatalogue = Array.Empty<ModelDescriptor>();
+    private bool _modelCatalogueCurrent;
     private string? _pendingInstruction;
     private bool _pendingInstructionPreservesDraft;
     private ChatMentionQuery? _activeMention;
@@ -352,13 +357,21 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     {
         DemandOriginalChatCurrent();
         ArgumentNullException.ThrowIfNull(model);
+        _modelSelectionRevision++;
+        _hasCommittedHomeRoute = false;
+        _committedHomeModelName = null;
         // A ModelDescriptor argument carries no current discovery provenance. Bind the
         // selection to the CURRENT successful catalogue snapshot: a name still offered by the
         // latest discovery adopts that exact snapshot entry, while a removed/stale descriptor
         // from an older picker is recorded as the user's configuration only and can never
         // promote Unknown/Discovering/Unavailable or become actionable on raw identity alone.
-        var admitted = AdmittedCatalogueEntry(model);
+        var admitted = _modelCatalogueCurrent ? AdmittedCatalogueEntry(model) : null;
         _selectedModel = admitted ?? model;
+        if (admitted is not null)
+        {
+            _modelAvailability = ChatModelAvailability.Available;
+            _modelAvailabilityCause = null;
+        }
         _preferences.SetModelDefaults(model.Name, _preferences.DefaultEffort);
         RestoreModelAvailabilityStatus();
         ModelChanged?.Invoke(this, EventArgs.Empty);
@@ -374,7 +387,9 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     private async Task RefreshModelsOriginalBodyAsync()
     {
         var original = RequireChatOriginal();
+        var catalogueGeneration = Interlocked.Increment(ref _modelCatalogueGeneration);
         _modelAvailability = ChatModelAvailability.Discovering;
+        _modelCatalogueCurrent = false;
         // Publish the truthful held state through the SAME owned page work BEFORE awaiting the
         // provider. An enabled Send control must not remain visually enabled during a held
         // retry merely because the backend would still refuse to dispatch. This publishes ONLY
@@ -399,10 +414,11 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                 ExceptionDispatchInfo.Capture(decision.Causes[0]).Throw();
             }
 
-            _modelAvailability = ChatModelAvailability.Unavailable;
-            _modelAvailabilityCause = decision.Cause;
             await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() =>
             {
+                if (catalogueGeneration != Volatile.Read(ref _modelCatalogueGeneration)) return;
+                _modelAvailability = ChatModelAvailability.Unavailable;
+                _modelAvailabilityCause = decision.Cause;
                 SetProjectionStatus(ModelUnavailableStatus);
                 PublishOriginalModelGateVisual();
             }));
@@ -421,10 +437,14 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         }
         await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() =>
         {
+            if (catalogueGeneration != Volatile.Read(ref _modelCatalogueGeneration)) return;
             // Bind every later selection/admission to THIS successful catalogue snapshot.
             // An older picker's removed descriptor is no longer a member and stays unusable.
             _admittedCatalogue = models;
-            if (_selectedModel is null && homeDefault is not null)
+            _modelCatalogueCurrent = true;
+            if (_hasCommittedHomeRoute)
+                _selectedModel = models.FirstOrDefault(model => string.Equals(model.Name, _committedHomeModelName, StringComparison.Ordinal));
+            else if (_selectedModel is null && homeDefault is not null)
                 _selectedModel = models.FirstOrDefault(model => string.Equals(model.Name, homeDefault, StringComparison.Ordinal));
             else
             {

@@ -10,6 +10,10 @@ The [22 November source register](../../specification/owner-references/2026-11-2
 
 At `b10098944`, Home's published model picker and Discover route exist. The checked-in runtime has agent execution, a canonical model registry and a GGUF Unix-socket worker broker. The development profile stores a Boolean residency preference. **Incomplete** (RT-001–005, ARC-001, MODEL-001–006 and the owner's 23 November brief). A user must be able to open the existing Dulche route, connect to the independently supervised service, select an installed model and stream a verified reply. The model picker must resolve actual lifecycle state, support manual suspension and connect to the same import, download and job owners as the service. The four-mode close policy and the independent emergency stop need native and resource-reclamation evidence. Initial classification is source inspection only.
 
+### Spaces current-chat model selection · 26 November
+
+**Partial adaptation** (PICK-004/008, SPC-002/017/020; `host-model-picker`, `spaces-chat`). An authorized saved Home route can update the originating selected Spaces Chat without starting a request or changing an in-flight model. Stale tab, conversation, actor, selection and catalogue observations refuse; a missing model does not fall back. `code` + focused headless `test`; native picker-to-provider validation and independent review are pending. The per-conversation restoration boundary, ordinary Stop/close recovery and branch-bound regeneration remain open; see the receiving coordinator's `terra-spaces-independence-20261126.md` handoff.
+
 ## Current pass · 22 November 2026
 
 The owner’s 22 November v4 Atlas and bundled four-volume specification govern current product work. The 18 November map and dated observations below describe their original revisions.

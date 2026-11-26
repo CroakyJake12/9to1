@@ -18,6 +18,7 @@ using Haven.Application;
 using Haven.Application.Automations;
 using Haven.Application.Haven;
 using Haven.Desktop.Accounts;
+using Haven.Desktop.Services;
 using Haven.Desktop.Views.Pages.Automations;
 using Haven.Desktop.Views.Shell;
 using Haven.SharedHeader;
@@ -463,6 +464,7 @@ public sealed partial class App
         /// generation and publishes only if it is still current, so an out-of-order completion never
         /// overwrites a newer selection.</summary>
         private long _modelProjectionGeneration;
+        private long _chatRouteCommitGeneration;
 
         /// <summary>Composes the genuine selected-model projection from the real Home/Dulche route
         /// resolver and publishes it to the real Browse consumer. It reads the ACTUAL current user
@@ -1041,6 +1043,14 @@ public sealed partial class App
                 var actor = await ObserveActorAsync(cancellationToken);
                 if (actor is null || !IsPanelCurrent(generation, actor.ProfileId))
                     return HavenSharedOpenResult.Denied;
+                // Capture the exact originating tab and Chat before awaiting picker setup.
+                // A later route commit must never be redirected to whichever tab happens
+                // to be selected when its asynchronous model resolution completes.
+                var originalChrome = _chrome;
+                var originalTab = originalChrome?.State.SelectedTabId;
+                var originalSpaces = originalTab is { } tabId
+                    ? originalChrome?.ObserveOriginalAppContent(tabId) as SpacesBrowseAppContentSession : null;
+                var originalChat = originalSpaces?.CaptureSelectedChatModelTarget();
                 HomeModelPickerOriginalSessionProvider session;
                 try
                 {
@@ -1051,8 +1061,18 @@ public sealed partial class App
                         _home.Resources, _home.Broker);
                     // The single shared route-commit seam: a successful guarded CAS save notifies the
                     // retained Home-owned selection source so the genuine projection republishes live.
-                    var notifying = new RouteNotifyingModelPickerProvider(provider,
-                        () => _homeModelSelectionSource?.NotifyRouteCommitted());
+                    var notifying = new RouteNotifyingModelPickerProvider(provider, () =>
+                    {
+                        var source = _homeModelSelectionSource ?? _services.GetService<HomeModelSelectionSource>();
+                        source?.NotifyRouteCommitted();
+                        if (source is not null && originalChrome is not null && originalTab is { } tab &&
+                            originalSpaces is not null && originalChat is not null)
+                        {
+                            var commit = Interlocked.Increment(ref _chatRouteCommitGeneration);
+                            Track(ApplyCommittedRouteToOriginalChatAsync(source, originalChrome, tab,
+                                originalSpaces, originalChat, actor, commit, ModelProjectionToken));
+                        }
+                    });
                     session = new HomeModelPickerOriginalSessionProvider(notifying, _home.Profiles);
                     var begun = await session.BeginAsync(cancellationToken);
                     if (!begun) return HavenSharedOpenResult.Refused("OriginalModelSessionUnavailable",
@@ -1095,6 +1115,29 @@ public sealed partial class App
                 FocusModelPickerControl(loaded.Root, "compact-model-picker-edit");
                 return HavenSharedOpenResult.Succeeded();
             });
+        }
+
+        private async Task ApplyCommittedRouteToOriginalChatAsync(HomeModelSelectionSource source,
+            HavenOS.Apps.Browse.BrowseChrome chrome, Guid tab, SpacesBrowseAppContentSession spaces,
+            SpacesBrowseAppContentSession.OriginalModelTarget target, AuthenticatedResourceActor actor,
+            long commit, CancellationToken token)
+        {
+            try
+            {
+                var snapshot = await source.ResolveAsync(commit, token);
+                var currentActor = await ObserveActorAsync(token);
+                if (currentActor is null || currentActor != actor ||
+                    snapshot is not null && snapshot.Actor != actor) return;
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    if (!IsCurrent || token.IsCancellationRequested ||
+                        commit != Volatile.Read(ref _chatRouteCommitGeneration) ||
+                        !ReferenceEquals(_chrome, chrome) || chrome.State.SelectedTabId != tab ||
+                        !ReferenceEquals(chrome.ObserveOriginalAppContent(tab), spaces)) return;
+                    spaces.ApplySelectedChatModelTarget(target, snapshot, actor);
+                });
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested) { }
         }
 
         /// <summary>Delegates a picker feature provider and notifies the shared Home-owned selection

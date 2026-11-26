@@ -87,6 +87,12 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     // immutable projection, never Avalonia properties or mutable Chat state.
     private sealed record PublishedChatRoute(NewChatPage Page, AppContentAddress Address);
     private PublishedChatRoute? _publishedChatRoute; // Guarded by _gate.
+    internal sealed class OriginalModelTarget(NewChatPage page, Guid conversationId, long selectionRevision)
+    {
+        internal NewChatPage Page { get; } = page;
+        internal Guid ConversationId { get; } = conversationId;
+        internal long SelectionRevision { get; set; } = selectionRevision;
+    }
     private CuiSceneHost? _retiredDiagnosticHost;
     private volatile Control? _page;
     private volatile AppContentAddress _address;
@@ -123,6 +129,33 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     public bool CanRetireOriginalView => _close is { IsCompletedSuccessfully: true };
     public Task? OriginalInitialization => _initialization;
     public Task? OriginalClose => _close;
+
+    internal OriginalModelTarget? CaptureSelectedChatModelTarget()
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        lock (_gate)
+        {
+            if (!_published || _closing || _publishedChatRoute is not { } route ||
+                !ReferenceEquals(route.Page, _chatPage)) return null;
+            return new(route.Page, route.Page.ConversationId, route.Page.ModelSelectionRevision);
+        }
+    }
+
+    internal void ApplySelectedChatModelTarget(OriginalModelTarget target,
+        Haven.Application.Haven.HavenModelProjectionSnapshot? snapshot, AuthenticatedResourceActor actor)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        lock (_gate)
+        {
+            if (!_published || _closing || actor != _historyOriginalActor ||
+                !string.Equals(actor.ProfileId, _request.ProfileId, StringComparison.Ordinal) ||
+                _publishedChatRoute is not { } route || !ReferenceEquals(route.Page, target.Page) ||
+                !ReferenceEquals(_chatPage, target.Page) || target.Page.ConversationId != target.ConversationId)
+                return;
+        }
+        if (target.Page.ApplyCommittedHomeModelRoute(snapshot, actor, target.SelectionRevision))
+            target.SelectionRevision = target.Page.ModelSelectionRevision;
+    }
 
     /// <summary>The canonical CUI failure presentation retained after a failed retirement.
     /// It is owned by this session and stays live in the same tab; the disposed Chat/Spaces

@@ -1,5 +1,6 @@
 using System.Reflection;
 using Haven.Application;
+using Haven.Application.Haven;
 using Haven.Core;
 using Haven.Desktop.Services;
 using Haven.Desktop.Views.Pages.Chat;
@@ -13,6 +14,205 @@ namespace Haven.Desktop.Tests;
 // owning inputs. This managed UI-child journey does not instantiate a native page.
 public sealed partial class ChatCloudPermissionCallerTests
 {
+    [AvaloniaFact]
+    public async Task Committed_home_model_change_affects_the_next_send_without_replaying_or_changing_the_active_send()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig(temporary: false);
+        var first = rig.Provider.Model.Model with { Name = "dulche-local:first", Capabilities = new HashSet<ToolCapability> { ToolCapability.Text } };
+        var second = first with { Name = "dulche-local:second" };
+        rig.Client.AvailableModels = [first, second];
+        var entered = new TaskCompletionSource<OllamaChatRequest>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var calls = new List<OllamaChatRequest>();
+        rig.Client.OrdinaryProviderBody = async (request, actualToken) =>
+        {
+            calls.Add(request);
+            if (calls.Count == 1)
+            {
+                entered.TrySetResult(request);
+                await release.Task.WaitAsync(actualToken);
+            }
+            return false;
+        };
+        var directory = Path.Combine(Path.GetTempPath(), "chat-model-switch-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var drafts = new NativeComposerDraftStore();
+        NewChatPage? page = null;
+        Task? firstSend = null;
+        try
+        {
+            page = CreateNativeComposerPage(rig, directory, drafts);
+            await page.OriginalInitialization.WaitAsync(TimeSpan.FromSeconds(10), token);
+            await page.RefreshModelsAsync();
+            page.SelectModel(first);
+            page.SetDraft("First request");
+            page.RequestComposerSend();
+            firstSend = Assert.IsAssignableFrom<Task>(typeof(NewChatPage)
+                .GetField("_originalSend", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page));
+            var admitted = await entered.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
+            Assert.Equal(first.Name, admitted.Model);
+
+            page.SetDraft("Next draft");
+            var actor = new AuthenticatedResourceActor("actor", "profile", null, null, "auth-1");
+            var snapshot = HavenModelProjectionSnapshot.CreateValidated(actor, actor.AuthenticationRevision,
+                "User", actor.ProfileId, "chat-route", 2, 1, "dulche-local", "second",
+                true, true, [], null);
+            page.ApplyCommittedHomeModelRoute(snapshot, actor, page.ModelSelectionRevision);
+
+            Assert.Equal(second.Name, page.SelectedModelName);
+            Assert.Equal("Next draft", page.ComposerInput.Text);
+            Assert.Single(calls);
+            Assert.Equal(first.Name, calls[0].Model);
+            release.TrySetResult();
+            await firstSend.WaitAsync(TimeSpan.FromSeconds(20), token);
+            Assert.Equal("Next draft", page.ComposerInput.Text);
+            page.RequestComposerSend();
+            var secondSend = Assert.IsAssignableFrom<Task>(typeof(NewChatPage)
+                .GetField("_originalSend", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page));
+            await secondSend.WaitAsync(TimeSpan.FromSeconds(20), token);
+            Assert.Equal(2, calls.Count);
+            Assert.Equal(second.Name, calls[1].Model);
+        }
+        finally
+        {
+            release.TrySetResult();
+            if (page is not null)
+            {
+                if (firstSend is not null) await firstSend;
+                page.RequestRetirement();
+                await page.CloseAndDrainAsync();
+            }
+            Directory.Delete(directory, true);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Unavailable_or_stale_home_route_never_substitutes_another_model_or_erases_the_draft()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig(temporary: false);
+        var first = rig.Provider.Model.Model with { Name = "dulche-local:first", Capabilities = new HashSet<ToolCapability> { ToolCapability.Text } };
+        var second = first with { Name = "dulche-local:second" };
+        rig.Client.AvailableModels = [first, second];
+        var directory = Path.Combine(Path.GetTempPath(), "chat-model-stale-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        NewChatPage? page = null;
+        try
+        {
+            page = CreateNativeComposerPage(rig, directory, new NativeComposerDraftStore());
+            await page.OriginalInitialization.WaitAsync(TimeSpan.FromSeconds(10), token);
+            await page.RefreshModelsAsync();
+            page.SelectModel(first);
+            page.SetDraft("Retain this draft");
+            var staleRevision = page.ModelSelectionRevision;
+            page.SelectModel(second);
+            var actor = new AuthenticatedResourceActor("actor", "profile", null, null, "auth-1");
+            var snapshot = HavenModelProjectionSnapshot.CreateValidated(actor, actor.AuthenticationRevision,
+                "User", actor.ProfileId, "chat-route", 2, 1, "dulche-local", "missing",
+                true, true, [], null);
+            Assert.False(page.ApplyCommittedHomeModelRoute(snapshot, actor, staleRevision));
+            Assert.Equal(second.Name, page.SelectedModelName);
+            var otherActor = actor with { AuthenticationRevision = "auth-2" };
+            Assert.False(page.ApplyCommittedHomeModelRoute(snapshot, otherActor, page.ModelSelectionRevision));
+            Assert.Equal(second.Name, page.SelectedModelName);
+            Assert.True(page.ApplyCommittedHomeModelRoute(snapshot, actor, page.ModelSelectionRevision));
+            Assert.Null(page.SelectedModelName);
+            Assert.Equal(ChatModelAvailability.Unavailable, page.ModelAvailability);
+            await page.RefreshModelsAsync();
+            Assert.Null(page.SelectedModelName);
+            Assert.Equal("Retain this draft", page.ComposerInput.Text);
+            Assert.Equal(0, rig.Client.Dispatches);
+        }
+        finally
+        {
+            if (page is not null) { page.RequestRetirement(); await page.CloseAndDrainAsync(); }
+            Directory.Delete(directory, true);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Failed_model_discovery_cannot_reactivate_a_stale_catalogue_but_refresh_can_restore_the_exact_route()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig(temporary: false);
+        var first = rig.Provider.Model.Model with { Name = "dulche-local:first", Capabilities = new HashSet<ToolCapability> { ToolCapability.Text } };
+        var second = first with { Name = "dulche-local:second" };
+        rig.Client.AvailableModels = [first, second];
+        var directory = Path.Combine(Path.GetTempPath(), "chat-model-recovery-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        NewChatPage? page = null;
+        try
+        {
+            page = CreateNativeComposerPage(rig, directory, new NativeComposerDraftStore());
+            await page.OriginalInitialization.WaitAsync(TimeSpan.FromSeconds(10), token);
+            await page.RefreshModelsAsync();
+            page.SetDraft("Keep this");
+            var failure = new HttpRequestException("Provider unavailable", null, System.Net.HttpStatusCode.BadGateway);
+            rig.Client.ModelDiscovery = _ => Task.FromException<IReadOnlyList<ModelDescriptor>>(failure);
+            await page.RefreshModelsAsync();
+            Assert.Equal(ChatModelAvailability.Unavailable, page.ModelAvailability);
+            var actor = new AuthenticatedResourceActor("actor", "profile", null, null, "auth-1");
+            var snapshot = HavenModelProjectionSnapshot.CreateValidated(actor, actor.AuthenticationRevision,
+                "User", actor.ProfileId, "chat-route", 2, 1, "dulche-local", "second",
+                true, true, [], null);
+            page.ApplyCommittedHomeModelRoute(snapshot, actor, page.ModelSelectionRevision);
+            Assert.Null(page.SelectedModelName);
+            Assert.Same(failure, page.ModelAvailabilityCause);
+            Assert.Equal(0, rig.Client.Dispatches);
+
+            rig.Client.ModelDiscovery = null;
+            await page.RefreshModelsAsync();
+            Assert.Equal(second.Name, page.SelectedModelName);
+            Assert.Equal("Keep this", page.ComposerInput.Text);
+            Assert.Equal(0, rig.Client.Dispatches);
+        }
+        finally
+        {
+            if (page is not null) { page.RequestRetirement(); await page.CloseAndDrainAsync(); }
+            Directory.Delete(directory, true);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Older_model_discovery_cannot_replace_a_newer_catalogue()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig(temporary: false);
+        var first = rig.Provider.Model.Model with { Name = "dulche-local:first", Capabilities = new HashSet<ToolCapability> { ToolCapability.Text } };
+        var second = first with { Name = "dulche-local:second" };
+        rig.Client.AvailableModels = [first];
+        var directory = Path.Combine(Path.GetTempPath(), "chat-model-order-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var oldRead = new TaskCompletionSource<IReadOnlyList<ModelDescriptor>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        NewChatPage? page = null;
+        Task? older = null;
+        try
+        {
+            page = CreateNativeComposerPage(rig, directory, new NativeComposerDraftStore());
+            await page.OriginalInitialization.WaitAsync(TimeSpan.FromSeconds(10), token);
+            rig.Client.ModelDiscovery = _ => { entered.TrySetResult(); return oldRead.Task; };
+            older = page.RefreshModelsAsync();
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
+            rig.Client.ModelDiscovery = _ => Task.FromResult<IReadOnlyList<ModelDescriptor>>([second]);
+            await page.RefreshModelsAsync();
+            Assert.Equal(second.Name, page.SelectedModelName);
+            oldRead.TrySetResult([first]);
+            await older.WaitAsync(TimeSpan.FromSeconds(10), token);
+            Assert.Equal(second.Name, page.SelectedModelName);
+            Assert.Equal(second.Name, Assert.Single(page.AdmittedModels).Name);
+            Assert.Equal(0, rig.Client.Dispatches);
+        }
+        finally
+        {
+            oldRead.TrySetResult([first]);
+            if (older is not null) await older;
+            if (page is not null) { page.RequestRetirement(); await page.CloseAndDrainAsync(); }
+            Directory.Delete(directory, true);
+        }
+    }
+
     [AvaloniaFact]
     public async Task Ordinary_shared_composer_send_survives_delayed_safety_check_and_commits_before_cleanup()
     {
