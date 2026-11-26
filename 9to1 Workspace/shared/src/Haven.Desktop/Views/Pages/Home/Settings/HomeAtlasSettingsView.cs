@@ -180,7 +180,7 @@ internal sealed class HomeAtlasSettingsView : UserControl, ICuiActionDispatcher,
                     _bindings.Set("ShowTitle",false);_owner.Child=_appearance;break;
                 case "settings-local-general":case "settings-installed-models":case "settings-haven-model-memory":case "settings-haven-services":
                     _owner.Child=_lifecycle;
-                    add("browse://home/models","Open Models / Discover","Manage models, profiles, agents and Swarm Mode.");
+                    add("browse://home/models","Open Models","Manage models, profiles, agents and Swarm Mode.");
                     destination("settings-providers","Connect an external client to Dulche.");
                     ObserveDevice();break;
                 case "settings-providers":

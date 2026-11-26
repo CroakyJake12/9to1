@@ -263,7 +263,7 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
 
     private static string HeadingFor(string section) => section switch
     {
-        "newtab" => "New Tab", "models" => "Models / Discover", "dashboard" => "Dashboard",
+        "newtab" => "New Tab", "models" => "Models", "dashboard" => "Dashboard",
         "events" => "Events", "settings" => "Settings", "library" => "Library", _ => "Apps"
     };
 

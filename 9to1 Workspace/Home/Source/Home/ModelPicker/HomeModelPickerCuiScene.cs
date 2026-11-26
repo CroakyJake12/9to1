@@ -124,7 +124,9 @@ public sealed class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPrope
             case "CompactContextDisclosureName": value = SectionName("context", "Context"); return true;
             case "CompactModelDisclosureName": value = SectionName("model", "Model"); return true;
             case "CompactParticipantDisclosureName": value = SectionName("participant", "Assistant or Specialist"); return true;
-            case "CompactModelName": value = CompactCatalogueModel?.DisplayName ?? CompactIdentity?.ModelId ?? "Choose a model"; return true;
+            case "CompactModelName":
+                value = (CompactRouteIsDraft ? "Pending: " : "") + (CompactCatalogueModel?.DisplayName ?? CompactIdentity?.ModelId ?? "Choose a model");
+                return true;
             case "CompactModelSource":
                 value = CompactCatalogueModel is { IsLocal: true } || IsCompactModelResolved && _compactModel is { LocalityKnown: true, IsLocal: true }
                     ? "This device" : CompactCatalogueModel?.ProviderName ?? CompactIdentity?.ProviderId;
@@ -451,7 +453,7 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
                         ? new(true, "SectionToggled", "Picker section updated.")
                         : Failure<object>("SectionUnavailable", "Choose a compact picker section."),
                     HomeModelPickerAction.AddCatalogueCandidate => Box(AddCatalogueCandidate(action)),
-                    HomeModelPickerAction.ChooseCompactModel => Box(ChooseCompactModel(action)),
+                    HomeModelPickerAction.ChooseCompactModel => await ChooseCompactModelAsync(action, cancellationToken).ConfigureAwait(false),
                     HomeModelPickerAction.ToggleFamily => CanPublish() && Surface.ToggleFamily(action.FamilyKey ?? "")
                         ? new(true, "FamilyToggled", "Catalogue family expansion updated.")
                         : Failure<object>("FamilyNotFound", "Choose a current catalogue family."),
@@ -496,8 +498,7 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
             Surface.ApplyState(_editor.Current);
             if (!Surface.IsSettingsOpen)
                 Surface.SetCompactStatus(result.Succeeded || action.Action == HomeModelPickerAction.RefreshCatalogue ? null : result.Message);
-            if (action.Action != HomeModelPickerAction.ChooseCompactModel)
-                await ApplyEffectiveReasoningAsync(cancellationToken).ConfigureAwait(false);
+            await ApplyEffectiveReasoningAsync(cancellationToken).ConfigureAwait(false);
         }
         return result;
     }
@@ -533,16 +534,20 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
         return _editor.AddCandidate(entry);
     }
 
-    private HomeCoreOperationResult<HomeModelRouteContract> ChooseCompactModel(HomeModelPickerActionRequest action)
+    private async Task<HomeCoreOperationResult<object>> ChooseCompactModelAsync(HomeModelPickerActionRequest action, CancellationToken cancellationToken)
     {
         if (!CanPublish() || Surface.IsSettingsOpen || !Surface.CanEditCompactRoute ||
             !string.Equals(action.Category, Surface.CompactRole, StringComparison.Ordinal))
-            return Failure<HomeModelRouteContract>("RouteUnavailable", "Open the corresponding route before choosing a model.");
+            return Failure<object>("RouteUnavailable", "Open the corresponding route before choosing a model.");
 
         var entry = FindCatalogueEntry(action);
         if (entry is null || !HomeModelPickerCuiSurface.MatchesCompactCapability(entry, Surface.CompactRole))
-            return Failure<HomeModelRouteContract>("CatalogueEntryUnavailable", "Choose a current catalogue model for this role.");
-        return _editor.PreferCandidate(entry);
+            return Failure<object>("CatalogueEntryUnavailable", "Choose a current catalogue model for this role.");
+        // The compact picker chooses one exact model. Persist through the same
+        // guarded route owner; advanced route editing retains its explicit Save.
+        var choice = _editor.PreferCandidate(entry, exactSelection: true);
+        if (!choice.Succeeded || !_editor.Current.HasUnsavedChanges) return Box(choice);
+        return Box(await _editor.SaveAsync(cancellationToken).ConfigureAwait(false));
     }
 
     private HomeModelPickerCatalogueEntry? FindCatalogueEntry(HomeModelPickerActionRequest action) =>

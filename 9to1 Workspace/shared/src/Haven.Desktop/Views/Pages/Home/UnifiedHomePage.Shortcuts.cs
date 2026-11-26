@@ -19,7 +19,7 @@ internal sealed partial class UnifiedHomePage
         (NewTabShortcutPlacement.Apps, "Apps", "apps"),
         (NewTabShortcutPlacement.Library, "Library", "folder"),
         (NewTabShortcutPlacement.Dashboard, "Dashboard", "dashboard"),
-        (NewTabShortcutPlacement.Models, "Models / Discover", "cpu"),
+        (NewTabShortcutPlacement.Models, "Models", "cpu"),
         (NewTabShortcutPlacement.Events, "Events", "calendar"),
         (NewTabShortcutPlacement.Settings, "Settings", "settings")
     ];

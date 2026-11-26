@@ -25,6 +25,7 @@ public sealed class HomeModelPickerCuiControllerTests
         public List<string> RequestedCategories { get; } = [];
         public string? CatalogueFailure { get; set; }
         public bool FailRouteRefresh { get; set; }
+        public bool FailRouteSave { get; set; }
         public Task<HomeCoreOperationResult<object>> RetryAuditAsync(string requestId, CancellationToken ct = default) =>
             Task.FromResult(new HomeCoreOperationResult<object>(false, "AuditNotOwned", "This host does not own the original route audit."));
         public Task<HomeCoreOperationResult<HomeModelCataloguePage>> GetCatalogueAsync(string? query = null, CancellationToken ct = default) =>
@@ -42,6 +43,8 @@ public sealed class HomeModelPickerCuiControllerTests
         }
         public Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> UpdateRouteAsync(HomeModelRouteEdit edit, CancellationToken ct = default)
         {
+            if (FailRouteSave)
+                return Task.FromResult(new HomeCoreOperationResult<HomeModelPickerSnapshot>(false, "Offline", "Route save unavailable."));
             if (edit.ExpectedRevision != Snapshot.Revision)
                 return Task.FromResult(new HomeCoreOperationResult<HomeModelPickerSnapshot>(false, "Conflict", "Route revision changed."));
             LastEdit = edit;
@@ -266,7 +269,7 @@ public sealed class HomeModelPickerCuiControllerTests
     }
 
     [Fact]
-    public async Task Compact_model_choice_prefers_the_current_catalogue_identity_and_saves_only_on_request()
+    public async Task Compact_model_choice_commits_the_exact_catalogue_identity_without_a_second_save()
     {
         var route = Route("chat.active", new("p", "current", null, true, 0),
             new("p", "desired", null, false, 1, "low"), new("p", "fallback", null, true, 2));
@@ -292,23 +295,47 @@ public sealed class HomeModelPickerCuiControllerTests
             ProviderId: choice.ProviderId, ModelId: choice.ModelId, ArtifactRevision: choice.ArtifactRevision));
 
         Assert.True(staged.Succeeded);
-        Assert.Null(provider.LastEdit);
-        Assert.True(Value<bool>(controller.Surface, "CanSaveCompactRoute"));
+        Assert.NotNull(provider.LastEdit);
+        Assert.False(Value<bool>(controller.Surface, "CanSaveCompactRoute"));
+        Assert.False(controller.Surface.State.HasUnsavedChanges);
         Assert.Equal("Friendly desired", Value<string>(controller.Surface, "CompactModelName"));
-        Assert.Equal("Route preference pending", Value<string>(controller.Surface, "CompactModelState"));
-        Assert.Equal(new[] { ("desired", true, 0), ("current", true, 1), ("fallback", true, 2) },
-            controller.Surface.State.Candidates.Select(candidate => (candidate.ModelId, candidate.Enabled, candidate.Order)));
+        Assert.Equal("Saved route preference", Value<string>(controller.Surface, "CompactModelState"));
+        Assert.Equal(new[] { ("desired", true, 0), ("current", false, 1), ("fallback", false, 2) },
+            provider.LastEdit.Route.Candidates.Select(candidate => (candidate.ModelId, candidate.Enabled, candidate.Order)));
         Assert.Equal("low", controller.Surface.State.Candidates[0].ReasoningLevelId);
-        var blocked = await controller.ExecuteAsync(new(HomeModelPickerAction.SelectCompactRole, Category: "voice"));
-        Assert.Equal("UnsavedChanges", blocked.Code);
-        Assert.Equal(new[] { "chat" }, provider.RequestedCategories);
-
-        var saved = await controller.ExecuteAsync(new(HomeModelPickerAction.SaveRoute));
-
-        Assert.True(saved.Succeeded);
         Assert.Equal(4, provider.LastEdit!.ExpectedRevision);
         Assert.Equal("desired", provider.LastEdit.Route.Candidates[0].ModelId);
         Assert.False(Value<bool>(controller.Surface, "CanSaveCompactRoute"));
+        // Re-choosing the saved preference still invokes the canonical commit
+        // bridge, because this conversation may have a different local model.
+        Assert.True((await controller.ExecuteAsync(new(HomeModelPickerAction.ChooseCompactModel,
+            Category: choice.CompactRole, ProviderId: choice.ProviderId, ModelId: choice.ModelId,
+            ArtifactRevision: choice.ArtifactRevision))).Succeeded);
+        Assert.Equal(5, provider.LastEdit.ExpectedRevision);
+        Assert.Equal(6, provider.Snapshot.Revision);
+    }
+
+    [Fact]
+    public async Task Failed_compact_model_commit_stays_pending_and_keeps_the_saved_route()
+    {
+        var route = Route("chat.active", new HomeModelRouteCandidate("p", "current", null, true, 0));
+        var provider = new StubProvider(new HomeModelPickerSnapshot(4, "User", "chat", [route]))
+        {
+            Catalogue = new([Model("desired", "Text")], 0, 1, false, 1),
+            FailRouteSave = true,
+        };
+        var controller = new HomeModelPickerCuiController(new HomeModelPickerRouteEditor(provider),
+            new HomeModelPickerCuiSurface(new CuiRichParser().Parse("<Cui><Page/></Cui>")));
+        await controller.OpenAsync("User", "chat");
+        var result = await controller.ExecuteAsync(new(HomeModelPickerAction.ChooseCompactModel,
+            Category: "chat", ProviderId: "p", ModelId: "desired"));
+        Assert.False(result.Succeeded);
+        Assert.Equal("Offline", result.Code);
+        Assert.Null(provider.LastEdit);
+        Assert.Equal("current", provider.Snapshot.Routes.Single().Candidates.Single().ModelId);
+        Assert.Equal("Pending: Friendly desired", Value<string>(controller.Surface, "CompactModelName"));
+        Assert.True(Value<bool>(controller.Surface, "HasCompactStatus"));
+        Assert.Equal("Route save unavailable.", Value<string>(controller.Surface, "CompactStatus"));
     }
 
     [Fact]
@@ -419,7 +446,7 @@ public sealed class HomeModelPickerCuiControllerTests
         Assert.Equal(5, surface.State.Snapshot!.Revision);
         Assert.False(Value<bool>(surface, "RouteRefreshRequired"));
         Assert.True((await controller.ExecuteAsync(select)).Succeeded);
-        Assert.True((await controller.ExecuteAsync(new(HomeModelPickerAction.SaveRoute))).Succeeded);
+        Assert.False(surface.State.HasUnsavedChanges);
         Assert.Equal(5, provider.LastEdit.ExpectedRevision);
         Assert.Equal(6, provider.Snapshot.Revision);
         Assert.Equal("next", provider.LastEdit.Route.Candidates[0].ModelId);

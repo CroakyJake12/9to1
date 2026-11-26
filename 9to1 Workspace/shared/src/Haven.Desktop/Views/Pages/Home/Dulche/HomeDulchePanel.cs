@@ -6,6 +6,7 @@ using Avalonia.Threading;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
+using Haven.Application;
 using Haven.Desktop.Services;
 
 namespace Haven.Desktop.Views.Pages.Home;
@@ -18,6 +19,7 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
     }
 
     private readonly DulcheLocalClient _client;
+    private readonly ICatalogRepository? _specialists;
     private readonly HomeDulcheSwarm _swarm;
     private bool _showSwarm;
     private readonly Func<Func<CancellationToken, Task>, CancellationToken, Task> _run;
@@ -32,13 +34,19 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
     private int _reads;
     private long _promptRevision;
     private bool _acceptingRequests;
+    private CancellationTokenSource? _generationCancellation;
+    private bool _generationCancelRequested;
+    private string? _generationRunId;
+    private string _modelSection = "chat";
     private Item? Model => Select("model").SelectedItem as Item;
     private SelectionSnapshot Epoch => new(Model?.Id, _reads);
     private readonly record struct SelectionSnapshot(string? Model, int Generation);
 
-    internal HomeDulchePanel(DulcheLocalClient client, Func<Func<CancellationToken, Task>, CancellationToken, Task> run)
+    internal HomeDulchePanel(DulcheLocalClient client, Func<Func<CancellationToken, Task>, CancellationToken, Task> run,
+        ICatalogRepository? specialists = null)
     {
         _client = client;
+        _specialists = specialists;
         _run = run;
         _swarm = new HomeDulcheSwarm(client,run);
         _loader.BindAuthoredControl("dulche-swarm-mount",_=>_swarm);
@@ -47,19 +55,22 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
         using var reader = new StreamReader(stream);
         var parser = new CuiRichParser();
         var document = parser.Parse(reader.ReadToEnd(), "Dulche.cui");
-        foreach (var id in new[] { "model", "results", "files", "profiles", "jobs", "agents", "candidate", "adapters", "adapter-scope" })
+        foreach (var id in new[] { "model", "results", "files", "profiles", "jobs", "agents", "candidate", "adapters", "adapter-scope", "adapter-specialist" })
             Mount(id, new ComboBox());
-        foreach (var id in new[] { "prompt", "search", "import-path", "import-base", "profile-name", "profile-settings", "profile-device", "profile-context", "filter-architecture", "filter-size", "filter-capability", "filter-quant", "adapter-path", "adapter-scale", "adapter-specialist" })
+        foreach (var id in new[] { "prompt", "search", "import-path", "import-base", "profile-name", "profile-settings", "profile-device", "profile-context", "filter-architecture", "filter-size", "filter-capability", "filter-quant", "adapter-path", "adapter-scale" })
             Mount(id, new TextBox());
         foreach (var id in new[] { "status", "detail", "output", "message", "catalog-detail", "resources", "benchmark-results", "inference-support", "inference-operation", "adapter-status" })
             Mount(id, new TextBlock());
-        foreach (var id in new[] { "toggle", "unload", "generate", "new", "manage", "swarm", "find", "installed", "inspect", "remove", "download", "import", "pause", "resume", "cancel", "profile-select", "profile-save", "profile-rename", "recover", "stop", "stop-all", "agent-resume", "allow", "benchmarks", "benchmark-start", "candidates", "training", "optimise", "optimise-restore", "adapter-attach", "adapter-detach", "adapter-refresh" })
+        foreach (var id in new[] { "toggle", "unload", "generate", "generation-cancel", "view-chat", "view-performance", "view-adapters", "new", "manage", "swarm", "swarm-return", "find", "installed", "inspect", "remove", "download", "import", "pause", "resume", "cancel", "profile-select", "profile-save", "profile-rename", "recover", "stop", "stop-all", "agent-resume", "allow", "benchmarks", "benchmark-start", "candidates", "training", "optimise", "optimise-restore", "adapter-attach", "adapter-detach", "adapter-refresh" })
         {
             var button = new Button();
             Mount(id, button);
             button.Click += async (_, _) => await RunActionAsync(id);
         }
         _bindings.Set("Manage", false);
+        _bindings.Set("ChatVisible", true);
+        _bindings.Set("PerformanceVisible", false);
+        _bindings.Set("AdaptersVisible", false);
         _loader.SetBindingContext(_bindings);
         var result = _loader.TryLoad(document);
         if (result.Root is null || parser.Diagnostics.Diagnostics.Concat(result.Diagnostics).Any(d => d.Severity == CuiDiagnosticSeverity.Error))
@@ -72,12 +83,14 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
             _reads++;
             _loadedProfiles = null;
             ClearAdapterObservation();
+            RediscoverInferenceOperation();
             Render();
         };
         Input("prompt").TextChanged += (_, _) => _promptRevision++;
         Select("adapter-scope").ItemsSource = new[] { "Model", "Specialist" };
         Select("adapter-scope").SelectedIndex = 0;
         Select("adapter-scope").SelectionChanged += (_, _) => RenderInferenceManagement();
+        Select("adapter-specialist").SelectionChanged += (_, _) => RenderInferenceManagement();
         Select("adapters").SelectionChanged += (_, _) => RenderInferenceManagement();
         Input("adapter-scale").Text = "1";
         Select("results").SelectionChanged += (_, _) => { _removeConfirmation = null; _inspectedRevision = null; Select("files").ItemsSource = Array.Empty<Item>(); ShowDetails(); };
@@ -100,7 +113,11 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
     }
     private ComboBox Select(string key) => (ComboBox)_controls[key];
     private TextBox Input(string key) => (TextBox)_controls[key];
-    private void Text(string key, string text) => State(_controls[key], "Text", text);
+    private void Text(string key, string text)
+    {
+        State(_controls[key], "Text", text);
+        if (key == "message") _bindings.Set("HasRunStatus", !string.IsNullOrWhiteSpace(text));
+    }
     private static void State(Control control, string property, object? value) =>
         CuiPropertyPresentation.Set(control, property, value, CuiPropertyLevel.Instance, "Dulche runtime", order: 2);
     private static string Value(JsonNode? row, string key) => row?[key]?.ToString() ?? "";
@@ -136,10 +153,33 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
         State(_controls["benchmark-start"], "IsEnabled", _connected && !_operating && CanGenerate(state));
         State(_controls["toggle"], "IsEnabled", _connected && !_operating && toggle.Action is not null);
         State(_controls["generate"], "IsEnabled", _connected && _acceptingRequests && !_generating && !_operating && !HasActiveInferenceOperation && CanRequestInference(selected));
+        State(_controls["generation-cancel"], "IsEnabled", _generating && !_generationCancelRequested && _generationCancellation is not null);
+        _bindings.Set("GenerationActive", _generating);
         State(_controls["unload"], "IsEnabled", _connected && !_operating && CanGenerate(state));
         State(_controls["new"], "IsEnabled", !_generating);
         State(_controls["model"], "IsEnabled", !_generating && !_operating);
         var data = selected?.Data;
+        _bindings.Set("SelectedModelName", selected?.Label ?? "Choose an installed model");
+        var friendlyState = state switch
+        {
+            "loaded" or "ready" or "running" or "active" => "Loaded",
+            "failed" when CanRequestInference(selected) => "Stopped after an error · Send retries startup",
+            "installed" or "unloaded" or "stopped" or "idle" when CanRequestInference(selected) => "Starts when you send",
+            "loading" or "resuming" or "recovering" => "Starting model…",
+            "suspended" or "manual_suspended" or "suspended_manual" => "Paused · Resume to use this model",
+            "waiting_for_resources" or "resource_suspended" => "Waiting for resources",
+            "failed" => "Stopped after an error",
+            "" => "",
+            _ => state.Replace('_', ' ')
+        };
+        _bindings.Set("SelectedModelSummary", string.Join(" · ", new[]
+        {
+            friendlyState, ReportedContext(data) is { } context ? $"{context:N0} tokens" : "",
+            Value(data, "gpu")
+        }.Where(value => value.Length > 0)));
+        var modelIssue = Value(data, "error") is { Length: > 0 } issue ? issue : Value(data, "last_error");
+        _bindings.Set("SelectedModelIssue", modelIssue);
+        _bindings.Set("HasSelectedModelIssue", !string.IsNullOrWhiteSpace(modelIssue));
         Text("detail", data is null ? "" : string.Join(" · ", new[] { Value(data, "engine"), Value(data, "gpu"), Value(data, "quantization"), state == "waiting_for_resources" ? "Suspended — Waiting for Resources" : state }.Where(v => v.Length > 0)));
         RenderInferenceManagement();
     }
@@ -198,8 +238,8 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
                 var free = Value(resources, "host_available_mib");
                 var devices = Rows(resources?["gpus"]).Select(gpu =>
                     $"{Value(gpu, "name")} {Value(gpu, "used_mib")}/{Value(gpu, "total_mib")} MiB · {Value(gpu, "temperature_c")} °C");
-                Text("resources", string.Join("\n", devices));
-                Text("status", $"Connected · {models.Length} configured model{(models.Length == 1 ? "" : "s")}" + (free.Length > 0 ? $" · {free} MiB RAM available" : ""));
+                Text("resources", string.Join("\n", devices) + (free.Length > 0 ? $"\n{free} MiB RAM available" : ""));
+                Text("status", $"Connected · {models.Length} configured model{(models.Length == 1 ? "" : "s")}");
                 await RefreshInferenceManagementAsync(token);
                 if (_showSwarm)
                 {
@@ -233,11 +273,28 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
     {
         if (!_active || _lifetime.IsCancellationRequested)
             return;
-        if (command == "swarm")
+        if (command == "generation-cancel")
         {
-            _showSwarm=!_showSwarm;
-            _managing=false;
-            _bindings.Set("Manage",false);
+            if (_generating && _generationCancellation is { } cancellation && !_generationCancelRequested)
+            {
+                _generationCancelRequested = true;
+                Text("message", "Cancelling this response… Waiting for its run to stop.");
+                cancellation.Cancel();
+                Render();
+            }
+            return;
+        }
+        if (command is "view-chat" or "view-performance" or "view-adapters")
+        {
+            SelectModelSection(command[5..]);
+            await PollAsync();
+            return;
+        }
+        if (command is "swarm" or "swarm-return")
+        {
+            var showSwarm = !_showSwarm;
+            SelectModelSection("chat");
+            _showSwarm=showSwarm;
             _bindings.Set("SwarmVisible",_showSwarm);
             _bindings.Set("SingleVisible",!_showSwarm);
             State(_controls["swarm"],"Content",_showSwarm ? "Back to chat" : "Swarm Mode");
@@ -246,12 +303,7 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
         }
         if (command == "manage")
         {
-            _showSwarm=false;
-            _bindings.Set("SwarmVisible",false);
-            _bindings.Set("SingleVisible",true);
-            State(_controls["swarm"],"Content","Swarm Mode");
-            _managing = !_managing;
-            _bindings.Set("Manage", _managing);
+            SelectModelSection(_modelSection == "advanced" ? "chat" : "advanced");
             if (_managing)
                 await PollAsync();
             return;
@@ -278,7 +330,12 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
         if (command == "generate" ? _generating : _operating)
             return;
         if (command == "generate")
+        {
             _generating = true;
+            _generationCancelRequested = false;
+            _generationRunId = null;
+            _generationCancellation = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
+        }
         else
             _operating = true;
         Render();
@@ -291,7 +348,11 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
         finally
         {
             if (command == "generate")
+            {
                 _generating = false;
+                _generationCancellation?.Dispose();
+                _generationCancellation = null;
+            }
             else
                 _operating = false;
             if (!_lifetime.IsCancellationRequested)
@@ -300,6 +361,19 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
                 await PollAsync();
             }
         }
+    }
+    private void SelectModelSection(string section)
+    {
+        _modelSection = section;
+        _managing = section == "advanced";
+        _showSwarm = false;
+        _bindings.Set("SingleVisible", true);
+        _bindings.Set("SwarmVisible", false);
+        _bindings.Set("ChatVisible", section == "chat");
+        _bindings.Set("PerformanceVisible", section == "performance");
+        _bindings.Set("AdaptersVisible", section == "adapters");
+        _bindings.Set("Manage", _managing);
+        State(_controls["swarm"], "Content", "Swarm Mode");
     }
     private async Task RunCoreAsync(string command, CancellationToken token)
     {
@@ -310,6 +384,7 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
         switch (command)
         {
             case "generate":
+            {
                 if (model is null || !_acceptingRequests || !CanRequestInference(model) || _operating || HasActiveInferenceOperation)
                     return;
                 var submittedDraft = Input("prompt").Text;
@@ -318,20 +393,33 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
                 var history = _histories.GetValueOrDefault(model.Id) ?? [];
                 var messages = history.Append(new Dictionary<string, string> { { "role", "user" }, { "content", prompt } }).ToList();
                 var answer = new StringBuilder();
+                using var generation = CancellationTokenSource.CreateLinkedTokenSource(token,
+                    _generationCancellation?.Token ?? _lifetime.Token);
                 Text("output", "");
                 Text("message", CanGenerate(ModelState(model)) ? "Generating…" : "Starting inference… Your message is retained while the model loads.");
-                await foreach (var delta in _client.StreamAsync(model.Id, messages, id =>
+                try
                 {
-                    // The socket transport invokes admission callbacks off the UI thread.
-                    Dispatcher.UIThread.Post(() =>
+                    await foreach (var delta in _client.StreamAsync(model.Id, messages, id =>
                     {
-                        if (!_lifetime.IsCancellationRequested && _generating)
-                            Text("message", "Run " + id);
-                    });
-                }, token))
+                        _generationRunId = id;
+                        // Admission is distinct from the first generated content.
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            if (!_lifetime.IsCancellationRequested && _generating && !_generationCancelRequested &&
+                                _generationRunId == id && answer.Length == 0)
+                                Text("message", "Starting response…");
+                        });
+                    }, generation.Token))
+                    {
+                        answer.Append(delta);
+                        Text("output", answer.ToString());
+                        if (!_generationCancelRequested) Text("message", "Generating…");
+                    }
+                }
+                catch (OperationCanceledException) when (_generationCancelRequested && !token.IsCancellationRequested)
                 {
-                    answer.Append(delta);
-                    Text("output", answer.ToString());
+                    Text("message", "Cancelled. Partial output and your draft were retained.");
+                    return;
                 }
                 if (answer.Length == 0)
                     throw new IOException("The model returned no answer text.");
@@ -341,6 +429,7 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
                     Input("prompt").Text = "";
                 Text("message", "Completed.");
                 return;
+            }
             case "toggle":
             case "unload":
                 var action = command == "unload" ? "unload" : Toggle(ModelState(model)).Action;

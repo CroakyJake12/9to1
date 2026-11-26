@@ -207,6 +207,52 @@ class InferenceManagementTests(unittest.TestCase):
         self.assertEqual("restored", self.manager.operation(op["id"])["state"])
         effective = apply_native_tuning(self.ctx.engines.root, "native-base", self.ctx.config)
         self.assertEqual(self.ctx.config, effective)
+
+    def test_capability_discovery_recovers_current_rollback_after_panel_or_service_restart(self):
+        op = self.start()
+        self.ctx.run_pending()
+        recovered = InferenceManagement(self.ctx, control_dir=self.ctx.control, start_thread=self.ctx.work.append)
+        before = list(self.ctx.calls)
+        row = next(row for row in recovered.capabilities()["models"] if row["id"] == "native-base")
+        self.assertEqual(op["id"], row["latest_operation"]["id"])
+        self.assertEqual(op["id"], row["rollback_operation"]["id"])
+        self.assertTrue(row["rollback_operation"]["rollback_available"])
+        self.assertNotIn("previous_overlay", row["rollback_operation"])
+        self.assertNotIn("private-test-key", json.dumps(row))
+        self.assertEqual(before, self.ctx.calls)
+        self.assertEqual([], self.ctx.work)
+        recovered.optimise("native-base", {"action": "restore", "operation_id": row["rollback_operation"]["id"]})
+        self.ctx.run_pending()
+        row = next(row for row in recovered.capabilities()["models"] if row["id"] == "native-base")
+        self.assertIsNone(row["rollback_operation"])
+        self.assertEqual("restored", row["latest_operation"]["state"])
+
+    def test_discovery_keeps_failed_latest_attempt_separate_from_current_rollback(self):
+        original = self.start()
+        self.ctx.run_pending()
+        newer = self.start()
+        self.ctx.result = {"outcome": "base_failed", "message": "Measurement unavailable"}
+        self.ctx.run_pending()
+        caps = self.manager.capabilities()
+        row = next(row for row in caps["models"] if row["id"] == "native-base")
+        self.assertEqual(newer["id"], row["latest_operation"]["id"])
+        self.assertEqual("failed", row["latest_operation"]["state"])
+        self.assertEqual(original["id"], row["rollback_operation"]["id"])
+        self.assertIsNone(caps["active_operation"])
+        path = native_tuning_path(self.ctx.engines.root, "native-base")
+        changed = json.loads(path.read_text())
+        changed["operation_id"] = "0" * 32
+        atomic_json(path, changed)
+        row = next(row for row in self.manager.capabilities()["models"] if row["id"] == "native-base")
+        self.assertIsNone(row["rollback_operation"])
+
+    def test_discovery_identifies_active_maintenance_without_starting_another_trial(self):
+        operation = self.start()
+        caps = self.manager.capabilities()
+        self.assertEqual(operation["id"], caps["active_operation"]["id"])
+        self.assertEqual("queued", caps["active_operation"]["state"])
+        self.assertEqual(1, len(self.ctx.work))
+        self.assertEqual([], self.ctx.calls)
     def test_changed_source_or_guard_candidate_cannot_be_applied(self):
         for kind in ("source", "context", "environment", "precision", "nonexact", "perrequest"):
             with self.subTest(kind=kind):

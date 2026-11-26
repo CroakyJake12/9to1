@@ -450,7 +450,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             {
                 var selectedName = _selectedModel?.Name ?? _preferences.DefaultModel;
                 _selectedModel = models.FirstOrDefault(model => model.Name.Equals(selectedName, StringComparison.OrdinalIgnoreCase)) ??
-                    models.FirstOrDefault();
+                    (string.IsNullOrWhiteSpace(selectedName) ? models.FirstOrDefault() : null);
             }
             _modelAvailability = _selectedModel is null ? ChatModelAvailability.Unavailable : ChatModelAvailability.Available;
             _modelAvailabilityCause = null;

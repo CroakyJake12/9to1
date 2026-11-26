@@ -781,6 +781,42 @@ public sealed partial class ChatCloudPermissionCallerTests
     }
 
     [AvaloniaFact]
+    public async Task Explicit_model_missing_from_refresh_never_chooses_an_unrelated_available_model()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var rig = new Rig(temporary: false);
+        var chosen = rig.Provider.Model.Model with { Name = "dulche-local:chosen", Capabilities = new HashSet<ToolCapability> { ToolCapability.Text } };
+        var other = chosen with { Name = "dulche-local:other" };
+        rig.Client.AvailableModels = [chosen, other];
+        var directory = Path.Combine(Path.GetTempPath(), "chat-model-exact-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        NewChatPage? page = null;
+        try
+        {
+            page = CreateNativeComposerPage(rig, directory, new NativeComposerDraftStore());
+            await page.OriginalInitialization.WaitAsync(TimeSpan.FromSeconds(10), token);
+            await page.RefreshModelsAsync();
+            page.SelectModel(chosen);
+            page.SetDraft("Retain the exact model and this draft");
+            rig.Client.AvailableModels = [other];
+            await page.RefreshModelsAsync();
+            Assert.Null(page.SelectedModelName);
+            Assert.Equal(ChatModelAvailability.Unavailable, page.ModelAvailability);
+            Assert.Equal("Retain the exact model and this draft", page.ComposerInput.Text);
+            Assert.Equal(0, rig.Client.Dispatches);
+            rig.Client.AvailableModels = [other, chosen];
+            await page.RefreshModelsAsync();
+            Assert.Equal(chosen.Name, page.SelectedModelName);
+            Assert.Equal(0, rig.Client.Dispatches);
+        }
+        finally
+        {
+            if (page is not null) { page.RequestRetirement(); await page.CloseAndDrainAsync(); }
+            Directory.Delete(directory, true);
+        }
+    }
+
+    [AvaloniaFact]
     public async Task Failed_model_discovery_cannot_reactivate_a_stale_catalogue_but_refresh_can_restore_the_exact_route()
     {
         var token = TestContext.Current.CancellationToken;
@@ -846,6 +882,12 @@ public sealed partial class ChatCloudPermissionCallerTests
             await entered.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
             rig.Client.ModelDiscovery = _ => Task.FromResult<IReadOnlyList<ModelDescriptor>>([second]);
             await page.RefreshModelsAsync();
+            // Discovery publishes the newer catalogue but cannot replace the model already
+            // shown to the user. Make the new choice explicitly before the stale read returns.
+            Assert.Null(page.SelectedModelName);
+            Assert.Equal(ChatModelAvailability.Unavailable, page.ModelAvailability);
+            Assert.Equal(second.Name, Assert.Single(page.AdmittedModels).Name);
+            page.SelectModel(second);
             Assert.Equal(second.Name, page.SelectedModelName);
             oldRead.TrySetResult([first]);
             await older.WaitAsync(TimeSpan.FromSeconds(10), token);

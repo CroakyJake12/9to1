@@ -431,7 +431,8 @@ public sealed partial class App
             var home = new UnifiedHomeContentFactory(modes, CreateDashboard,
                 () => new Haven.Desktop.Views.Pages.Home.HomeDiscoverPage(new HomeDiscoverCatalog(catalogue.Providers.Select(provider =>
                     new HomeRegisteredModelCatalogueSource(catalogue, provider.Id, () => !privacy.Current.LocalOnlyMode, new HomeDulchePackagedModelEvidenceSource()))),
-                    _services.GetRequiredService<IHuggingFaceModelService>(), _home.Profiles, _services.GetRequiredService<DulcheLocalClient>()),
+                    _services.GetRequiredService<IHuggingFaceModelService>(), _home.Profiles, _services.GetRequiredService<DulcheLocalClient>(),
+                    _services.GetRequiredService<ICatalogRepository>()),
                 (intent, settlement) => OriginalClose is null && _workspace is { } workspace && workspace.QueueNavigation(intent, settlement),
                 PrepareNewTabChatDraftAsync, AdmitHomeAsync, () => IsCurrent, _windowLifetime,
                 aiAvailable: _services.GetRequiredService<IConversationProductionRepository>().SupportsUnsentChatDraft,

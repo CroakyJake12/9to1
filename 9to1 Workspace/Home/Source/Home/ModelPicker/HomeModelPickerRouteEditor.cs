@@ -228,7 +228,7 @@ public sealed class HomeModelPickerRouteEditor(IHomeModelPickerFeatureProvider p
     }
 
     /// <summary>Sets the preferred candidate of the current route draft, retaining existing fallbacks.</summary>
-    internal HomeCoreOperationResult<HomeModelRouteContract> PreferCandidate(HomeModelPickerCatalogueEntry entry)
+    internal HomeCoreOperationResult<HomeModelRouteContract> PreferCandidate(HomeModelPickerCatalogueEntry entry, bool exactSelection = false)
     {
         var state = Current;
         if (state.IsBusy) return Fail<HomeModelRouteContract>("OperationInProgress", "Wait for the current model operation to finish.");
@@ -239,11 +239,14 @@ public sealed class HomeModelPickerRouteEditor(IHomeModelPickerFeatureProvider p
 
         var candidates = Ordered(route.Candidates);
         var preferred = candidates.FirstOrDefault(candidate => SameIdentity(candidate, entry.ProviderId, entry.ModelId, entry.ArtifactRevision));
-        if (preferred is { Enabled: true, Order: 0 }) return Success(route, state.Snapshot?.Revision ?? 0);
+        // A compact exact choice must also reapply to the originating chat when
+        // its local model differs from the already-saved global preference.
+        if (!exactSelection && preferred is { Enabled: true, Order: 0 })
+            return Success(route, state.Snapshot?.Revision ?? 0);
         preferred ??= new(entry.ProviderId, entry.ModelId, entry.ArtifactRevision, true, 0);
         var reordered = candidates.Where(candidate => !SameIdentity(candidate, entry.ProviderId, entry.ModelId, entry.ArtifactRevision))
             .Prepend(preferred with { Enabled = true })
-            .Select((candidate, index) => candidate with { Order = index }).ToArray();
+            .Select((candidate, index) => candidate with { Order = index, Enabled = index == 0 || !exactSelection && candidate.Enabled }).ToArray();
         var draft = route with { Candidates = Array.AsReadOnly(reordered) };
         Publish(state with { DraftRoute = draft, HasUnsavedChanges = true,
             Preview = null, StatusCode = "UnsavedChanges", StatusMessage = "Model preference is ready to save." });

@@ -1,7 +1,7 @@
 <Cui id="home.huggingface-browser" version="1">
   <Theme Name="user_preference">
     <Page AccessibleName="Hugging Face model browser">
-      <Container id="hf-browser-root" Type="Grid" RowSizes="Auto Auto 1fr Auto Auto Auto Auto Auto" Padding="14" CellGap="8" Background="{Resource CuiPanelBrush}" CornerRadius="12" VerticalScrolling="True" MaxHeight="520">
+      <Container id="hf-browser-root" Type="Grid" RowSizes="Auto Auto Auto Auto Auto Auto Auto Auto" Padding="14" CellGap="8" Background="{Resource CuiPanelBrush}" CornerRadius="12">
         <Container Type="Vertical Stack" CellGap="2">
           <Text Text="Hugging Face" FontSize="18" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />
           <Text Text="Search public GGUF repositories, inspect exact files, and install a verified model into Dulche. Installation does not start inference." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />

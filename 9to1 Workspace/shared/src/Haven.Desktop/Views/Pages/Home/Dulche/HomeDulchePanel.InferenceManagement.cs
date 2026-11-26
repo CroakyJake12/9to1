@@ -9,8 +9,15 @@ internal sealed partial class HomeDulchePanel
     private DateTimeOffset _capabilitiesObservedAt;
     private bool _inferenceCapabilitiesAvailable;
     private string? _inferenceOperationId, _inferenceOperationModel;
+    private string? _rollbackOperationId, _rollbackOperationModel;
     private JsonNode? _inferenceOperation;
     private string? _adapterObservationModel;
+    private sealed record SpecialistChoice(Guid Id, string Name)
+    {
+        public override string ToString() => Name;
+    }
+    private readonly HashSet<Guid> _knownSpecialists = [];
+    private string _specialistStatus = "Choose a saved Specialist.";
     private bool HasActiveInferenceOperation => Value(_inferenceOperation, "state") is "queued" or "running" or "validating" or "applying" or "restoring";
 
     private JsonNode? InferenceCapability(string capability)
@@ -46,13 +53,17 @@ internal sealed partial class HomeDulchePanel
         var available = _connected && Model is not null && !_operating && !_generating && !HasActiveInferenceOperation;
         State(_controls["optimise"], "IsEnabled", available && SupportsInferenceManagement("optimise") && ReportedContext(Model?.Data) is not null);
         State(_controls["optimise-restore"], "IsEnabled", available && SupportsInferenceManagement("optimise") &&
-            _inferenceOperationModel == Model?.Id && _inferenceOperation?["rollback_available"] is JsonValue rollback &&
-            rollback.TryGetValue<bool>(out var canRestore) && canRestore);
-        State(_controls["adapter-attach"], "IsEnabled", available && SupportsInferenceManagement("adapters"));
+            _rollbackOperationModel == Model?.Id && _rollbackOperationId is not null);
+        var specialistScope = Select("adapter-scope").SelectedItem as string == "Specialist";
+        var validSpecialist = Select("adapter-specialist").SelectedItem is SpecialistChoice selectedSpecialist &&
+            _knownSpecialists.Contains(selectedSpecialist.Id);
+        State(_controls["adapter-attach"], "IsEnabled", available && SupportsInferenceManagement("adapters") && (!specialistScope || validSpecialist));
+        State(_controls["adapter-specialist"], "IsEnabled", available && _specialists is not null);
+        _bindings.Set("SpecialistAdapterStatus", _specialistStatus);
         State(_controls["adapter-detach"], "IsEnabled", available && SupportsInferenceManagement("adapters") &&
             _adapterObservationModel == Model?.Id && Select("adapters").SelectedItem is Item selected && CanDetachAdapter(selected));
         State(_controls["adapter-refresh"], "IsEnabled", _connected && !_operating && Model is not null && _inferenceCapabilitiesAvailable);
-        _bindings.Set("SpecialistAdapterScope", Select("adapter-scope").SelectedItem as string == "Specialist");
+        _bindings.Set("SpecialistAdapterScope", specialistScope);
         var support = new List<string>();
         foreach (var (key, label) in new[] { ("optimise", "Optimisation"), ("adapters", "Adapters") })
         {
@@ -75,6 +86,7 @@ internal sealed partial class HomeDulchePanel
                 _inferenceCapabilities = capabilities;
                 _inferenceCapabilitiesAvailable = true;
                 _capabilitiesObservedAt = DateTimeOffset.UtcNow;
+                RediscoverInferenceOperation();
             }
             catch (Exception error) when (error is IOException or HttpRequestException || error is OperationCanceledException && !token.IsCancellationRequested)
             {
@@ -104,9 +116,74 @@ internal sealed partial class HomeDulchePanel
                 Text("inference-operation", "Operation status unavailable. " + error.Message);
             }
         }
-        if (_managing && !_operating && Model is { } model && _inferenceCapabilitiesAvailable)
+        if (_modelSection == "adapters" && !_operating && Model is { } model && _inferenceCapabilitiesAvailable)
+        {
+            await RefreshSpecialistsAsync(token);
             await RefreshAdaptersAsync(model.Id, token);
+        }
         if (_active) RenderInferenceManagement();
+    }
+
+    private async Task RefreshSpecialistsAsync(CancellationToken token)
+    {
+        if (_specialists is null)
+        {
+            _knownSpecialists.Clear();
+            _specialistStatus = "The Specialist catalogue is unavailable in this view. Model attachments remain available.";
+            return;
+        }
+        try
+        {
+            var definitions = await _specialists.GetAgentsAsync(token);
+            if (!_active) return;
+            var choices = definitions.Where(item => item.IsEnabled && item.Id != Guid.Empty)
+                .GroupBy(item => item.Id).Select(group => group.First())
+                .Select(item => new SpecialistChoice(item.Id, item.Name)).OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase).ToArray();
+            var select = Select("adapter-specialist");
+            var selected = (select.SelectedItem as SpecialistChoice)?.Id;
+            _knownSpecialists.Clear();
+            _knownSpecialists.UnionWith(choices.Select(item => item.Id));
+            if (select.ItemsSource is not SpecialistChoice[] prior || !prior.SequenceEqual(choices))
+            {
+                select.ItemsSource = choices;
+                select.SelectedItem = choices.FirstOrDefault(item => item.Id == selected);
+            }
+            _specialistStatus = choices.Length == 0 ? "No enabled Specialists are available. Create or enable a Specialist first." : "Choose the Specialist that should use this adapter.";
+        }
+        catch (Exception error) when (error is not OperationCanceledException || !token.IsCancellationRequested)
+        {
+            _knownSpecialists.Clear();
+            Select("adapter-specialist").ItemsSource = Array.Empty<SpecialistChoice>();
+            _specialistStatus = "Could not read Specialists: " + error.Message;
+        }
+    }
+
+    private void RediscoverInferenceOperation()
+    {
+        var modelId = Model?.Id;
+        var row = Rows(_inferenceCapabilities?["models"]).FirstOrDefault(item => Value(item, "id") == modelId) as JsonObject;
+        var active = _inferenceCapabilities?["active_operation"];
+        var observed = active ?? row?["latest_operation"];
+        if (observed is not null)
+            PublishInferenceOperation(observed, Value(observed, "model") is { Length: > 0 } owner ? owner : modelId);
+        else if (row?.ContainsKey("latest_operation") == true || _inferenceOperationModel != modelId)
+        {
+            _inferenceOperationId = _inferenceOperationModel = null;
+            _inferenceOperation = null;
+            Text("inference-operation", "");
+        }
+        if (row?.ContainsKey("rollback_operation") == true)
+        {
+            var rollback = row["rollback_operation"];
+            var valid = Value(rollback, "model") == modelId && Value(rollback, "id").Length > 0 &&
+                rollback?["rollback_available"] is JsonValue flag && flag.TryGetValue<bool>(out var allowed) && allowed;
+            _rollbackOperationId = valid ? Value(rollback, "id") : null;
+            _rollbackOperationModel = valid ? modelId : null;
+        }
+        else if (_rollbackOperationModel != modelId)
+        {
+            _rollbackOperationId = _rollbackOperationModel = null;
+        }
     }
 
     private void PublishInferenceOperation(JsonNode operation, string? modelId)
@@ -118,6 +195,17 @@ internal sealed partial class HomeDulchePanel
         _inferenceOperationId = id;
         _inferenceOperationModel = modelId;
         _inferenceOperation = operation;
+        if (modelId == Model?.Id && !HasActiveInferenceOperation &&
+            operation["rollback_available"] is JsonValue rollback && rollback.TryGetValue<bool>(out var available))
+        {
+            if (available)
+            {
+                _rollbackOperationId = id;
+                _rollbackOperationModel = modelId;
+            }
+            else if (_rollbackOperationId == id)
+                _rollbackOperationId = _rollbackOperationModel = null;
+        }
         var parts = new List<string> { (modelId ?? "Inference") + " · " + Value(operation, "state") };
         foreach (var key in new[] { "message", "error" })
             if (Value(operation, key) is { Length: > 0 } detail) parts.Add(detail);
@@ -177,16 +265,16 @@ internal sealed partial class HomeDulchePanel
                 var started = await _client.PostAsync("models/" + Esc(model.Id) + "/optimise",
                     new { action = "start", context_tokens = context, goal = "speed" }, token);
                 PublishInferenceOperation(started, model.Id);
+                _capabilitiesObservedAt = DateTimeOffset.MinValue;
                 Text("message", "Inference optimisation requested with the current context preserved.");
                 return;
             case "optimise-restore":
-                if (_inferenceOperationId is null || _inferenceOperationModel != model.Id ||
-                    _inferenceOperation?["rollback_available"] is not JsonValue rollback ||
-                    !rollback.TryGetValue<bool>(out var canRestore) || !canRestore)
+                if (_rollbackOperationId is null || _rollbackOperationModel != model.Id)
                     throw new InvalidOperationException("No restorable inference profile is available for this model.");
                 var restored = await _client.PostAsync("models/" + Esc(model.Id) + "/optimise",
-                    new { action = "restore", operation_id = _inferenceOperationId }, token);
+                    new { action = "restore", operation_id = _rollbackOperationId }, token);
                 PublishInferenceOperation(restored, model.Id);
+                _capabilitiesObservedAt = DateTimeOffset.MinValue;
                 Text("message", "Restore requested; the operation status reports when it finishes.");
                 return;
             case "adapter-attach":
@@ -194,7 +282,17 @@ internal sealed partial class HomeDulchePanel
                 if (!Path.IsPathFullyQualified(path)) throw new InvalidOperationException("Enter the adapter's absolute local path.");
                 if (!double.TryParse(Input("adapter-scale").Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var scale) || !double.IsFinite(scale))
                     throw new InvalidOperationException("Enter a finite adapter scale, such as 1.");
-                var specialist = Select("adapter-scope").SelectedItem as string == "Specialist" ? Need("adapter-specialist") : null;
+                string? specialist = null;
+                if (Select("adapter-scope").SelectedItem as string == "Specialist")
+                {
+                    if (_specialists is null || Select("adapter-specialist").SelectedItem is not SpecialistChoice choice || !_knownSpecialists.Contains(choice.Id))
+                        throw new InvalidOperationException("Choose an enabled Specialist before attaching this adapter.");
+                    var specialistId = choice.Id;
+                    var current = await _specialists.GetAgentsAsync(token);
+                    if (!current.Any(item => item.Id == specialistId && item.IsEnabled))
+                        throw new InvalidOperationException("That Specialist is no longer available. Choose an enabled Specialist and try again.");
+                    specialist = specialistId.ToString("D");
+                }
                 await _client.PostAsync("models/" + Esc(model.Id) + "/adapters", new { path, scale, specialist_id = specialist }, token);
                 await RefreshAdaptersAsync(model.Id, token);
                 Text("message", "Adapter binding saved. Its observed state shows whether it is active.");

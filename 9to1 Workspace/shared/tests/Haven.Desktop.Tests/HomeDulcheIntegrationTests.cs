@@ -5,12 +5,14 @@ using Haven.Desktop.Views.Pages.Home;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
+using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using Haven.Application;
+using Haven.Core;
 using Haven.Desktop.Services;
 using HomeDiscoverPage = Haven.Desktop.Views.Pages.Home.HomeDiscoverPage;
 using HavenOS.Home.Discover;
@@ -83,10 +85,11 @@ public sealed class HomeDulcheIntegrationTests
             handler.ReleaseCompletion.TrySetResult();
             while (!ByText("Send").IsEnabled) await Task.Delay(10, timeout.Token);
             Assert.Equal("Retain the failed request", Named<TextBox>("Dulche prompt").Text);
-            ByText("Manage models").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            Assert.False(ByText("Optimise inference").IsEnabled);
-            Assert.False(ByText("Attach adapter").IsEnabled);
-            Assert.Contains("unavailable", Named<TextBlock>("Inference management availability").Text);
+            ByText("Performance").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.False((await WaitForButtonAsync(page, "Optimise inference", timeout.Token)).IsEnabled);
+            Assert.Contains("unavailable", (await WaitForNamedAsync<TextBlock>(page, "Inference management availability", timeout.Token)).Text);
+            ByText("Adapters").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.False((await WaitForButtonAsync(page, "Attach adapter", timeout.Token)).IsEnabled);
             Assert.Equal(1, handler.CompletionAttempts);
         }
         finally
@@ -104,8 +107,9 @@ public sealed class HomeDulcheIntegrationTests
         var root = Directory.CreateTempSubdirectory("dulche-inference-controls-");
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
         using var handler = new InferenceManagementHandler();
+        var specialists = new SpecialistCatalog();
         var page = new HomeDiscoverPage(new HomeDiscoverCatalog([]), null, null,
-            new DulcheLocalClient(new UserPreferencesService(new Paths(root.FullName)), handler));
+            new DulcheLocalClient(new UserPreferencesService(new Paths(root.FullName)), handler), specialists);
         var window = new Window { Width = 1200, Height = 900, Content = page };
         try
         {
@@ -115,10 +119,13 @@ public sealed class HomeDulcheIntegrationTests
             Button ByText(string label) => page.GetVisualDescendants().OfType<Button>().Single(b => b.Content?.ToString() == label);
             void Click(string label) => ByText(label).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             while (!ByText("Send").IsEnabled) await Task.Delay(10, timeout.Token);
-            Click("Manage models");
-            while (!ByText("Optimise inference").IsEnabled) await Task.Delay(10, timeout.Token);
-            while (Named<ComboBox>("Inference profiles").ItemCount != 1) await Task.Delay(10, timeout.Token);
-            Named<TextBox>("Profile context length").Text = "16384";
+            Click("Advanced");
+            var profiles = await WaitForNamedAsync<ComboBox>(page, "Inference profiles", timeout.Token);
+            while (profiles.ItemCount != 1) await Task.Delay(10, timeout.Token);
+            (await WaitForNamedAsync<TextBox>(page, "Profile context length", timeout.Token)).Text = "16384";
+            Click("Performance");
+            var optimiseButton = await WaitForButtonAsync(page, "Optimise inference", timeout.Token);
+            while (!optimiseButton.IsEnabled) await Task.Delay(10, timeout.Token);
             Click("Optimise inference");
             var optimise = await handler.Commands.Reader.ReadAsync(timeout.Token);
             Assert.Equal("/v1/models/one/optimise", optimise.Path);
@@ -130,17 +137,22 @@ public sealed class HomeDulcheIntegrationTests
             var restore = await handler.Commands.Reader.ReadAsync(timeout.Token);
             Assert.Equal("restore", restore.Body["action"]!.ToString());
             Assert.Equal("op-one", restore.Body["operation_id"]!.ToString());
-            while (!ByText("Attach adapter").IsEnabled) await Task.Delay(10, timeout.Token);
+            Click("Adapters");
+            var attachButton = await WaitForButtonAsync(page, "Attach adapter", timeout.Token);
+            while (!attachButton.IsEnabled) await Task.Delay(10, timeout.Token);
             Named<TextBox>("LoRA adapter path").Text = "/fixtures/adapter.gguf";
             Named<TextBox>("LoRA adapter scale").Text = "0.75";
             Named<ComboBox>("LoRA adapter binding scope").SelectedItem = "Specialist";
-            Named<TextBox>("Canonical specialist ID for adapter binding").Text = "specialist:fixture";
+            var specialist = await WaitForNamedAsync<ComboBox>(page, "Choose a Specialist", timeout.Token);
+            while (specialist.ItemCount != 2) await Task.Delay(10, timeout.Token);
+            specialist.SelectedIndex = 1;
+            Assert.Equal("Review specialist", specialist.SelectedItem!.ToString());
             Click("Attach adapter");
             var attached = await handler.Commands.Reader.ReadAsync(timeout.Token);
             Assert.Equal("/v1/models/one/adapters", attached.Path);
             Assert.Equal("/fixtures/adapter.gguf", attached.Body["path"]!.ToString());
             Assert.Equal(0.75, attached.Body["scale"]!.GetValue<double>());
-            Assert.Equal("specialist:fixture", attached.Body["specialist_id"]!.ToString());
+            Assert.Equal(SpecialistCatalog.ReviewerId.ToString("D"), attached.Body["specialist_id"]!.ToString());
             while (!ByText("Detach selected adapter").IsEnabled) await Task.Delay(10, timeout.Token);
             Assert.Contains("selected", Named<TextBlock>("LoRA adapter runtime status").Text);
             Assert.DoesNotContain("Active in inference", Named<TextBlock>("LoRA adapter runtime status").Text);
@@ -157,15 +169,208 @@ public sealed class HomeDulcheIntegrationTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task RemovedSpecialistRequiresANewExplicitSelectionEvenWhenAnotherRemains()
+    {
+        var root = Directory.CreateTempSubdirectory("dulche-specialist-selection-");
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(12));
+        using var handler = new InferenceManagementHandler();
+        var specialists = new SpecialistCatalog();
+        var page = new HomeDiscoverPage(new HomeDiscoverCatalog([]), null, null,
+            new DulcheLocalClient(new UserPreferencesService(new Paths(root.FullName)), handler), specialists);
+        var window = new Window { Width = 1000, Height = 650, Content = page };
+        try
+        {
+            window.Show();
+            await page.ActivateAsync(timeout.Token);
+            Button FindButton(string label) => page.GetVisualDescendants().OfType<Button>().Single(b => b.Content?.ToString() == label);
+            void Click(string label) => FindButton(label).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            while (!FindButton("Send").IsEnabled) await Task.Delay(10, timeout.Token);
+            Click("Adapters");
+            (await WaitForNamedAsync<ComboBox>(page, "LoRA adapter binding scope", timeout.Token)).SelectedItem = "Specialist";
+            var picker = await WaitForNamedAsync<ComboBox>(page, "Choose a Specialist", timeout.Token);
+            while (picker.ItemCount != 2) await Task.Delay(10, timeout.Token);
+            Assert.Null(picker.SelectedItem);
+            Assert.False(FindButton("Attach adapter").IsEnabled);
+            picker.SelectedIndex = 1;
+            Assert.Equal("Review specialist", picker.SelectedItem!.ToString());
+            Assert.True(FindButton("Attach adapter").IsEnabled);
+            specialists.RemovedIds.Add(SpecialistCatalog.ReviewerId);
+            Click("Chat");
+            await WaitForNamedAsync<TextBox>(page, "Dulche prompt", timeout.Token);
+            Click("Adapters");
+            picker = await WaitForNamedAsync<ComboBox>(page, "Choose a Specialist", timeout.Token);
+            while (picker.ItemCount != 1) await Task.Delay(10, timeout.Token);
+            Assert.Null(picker.SelectedItem);
+            Assert.False(FindButton("Attach adapter").IsEnabled);
+            var previousReads = specialists.Reads;
+            Click("Chat");
+            await WaitForNamedAsync<TextBox>(page, "Dulche prompt", timeout.Token);
+            Click("Adapters");
+            picker = await WaitForNamedAsync<ComboBox>(page, "Choose a Specialist", timeout.Token);
+            while (specialists.Reads == previousReads) await Task.Delay(10, timeout.Token);
+            Assert.Null(picker.SelectedItem);
+            Assert.False(FindButton("Attach adapter").IsEnabled);
+            Assert.False(handler.Commands.Reader.TryRead(out _));
+        }
+        finally { await page.CloseAndDrainAsync(); window.Close(); root.Delete(true); }
+    }
+
+    [AvaloniaFact]
+    public async Task FreshPanelRediscoversApplicableRollbackWithoutStartingAnotherOptimisation()
+    {
+        var root = Directory.CreateTempSubdirectory("dulche-rollback-discovery-");
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(12));
+        using var handler = new InferenceManagementHandler { DiscoverSavedOperation = true };
+        var page = new HomeDiscoverPage(new HomeDiscoverCatalog([]), null, null,
+            new DulcheLocalClient(new UserPreferencesService(new Paths(root.FullName)), handler));
+        var window = new Window { Width = 1000, Height = 650, Content = page };
+        try
+        {
+            window.Show();
+            await page.ActivateAsync(timeout.Token);
+            Button FindButton(string label) => page.GetVisualDescendants().OfType<Button>().Single(b => b.Content?.ToString() == label);
+            FindButton("Performance").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            var restoreButton = await WaitForButtonAsync(page, "Restore previous settings", timeout.Token);
+            while (!restoreButton.IsEnabled) await Task.Delay(10, timeout.Token);
+            Assert.False(handler.Commands.Reader.TryRead(out _));
+            FindButton("Restore previous settings").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            var restored = await handler.Commands.Reader.ReadAsync(timeout.Token);
+            Assert.Equal("/v1/models/one/optimise", restored.Path);
+            Assert.Equal("restore", restored.Body["action"]!.ToString());
+            Assert.Equal("saved-operation", restored.Body["operation_id"]!.ToString());
+            while (!FindButton("Optimise inference").IsEnabled) await Task.Delay(10, timeout.Token);
+            Assert.False(FindButton("Restore previous settings").IsEnabled);
+        }
+        finally { await page.CloseAndDrainAsync(); window.Close(); root.Delete(true); }
+    }
+
+    [AvaloniaFact]
+    public async Task HistoricalOperationCannotRestoreWhenItsOverlayIsNoLongerApplicable()
+    {
+        var root = Directory.CreateTempSubdirectory("dulche-stale-rollback-");
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(12));
+        using var handler = new InferenceManagementHandler { DiscoverSavedOperation = true, SavedRollbackApplicable = false };
+        var page = new HomeDiscoverPage(new HomeDiscoverCatalog([]), null, null,
+            new DulcheLocalClient(new UserPreferencesService(new Paths(root.FullName)), handler));
+        var window = new Window { Width = 1000, Height = 650, Content = page };
+        try
+        {
+            window.Show();
+            await page.ActivateAsync(timeout.Token);
+            Button FindButton(string label) => page.GetVisualDescendants().OfType<Button>().Single(b => b.Content?.ToString() == label);
+            FindButton("Performance").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            var optimiseButton = await WaitForButtonAsync(page, "Optimise inference", timeout.Token);
+            while (!optimiseButton.IsEnabled) await Task.Delay(10, timeout.Token);
+            Assert.False(FindButton("Restore previous settings").IsEnabled);
+            Assert.False(handler.Commands.Reader.TryRead(out _));
+        }
+        finally { await page.CloseAndDrainAsync(); window.Close(); root.Delete(true); }
+    }
+
+    [AvaloniaFact]
+    public async Task InstalledModelChatFitsTheHomeViewportAndSectionChangesPreserveDraft()
+    {
+        var root = Directory.CreateTempSubdirectory("dulche-chat-layout-");
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(12));
+        using var handler = new InferenceManagementHandler { ModelName = "Qwen3.8 Flash Next ALORA multimodal · 524,288 context · dual GPU" };
+        var page = new HomeDiscoverPage(new HomeDiscoverCatalog([]), null, null,
+            new DulcheLocalClient(new UserPreferencesService(new Paths(root.FullName)), handler));
+        var window = new Window { Width = 1000, Height = 650, Content = page };
+        try
+        {
+            window.Show();
+            await page.ActivateAsync(timeout.Token);
+            T Named<T>(string name) where T : Control => page.GetVisualDescendants().OfType<T>().Single(c => AutomationProperties.GetName(c) == name);
+            Button FindButton(string label) => page.GetVisualDescendants().OfType<Button>().Single(b => b.Content?.ToString() == label);
+            while (!FindButton("Send").IsEnabled) await Task.Delay(10, timeout.Token);
+            var prompt = Named<TextBox>("Dulche prompt");
+            prompt.Text = "Keep this draft while I inspect performance and adapters.";
+            foreach (var size in new[] { new Size(1000, 650), new Size(720, 480) })
+            {
+                window.Width = size.Width;
+                window.Height = size.Height;
+                window.UpdateLayout();
+                foreach (var control in new Control[] { Named<ComboBox>("Installed inference model"), prompt, FindButton("Send") })
+                {
+                    Assert.True(control.IsEffectivelyVisible);
+                    var origin = control.TranslatePoint(default(Point), window);
+                    Assert.NotNull(origin);
+                    Assert.True(control.Bounds.Width > 0 && control.Bounds.Height > 0);
+                    Assert.InRange(origin!.Value.X, -1, window.ClientSize.Width);
+                    Assert.InRange(origin.Value.Y, -1, window.ClientSize.Height);
+                    Assert.True(origin.Value.X + control.Bounds.Width <= window.ClientSize.Width + 1,
+                        $"{AutomationProperties.GetName(control) ?? control.ToString()} extends beyond the horizontal viewport at {size}.");
+                    Assert.True(origin.Value.Y + control.Bounds.Height <= window.ClientSize.Height + 1,
+                        $"{AutomationProperties.GetName(control) ?? control.ToString()} is below the viewport at {size}.");
+                }
+                foreach (var scroll in page.GetVisualDescendants().OfType<ScrollViewer>().Where(s => s.IsEffectivelyVisible))
+                    Assert.True(scroll.Extent.Width <= scroll.Viewport.Width + 1, $"Horizontal overflow in Home at {size}.");
+            }
+            AssertNoVisibleNamed<TextBox>(page, "GPU, context and inference profile settings");
+            AssertNoVisibleNamed<TextBox>(page, "Local model path");
+            FindButton("Performance").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await WaitForButtonAsync(page, "Optimise inference", timeout.Token);
+            AssertNoVisibleNamed<TextBox>(page, "Dulche prompt");
+            FindButton("Adapters").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await WaitForNamedAsync<TextBox>(page, "LoRA adapter path", timeout.Token);
+            Assert.DoesNotContain(page.GetVisualDescendants().OfType<Button>(), b => b.Content?.ToString() == "Optimise inference" && b.IsEffectivelyVisible);
+            FindButton("Chat").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            prompt = await WaitForNamedAsync<TextBox>(page, "Dulche prompt", timeout.Token);
+            Assert.Equal("Keep this draft while I inspect performance and adapters.", prompt.Text);
+        }
+        finally { await page.CloseAndDrainAsync(); window.Close(); root.Delete(true); }
+    }
+
+    [AvaloniaFact]
+    public async Task CancelResponseStopsOnlyItsOwnedRunAndRetainsPartialOutputAndNewDraft()
+    {
+        var root = Directory.CreateTempSubdirectory("dulche-cancel-response-");
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(12));
+        using var handler = new DirectChatHandler { HoldStopSettlement = true };
+        handler.Stream.Push("data: {\"choices\":[{\"delta\":{\"content\":\"Partial answer\"}}]}\n\n");
+        var page = new HomeDiscoverPage(new HomeDiscoverCatalog([]), null, null,
+            new DulcheLocalClient(new UserPreferencesService(new Paths(root.FullName)), handler));
+        var window = new Window { Width = 1000, Height = 650, Content = page };
+        try
+        {
+            window.Show();
+            await page.ActivateAsync(timeout.Token);
+            T Named<T>(string name) where T : Control => page.GetVisualDescendants().OfType<T>().Single(c => AutomationProperties.GetName(c) == name);
+            var send = page.GetVisualDescendants().OfType<Button>().Single(b => b.Content?.ToString() == "Send");
+            while (!send.IsEnabled) await Task.Delay(10, timeout.Token);
+            var prompt = Named<TextBox>("Dulche prompt");
+            prompt.Text = "Initial request";
+            send.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            while (Named<TextBlock>("Dulche response").Text != "Partial answer") await Task.Delay(10, timeout.Token);
+            prompt.Text = "A newer request";
+            Named<Button>("Cancel this Dulche response").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.Equal("/v1/agents/direct-current/stop", await handler.Stops.Reader.ReadAsync(timeout.Token));
+            Assert.False(send.IsEnabled);
+            Assert.Contains("Waiting", Named<TextBlock>("Dulche run status").Text);
+            handler.ReleaseStop.TrySetResult();
+            while (!send.IsEnabled) await Task.Delay(10, timeout.Token);
+            Assert.Contains("Cancelled", Named<TextBlock>("Dulche run status").Text);
+            Assert.Equal("Partial answer", Named<TextBlock>("Dulche response").Text);
+            Assert.Equal("A newer request", prompt.Text);
+            Assert.False(handler.Stops.Reader.TryRead(out _));
+        }
+        finally { handler.ReleaseStop.TrySetResult(); await page.CloseAndDrainAsync(); window.Close(); root.Delete(true); }
+    }
+
     private sealed class InferenceManagementHandler : HttpMessageHandler
     {
         public bool FailCompletion { get; init; }
         public bool ManagementSupported { get; init; } = true;
+        public bool DiscoverSavedOperation { get; init; }
+        public bool SavedRollbackApplicable { get; init; } = true;
+        public string ModelName { get; init; } = "Model One";
         public int CompletionAttempts { get; private set; }
         public TaskCompletionSource<JsonNode> Completion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource ReleaseCompletion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Channel<(string Path, JsonNode Body)> Commands { get; } = Channel.CreateUnbounded<(string, JsonNode)>();
         private bool _attached;
+        private bool _restored;
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken token)
         {
@@ -177,17 +382,30 @@ public sealed class HomeDulcheIntegrationTests
                 await ReleaseCompletion.Task.WaitAsync(token);
                 return FailCompletion
                     ? new(HttpStatusCode.ServiceUnavailable) { Content = new StringContent("{\"error\":\"Model startup failed\"}", Encoding.UTF8, "application/json") }
-                    : new(HttpStatusCode.OK) { Content = new StringContent("data: {\"choices\":[{\"delta\":{\"content\":\"Completed answer\"}}]}\n\ndata: [DONE]\n\n", Encoding.UTF8, "text/event-stream") };
+                    : new(HttpStatusCode.OK) { Content = new StringContent("data: {\"choices\":[{\"delta\":{\"content\":\"Completed answer\"},\"finish_reason\":\"stop\"}]}\n\ndata: [DONE]\n\n", Encoding.UTF8, "text/event-stream") };
             }
             string data;
             if (path == "/v1/status")
-                data = """{"phase":"ready","stop_all":false,"models":[{"id":"one","name":"Model One","state":"unloaded","can_start":true,"context":524288}],"agents":[],"resources":{}}""";
+                data = JsonSerializer.Serialize(new { phase = "ready", stop_all = false,
+                    models = new[] { new { id = "one", name = ModelName, state = "unloaded", can_start = true, context = 524288 } },
+                    agents = Array.Empty<object>(), resources = new { } });
             else if (path == "/v1/inference/capabilities")
-                data = JsonSerializer.Serialize(new { optimise = new { supported = ManagementSupported }, adapters = new { supported = ManagementSupported } });
+            {
+                var caps = JsonSerializer.SerializeToNode(new { optimise = new { supported = ManagementSupported }, adapters = new { supported = ManagementSupported } })!;
+                if (DiscoverSavedOperation)
+                {
+                    var saved = JsonNode.Parse("""{"id":"saved-operation","model":"one","state":"completed","rollback_available":true,"context_tokens":524288}""")!;
+                    caps["models"] = new JsonArray(new JsonObject { ["id"] = "one", ["latest_operation"] = saved,
+                        ["rollback_operation"] = SavedRollbackApplicable && !_restored ? saved.DeepClone() : null });
+                    caps["active_operation"] = null;
+                }
+                data = caps.ToJsonString();
+            }
             else if (path == "/v1/models/one/optimise")
             {
                 var body = JsonNode.Parse(await request.Content!.ReadAsStringAsync(token))!;
                 await Commands.Writer.WriteAsync((path, body), token);
+                _restored = body["action"]!.ToString() == "restore";
                 data = body["action"]!.ToString() == "start"
                     ? """{"id":"op-one","state":"queued","context_tokens":524288}"""
                     : """{"id":"restore-one","state":"completed","message":"Previous settings restored"}""";
@@ -273,7 +491,7 @@ public sealed class HomeDulcheIntegrationTests
                     await io.WriteAsync(Encoding.ASCII.GetBytes("HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nConnection: close\r\nX-Dulche-Run-Id: ui-fixture\r\n\r\ndata: {\"choices\":[{\"delta\":{\"content\":\"alpha\"}}]}\n\n"), timeout.Token);
                     appended.TrySetResult();
                     await release.Task.WaitAsync(timeout.Token);
-                    await io.WriteAsync(Encoding.ASCII.GetBytes("data: {\"choices\":[{\"delta\":{\"content\":\" beta\"}}]}\n\ndata: [DONE]\n\n"), timeout.Token);
+                    await io.WriteAsync(Encoding.ASCII.GetBytes("data: {\"choices\":[{\"delta\":{\"content\":\" beta\"},\"finish_reason\":\"stop\"}]}\n\ndata: [DONE]\n\n"), timeout.Token);
                     continue;
                 }
                 var answer = request.Contains("/status")
@@ -346,6 +564,8 @@ public sealed class HomeDulcheIntegrationTests
             Button ButtonByLabel(string name) => page.GetVisualDescendants().OfType<Button>().Single(b => b.Content?.ToString() == name);
             T InputByLabel<T>(string name) where T : Control => page.GetVisualDescendants().OfType<T>().Single(c => AutomationProperties.GetName(c) == name);
             void Click(string name) => ButtonByLabel(name).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Click("Advanced");
+            await WaitForButtonAsync(page, "Swarm Mode", timeout.Token);
             Click("Swarm Mode");
             while (!page.GetVisualDescendants().OfType<Button>().Any(b => b.Content?.ToString() == "Configure"))
                 await Task.Delay(15, timeout.Token);
@@ -525,6 +745,244 @@ public sealed class HomeDulcheIntegrationTests
             else data="""{"enabled":true,"listening":true,"base_url":"http://127.0.0.1:18740/v1","models":[{"id":"verified-id"}],"clients":[],"opencode_config":{"providers":{"dulche":{"settings":{"baseURL":"http://127.0.0.1:18740/v1"}}}}}""";
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK){Content=new StringContent(data,Encoding.UTF8,"application/json")});
         }
+    }
+
+    [Fact]
+    public async Task DirectChatMissingAdmissionIsBoundedWithoutStoppingAnUnidentifiedRun()
+    {
+        Assert.Equal(TimeSpan.FromMinutes(8), DulcheLocalClient.DirectChatAdmissionTimeout);
+        Assert.Equal(TimeSpan.FromMinutes(8), DulcheLocalClient.DirectChatFirstProgressTimeout);
+        Assert.Equal(TimeSpan.FromMinutes(2), DulcheLocalClient.DirectChatIdleTimeout);
+        var root = Directory.CreateTempSubdirectory("dulche-missing-admission-");
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        using var handler = new DirectChatHandler { WithholdHeaders = true };
+        var client = new DulcheLocalClient(new UserPreferencesService(new Paths(root.FullName)), handler)
+            { DirectAdmissionLimit = TimeSpan.FromMilliseconds(100) };
+        try
+        {
+            var error = await Assert.ThrowsAsync<DulcheRunStopUnconfirmedException>(async () =>
+            {
+                await foreach (var _ in client.StreamAsync("one", [], _ => { }, timeout.Token)) { }
+            });
+            Assert.Null(error.RunId);
+            Assert.Contains("timed out", error.Message);
+            Assert.False(handler.Stops.Reader.TryRead(out _));
+        }
+        finally { root.Delete(true); }
+    }
+
+    [Fact]
+    public async Task RoleOnlyChunkDoesNotCountAsFirstModelProgress()
+    {
+        var root = Directory.CreateTempSubdirectory("dulche-role-only-");
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        using var handler = new DirectChatHandler();
+        handler.Stream.Push("data: {\"choices\":[{\"delta\":{\"role\":\"assistant\"}}]}\n\n");
+        var client = new DulcheLocalClient(new UserPreferencesService(new Paths(root.FullName)), handler)
+            { DirectFirstProgressLimit = TimeSpan.FromMilliseconds(100), DirectIdleLimit = TimeSpan.FromSeconds(3) };
+        try
+        {
+            var error = await Assert.ThrowsAsync<TimeoutException>(async () =>
+            {
+                await foreach (var _ in client.StreamAsync("one", [], _ => { }, timeout.Token)) { }
+            });
+            Assert.Contains("startup limit", error.Message);
+            Assert.Equal("/v1/agents/direct-current/stop", await handler.Stops.Reader.ReadAsync(timeout.Token));
+        }
+        finally { root.Delete(true); }
+    }
+
+    [Fact]
+    public async Task ReasoningProgressExtendsTheWaitBeforeFirstVisibleContent()
+    {
+        var root = Directory.CreateTempSubdirectory("dulche-reasoning-progress-");
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        using var handler = new DirectChatHandler();
+        handler.Stream.Push("data: {\"choices\":[{\"delta\":{\"reasoning_content\":\"Considering the request\"}}]}\n\n");
+        var client = new DulcheLocalClient(new UserPreferencesService(new Paths(root.FullName)), handler)
+            { DirectFirstProgressLimit = TimeSpan.FromMilliseconds(150), DirectIdleLimit = TimeSpan.FromSeconds(2) };
+        try
+        {
+            var answer = new StringBuilder();
+            async Task Read()
+            {
+                await foreach (var chunk in client.StreamAsync("one", [], _ => { }, timeout.Token)) answer.Append(chunk);
+            }
+            var reading = Read();
+            await handler.Stream.FirstRead.Task.WaitAsync(timeout.Token);
+            await Task.Delay(250, timeout.Token);
+            Assert.False(reading.IsCompleted);
+            handler.Stream.Push("data: {\"choices\":[{\"delta\":{\"content\":\"Final answer\"},\"finish_reason\":\"stop\"}]}\n\ndata: [DONE]\n\n");
+            await reading;
+            Assert.Equal("Final answer", answer.ToString());
+            Assert.False(handler.Stops.Reader.TryRead(out _));
+        }
+        finally { root.Delete(true); }
+    }
+
+    [Fact]
+    public async Task DirectChatIdleTimeoutRetainsPartialOutputAndAwaitsExactStop()
+    {
+        var root = Directory.CreateTempSubdirectory("dulche-idle-response-");
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        using var handler = new DirectChatHandler { HoldStopSettlement = true };
+        handler.Stream.Push("data: {\"choices\":[{\"delta\":{\"content\":\"Partial answer\"}}]}\n\n");
+        var client = new DulcheLocalClient(new UserPreferencesService(new Paths(root.FullName)), handler)
+            { DirectIdleLimit = TimeSpan.FromMilliseconds(100) };
+        try
+        {
+            var answer = new StringBuilder();
+            async Task Read()
+            {
+                await foreach (var chunk in client.StreamAsync("one", [], _ => { }, timeout.Token)) answer.Append(chunk);
+            }
+            var reading = Read();
+            Assert.Equal("/v1/agents/direct-current/stop", await handler.Stops.Reader.ReadAsync(timeout.Token));
+            Assert.False(reading.IsCompleted);
+            handler.ReleaseStop.TrySetResult();
+            var error = await Assert.ThrowsAsync<TimeoutException>(() => reading);
+            Assert.Contains("stalled", error.Message);
+            Assert.Equal("Partial answer", answer.ToString());
+            Assert.False(handler.Stops.Reader.TryRead(out _));
+        }
+        finally { handler.ReleaseStop.TrySetResult(); root.Delete(true); }
+    }
+
+    [Fact]
+    public async Task UnsettledOwnedStopRemainsAnErrorInsteadOfConfirmedCancellation()
+    {
+        var root = Directory.CreateTempSubdirectory("dulche-unsettled-stop-");
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        using var handler = new DirectChatHandler { StopSettled = false };
+        handler.Stream.Push("data: {\"choices\":[{\"delta\":{\"content\":\"Partial\"}}]}\n\n");
+        var client = new DulcheLocalClient(new UserPreferencesService(new Paths(root.FullName)), handler)
+            { DirectIdleLimit = TimeSpan.FromMilliseconds(100) };
+        try
+        {
+            var failure = await Assert.ThrowsAsync<AggregateException>(async () =>
+            {
+                await foreach (var _ in client.StreamAsync("one", [], _ => { }, timeout.Token)) { }
+            });
+            Assert.Contains(failure.Flatten().InnerExceptions, e => e is DulcheRunStopUnconfirmedException { RunId: "direct-current" });
+            Assert.Equal("/v1/agents/direct-current/stop", await handler.Stops.Reader.ReadAsync(timeout.Token));
+        }
+        finally { root.Delete(true); }
+    }
+
+    private sealed class DirectChatHandler : HttpMessageHandler
+    {
+        public bool WithholdHeaders { get; init; }
+        public bool HoldStopSettlement { get; init; }
+        public bool StopSettled { get; init; } = true;
+        public ChannelBytesStream Stream { get; } = new();
+        public Channel<string> Stops { get; } = Channel.CreateUnbounded<string>();
+        public TaskCompletionSource ReleaseStop { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken token)
+        {
+            var path = request.RequestUri!.AbsolutePath;
+            if (path == "/v1/chat/completions")
+            {
+                if (WithholdHeaders) await Task.Delay(Timeout.Infinite, token);
+                var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StreamContent(Stream) };
+                response.Headers.Add("X-Dulche-Run-Id", "direct-current");
+                return response;
+            }
+            string json = "{}";
+            if (path.StartsWith("/v1/agents/", StringComparison.Ordinal) && path.EndsWith("/stop", StringComparison.Ordinal))
+            {
+                await Stops.Writer.WriteAsync(path, token);
+                if (HoldStopSettlement) await ReleaseStop.Task.WaitAsync(token);
+                json = JsonSerializer.Serialize(new { id = "direct-current", state = "stopped", settled = StopSettled });
+            }
+            else if (path == "/v1/status")
+                json = """{"phase":"ready","models":[{"id":"one","name":"Model One","state":"loaded","context":524288}],"agents":[{"id":"unrelated-agent","state":"running"}],"resources":{}}""";
+            return new(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") };
+        }
+    }
+
+    private sealed class ChannelBytesStream : Stream
+    {
+        private readonly Channel<byte[]> _chunks = Channel.CreateUnbounded<byte[]>();
+        private byte[]? _chunk;
+        private int _position;
+        public TaskCompletionSource FirstRead { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public void Push(string text) => _chunks.Writer.TryWrite(Encoding.UTF8.GetBytes(text));
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken token = default)
+        {
+            if (_chunk is null || _position == _chunk.Length)
+            {
+                if (!await _chunks.Reader.WaitToReadAsync(token)) return 0;
+                _chunk = await _chunks.Reader.ReadAsync(token);
+                _position = 0;
+            }
+            var count = Math.Min(buffer.Length, _chunk.Length - _position);
+            _chunk.AsMemory(_position, count).CopyTo(buffer);
+            _position += count;
+            FirstRead.TrySetResult();
+            return count;
+        }
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken token) => ReadAsync(buffer.AsMemory(offset, count), token).AsTask();
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override void Flush() => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        protected override void Dispose(bool disposing) { _chunks.Writer.TryComplete(); base.Dispose(disposing); }
+    }
+
+    private static async Task<T> WaitForNamedAsync<T>(Control page, string name, CancellationToken token) where T : Control
+    {
+        while (true)
+        {
+            var control = page.GetVisualDescendants().OfType<T>().SingleOrDefault(c =>
+                c.IsEffectivelyVisible && AutomationProperties.GetName(c) == name);
+            if (control is not null) return control;
+            await Task.Delay(10, token);
+        }
+    }
+
+    private static async Task<Button> WaitForButtonAsync(Control page, string label, CancellationToken token)
+    {
+        while (true)
+        {
+            var button = page.GetVisualDescendants().OfType<Button>().SingleOrDefault(b =>
+                b.IsEffectivelyVisible && b.Content?.ToString() == label);
+            if (button is not null) return button;
+            await Task.Delay(10, token);
+        }
+    }
+
+    private static void AssertNoVisibleNamed<T>(Control page, string name) where T : Control =>
+        Assert.DoesNotContain(page.GetVisualDescendants().OfType<T>(), c =>
+            c.IsEffectivelyVisible && AutomationProperties.GetName(c) == name);
+
+    private sealed class SpecialistCatalog : ICatalogRepository
+    {
+        internal static readonly Guid ReviewerId = Guid.Parse("df5fb502-9d48-4bd4-9e11-55c6f7b99d60");
+        public HashSet<Guid> RemovedIds { get; } = [];
+        public int Reads { get; private set; }
+        private readonly AgentDefinition[] _definitions = [
+            new(Guid.Parse("46765915-fd77-4455-bd6b-3e219cf6dc78"), "Coding specialist", "", "", "agent", "one", null, "", "{}", false, true, DateTimeOffset.UtcNow),
+            new(ReviewerId, "Review specialist", "", "", "agent", "one", null, "", "{}", false, true, DateTimeOffset.UtcNow),
+            new(Guid.Parse("1b9968cc-44d4-48a8-86c6-e93b1c048bac"), "Disabled specialist", "", "", "agent", "one", null, "", "{}", false, false, DateTimeOffset.UtcNow)
+        ];
+        public Task<IReadOnlyList<AgentDefinition>> GetAgentsAsync(CancellationToken token)
+        {
+            Reads++;
+            return Task.FromResult<IReadOnlyList<AgentDefinition>>(_definitions.Where(item => !RemovedIds.Contains(item.Id)).ToArray());
+        }
+        public Task<IReadOnlyList<PromptDefinition>> GetPromptsAsync(CancellationToken token) => Task.FromResult<IReadOnlyList<PromptDefinition>>([]);
+        public Task UpsertAgentAsync(AgentDefinition value, CancellationToken token) => throw new NotSupportedException();
+        public Task UpsertPromptAsync(PromptDefinition value, CancellationToken token) => throw new NotSupportedException();
+        public Task SetAgentEnabledAsync(Guid id, bool enabled, CancellationToken token) => throw new NotSupportedException();
+        public Task SetPromptEnabledAsync(Guid id, bool enabled, CancellationToken token) => throw new NotSupportedException();
+        public Task DeleteCustomAgentAsync(Guid id, CancellationToken token) => throw new NotSupportedException();
+        public Task DeleteCustomPromptAsync(Guid id, CancellationToken token) => throw new NotSupportedException();
     }
 
     private sealed class Paths(string root) : IAppPaths

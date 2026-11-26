@@ -1069,7 +1069,7 @@ public sealed partial class App
                         _home.Resources, _home.Broker);
                     // The single shared route-commit seam: a successful guarded CAS save notifies the
                     // retained Home-owned selection source so the genuine projection republishes live.
-                    var notifying = new RouteNotifyingModelPickerProvider(provider, () =>
+                    var notifying = new RouteNotifyingModelPickerProvider(provider, async () =>
                     {
                         var source = _homeModelSelectionSource ?? _services.GetService<HomeModelSelectionSource>();
                         source?.NotifyRouteCommitted();
@@ -1077,8 +1077,9 @@ public sealed partial class App
                             originalChat is not null)
                         {
                             var commit = Interlocked.Increment(ref _chatRouteCommitGeneration);
-                            Track(ApplyCommittedRouteToOriginalChatAsync(source, originalChrome, tab,
-                                originalChat, actor, commit, ModelProjectionToken));
+                            var applied = ApplyCommittedRouteToOriginalChatAsync(source, originalChrome, tab,
+                                originalChat, actor, commit, ModelProjectionToken);
+                            await Track(applied).ConfigureAwait(false);
                         }
                     });
                     session = new HomeModelPickerOriginalSessionProvider(notifying, _home.Profiles);
@@ -1152,11 +1153,11 @@ public sealed partial class App
         /// source ONLY after a real canonical route commit succeeds (the guarded CAS save). It forwards
         /// every other operation unchanged and never invents a commit. It preserves the originating
         /// actor port so the session provider's fenced route edits continue to work.</summary>
-        private sealed class RouteNotifyingModelPickerProvider(IHomeModelPickerFeatureProvider inner, Action onRouteCommitted)
+        private sealed class RouteNotifyingModelPickerProvider(IHomeModelPickerFeatureProvider inner, Func<Task> onRouteCommitted)
             : IHomeModelPickerOriginalActorFeatureProvider
         {
             private readonly IHomeModelPickerFeatureProvider _inner = inner ?? throw new ArgumentNullException(nameof(inner));
-            private readonly Action _onRouteCommitted = onRouteCommitted ?? throw new ArgumentNullException(nameof(onRouteCommitted));
+            private readonly Func<Task> _onRouteCommitted = onRouteCommitted ?? throw new ArgumentNullException(nameof(onRouteCommitted));
 
             public Task<HomeCoreOperationResult<HomeModelCataloguePage>> GetCatalogueAsync(string? query = null, CancellationToken cancellationToken = default) =>
                 _inner.GetCatalogueAsync(query, cancellationToken);
@@ -1167,7 +1168,7 @@ public sealed partial class App
             public async Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> UpdateRouteAsync(HomeModelRouteEdit edit, CancellationToken cancellationToken = default)
             {
                 var result = await _inner.UpdateRouteAsync(edit, cancellationToken).ConfigureAwait(false);
-                if (result.Succeeded) _onRouteCommitted();
+                if (result.Succeeded) await _onRouteCommitted().ConfigureAwait(false);
                 return result;
             }
             public async Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> UpdateRouteForActorAsync(
@@ -1176,7 +1177,7 @@ public sealed partial class App
                 var result = _inner is IHomeModelPickerOriginalActorFeatureProvider bound
                     ? await bound.UpdateRouteForActorAsync(expectedActor, edit, cancellationToken).ConfigureAwait(false)
                     : new HomeCoreOperationResult<HomeModelPickerSnapshot>(false, "Unsupported", "The underlying route owner is unavailable.");
-                if (result.Succeeded) _onRouteCommitted();
+                if (result.Succeeded) await _onRouteCommitted().ConfigureAwait(false);
                 return result;
             }
             public Task<HomeCoreOperationResult<object>> RetryAuditAsync(string requestId, CancellationToken cancellationToken = default) =>

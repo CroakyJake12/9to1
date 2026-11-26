@@ -214,8 +214,8 @@ public sealed class HomeModelPickerCatalogueRow : ICuiBindingContext
             case "DisplayName": value = _entry.DisplayName; return true;
             case "ProviderName": value = _entry.ProviderName; return true;
             case "CompactSource": value = _entry.IsLocal == true ? "This device" : _entry.ProviderName; return true;
-            case "CompactChooseLabel": value = "Prefer model"; return true;
-            case "CompactChooseName": value = $"Prefer {_entry.DisplayName} from {_entry.ProviderName}"; return true;
+            case "CompactChooseLabel": value = "Use model"; return true;
+            case "CompactChooseName": value = $"Use {_entry.DisplayName} from {_entry.ProviderName}"; return true;
             case "Locality": value = Locality; return true;
             case "Capabilities": value = Capabilities; return true;
             case "FamilyLabel": value = _entry.Presentation?.FamilyLabel switch

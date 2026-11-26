@@ -180,16 +180,37 @@ class InferenceManagement:
                 "goal": "speed", "method": "strata-tune-auto"}
 
     def capabilities(self):
+        # The native panel may be recreated independently of this service. Publish
+        # persisted receipts, including the exact overlay that is still current,
+        # so discovery never needs to start another tuning run to find rollback.
+        with self.lock:
+            operations = [self.operation(op_id) for op_id in self.state.get(OPERATIONS, [])
+                          if self.state.get("inference:operation:" + op_id)]
         rows = []
         for row in self.ctx.status().get("models", []):
             mid = row["id"]
+            matching = [op for op in operations if op.get("model") == mid]
+            latest = matching[-1] if matching else None
+            rollback = None
+            try:
+                overlay = _json(native_tuning_path(self.ctx.engines.root, mid))
+                if overlay.get("state") == "active" and overlay.get("model") == mid:
+                    rollback = next((op for op in reversed(matching)
+                                     if op["id"] == overlay.get("operation_id")
+                                     and op.get("rollback_available") is True
+                                     and op.get("state") not in ACTIVE), None)
+            except (OSError, ValueError, RuntimeError):
+                pass  # Missing or changed evidence never enables a rollback.
             rows.append({"id": mid, "optimise": self._optimise_capability(mid),
-                         "adapters": self._engine_capability(mid)})
+                         "adapters": self._engine_capability(mid),
+                         "latest_operation": latest, "rollback_operation": rollback})
         def aggregate(key):
             if any(row[key]["supported"] for row in rows):
                 return {"supported": True}
             return {"supported": False, "reason": "No installed model currently has a qualified " + ("optimisation runner." if key == "optimise" else "LoRA attachment backend.")}
-        return {"optimise": aggregate("optimise"), "adapters": aggregate("adapters"), "models": rows}
+        active = next((op for op in reversed(operations) if op.get("state") in ACTIVE), None)
+        return {"optimise": aggregate("optimise"), "adapters": aggregate("adapters"),
+                "models": rows, "active_operation": active}
 
     def _save_operation(self, op):
         self.state.set("inference:operation:" + op["id"], op)

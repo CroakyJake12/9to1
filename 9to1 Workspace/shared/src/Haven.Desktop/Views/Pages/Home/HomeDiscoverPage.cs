@@ -22,6 +22,10 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
     private readonly HomeDulchePanel? _dulche;
     private readonly DesktopOriginalWorkLifetime _work;
     private readonly CuiControlLoader _loader = new();
+    private readonly CuiViewModel _bindings = new();
+    private readonly Button _browse = new();
+    private bool _browsing;
+    private bool _huggingFaceActivated;
     private readonly TextBox _search = new();
     private readonly ComboBox _category = new() { ItemsSource = new[] { "All categories", "Chat", "Image", "Voice", "Audio (advanced)", "Video (advanced)" }, SelectedIndex = 0 };
     private readonly ComboBox _locality = new() { ItemsSource = new[] { "All locations", "Local", "Cloud", "Remote" }, SelectedIndex = 0 };
@@ -39,9 +43,10 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
         HomeLocalProfileIdentity? homeProfiles = null) : this(catalog, huggingFace, homeProfiles, null) { }
 
     public HomeDiscoverPage(HomeDiscoverCatalog catalog, IHuggingFaceModelService? huggingFace,
-        HomeLocalProfileIdentity? homeProfiles, DulcheLocalClient? dulche)
+        HomeLocalProfileIdentity? homeProfiles, DulcheLocalClient? dulche, ICatalogRepository? specialists = null)
     {
         _catalog = catalog;
+        _browsing = dulche is null;
         _work = new(StopDiscoverAsync, DetachDiscoverAsync);
         Func<CancellationToken, ValueTask<AuthenticatedResourceActor?>>? currentProfile = homeProfiles is null
             ? null
@@ -54,6 +59,7 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
         var document = parser.Parse(reader.ReadToEnd(), "Discover.cui");
         if (parser.Diagnostics.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
             throw new InvalidDataException("The Home Discover CUI document is invalid.");
+        _loader.BindAuthoredControl("discover-browse", _ => _browse);
         _loader.BindAuthoredControl("discover-search", _ => _search);
         _loader.BindAuthoredControl("discover-category", _ => _category);
         _loader.BindAuthoredControl("discover-locality", _ => _locality);
@@ -66,13 +72,18 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
         _loader.BindAuthoredControl("discover-huggingface-mount", _ => _huggingFace);
         if (dulche is not null)
         {
-            _dulche = new HomeDulchePanel(dulche, RunDiscoverAsync);
+            _dulche = new HomeDulchePanel(dulche, RunDiscoverAsync, specialists);
             _loader.BindAuthoredControl("discover-dulche-mount", _ => _dulche);
         }
+        _bindings.Set("HasDulche", dulche is not null);
+        _bindings.Set("BrowseVisible", _browsing);
+        _loader.SetBindingContext(_bindings);
         var loaded = _loader.TryLoad(document);
         if (loaded.Root is null || loaded.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
             throw new InvalidDataException("Home Discover could not be rendered: " + string.Join("; ", loaded.Diagnostics.Select(item => item.Message)));
         Content = loaded.Root;
+        _loader.WireBindings(loaded.Root);
+        SetDiscoverValue(_browse, "Content", _browsing ? "Hide model catalogue" : "Find or install models");
         _models.ItemTemplate = new FuncDataTemplate<HomeDiscoverModel>((model, _) => new TextBlock
         {
             Text = model is null ? string.Empty : $"{model.DisplayName ?? model.Name} · {model.Identity.ProviderId} · {model.Locality} · {model.InstallState} · {model.ConnectionState}",
@@ -83,6 +94,21 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
             var selected = SelectedModels();
             SetDiscoverValue(_compare, "IsEnabled", selected.Length is > 0 and <= 20);
             SetDiscoverValue(_details, "Text", selected.Length > 0 ? string.Join("\n\n", selected.Select(Describe)) : "Select a model to inspect its reported metadata.");
+        };
+        _browse.Click += async (_, _) =>
+        {
+            if (_disposed || _work.IsRetiring) return;
+            _browsing = !_browsing;
+            _bindings.Set("BrowseVisible", _browsing);
+            SetDiscoverValue(_browse, "Content", _browsing ? "Hide model catalogue" : "Find or install models");
+            if (_browsing)
+                await RunDiscoverEventAsync(() => ActivateAsync(CancellationToken.None));
+            else
+            {
+                // Retire only catalogue reads; the selected model and its response keep their owner.
+                _generation++;
+                _readCancellation?.Cancel();
+            }
         };
         _refresh.Click += async (_, _) => await RunDiscoverEventAsync(() => ActivateAsync(CancellationToken.None));
         _manage.Click += (_, _) => { if (!_work.IsRetiring) ManageProvidersRequested?.Invoke(this, EventArgs.Empty); };
@@ -114,6 +140,7 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
     {
         if (_disposed) return;
         _dulche?.Activate();
+        if (!_browsing) return;
         var selected = SelectedModels().Select(model => model.Identity.StableKey).ToHashSet(StringComparer.Ordinal);
         var (generation, token) = StartRead(cancellationToken);
         _models.ItemsSource = Array.Empty<HomeDiscoverModel>();
@@ -133,7 +160,11 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
             SetDiscoverValue(_status, "Text", $"{page.State} · {page.Models.Count} of {page.TotalCount} models · {page.Providers.Count} registered providers" +
                 (page.NextPageToken is null ? string.Empty : ". Narrow your search to see more results.") +
                 string.Concat(problems.Select(problem => "\n" + problem)));
-            await _huggingFace.ActivateAsync(token);
+            if (!_huggingFaceActivated)
+            {
+                await _huggingFace.ActivateAsync(token);
+                if (Current(generation, token)) _huggingFaceActivated = true;
+            }
             if (SelectedModels().Length == 0) SetDiscoverValue(_details, "Text", "Select models to compare. Only capabilities reported by providers are shown.");
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
@@ -186,7 +217,7 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
         $"Architecture: {model.Architecture ?? "Unknown"} · Parameters: {model.ParameterInformation ?? "Unknown"} · Format: {model.QuantizationOrFormat ?? "Unknown"}\n" +
         $"Context: {model.ContextLimit?.ToString() ?? "Unknown"} · Cost: {model.CostClass ?? "Unknown"} · Residency: {model.Residency ?? "Unknown"}\n" +
         $"Capabilities: {(model.Capabilities is { Count: > 0 } ? string.Join(", ", model.Capabilities.Order()) : "Unknown")}";
-    public void Deactivate() { _generation++; _readCancellation?.Cancel(); _huggingFace.Deactivate(); _dulche?.Deactivate(); }
+    public void Deactivate() { _huggingFaceActivated = false; _generation++; _readCancellation?.Cancel(); _huggingFace.Deactivate(); _dulche?.Deactivate(); }
     public Task? OriginalClose => _work.OriginalClose;
     public Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken)
     {

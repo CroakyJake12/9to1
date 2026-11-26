@@ -156,7 +156,7 @@ public sealed partial class DulcheLocalClient
 
     public IAsyncEnumerable<string> StreamAsync(string model, IReadOnlyList<Dictionary<string, string>> messages,
         Action<string> runStarted, CancellationToken token) =>
-        StreamChatAsync(new { model, messages, stream = true }, runStarted, ownsIncompleteRun: false, token);
+        StreamDirectChatAsync(new { model, messages, stream = true }, runStarted, token);
 
     internal IAsyncEnumerable<string> StreamLocalModelAsync(object payload, CancellationToken token) =>
         StreamChatAsync(payload, null, ownsIncompleteRun: true, token);

@@ -4,7 +4,21 @@ The original 18 November handoff identified this register as HANDOFF-007. Record
 **Conforming** · **Adaptation** (keep behaviour, change presentation/placement) · **Conflict** (cite the specific requirement being violated) · **Additional compatible feature** (preserve) · **Incomplete** (specified, not implemented).
 Evidence levels: `code` (source inspected) · `test` (focused check passes) · `native` (running dev copy observed) · `not observed`.
 
-The [22 November source register](../../specification/owner-references/2026-11-22-atlas-v4/README.md) governs new work. Earlier entries in this inventory refer to their dated specification and runtime.
+The owner-provided 26 November v5 Specification and Atlas govern the current native migration; their exact identities are recorded in the [migration assessment](../native-migration-20261126.md). The [22 November source register](../../specification/owner-references/2026-11-22-atlas-v4/README.md) and earlier entries retain their original dated scope.
+
+## Native migration and usability · 26 November 2026
+
+The owner requested direct native use of Spaces, Build and Dulche, then identified the live Models page as unusable. The current acceptance path is: select the exact installed model, send without a separate load step, cancel the same response, reach performance/adapter controls, and preserve draft/history/profile state. Reference: RUN106, PICK001–009, IXSPACES025; Atlas `home-models`, `home-models-installed`, `home-model-details`; the direct optimiser and LoRA controls are also explicit owner requirements.
+
+| Surface | Classification | Current source change and evidence boundary |
+| --- | --- | --- |
+| Compact model picker → Spaces Send | Conflict corrected in source | Compact **Use model** performs the guarded canonical save and awaits the originating chat bridge. It disables other retained candidates so the selected model cannot silently resolve to a different one. Explicit missing selections remain unavailable. The first live test exposed the old unsaved-draft bug; it is retained as failed evidence, not ALORA acceptance. |
+| Home → Models | Adaptation | One full-width model panel, readable selected identity and runtime state, four sections (Chat, Performance, Adapters, Advanced), one page scroll area. Catalogue/import discovery is deliberate; opening and hiding it must preserve installations and current response ownership. Exact native viewport acceptance remains required. |
+| Dulche → direct Send and Cancel | Adaptation / reliability correction | Send owns one response and its exact stop receipt; bounded stalled-stream handling preserves partial output and newer drafts. Mode changes preserve the composer. |
+| Performance and adapters | Additional compatible features | Strata tuning remains backend-qualified and context-preserving. Durable operation/rollback discovery survives reopening. Adapter bindings use exact model identity and actual Specialist IDs; unsupported fixed ALORA edits stay explicit. |
+| Dual GPU and crash recovery | Partial capability | The existing pooled Inkling backend serves one model across RTX 5080 + V100; the ALORA profile remains a distinct RTX route. Central recovery and settled stop contracts are source/test evidence until the exact live workload and guards are observed. |
+
+See the [full assessment and evidence ledger](../native-migration-20261126.md) for source/tests, deployment receipts and remaining v5 parity requirements. This entry does not certify complete v5 parity, ALORA multi-GPU qualification, ALORA tuning or the complete RT026 compaction journal.
 
 ## Dulche integration · 23 November 2026
 
