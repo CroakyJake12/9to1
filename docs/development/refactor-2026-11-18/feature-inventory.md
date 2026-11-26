@@ -167,3 +167,10 @@ The native Build CPU qualification now completed a real 9to1 source edit, an int
 ### Native review-flow blocker found at 10:10 GMT
 
 The9d2a41cffe candidate published and launched under managed custody. Actual Home Settings Permissions navigation then crashed during first layout because embedded SettingsHavenScene supplied a unitless zero column. The focused correction uses0px and an owning native-scene measure/arrange regression. Runtime exit1 and profile evidence remain retained; the failed run is not acceptance of model selection/Stop/Regenerate. Replacement validation remains pending at this checkpoint.
+
+
+### Space-scoped native Send boundary — 26 November 2026
+
+Settings Permissions layout repair passed its owning Measure/Arrange check and its native route-review path. Live Send then exposed an earlier guard that rejected ordinary Space generation preferences before the actual original Space policy could derive routing restrictions. Fix `1ed75d244d` captures and intersects that real policy first, keeps existing restrictions and source/dispatch guards, and limits explicit materialization to ordinary producer calls. Canonical and continuation binder behavior is preserved.
+
+Focused source reproduction retained the exact native failure (6 failed / 1 passed before correction); 35 owning Space policy/context cases passed afterward. The normal Application suite remains blocked by five unrelated existing xUnit1051 diagnostics, with no suppression or unrelated edits. A full dependency Desktop build then passed 25 focused cases, including actual compiled Space Send controls, route changes, Stop, regeneration and draft preservation. Native successor acceptance is still pending at this source checkpoint; headless controls and the CPU fixture do not establish real-model quality or visual Atlas parity.

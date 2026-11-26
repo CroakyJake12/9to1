@@ -1,4 +1,12 @@
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using Avalonia.Automation;
+using Avalonia.Automation.Peers;
+using Avalonia.Automation.Provider;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Haven.Application;
 using Haven.Application.Haven;
 using Haven.Core;
@@ -10,10 +18,240 @@ using Haven.Desktop.Events;
 
 namespace Haven.Desktop.Tests;
 
-// The complete Data initial-host and maintained caller test partials are actual
-// owning inputs. This managed UI-child journey does not instantiate a native page.
+// Reuses the complete Data initial-host and maintained caller fixtures. The compiled
+// native-page control cases run in headless windows; they do not claim OS/native acceptance.
 public sealed partial class ChatCloudPermissionCallerTests
 {
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Compiled_native_composer_send_button_dispatches_once_and_preserves_next_draft(bool automationInvoke)
+    {
+        var token = TestContext.Current.CancellationToken;
+        var timeout = TimeSpan.FromSeconds(15);
+        await using var rig = new Rig(temporary: false);
+        var model = rig.Provider.Model.Model with
+        {
+            Name = "dulche-local:compiled-native-composer",
+            Capabilities = new HashSet<ToolCapability> { ToolCapability.Text }
+        };
+        rig.Client.AvailableModels = [model];
+        var entered = new TaskCompletionSource<OllamaChatRequest>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        rig.Client.OrdinaryProviderBody = async (request, sourceToken) =>
+        {
+            entered.TrySetResult(request);
+            await release.Task.WaitAsync(sourceToken);
+            return false;
+        };
+        var directory = Directory.CreateTempSubdirectory("compiled-native-composer-").FullName;
+        var page = CreateNativeComposerPage(rig, directory, new NativeComposerDraftStore());
+        var window = new Window { Width = 1200, Height = 900, Content = page };
+        Task? actions = null;
+        var closed = false;
+        try
+        {
+            await page.OriginalInitialization.WaitAsync(timeout, token);
+            await page.RefreshModelsAsync();
+            page.SelectModel(model);
+            window.Show();
+            Dispatcher.UIThread.RunJobs();
+            window.UpdateLayout();
+
+            var composer = Assert.Single(page.GetVisualDescendants().OfType<ChatComposerCuiView>());
+            await composer.InitializeAsync().WaitAsync(timeout, token);
+            var input = Assert.Single(composer.GetVisualDescendants().OfType<TextBox>(),
+                control => AutomationProperties.GetAutomationId(control) == "composer-input");
+            const string prompt = "Compiled composer original input";
+            input.Text = prompt;
+            Dispatcher.UIThread.RunJobs();
+            window.UpdateLayout();
+            Assert.Equal(prompt, page.ComposerInput.Text);
+
+            var send = Assert.Single(composer.GetVisualDescendants().OfType<Button>(),
+                control => AutomationProperties.GetAutomationId(control) == "send-button");
+            Assert.True(send.IsEffectivelyVisible);
+            Assert.True(send.IsEnabled);
+            Assert.Contains("Send", AutomationProperties.GetName(send), StringComparison.Ordinal);
+            // Exercise the actual authored shelf action and loader, including the same
+            // provider used by AT-SPI. No page helper or binding dispatch bypasses them.
+            if (automationInvoke)
+            {
+                var peer = Assert.IsAssignableFrom<AutomationPeer>(ControlAutomationPeer.CreatePeerForElement(send));
+                Assert.IsAssignableFrom<IInvokeProvider>(peer.GetProvider<IInvokeProvider>()).Invoke();
+            }
+            else send.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+
+            actions = composer.CaptureOriginalActionSettlement();
+            await Task.WhenAny(entered.Task, actions).WaitAsync(timeout, token);
+            if (actions.IsCompleted) await actions;
+            Assert.True(entered.Task.IsCompletedSuccessfully,
+                "The rendered Send action settled without reaching the ordinary provider.");
+            var request = await entered.Task;
+            Assert.Equal(model.Name, request.Model);
+            Assert.Contains(request.Messages, message => message.Role == "user" && message.Content == prompt);
+            Assert.Equal(prompt, Assert.Single(rig.Conversations.Messages, message => message.Role == MessageRole.User).Content);
+            Assert.True(page.IsSending);
+            Assert.Empty(input.Text ?? string.Empty);
+            Assert.False(actions.IsCompleted);
+
+            input.Text = "Unsent next draft";
+            release.TrySetResult();
+            await actions.WaitAsync(timeout, token);
+            await page.JoinAdmittedOriginalWorkAsync().WaitAsync(timeout, token);
+            Assert.Equal(1, rig.Client.Dispatches);
+            Assert.Equal(1, rig.Client.StreamDisposals);
+            Assert.Single(rig.Conversations.Messages, message => message.Role == MessageRole.User);
+            Assert.Equal("Unsent next draft", page.ComposerInput.Text);
+            Assert.False(page.IsSending);
+            Assert.Equal(0, rig.Capture.ChatCaptures);
+
+            page.RequestRetirement();
+            await page.CloseAndDrainAsync().WaitAsync(timeout, token);
+            closed = true;
+        }
+        finally
+        {
+            release.TrySetResult();
+            if (actions is not null) _ = await Record.ExceptionAsync(() => actions.WaitAsync(timeout, token));
+            if (!closed)
+            {
+                page.RequestRetirement();
+                _ = await Record.ExceptionAsync(() => page.CloseAndDrainAsync().WaitAsync(timeout, token));
+            }
+            window.Content = null;
+            window.Close();
+            Directory.Delete(directory, true);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Compiled_native_space_composer_send_captures_policy_without_caller_routing_and_preserves_next_draft()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var timeout = TimeSpan.FromSeconds(15);
+        await using var rig = new Rig(temporary: false);
+        var model = rig.Provider.Model.Model with
+        {
+            Name = rig.Provider.Model.Key,
+            Capabilities = new HashSet<ToolCapability> { ToolCapability.Text }
+        };
+        rig.Client.AvailableModels = [model];
+        var entered = new TaskCompletionSource<OllamaChatRequest>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        rig.Client.OrdinaryProviderBody = async (request, sourceToken) =>
+        {
+            entered.TrySetResult(request);
+            await release.Task.WaitAsync(sourceToken);
+            return false;
+        };
+        var directory = Directory.CreateTempSubdirectory("compiled-space-composer-").FullName;
+        var paths = NativeComposerProxy<IAppPaths>((name, _) => name == "get_DataDirectory" ? directory : Path.Combine(directory, name));
+        var preferences = new UserPreferencesService(paths);
+        // The real page starts with ordinary preferences, not a test-supplied routing
+        // object that could conceal the missing original Space capture boundary.
+        Assert.Null(preferences.GenerationOptions.RequestedRoutingConstraints);
+        var registry = new SpaceRegistry(new VersionedAtomicSettingsStore(paths));
+        var space = await registry.CreateAsync("Compiled composer Space", cancellationToken: token);
+        var policy = new CompiledComposerSpacePolicySource(registry);
+        var client = new CompiledComposerGuardedClient(rig.Client, rig.Provider);
+        var sessions = new ChatSessionService(rig.Conversations, client, new CapabilityPreflightService(), new Safety(),
+            new WorkspaceToolRuntime(new Workspace()), new ComputerToolRuntime(new Computer()));
+        sessions.BindOriginalSpacePolicySource(policy);
+        var drafts = new NativeComposerDraftStore();
+        var page = CreateNativeComposerPage(rig, directory, drafts, enableFreshChatTemporaryLifecycle: true,
+            modelClient: client, sessions: sessions, preferences: preferences);
+        var window = new Window { Width = 1200, Height = 900, Content = page };
+        Task? actions = null;
+        var closed = false;
+        try
+        {
+            await page.OriginalInitialization.WaitAsync(timeout, token);
+            await page.JoinAdmittedOriginalWorkAsync().WaitAsync(timeout, token);
+            await page.StartFreshConversationAsync(HavenMode.Chat, null, spaceId: space.Id).WaitAsync(timeout, token);
+            await page.JoinAdmittedOriginalWorkAsync().WaitAsync(timeout, token);
+            await page.RefreshModelsAsync();
+            page.SelectModel(model);
+            Assert.Equal(space.Id, page.CurrentConversation.SpaceId);
+            Assert.Null(preferences.GenerationOptions.RequestedRoutingConstraints);
+            window.Show();
+            Dispatcher.UIThread.RunJobs();
+            window.UpdateLayout();
+
+            var composer = Assert.Single(page.GetVisualDescendants().OfType<ChatComposerCuiView>());
+            await composer.InitializeAsync().WaitAsync(timeout, token);
+            var input = Assert.Single(composer.GetVisualDescendants().OfType<TextBox>(),
+                control => AutomationProperties.GetAutomationId(control) == "composer-input");
+            const string prompt = "Original Space-scoped compiled composer input";
+            input.Text = prompt;
+            Dispatcher.UIThread.RunJobs();
+            window.UpdateLayout();
+            var catalogueReadsBeforeSend = client.CatalogueReads;
+            var send = Assert.Single(composer.GetVisualDescendants().OfType<Button>(),
+                control => AutomationProperties.GetAutomationId(control) == "send-button");
+            Assert.True(send.IsEffectivelyVisible);
+            Assert.True(send.IsEnabled);
+            Assert.Contains("Send", AutomationProperties.GetName(send), StringComparison.Ordinal);
+            var peer = Assert.IsAssignableFrom<AutomationPeer>(ControlAutomationPeer.CreatePeerForElement(send));
+            Assert.IsAssignableFrom<IInvokeProvider>(peer.GetProvider<IInvokeProvider>()).Invoke();
+
+            actions = composer.CaptureOriginalActionSettlement();
+            await Task.WhenAny(entered.Task, actions).WaitAsync(timeout, token);
+            if (actions.IsCompleted) await actions;
+            Assert.True(entered.Task.IsCompletedSuccessfully,
+                "The compiled Space Send action settled without reaching the guarded provider.");
+            var request = await entered.Task;
+            Assert.Equal(model.Name, request.Model);
+            Assert.Contains(request.Messages, message => message.Role == "user" && message.Content == prompt);
+            var options = Assert.IsType<GenerationOptions>(request.Options);
+            Assert.True(options.RequireOriginalSpacePolicy);
+            Assert.NotNull(options.OriginalSpacePolicy);
+            Assert.Same(policy.CapturedSnapshot!.Lineage, options.RequestedSpacePolicyLineage);
+            Assert.Equal(space.Id, options.RequestedSpacePolicyLineage!.SpaceId);
+            Assert.True(options.RequestedRoutingConstraints!.AllowCloud);
+            Assert.True(options.RequestedRoutingConstraints.AllowFallback);
+            Assert.False(options.RequestedContextConstraints!.AllowPersistentMemoryRead);
+            Assert.Equal(1, policy.Captures);
+            Assert.Equal(1, policy.Reads);
+            Assert.True(policy.Validations >= 2);
+            Assert.Equal(1, client.GuardedDispatches);
+            Assert.Equal(catalogueReadsBeforeSend, client.CatalogueReads);
+            Assert.Equal(prompt, Assert.Single(rig.Conversations.Messages, message => message.Role == MessageRole.User).Content);
+            Assert.True(page.IsSending);
+            Assert.Empty(input.Text ?? string.Empty);
+            Assert.False(actions.IsCompleted);
+
+            input.Text = "Preserve next Space draft";
+            release.TrySetResult();
+            await actions.WaitAsync(timeout, token);
+            await page.JoinAdmittedOriginalWorkAsync().WaitAsync(timeout, token);
+            Assert.Equal(1, rig.Client.Dispatches);
+            Assert.Equal(1, rig.Client.StreamDisposals);
+            Assert.Single(rig.Conversations.Messages, message => message.Role == MessageRole.User);
+            Assert.Equal("Preserve next Space draft", page.ComposerInput.Text);
+            Assert.False(page.IsSending);
+            Assert.Null(preferences.GenerationOptions.RequestedRoutingConstraints);
+
+            page.RequestRetirement();
+            await page.CloseAndDrainAsync().WaitAsync(timeout, token);
+            closed = true;
+            Assert.Equal("Preserve next Space draft", Assert.IsType<ConversationDraft>(drafts.Last).Content);
+        }
+        finally
+        {
+            release.TrySetResult();
+            if (actions is not null) _ = await Record.ExceptionAsync(() => actions.WaitAsync(timeout, token));
+            if (!closed)
+            {
+                page.RequestRetirement();
+                _ = await Record.ExceptionAsync(() => page.CloseAndDrainAsync().WaitAsync(timeout, token));
+            }
+            window.Content = null;
+            window.Close();
+            Directory.Delete(directory, true);
+        }
+    }
+
     [AvaloniaFact]
     public async Task Committed_home_model_change_affects_the_next_send_without_replaying_or_changing_the_active_send()
     {
@@ -905,6 +1143,90 @@ public sealed partial class ChatCloudPermissionCallerTests
         }
     }
 
+    // Controlled boundary over the actual stored Space policy. This fixture exercises
+    // the native caller and source/dispatch contracts, not native Home ownership authority.
+    private sealed class CompiledComposerSpacePolicySource(SpaceRegistry registry) : IOriginalSpaceRequestPolicySource
+    {
+        private sealed record Input(CompiledComposerSpacePolicySource Owner, Guid ConversationId,
+            OriginalSpacePolicySnapshot Snapshot) : IOriginalSpaceRequestPolicyInput;
+        internal int Captures;
+        internal int Reads;
+        internal int Validations;
+        internal OriginalSpacePolicySnapshot? CapturedSnapshot;
+
+        public Task<IOriginalSpaceRequestPolicyInput> CaptureAsync(Conversation conversation, Action<Action> acquire, CancellationToken token) =>
+            Run(acquire, async originals =>
+            {
+                Interlocked.Increment(ref Captures);
+                var snapshot = await ResolveAsync(conversation.SpaceId!.Value, originals, token);
+                CapturedSnapshot = snapshot;
+                return (IOriginalSpaceRequestPolicyInput)new Input(this, conversation.Id, snapshot);
+            });
+
+        public Task<OriginalSpacePolicySnapshot> ReadAsync(IOriginalSpaceRequestPolicyInput input, Conversation conversation,
+            Action<Action> acquire, CancellationToken token) => Run(acquire, async originals =>
+            {
+                Interlocked.Increment(ref Reads);
+                var actual = RequireInput(input, conversation);
+                await ValidateCoreAsync(actual, conversation, originals, token);
+                return actual.Snapshot;
+            });
+
+        public Task ValidateAsync(IOriginalSpaceRequestPolicyInput input, Conversation conversation,
+            Action<Action> acquire, CancellationToken token) => Run(acquire, async originals =>
+            {
+                await ValidateCoreAsync(RequireInput(input, conversation), conversation, originals, token);
+                return true;
+            });
+
+        private Input RequireInput(IOriginalSpaceRequestPolicyInput input, Conversation conversation) =>
+            input is Input actual && ReferenceEquals(actual.Owner, this) && actual.ConversationId == conversation.Id &&
+            actual.Snapshot.Lineage.SpaceId == conversation.SpaceId && !conversation.IsArchived
+                ? actual : throw new SpaceRequestPolicyBlockedException("SPACE_POLICY_INPUT_NOT_ORIGINAL", "Foreign controlled policy input.");
+
+        private async Task ValidateCoreAsync(Input input, Conversation conversation, CloudflareOriginalTaskLedger originals, CancellationToken token)
+        {
+            Interlocked.Increment(ref Validations);
+            var current = await ResolveAsync(conversation.SpaceId!.Value, originals, token);
+            if (!current.Lineage.Equals(input.Snapshot.Lineage))
+                throw new SpaceRequestPolicyBlockedException("SPACE_POLICY_CHANGED", "The controlled Space policy changed.");
+        }
+
+        private Task<OriginalSpacePolicySnapshot> ResolveAsync(Guid id, CloudflareOriginalTaskLedger originals, CancellationToken token) =>
+            originals.AwaitAsync(originals.Invoke(() => new SpacePolicyResolver(registry).ResolveExistingAsync(id,
+                body => originals.Invoke(() => { body(); return true; }), task => originals.Track(task), token)));
+
+        private static Task<T> Run<T>(Action<Action> acquire, Func<CloudflareOriginalTaskLedger, Task<T>> body)
+        {
+            var originals = new CloudflareOriginalTaskLedger();
+            originals.BindOriginalCallerCallback(acquire);
+            return originals.RunToOriginalSettlementAsync(() => body(originals));
+        }
+    }
+
+    private sealed class CompiledComposerGuardedClient(Client inner, IModelProvider provider) : IOriginalPrivateContextModelClient
+    {
+        internal int CatalogueReads;
+        internal int GuardedDispatches;
+        public Task<bool> IsAvailableAsync(CancellationToken token) => inner.IsAvailableAsync(token);
+        public Task<IReadOnlyList<ModelDescriptor>> GetModelsAsync(CancellationToken token)
+        {
+            Interlocked.Increment(ref CatalogueReads);
+            return inner.GetModelsAsync(token);
+        }
+        public async IAsyncEnumerable<string> StreamChatAsync(OllamaChatRequest request, [EnumeratorCancellation] CancellationToken token)
+        {
+            OriginalPrivateContextDispatch.ValidateProviderRoute(request.Options, provider);
+            await OriginalPrivateContextDispatch.ValidateProviderAsync(request.Options, provider, token);
+            Interlocked.Increment(ref GuardedDispatches);
+            await foreach (var value in inner.StreamChatAsync(request, token)) yield return value;
+        }
+        public Task<string> CompleteAsync(OllamaChatRequest request, CancellationToken token) =>
+            throw new InvalidOperationException("The scoped composer fixture permits no auxiliary model request.");
+        public Task<OllamaToolResponse> ChatWithToolsAsync(OllamaToolRequest request, CancellationToken token) =>
+            throw new InvalidOperationException("The scoped composer fixture permits no tool request.");
+    }
+
     private static TaskRunOriginalInitialChatObservationLease NativeComposerIssuedLease(NewChatPage page)
     {
         var presentation = typeof(NewChatPage).GetField("_currentOriginalInitialTaskPresentation", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page)!;
@@ -913,13 +1235,14 @@ public sealed partial class ChatCloudPermissionCallerTests
     }
     private static NewChatPage CreateNativeComposerPage(Rig rig, string directory, NativeComposerDraftStore drafts,
         IConversationSafetyService? safety = null, IConversationRepository? conversationWrites = null,
-        bool enableFreshChatTemporaryLifecycle = false)
+        bool enableFreshChatTemporaryLifecycle = false, IOllamaClient? modelClient = null,
+        ChatSessionService? sessions = null, UserPreferencesService? preferences = null)
     {
         var paths = NativeComposerProxy<IAppPaths>((name, _) => name == "get_DataDirectory" ? directory : Path.Combine(directory, name));
         var local = new GenUiLocalActionRegistry(); var instances = new GenUiInstanceStore();
-        return new(new HavenEventBus(), conversationWrites ?? rig.Conversations, rig.Client, rig.Service, safety ?? new Safety(),
+        return new(new HavenEventBus(), conversationWrites ?? rig.Conversations, modelClient ?? rig.Client, sessions ?? rig.Service, safety ?? new Safety(),
             NativeComposerProxy<IConversationVersioningService>((name, _) => throw new InvalidOperationException("Unexpected versioning: " + name)),
-            new UserPreferencesService(paths),
+            preferences ?? new UserPreferencesService(paths),
             new GenerativeUiEventRouter([], new NativeComposerAudit(), instances), instances,
             new CalculatorTemplateRuntime(local, instances), new StructuredFormTemplateRuntime(local, instances),
             new ChoicePromptTemplateRuntime(local), new ChecklistTemplateRuntime(local, instances), new DataGridTemplateRuntime(local),
