@@ -620,6 +620,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         public Func<CancellationToken, Task<IReadOnlyList<ModelDescriptor>>>? ModelDiscovery;
         public bool RunApprovedOwnedFrame;
         public Func<OllamaChatRequest, CancellationToken, Task<bool>>? OrdinaryProviderBody;
+        public Func<OllamaChatRequest, CancellationToken, Task<bool>>? OriginalOrdinaryProviderMove;
         public Task? OriginalDispose;
         public TaskCompletionSource? NextDisposeEntered = null;
         public Task<OllamaToolResponse>? OriginalToolFailure;
@@ -645,7 +646,17 @@ public sealed partial class ChatCloudPermissionCallerTests
         {
             public string Current => "unreachable provider effect";
             public IAsyncEnumerator<string> GetAsyncEnumerator(CancellationToken ignored = default) => this;
-            public ValueTask<bool> MoveNextAsync() => new(MoveOriginalAsync());
+            public ValueTask<bool> MoveNextAsync()
+            {
+                // Expose a genuinely raw source for cancellation provenance negatives;
+                // an async helper would turn a faulted OCE into a canceled wrapper.
+                if (request.ExecutionContext is null && owner.OriginalOrdinaryProviderMove is { } original)
+                {
+                    owner.Dispatches++;
+                    return new(original(request, token));
+                }
+                return new(MoveOriginalAsync());
+            }
             private async Task<bool> MoveOriginalAsync()
             {
                 if (request.ExecutionContext is null && owner.OrdinaryProviderBody is { } ordinary)

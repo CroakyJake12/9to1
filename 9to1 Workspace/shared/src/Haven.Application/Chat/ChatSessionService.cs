@@ -322,7 +322,9 @@ public sealed partial class ChatSessionService(
     /// <summary>Runs the same committed-input ordinary Chat send through the exact
     /// original ordinary invocation. The caller supplies the owning synchronous
     /// callback scope; the returned stream retains the producer's sources through
-    /// iterator disposal and joins them before it settles.</summary>
+    /// iterator disposal and joins them before it settles. An explicit prepared branch
+    /// and its existing input use the same branch-bound producer without admitting a
+    /// duplicate user message or invoking the new-input commit callback.</summary>
     public IAsyncEnumerable<ChatStreamEvent> SendWithCommittedInputFromOriginalAsync(
         Action<Action> originalSynchronousScope,
         Conversation conversation,
@@ -349,19 +351,17 @@ public sealed partial class ChatSessionService(
         ComputerUseRequest? computerUseRequest = null,
         ProviderExecutionContext? executionContext = null,
         TaskRunExecutionIntent taskExecutionIntent = TaskRunExecutionIntent.OrdinaryConversation,
-        Func<ChatMessage, CancellationToken, Task>? userInputCommitted = null)
+        Func<ChatMessage, CancellationToken, Task>? userInputCommitted = null,
+        Guid? expectedBranchId = null,
+        ChatMessage? existingUserInput = null)
     {
         ArgumentNullException.ThrowIfNull(originalSynchronousScope);
         if (taskExecutionIntent != TaskRunExecutionIntent.OrdinaryConversation || executionContext is not null)
             throw new InvalidOperationException("The original ordinary Chat producer cannot issue a canonical task invocation.");
-        if (conversation.SpaceId is null)
-            return CreateOriginalSend(conversation, prompt, model, effort, capabilities, agentName,
-                agentInstructions, duoMode, workspaceRoot, projectContext, projectInstructions, images,
-                cancellationToken, prompts, registeredContext, generationOptions, filePermission,
-                commandPermission, browserPermission, explicitCapabilities, availableCapabilities,
-                computerUseRequest, executionContext, taskExecutionIntent, null,
-                userInputCommitted: userInputCommitted);
-        if (generationOptions?.RequestedRoutingConstraints is null)
+        // Plain native chats need the SAME source ledger as Space chats: a canceled
+        // outer iterator alone cannot distinguish an acknowledged user stop from a
+        // faulted provider, an uncommitted writer or failed cleanup.
+        if (conversation.SpaceId is not null && generationOptions?.RequestedRoutingConstraints is null)
             throw new InvalidOperationException("This original source requires explicit constrained routing before provider discovery.");
 
         var original = new ChatOrdinaryOriginalInvocation(this, cancellationToken, originalSynchronousScope);
@@ -370,33 +370,72 @@ public sealed partial class ChatSessionService(
             projectInstructions, images, cancellationToken, prompts, registeredContext, generationOptions,
             filePermission, commandPermission, browserPermission, explicitCapabilities, availableCapabilities,
             computerUseRequest, executionContext, taskExecutionIntent, null, original,
+            expectedBranchId: expectedBranchId, existingUserInput: existingUserInput,
             userInputCommitted: userInputCommitted));
-        return ConsumeAndJoinOrdinaryOriginalAsync(original, cancellationToken);
+        return ConsumeAndJoinOrdinaryOriginalAsync(original);
     }
 
     private static async IAsyncEnumerable<ChatStreamEvent> ConsumeAndJoinOrdinaryOriginalAsync(
-        ChatOrdinaryOriginalInvocation original,
-        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+        ChatOrdinaryOriginalInvocation original)
     {
-        var iterator = original.ConsumeOriginal().GetAsyncEnumerator(cancellationToken);
+        IAsyncEnumerator<ChatStreamEvent>? iterator = null;
+        Task<bool>? failedMove = null;
+        Exception? bodyFailure = null;
         try
         {
-            while (await iterator.MoveNextAsync().ConfigureAwait(false))
+            // The issuer already owns the exact business token (including the page
+            // lifetime). Do not let an outer iterator merge it into a different token.
+            try { iterator = original.ConsumeOriginal().GetAsyncEnumerator(); }
+            catch (Exception failure) { bodyFailure = failure; }
+            while (iterator is not null && bodyFailure is null)
+            {
+                bool hasNext;
+                try
+                {
+                    // Retain the SAME raw body Task, not an async wrapper whose builder
+                    // could translate a faulted OCE into apparently canceled work.
+                    failedMove = iterator.MoveNextAsync().AsTask();
+                    hasNext = await failedMove.ConfigureAwait(false);
+                }
+                catch (Exception failure) { bodyFailure = failure; break; }
+                failedMove = null;
+                if (!hasNext) break;
                 yield return iterator.Current;
+            }
         }
         finally
         {
+            // The owning scope may fail after acquiring the actual iterator or Move.
+            // Recover only the issuer's SAME receipt; never reacquire the stream.
+            iterator ??= original.OriginalBodyIterator as IAsyncEnumerator<ChatStreamEvent>;
             await DisposeAndJoinOrdinaryOriginalAsync(iterator, original).ConfigureAwait(false);
         }
+        // The issuer qualifies cancellation only AFTER every durable write and actual
+        // provider/body/tracker cleanup has settled. Foreign-token/faulted OCEs and
+        // cleanup siblings remain errors; no generic Desktop lifetime rule is relaxed.
+        if (bodyFailure is not null && (failedMove is null ||
+            !original.IsExpectedOriginalBodyCancellation(failedMove, bodyFailure)))
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(bodyFailure).Throw();
     }
 
     private static async Task DisposeAndJoinOrdinaryOriginalAsync(
-        IAsyncEnumerator<ChatStreamEvent> iterator,
+        IAsyncEnumerator<ChatStreamEvent>? iterator,
         ChatOrdinaryOriginalInvocation original)
     {
         var failures = new List<Exception>();
-        try { await iterator.DisposeAsync().ConfigureAwait(false); }
+        // A source scope can throw after admitting a still-running raw Move. Join
+        // every accepted move before disposing its iterator; the source ledger owns
+        // their causes and performs final cancellation qualification below.
+        try
+        {
+            foreach (var actual in original.ReadOriginalBodyMoves())
+                try { await actual.ConfigureAwait(false); }
+                catch { /* The SAME raw cause remains in the issuer's ledger. */ }
+        }
         catch (Exception failure) { failures.Add(failure); }
+        if (iterator is not null)
+            try { await iterator.DisposeAsync().ConfigureAwait(false); }
+            catch (Exception failure) { failures.Add(failure); }
         try { await original.JoinOriginalSourcesAsync().ConfigureAwait(false); }
         catch (Exception failure) { failures.Add(failure); }
         if (failures.Count != 0)
