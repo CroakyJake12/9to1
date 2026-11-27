@@ -80,7 +80,19 @@
           <Button Content="Open existing extension source" Action="dev.start.open" IsEnabled="{Binding StartCanNavigate}" HorizontalAlignment="Left" />
         </Container>
         <Container Type="Grid" ColumnSizes="{Binding StartSetupColumns}" RowSizes="{Binding StartSetupRows}" CellGap="24" IsVisible="{Binding StartShowsFolder}">
-          <Container id="dev-landing-manual-section" Type="Vertical Stack" CellGap="12" Background="{Resource CuiPanelBrush}" CornerRadius="{Resource CuiCardRadius}" Padding="24">
+          <Container id="dev-landing-identity" Type="Vertical Stack" CellGap="12" Background="{Resource CuiPanelBrush}" CornerRadius="{Resource CuiCardRadius}" Padding="24" Row="0" IsVisible="{Binding StartIsNew}">
+            <Text text="Project details" font-size="18" font-weight="750" />
+            <Text text="Project name" font-size="11" foreground="{Resource CuiTextSoftBrush}" />
+            <Input id="dev-project-name" Type="Text" Value="{Binding TemplateProjectName}" PlaceholderText="My new project" AccessibleName="Project name" IsEnabled="{Binding StartInputsEnabled}" />
+            <Text text="Destination folder" font-size="11" foreground="{Resource CuiTextSoftBrush}" />
+            <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
+              <Input id="dev-destination-parent" Type="Text" Value="{Binding TemplateDestinationParent}" PlaceholderText="Location that will contain this project" AccessibleName="Parent destination folder" IsEnabled="{Binding StartInputsEnabled}" />
+              <Button Column="1" Content="Choose" Action="dev.start.browse-folder" id="dev-browse-destination-parent" IsEnabled="{Binding StartCanBrowseFolder}" />
+            </Container>
+            <Text text="This project gets its own new folder inside this location." font-size="11" TextWrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+            <Text id="dev-creation-hint" text="{Binding StartCreationHint}" TextWrapping="Wrap" role="status" accessible-name="Project destination check" font-size="11" />
+          </Container>
+          <Container id="dev-landing-manual-section" Type="Vertical Stack" CellGap="12" Background="{Resource CuiPanelBrush}" CornerRadius="{Resource CuiCardRadius}" Padding="24" IsVisible="{Binding StartIsOpen}">
             <Text text="{Binding StartFolderTitle}" font-size="18" font-weight="750" />
             <Text text="{Binding StartFolderHelp}" text-wrapping="Wrap" accessible-name="Manual project help" foreground="{Resource CuiTextSoftBrush}" font-size="12" />
             <Input id="dev-manual-folder" placeholdertext="Absolute path to an existing project folder" accessible-name="Existing project folder" Type="Text" Value="{Binding ManualFolderPath}" IsEnabled="{Binding StartInputsEnabled}" />
@@ -92,7 +104,7 @@
             <Text text="{Binding RetainedAttempt}" text-wrapping="Wrap" accessible-name="Retained manual setup recovery state" foreground="{Resource CuiTextSoftBrush}" />
           </Container>
           <Container id="dev-landing-template-section" Type="Vertical Stack" CellGap="10" Background="{Resource CuiPanelBrush}" CornerRadius="{Resource CuiCardRadius}" Padding="24" Row="1" IsVisible="{Binding StartIsNew}">
-            <Text text="Template" font-size="18" font-weight="750" />
+            <Text text="Starting point" font-size="18" font-weight="750" />
             <Input id="dev-template-query" Type="Text" Value="{Binding TemplateQuery}" placeholdertext="Filter project templates" accessible-name="Filter project templates" IsEnabled="{Binding StartInputsEnabled}" />
             <Button Content="{Binding StartTemplateFiltersLabel}" Action="dev.start.template-filters" id="dev-template-filters-toggle" HorizontalAlignment="Left" />
             <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding StartTemplateFiltersVisible}">
@@ -124,12 +136,16 @@
           <Container Type="Vertical Stack" id="dev-setup-summary" Column="{Binding StartSummaryColumn}" Row="{Binding StartSummaryRow}" RowSpan="{Binding StartSummaryRowSpan}" CellGap="12" Padding="24" Background="{Resource CuiPanelBrush}" CornerRadius="{Resource CuiCardRadius}" VerticalAlignment="Top" IsVisible="{Binding StartIsNew}">
             <Text Text="Project summary" FontSize="17" FontWeight="750" text-wrapping="Wrap" />
             <Text text="Name" foreground="{Resource CuiTextSoftBrush}" text-wrapping="Wrap" font-size="11" />
-            <Text text="{Binding StartProjectName}" accessible-name="Project name from selected folder" font-weight="600" text-wrapping="Wrap" />
-            <Text Text="Location" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" />
-            <Text Text="{Binding StartDestination}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" text-wrapping="Wrap" />
+            <Text text="{Binding StartProjectName}" accessible-name="Project name" font-weight="600" text-wrapping="Wrap" />
+            <Text Text="Destination" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" />
+            <Text Text="{Binding StartDestination}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" text-wrapping="Wrap" accessible-name="Final project folder preview" />
             <Text text="{Binding SelectedTemplate}" accessible-name="Selected project template" text-wrapping="Wrap" />
             <Text Text="{Binding StartTemplateReadiness}" TextWrapping="Wrap" FontSize="11" text-wrapping="Wrap" />
-            <Button id="dev-review-project-template" action="dev.templates.review" content="Review template files" Interactive="{Binding CanReviewTemplate}" HorizontalAlignment="Left" />
+            <Container Type="Wrap" CellGap="8" Margin="0 6 0 0">
+              <Button id="dev-check-and-create" action="dev.templates.check-and-create" content="Check and create" Interactive="{Binding CanCheckAndCreate}" AccentRole="Primary" />
+              <Button id="dev-review-project-template" action="dev.templates.review" content="Review template files" Interactive="{Binding CanReviewTemplate}" />
+              <Button id="dev-create-template-project" action="dev.templates.create" content="Create reviewed project" Interactive="{Binding CanCreateTemplateProject}" AccentRole="Primary" />
+            </Container>
             <Text text="{Binding TemplateReviewStatus}" text-wrapping="Wrap" accessible-name="Template review status" />
             <Repeat id="dev-template-review-files" Source="{Binding TemplateFiles}" As="item" Key="{Binding item.RelativePath}">
               <Container id="dev-template-review-file" Type="Vertical Stack" CellGap="2" Margin="0 4">
@@ -138,14 +154,13 @@
                 <Text id="dev-template-review-source" text="{Binding item.Text}" font-family="monospace" text-wrapping="Wrap" />
               </Container>
             </Repeat>
-            <Button id="dev-create-template-project" action="dev.templates.create" content="Create reviewed project" Interactive="{Binding CanCreateTemplateProject}" HorizontalAlignment="Left" AccentRole="Primary" />
             <Text text="{Binding TemplateProjectStatus}" text-wrapping="Wrap" accessible-name="Template project creation status" />
           </Container>
         </Container>
         <Container id="dev-setup-draft-form" Type="Vertical Stack" CellGap="10" Padding="20" Background="{Resource CuiPanelBrush}" CornerRadius="{Resource CuiCardRadius}" IsVisible="{Binding SetupFormVisible}">
           <Text id="dev-setup-draft-heading" Text="Keep your setup choices" FontSize="16" FontWeight="700" />
           <Input id="dev-setup-draft-name" Type="Text" Value="{Binding SetupDraftName}" PlaceholderText="Setup draft name" AccessibleName="Setup draft name" IsEnabled="{Binding StartInputsEnabled}" MinWidth="0" MinHeight="40" />
-          <Text id="dev-setup-draft-name-help" Text="This names the saved setup. The destination folder still determines the actual project name." TextWrapping="Wrap" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" />
+          <Text id="dev-setup-draft-name-help" Text="Saved with your project name by default. Rename the setup only if you want a different label; saving creates no folders and starts no agent." TextWrapping="Wrap" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" />
           <Container id="dev-setup-draft-actions" Type="Wrap" CellGap="8">
             <Button id="dev-save-setup-draft" Content="{Binding SetupSaveLabel}" Action="dev.setup.save" IsEnabled="{Binding CanSaveSetupDraft}" AccentRole="Primary" />
             <Button id="dev-another-setup-draft" Content="Start another draft" Action="dev.setup.new" IsEnabled="{Binding CanStartAnotherDraft}" />

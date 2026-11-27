@@ -33,7 +33,7 @@ public sealed partial class DeveloperSavedProjectsPage
             "StartTitle" => _startSurface switch { "new" => _editingSetupDraftWasSaved ? "Setup draft" : "New project", "open" => "Open project", "extension" => "9to1 Extension", _ => "Build" },
             "StartDescription" => _startSurface switch
             {
-                "new" => "Choose an installed template and an empty project folder.",
+                "new" => "Name the project, choose the location that will contain it and pick a starting point.",
                 "open" => "Choose a saved project or open existing source.",
                 "extension" => "An extension needs a target SDK and a compatible contribution.",
                 _ => "Your development workspace"
@@ -80,10 +80,16 @@ public sealed partial class DeveloperSavedProjectsPage
             "StartCanBrowseFolder" => IsStartActionAvailable("dev.start.browse-folder"),
             "StartFolderTitle" => editing ? "Project details" : "Open an existing folder or repository",
             "StartFolderHelp" => editing
-                ? "Use an existing empty folder. Its name becomes the project name; reviewed files are created only after approval."
+                ? "Enter a project name and choose the location that will contain it."
                 : "Keep the existing source, layout and project identity. No model is needed to open it.",
-            "StartProjectName" => _templateProjectName.Length > 0 ? _templateProjectName : "Choose a project folder",
-            "StartDestination" => _manualFolderPath.Length > 0 ? _manualFolderPath : "No folder selected",
+            "StartProjectName" => _templateProjectName.Length > 0 ? _templateProjectName : "Your new project",
+            "TemplateProjectName" => _templateProjectName,
+            "TemplateDestinationParent" => _templateDestinationParent,
+            "StartCreationHint" => ValidateCreationTarget().Message,
+            "CanCheckAndCreate" => IsActionAvailable("dev.templates.review") == true,
+            "StartDestination" => _manualFolderPath.Length > 0
+                ? (Path.IsPathFullyQualified(_manualFolderPath) ? _manualFolderPath : "(choose a destination location) \u00b7 " + _manualFolderPath)
+                : "No destination selected",
             "StartTemplateReadiness" => StartTemplateReadiness(),
             "StartTemplateColumns" => StartTemplateColumnCount() == 2 ? "1fr 1fr" : "1fr",
             "StartTemplateRows" => string.Join(" ", Enumerable.Repeat("Auto", Math.Max(1,
@@ -214,10 +220,21 @@ public sealed partial class DeveloperSavedProjectsPage
                 await PublishAsync(original, () =>
                 {
                     if (_templateInputRevision != revision) return; // Preserve a newer typed destination.
-                    _manualFolderPath = path;
-                    _templateProjectName = Path.GetFileName(Path.TrimEndingDirectorySeparator(path));
-                    _templateInputRevision = checked(_templateInputRevision + 1); _templateReview = null;
-                    _templateReviewStatus = "The folder changed. Review the exact template files again before creation.";
+                    if (_startSurface == "new")
+                    {
+                        // A285: on New project the picker selects the PARENT location; the
+                        // project's own child folder is derived from the entered name.
+                        _templateDestinationParent = path;
+                        DeriveTemplateFolderLocked();
+                    }
+                    else
+                    {
+                        _manualFolderPath = path;
+                        _templateProjectName = Path.GetFileName(Path.TrimEndingDirectorySeparator(path));
+                        _templateDestinationParent = Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(path)) ?? "";
+                        _templateInputRevision = checked(_templateInputRevision + 1); _templateReview = null;
+                        _templateReviewStatus = "The folder changed. Review the exact template files again before creation.";
+                    }
                 });
             }
             finally

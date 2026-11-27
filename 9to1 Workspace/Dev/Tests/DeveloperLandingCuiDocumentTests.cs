@@ -11,11 +11,13 @@ public sealed class DeveloperLandingCuiDocumentTests
         var nodes = Descendants(DeveloperLandingCuiDocument.Load().Components).ToArray();
         string[] expected = ["dev.references.refresh", "dev.references.open-space", "dev.references.open-task",
             "dev.references.create-manual-project", "dev.references.previous-projects", "dev.references.next-projects",
-            "dev.templates.select", "dev.templates.review", "dev.templates.create",
+            "dev.setup.drafts", "dev.setup.new", "dev.setup.pin-draft", "dev.setup.pinned", "dev.setup.pin-project",
+            "dev.setup.recent", "dev.setup.resume", "dev.setup.save",
+            "dev.templates.select", "dev.templates.review", "dev.templates.create", "dev.templates.check-and-create",
             "dev.start.projects", "dev.start.projects", "dev.start.projects",
             "dev.start.new", "dev.start.new", "dev.start.new",
             "dev.start.open", "dev.start.open", "dev.start.open", "dev.start.open",
-            "dev.start.extension", "dev.start.browse-folder", "dev.start.template-filters",
+            "dev.start.extension", "dev.start.browse-folder", "dev.start.browse-folder", "dev.start.template-filters",
             "dev.start.diagnostics", "dev.start.details"];
         Assert.Equal(expected.OrderBy(value => value), nodes.SelectMany(node => node.Actions.Values).Select(action => action.Name).OrderBy(value => value));
         var filter = Assert.Single(nodes, node => node.Name == "dev-project-query");
@@ -26,7 +28,7 @@ public sealed class DeveloperLandingCuiDocumentTests
             && property.Value is CuiBindingValue binding && binding.Path == "item.OpenLabel");
         foreach (var (id, availability) in new[] { ("dev-projects-previous", "CanPreviousProjectPage"),
             ("dev-projects-next", "CanNextProjectPage"), ("dev-review-project-template", "CanReviewTemplate"),
-            ("dev-create-template-project", "CanCreateTemplateProject") })
+            ("dev-create-template-project", "CanCreateTemplateProject"), ("dev-check-and-create", "CanCheckAndCreate") })
             Assert.Contains(Assert.Single(nodes, node => node.Name == id).Properties, property => property.Key.Equals("Interactive", StringComparison.OrdinalIgnoreCase)
                 && property.Value is CuiBindingValue binding && binding.Path == availability);
     }
@@ -41,8 +43,11 @@ public sealed class DeveloperLandingCuiDocumentTests
             ("dev-saved-projects-root", "StartColumns"), ("dev-start-sidebar", "StartSidebarVisible"),
             ("dev-start-main", "StartPagePadding"), ("dev-start-cards", "StartCardColumns"),
             ("dev-landing-saved-section", "StartShowsProjects"), ("dev-landing-template-section", "StartIsNew"),
+            ("dev-landing-identity", "StartIsNew"), ("dev-project-name", "TemplateProjectName"),
+            ("dev-destination-parent", "TemplateDestinationParent"), ("dev-creation-hint", "StartCreationHint"),
             ("dev-setup-summary", "StartIsNew"), ("dev-extension-unavailable", "StartIsExtension"),
-            ("dev-create-manual", "StartIsOpen"), ("dev-browse-project-folder", "StartCanBrowseFolder")
+            ("dev-create-manual", "StartIsOpen"), ("dev-browse-project-folder", "StartCanBrowseFolder"),
+            ("dev-browse-destination-parent", "StartCanBrowseFolder")
         })
             Assert.Contains(Assert.Single(nodes, node => node.Name == id).Properties.Values,
                 value => value is CuiBindingValue actual && actual.Path == binding);

@@ -58,6 +58,10 @@ public sealed partial class DeveloperSavedProjectsPage : UserControl, IActivatab
     private int _templateProviderIndex, _templateProjectTypeIndex, _templateLanguageIndex, _templateFrameworkIndex, _templateRuntimeIndex, _templatePlatformIndex,
         _templateSurfaceIndex, _templateOrganisationIndex, _templateReadinessIndex;
     private string _templateProjectName = "";
+    // Atlas A285 asks for a project NAME plus a PARENT destination. The canonical review and
+    // register owners keep receiving the exact final child folder through _manualFolderPath,
+    // which is derived from these two and never needs the user to pre-create it.
+    private string _templateDestinationParent = "";
     private string _templateReviewStatus = "Select a provider template and review its exact files before creating a project.";
     private string _templateProjectStatus = "";
     private string _selectedTemplateId = "";
@@ -388,7 +392,8 @@ public sealed partial class DeveloperSavedProjectsPage : UserControl, IActivatab
             "TemplateReadinessIndex" => 3,
             _ => 0
         };
-        var stringInput = value is string && (path is "ManualFolderPath" or "ProjectQuery" or "TemplateQuery");
+        var stringInput = value is string && (path is "ManualFolderPath" or "ProjectQuery" or "TemplateQuery"
+            or "TemplateProjectName" or "TemplateDestinationParent");
         var filterInput = value is int selectedIndex && indexCount > 0 && selectedIndex >= 0 && selectedIndex < indexCount;
         if (!stringInput && !filterInput) return false;
         var text = value as string;
@@ -403,9 +408,31 @@ public sealed partial class DeveloperSavedProjectsPage : UserControl, IActivatab
                 {
                     _manualFolderPath = text!;
                     _templateProjectName = Path.GetFileName(Path.TrimEndingDirectorySeparator(text!));
+                    _templateDestinationParent = Path.GetDirectoryName(
+                        Path.TrimEndingDirectorySeparator(text!)) ?? "";
                     _templateInputRevision = checked(_templateInputRevision + 1);
                     _templateReview = null;
                     _templateReviewStatus = "The target folder changed. Review the exact files for this folder again.";
+                }
+                else if (path == "TemplateProjectName")
+                {
+                    var name = (text ?? string.Empty).Trim();
+                    if (name.Length > 0 && !SafeProjectName(name))
+                    {
+                        _templateProjectStatus = "Use a single folder-style project name (no path characters, up to 120 characters).";
+                    }
+                    else
+                    {
+                        _templateProjectName = name;
+                        if (_setupDraftName.Length == 0 && _editingSetupDraftId is null) _setupDraftName = name;
+                        DeriveTemplateFolderLocked();
+                        _templateProjectStatus = "";
+                    }
+                }
+                else if (path == "TemplateDestinationParent")
+                {
+                    _templateDestinationParent = text ?? string.Empty;
+                    DeriveTemplateFolderLocked();
                 }
                 else if (path == "ProjectQuery") { _projectQuery = text!; _projectPage = 0; }
                 else if (path == "TemplateQuery")
@@ -504,9 +531,15 @@ public sealed partial class DeveloperSavedProjectsPage : UserControl, IActivatab
                 "dev.references.create-manual-project" => _metadataAvailable && _manualMetadataAvailable && !_manualBusy && _createManualProject is not null && _openExistingManual is not null && !string.IsNullOrWhiteSpace(_manualFolderPath),
                 "dev.templates.select" => _metadataAvailable && _templateCatalogAvailable && FilteredTemplateItems().Length > 0 && !_templateBusy,
                 "dev.templates.review" => _metadataAvailable && _templateCatalogAvailable && !_templateBusy &&
-                    _templateOptions.Any(option => IsSelectedTemplate(option) && CurrentTemplateQuery().Matches(option)) && SafeProjectName(_templateProjectName),
+                    _templateOptions.Any(option => IsSelectedTemplate(option) && CurrentTemplateQuery().Matches(option)) && SafeProjectName(_templateProjectName) &&
+                    ValidateCreationTarget().Valid,
+                "dev.templates.check-and-create" => _metadataAvailable && _templateCatalogAvailable && !_templateBusy &&
+                    _registerTemplateProject is not null && _openTemplateProject is not null &&
+                    _templateOptions.Any(option => IsSelectedTemplate(option) && CurrentTemplateQuery().Matches(option)) &&
+                    SafeProjectName(_templateProjectName) && ValidateCreationTarget().Valid,
                 "dev.templates.create" => _metadataAvailable && _templateCatalogAvailable && !_templateBusy && _registerTemplateProject is not null &&
-                    _openTemplateProject is not null && !string.IsNullOrWhiteSpace(_manualFolderPath) && Path.IsPathFullyQualified(_manualFolderPath) && IsCurrentTemplateReview(),
+                    _openTemplateProject is not null && !string.IsNullOrWhiteSpace(_manualFolderPath) && Path.IsPathFullyQualified(_manualFolderPath) && IsCurrentTemplateReview() &&
+                    ValidateCreationTarget().Valid,
                 _ => false
             };
         }
@@ -832,6 +865,56 @@ public sealed partial class DeveloperSavedProjectsPage : UserControl, IActivatab
         name == name.Trim() && name is not ("." or "..") && !name.EndsWith('.') && !name.EndsWith(' ') &&
         name.All(character => !char.IsControl(character) && character is not ('/' or '\\' or ':' or '<' or '>' or '"' or '|' or '?' or '*' or '\0'));
 
+    /// <summary>Recomputes the canonical final child folder from the entered name and chosen
+    /// parent. A changed identity invalidates the current file review exactly like the legacy
+    /// folder editor did; nothing is created on disk until Check and create runs.</summary>
+    private void DeriveTemplateFolderLocked()
+    {
+        if (!SafeProjectName(_templateProjectName)) return;
+        var parent = Path.TrimEndingDirectorySeparator(_templateDestinationParent ?? string.Empty);
+        string folder;
+        if (parent.Length > 0 && Path.IsPathFullyQualified(parent)) folder = Path.Combine(parent, _templateProjectName);
+        else if (_manualFolderPath.Length > 0 && Path.IsPathFullyQualified(_manualFolderPath))
+            folder = Path.Combine(Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(_manualFolderPath)) ?? string.Empty, _templateProjectName);
+        else return;
+        if (StringComparer.Ordinal.Equals(_manualFolderPath, folder)) return;
+        _manualFolderPath = folder;
+        _templateInputRevision = checked(_templateInputRevision + 1);
+        _templateReview = null;
+        _templateReviewStatus = "The target folder changed. Review the exact files for this folder again.";
+    }
+
+    /// <summary>Explains, beside the controls, why Check and create is not available yet.
+    /// An empty existing child folder remains creatable (the canonical owner verifies it again);
+    /// a populated child, a missing parent or unsafe characters refuse with the input retained.</summary>
+    private (bool Valid, string Message) ValidateCreationTarget()
+    {
+        if (_templateProjectName.Length == 0 && _manualFolderPath.Length == 0) return (false, "Enter a project name and choose the location that will contain it.");
+        if (!SafeProjectName(_templateProjectName)) return (false, "Use a single folder-style project name (no path characters, up to 120 characters).");
+        var full = Path.TrimEndingDirectorySeparator(_manualFolderPath);
+        if (full.Length == 0 || !Path.IsPathFullyQualified(full)) return (false, "Choose the destination location that will contain this project.");
+        var parent = Path.GetDirectoryName(full);
+        if (string.IsNullOrEmpty(parent)) return (false, "Choose the destination location that will contain this project.");
+        try
+        {
+            if (!Directory.Exists(parent)) return (false, "The destination location does not exist. Choose an existing folder.");
+            if (Directory.Exists(full) && Directory.EnumerateFileSystemEntries(full).Any())
+                return (false, "That location already contains a folder called \u201c" + _templateProjectName + "\u201d. Choose another name or destination.");
+            return (true, "");
+        }
+        catch (Exception error) { return (false, "The destination cannot be used: " + error.Message); }
+    }
+
+    /// <summary>Atlas A285 primary progression: one deliberate intent runs the existing file
+    /// review and then the existing single-creation owner. If any input changes between the two,
+    /// the review is no longer current and creation refuses with the explanation on status.</summary>
+    private async Task RunCheckAndCreateAsync(CancellationToken token)
+    {
+        await DispatchTemplateActionAsync("dev.templates.review", null, token).ConfigureAwait(false);
+        if (!IsCurrentTemplateReview()) return;
+        await DispatchTemplateActionAsync("dev.templates.create", null, token).ConfigureAwait(false);
+    }
+
     private ValueTask DispatchTemplateActionAsync(string command, object? parameter, CancellationToken cancellationToken)
     {
         if (command == "dev.templates.select")
@@ -859,6 +942,9 @@ public sealed partial class DeveloperSavedProjectsPage : UserControl, IActivatab
             });
             return ValueTask.CompletedTask;
         }
+
+        if (command == "dev.templates.check-and-create")
+            return new(RunCheckAndCreateAsync(cancellationToken));
 
         if (command is not ("dev.templates.review" or "dev.templates.create"))
             throw new InvalidOperationException("Unknown project-template action.");
@@ -938,6 +1024,11 @@ public sealed partial class DeveloperSavedProjectsPage : UserControl, IActivatab
                     !StringComparer.Ordinal.Equals(reviewed.FolderPath, folderPath) ||
                     !StringComparer.Ordinal.Equals(reviewed.ProjectName, projectName))
                     throw new InvalidOperationException("The template review changed before setup. Review the exact files again.");
+                // A285: the named child folder is created by this action inside the chosen
+                // parent; the user never pre-creates it. If setup later fails, any partially
+                // created empty folder stays inspectable and a retry reuses it (validation
+                // accepts an empty child), because error-path code must never delete folders.
+                if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
                 var reference = await original.AwaitAsync(InvokeOriginalSource(() =>
                     _registerTemplateProject!(folderPath, reviewed.Materialization, token))).ConfigureAwait(false);
                 await original.AwaitAsync(InvokeOriginalSource(() =>

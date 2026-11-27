@@ -280,7 +280,8 @@ public sealed partial class CanonicalCompatibleTaskContextCompositionTests
                     await page.DispatchAsync("dev.start.new", null, token); StartLayout(window);
                     Assert.True(StartControl<Control>(page, "dev-setup-summary").IsEffectivelyVisible);
                     Assert.False(StartControl<Control>(page, "dev-landing-saved-section").IsEffectivelyVisible);
-                    AssertStartFits(page, "dev-manual-folder", "dev-template-query", "dev-setup-summary");
+                    // A285: the New surface now leads with project name + parent destination.
+                    AssertStartFits(page, "dev-project-name", "dev-destination-parent", "dev-template-query", "dev-setup-summary");
                     CaptureStartFrame(window, $"build-new-project-{themeName}-{size.Width:0}x{size.Height:0}");
 
                     await page.DispatchAsync("dev.start.open", null, token); StartLayout(window);
@@ -336,6 +337,69 @@ public sealed partial class CanonicalCompatibleTaskContextCompositionTests
         Directory.CreateDirectory(directory); using var frame = window.CaptureRenderedFrame(); Assert.NotNull(frame);
         frame.Save(Path.Combine(directory, name + ".png"));
     }
+
+    /// <summary>Atlas A285 contract: the user enters a project NAME and a PARENT destination;
+    /// Check and create derives the child, creates it once through the canonical register owner
+    /// and opens it. An occupied child refuses with the inputs retained and nothing created.</summary>
+    [AvaloniaFact]
+    public Task Atlas_A285_project_name_and_parent_destination_create_one_child_folder_and_open_it() => Run(async rig =>
+    {
+        var token = TestContext.Current.CancellationToken;
+        var landing = BuildLanding(rig); var store = new NavigationMetadataStore([]);
+        var provider = new NavigationTemplateProvider("installed.cui", new("page", "CUI page", "cui",
+            ["CUI"], [], [], ["Build"], [], "installed.cui", true));
+        string? registeredPath = null; var createCalls = 0; var openCalls = 0;
+        using var connection = CancellationTokenSource.CreateLinkedTokenSource(token);
+        using var windowLifetime = CancellationTokenSource.CreateLinkedTokenSource(token);
+        var reference = new DeveloperProjectReference(Guid.NewGuid(), 1, Guid.NewGuid(), 1, Guid.NewGuid());
+        var page = new DeveloperSavedProjectsPage(landing.Catalog, landing.Spaces, ReadyReadiness.Instance, () => { },
+            _ => Task.CompletedTask, (_, _) => Task.CompletedTask,
+            store, _ => Task.CompletedTask, connection.Token, windowLifetime.Token, _ => { },
+            createManualProject: (_, _) => throw new InvalidOperationException("A285 must not use the manual create path."),
+            templateCatalog: new([provider]), templateMaterializer: new([provider]),
+            registerTemplateProject: (path, _, _) =>
+            {
+                createCalls++; registeredPath = path;
+                Assert.True(Directory.Exists(path), "Check and create must materialise the named child inside the chosen parent.");
+                return Task.FromResult(reference);
+            },
+            openTemplateProject: (_, _) => { openCalls++; return Task.CompletedTask; });
+        var window = new Window { Width = 1440, Height = 900, Content = page };
+        try
+        {
+            window.Show(); await page.ActivateAsync(token); StartLayout(window);
+            await PressStartButtonAsync(page, window, "dev-start-new", "StartIsNew", token);
+            Assert.True(page.TrySetValue("TemplateProjectName", "Revision dashboard"));
+            Assert.True(page.TrySetValue("TemplateDestinationParent", rig.Root));
+            Assert.True(page.TryGetValue("ManualFolderPath", out var derived));
+            Assert.Equal(Path.Combine(rig.Root, "Revision dashboard"), derived);
+            Assert.True(page.TryGetValue("StartCreationHint", out var readyHint));
+            Assert.Equal("", Assert.IsType<string>(readyHint));
+            Assert.True(page.TryGetValue("Templates", out var templatesObject));
+            var template = Assert.Single(Assert.IsAssignableFrom<object[]>(templatesObject));
+            Assert.True(((ICuiRepeatItemBindingContext)page).TryGetItemValue(template, "SelectionKey", out var key));
+            await page.DispatchAsync("dev.templates.select", key, token);
+            Assert.True(page.TryGetValue("CanCheckAndCreate", out var armedBefore));
+            Assert.True(Assert.IsType<bool>(armedBefore));
+            await page.DispatchAsync("dev.templates.check-and-create", null, token);
+            Assert.Equal(1, createCalls); Assert.Equal(1, openCalls);
+            Assert.Equal(Path.Combine(rig.Root, "Revision dashboard"), registeredPath);
+
+            // An occupied derived child refuses before any create, keeping every choice intact.
+            var occupied = Path.Combine(rig.Root, "Occupied name");
+            Directory.CreateDirectory(occupied); File.WriteAllText(Path.Combine(occupied, "keep.txt"), "x");
+            Assert.True(page.TrySetValue("TemplateProjectName", "Occupied name"));
+            Assert.False(page.IsActionAvailable("dev.templates.review") == true);
+            Assert.True(page.TryGetValue("CanCheckAndCreate", out var armedAfter));
+            Assert.False(Assert.IsType<bool>(armedAfter));
+            Assert.True(page.TryGetValue("StartCreationHint", out var hint));
+            Assert.Contains("already contains a folder", Assert.IsType<string>(hint));
+            Assert.Equal(1, createCalls);
+            Assert.True(page.TryGetValue("ManualFolderPath", out var retainedOccupied));
+            Assert.Equal(occupied, retainedOccupied);
+        }
+        finally { await page.CloseAndDrainAsync(); }
+    });
 
     private sealed class NavigationTemplateProvider(string providerId, DeveloperProjectTemplate template,
         IReadOnlyList<DeveloperToolchainReadiness>? readiness = null) : IDeveloperProjectTemplateContentProvider
