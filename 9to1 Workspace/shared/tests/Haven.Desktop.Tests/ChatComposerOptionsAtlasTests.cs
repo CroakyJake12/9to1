@@ -505,7 +505,8 @@ public sealed class ChatComposerOptionsAtlasTests
                 try { await original.WaitAsync(TimeSpan.FromSeconds(15), _token); }
                 catch (Exception error)
                 {
-                    if (Leaves(error).Any(cause => !ExpectedCloseCauses.Any(expected => ReferenceEquals(cause, expected))))
+                    var causes = Leaves(error).ToArray();
+                    if (causes.Length == 0 || causes.Any(cause => !ExpectedCloseCauses.Any(expected => ReferenceEquals(cause, expected))))
                         failures.Add(error);
                 }
             }
