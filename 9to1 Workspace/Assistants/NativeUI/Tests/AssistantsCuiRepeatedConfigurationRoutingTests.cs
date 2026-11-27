@@ -535,8 +535,8 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
                 var composer = Assert.Single(conversation.GetVisualDescendants().OfType<CuiContainerControl>(), value => value.Name == "assistant-message-composer");
                 var secondaryActions = Assert.Single(conversation.GetVisualDescendants().OfType<CuiContainerControl>(), value => value.Name == "assistant-composer-secondary-actions");
                 var identityBar = Assert.Single(root.GetVisualDescendants().OfType<CuiContainerControl>(), value => value.Name == "assistant-identity-bar");
-                Assert.True(scroll.Viewport.Height > 0 && double.IsFinite(scroll.Viewport.Height),
-                    $"Task controls, a long draft and attachment chips must leave a positive transcript viewport. " +
+                Assert.True(scroll.Viewport.Height >= 64 && double.IsFinite(scroll.Viewport.Height),
+                    $"Task controls, a long draft and attachment chips must leave at least 64px of transcript viewport. " +
                     $"Viewport={scroll.Viewport}; transcript={transcript.Bounds}; footer={footer.Bounds}; " +
                     $"composer={composer.Bounds}; secondary actions={secondaryActions.Bounds}; identity bar={identityBar.Bounds}; conversation={conversation.Bounds}.");
                 Assert.True(scroll.Extent.Height > scroll.Viewport.Height);
