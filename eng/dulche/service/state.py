@@ -55,6 +55,10 @@ class State:
                 attempt INTEGER NOT NULL, kind TEXT NOT NULL, data TEXT NOT NULL, ts REAL NOT NULL);
             CREATE INDEX IF NOT EXISTS events_run ON events(run,attempt,seq);
             CREATE INDEX IF NOT EXISTS runs_state ON runs(state,created);
+            -- Status discovery needs only the newest run IDs. Without this
+            -- covering index SQLite scans/sorts archived request bodies, which
+            -- can total gigabytes, while holding the controller's state lock.
+            CREATE INDEX IF NOT EXISTS runs_created ON runs(created DESC,id);
         """)
         self.directory.joinpath("service.sqlite3").chmod(0o600)
 
