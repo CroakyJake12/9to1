@@ -163,11 +163,11 @@
           </Container>
         </Container>
         <Text Text="{Binding ReplyStopStatus}" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" AccessibleName="Reply Stop status" Active="{Binding HasReplyStopStatus}" />
-        <Container Orientation="Horizontal" AccessibleName="Assistant actions" Type="Wrap" CellGap="6">
-          <Button id="assistant-save-draft" action="assistants.draft.save" Interactive="{Binding CanSaveDraft}" Padding="8,6" Chromeless="True" FontSize="12" FontWeight="SemiBold">Save draft</Button>
-          <Button id="assistant-new-task" action="assistants.task.new" Interactive="{Binding CanNewConversation}" Padding="8,6" Chromeless="True" FontSize="12" FontWeight="SemiBold">New task</Button>
-          <Button id="conversation-refresh-models" action="assistants.model.refresh" Interactive="{Binding CanRefreshConversationModels}" Padding="8,6" Chromeless="True" FontSize="12" FontWeight="SemiBold">Refresh available models</Button>
-          <Button id="conversation-model-settings" action="assistants.configuration.open" Interactive="{Binding CanConfigure}" Padding="8,6" Chromeless="True" FontSize="12" FontWeight="SemiBold">Model preferences</Button>
+        <Container id="assistant-composer-secondary-actions" AccessibleName="Assistant actions" Type="Grid" ColumnSizes="1fr 1fr" RowSizes="Auto Auto" CellGap="6">
+          <Button id="assistant-save-draft" Row="0" Column="0" action="assistants.draft.save" Interactive="{Binding CanSaveDraft}" Padding="8,6" Chromeless="True" FontSize="12" FontWeight="SemiBold" HorizontalContentAlignment="Left">Save draft</Button>
+          <Button id="assistant-new-task" Row="0" Column="1" action="assistants.task.new" Interactive="{Binding CanNewConversation}" Padding="8,6" Chromeless="True" FontSize="12" FontWeight="SemiBold" HorizontalContentAlignment="Left">New task</Button>
+          <Button id="conversation-refresh-models" Row="1" Column="0" action="assistants.model.refresh" Interactive="{Binding CanRefreshConversationModels}" AccessibleName="Refresh available models" Tooltip="Refresh available models" Padding="8,6" Chromeless="True" FontSize="12" FontWeight="SemiBold" HorizontalContentAlignment="Left">Refresh models</Button>
+          <Button id="conversation-model-settings" Row="1" Column="1" action="assistants.configuration.open" Interactive="{Binding CanConfigure}" AccessibleName="Model preferences" Tooltip="Model preferences" Padding="8,6" Chromeless="True" FontSize="12" FontWeight="SemiBold" HorizontalContentAlignment="Left">Model preferences</Button>
         </Container>
       </Container>
     </Container>

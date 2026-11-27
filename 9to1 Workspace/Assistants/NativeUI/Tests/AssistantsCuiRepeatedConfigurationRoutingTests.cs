@@ -532,14 +532,19 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
                 var editorScroll = Assert.Single(input.GetVisualDescendants().OfType<ScrollViewer>());
                 Assert.True(editorScroll.Viewport.Height > 0 && editorScroll.Extent.Height > editorScroll.Viewport.Height,
                     "The retained multiline editor must scroll its long draft within the composer cap.");
+                var composer = Assert.Single(conversation.GetVisualDescendants().OfType<CuiContainerControl>(), value => value.Name == "assistant-message-composer");
+                var secondaryActions = Assert.Single(conversation.GetVisualDescendants().OfType<CuiContainerControl>(), value => value.Name == "assistant-composer-secondary-actions");
+                var identityBar = Assert.Single(root.GetVisualDescendants().OfType<CuiContainerControl>(), value => value.Name == "assistant-identity-bar");
                 Assert.True(scroll.Viewport.Height > 0 && double.IsFinite(scroll.Viewport.Height),
-                    "Task controls, a long draft and attachment chips must leave a positive transcript viewport.");
+                    $"Task controls, a long draft and attachment chips must leave a positive transcript viewport. " +
+                    $"Viewport={scroll.Viewport}; transcript={transcript.Bounds}; footer={footer.Bounds}; " +
+                    $"composer={composer.Bounds}; secondary actions={secondaryActions.Bounds}; identity bar={identityBar.Bounds}; conversation={conversation.Bounds}.");
                 Assert.True(scroll.Extent.Height > scroll.Viewport.Height);
                 var footerBounds = new Rect(footer.TranslatePoint(default, window)!.Value, footer.Bounds.Size);
                 scroll.ScrollToEnd(); await Layout(); Assert.True(scroll.Offset.Y > 0);
                 Assert.Equal(footerBounds, new Rect(footer.TranslatePoint(default, window)!.Value, footer.Bounds.Size));
                 foreach (var id in new[] { "assistant-start-task", "assistant-steer", "assistant-queue", "assistant-stop",
-                    "assistant-save-draft", "conversation-refresh-models", "conversation-model-settings", "new-conversation" }) InViewport(FindButton(id));
+                    "assistant-save-draft", "assistant-new-task", "conversation-attach-file", "conversation-refresh-models", "conversation-model-settings", "new-conversation" }) InViewport(FindButton(id));
                 foreach (var name in new[] { "Selected model", "Model availability help" })
                     InViewport(Assert.Single(conversation.GetVisualDescendants().OfType<TextBlock>(), value =>
                         value.IsEffectivelyVisible && AutomationProperties.GetName(value) == name));

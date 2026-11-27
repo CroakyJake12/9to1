@@ -17,8 +17,8 @@ public sealed partial class AssistantsCuiBindings
         Set("ModelAvailabilityHelp", !hasConversation
             ? "Create or open a conversation to check available models."
             : _snapshot.Models.Count == 0
-                ? "No model is available. Review Model preferences, then refresh. You can still write and save a draft."
-                : "Choose an available model in Workspace before sending. Your saved model preference is unchanged.");
+                ? "No model available. Use Model preferences, then refresh. You can save a draft."
+                : "Choose a model in Workspace. Your saved preference is unchanged.");
         Set("ComposerAvailability", !hasConversation ? "Open a conversation to write a message."
             : _snapshot.SelectedAssistant?.Configuration.Enabled != true ? "This Assistant is disabled. Enable it in Configure before sending."
             : _selectedModel is null ? "Send is unavailable until you choose an authorized model."
