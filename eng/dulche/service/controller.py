@@ -529,6 +529,11 @@ class Controller:
                     want=action == "suspend",
                 )
             elif not automatic:
+                if action == "resume":
+                    # The earlier start has settled. This validated explicit Resume
+                    # replaces only its old stop intent while the controller lock is
+                    # held; a newer Suspend can still latch the new transition below.
+                    pref.pop("pending_suspend", None)
                 pref.update(manual=False, pressure=False, want=True)
             self.state.set("model:" + mid, pref)
             self.state.audit(

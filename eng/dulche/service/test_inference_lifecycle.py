@@ -263,6 +263,102 @@ class InferenceLifecycleTests(unittest.TestCase):
         self.assertEqual("checkpointed", self.status(run)["state"])
         self.assertEqual(0, self.eng.generation_calls)
 
+    def _failed_start_after_manual_stop(self, *, recover=False):
+        if recover:
+            self.ctx.ensure_model("q")
+            self.eng.loaded = False
+        self.eng.fail_load = True
+        self.eng.load_gate.clear()
+        self.eng.load_entered.clear()
+        if recover:
+            self.assertTrue(self.ctx.recover_engine("q", "Fixture owned engine crashed"))
+        run = self.ctx.jobs.create(self.request)
+        self.assertTrue(self.eng.load_entered.wait(2))
+        self.assertEqual("recovering" if recover else "loading", self.ctx.model("q")["state"])
+        self.ctx.change("q", "suspend")
+        self.assertEqual("suspending", self.ctx.model("q")["state"])
+        self.eng.load_gate.set()
+        wait(lambda: "q" not in self.ctx.transitions)
+        row = self.ctx.model("q")
+        self.assertEqual("failed", row["state"])
+        self.assertIn("exited during startup", row["error"])
+        self.assertTrue(row["manual_suspended"])
+        self.assertFalse(row["can_start"])
+        self.assertTrue(self.ctx._prefs("q")["pending_suspend"])
+        self.assertEqual("checkpointed", self.status(run)["state"])
+        self.assertEqual(0, self.eng.generation_calls)
+        return run
+
+    def _assert_prior_stop_can_only_be_replaced_by_explicit_resume(self, *, recover=False):
+        run = self._failed_start_after_manual_stop(recover=recover)
+        loads = self.eng.load_count
+        for action in (lambda: self.ctx.jobs.create(self.request),
+                       lambda: self.ctx.count_prompt("q", [{"role": "user", "content": "hello"}]),
+                       lambda: self.ctx.change("q", "load"),
+                       lambda: self.ctx.change("q", "resume", automatic=True)):
+            with self.assertRaises(Fault):
+                action()
+        for _ in range(2):
+            self.ctx._poll()
+        self.assertEqual(loads, self.eng.load_count)
+        self.assertTrue(self.ctx.model("q")["manual_suspended"])
+        with self.assertRaisesRegex(Fault, "Unknown performance profile"):
+            self.ctx.change("q", "resume", profile="removed-profile")
+        self.assertTrue(self.ctx._prefs("q")["pending_suspend"])
+        self.assertTrue(self.ctx.model("q")["manual_suspended"])
+
+        self.eng.fail_load = False
+        self.eng.load_gate.clear()
+        self.eng.load_entered.clear()
+        self.ctx.change("q", "resume")
+        self.assertTrue(self.eng.load_entered.wait(2))
+        self.eng.load_gate.set()
+        wait(lambda: "q" not in self.ctx.transitions)
+        self.assertEqual("loaded", self.ctx.model("q")["state"])
+        wait(lambda: self.completed(run))
+        self.assertFalse(self.ctx.model("q")["manual_suspended"])
+        self.assertEqual(loads + 1, self.eng.load_count)
+        self.assertEqual(1, self.eng.generation_calls)
+        self.assertEqual(1, len(self.status(run)["completed_steps"]))
+
+    def test_explicit_resume_consumes_only_prior_stop_after_failed_load(self):
+        self._assert_prior_stop_can_only_be_replaced_by_explicit_resume()
+
+    def test_explicit_resume_consumes_only_prior_stop_after_failed_recovery(self):
+        self._assert_prior_stop_can_only_be_replaced_by_explicit_resume(recover=True)
+
+    def _assert_newer_stop_wins_during_resume(self, *, fail_resume):
+        run = self._failed_start_after_manual_stop()
+        loads = self.eng.load_count
+        self.eng.fail_load = fail_resume
+        self.eng.load_gate.clear()
+        self.eng.load_entered.clear()
+        self.ctx.change("q", "resume")
+        self.assertTrue(self.eng.load_entered.wait(2))
+        self.ctx.change("q", "suspend")
+        self.assertTrue(self.ctx._prefs("q")["pending_suspend"])
+        self.eng.load_gate.set()
+        wait(lambda: "q" not in self.ctx.transitions)
+        row = self.ctx.model("q")
+        self.assertEqual("failed" if fail_resume else "suspended", row["state"])
+        self.assertTrue(row["manual_suspended"])
+        self.assertFalse(row["can_start"])
+        self.assertFalse(self.eng.loaded)
+        self.assertEqual(loads + 1, self.eng.load_count)
+        self.assertEqual(0, self.eng.generation_calls)
+        self.assertEqual("checkpointed", self.status(run)["state"])
+        for _ in range(2):
+            self.ctx._poll()
+        self.assertEqual(loads + 1, self.eng.load_count)
+        with self.assertRaisesRegex(Fault, "Resume"):
+            self.ctx.jobs.create(self.request)
+
+    def test_newer_manual_stop_wins_after_explicit_resume_loads_successfully(self):
+        self._assert_newer_stop_wins_during_resume(fail_resume=False)
+
+    def test_newer_manual_stop_wins_after_explicit_resume_fails(self):
+        self._assert_newer_stop_wins_during_resume(fail_resume=True)
+
 
 if __name__ == "__main__":
     unittest.main()
