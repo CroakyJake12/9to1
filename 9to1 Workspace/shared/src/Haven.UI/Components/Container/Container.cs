@@ -117,7 +117,9 @@ public class Container : HavenElement
         if (Math.Abs(nextX - _scrollX) < .0001d && Math.Abs(nextY - _scrollY) < .0001d) return false;
         _scrollX = nextX;
         _scrollY = nextY;
-        Invalidate();
+        // Offsets change content placement, not the tree, styles or motion definitions.
+        // Keep layout so clipping, hit testing and native hosts use the translated bounds.
+        Invalidate(HavenInvalidationKinds.Layout | HavenInvalidationKinds.Paint);
         return true;
     }
 }
