@@ -31,5 +31,15 @@
     "sha256": "57f73e11f51999432bf7ab22ce55b6f945d5eca1bf824404cfa9ec2e3718c84e",
     "modified": false,
     "license": "DejaVuSans/LICENSE.txt, extracted verbatim from embedded font copyright/license names"
+  },
+  "monospace": {
+    "upstream": "https://dejavu-fonts.github.io/",
+    "version": "Version 2.37",
+    "file": "DejaVuSansMono/DejaVuSansMono.ttf",
+    "localSource": "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+    "size": 343140,
+    "sha256": "54bf827eb99404e8f430c330ad30f063334f637eba0109b6a18d4f566a8e9dd8",
+    "modified": false,
+    "license": "DejaVuSansMono/LICENSE.txt, extracted verbatim from embedded font copyright/license names"
   }
 }

@@ -5,6 +5,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
 using Haven.Desktop.HavenUI.Backend;
@@ -63,6 +64,7 @@ internal sealed partial class ChatHavenScene
             RoutingStrategies.Tunnel, handledEventsToo: true);
         ComposerView.AttachedToVisualTree += OnComposerAttachedToVisualTree;
         ComposerView.DetachedFromVisualTree += OnComposerDetachedFromVisualTree;
+        ComposerView.LayoutUpdated += OnAddMenuOwnerLayoutUpdated;
     }
 
     private void OnComposerAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
@@ -79,9 +81,36 @@ internal sealed partial class ChatHavenScene
 
     private void OnAddMenuPopupKeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.Handled || e.Key != Key.Escape || _addMenuPopup?.IsOpen != true) return;
-        e.Handled = true;
-        HideAddMenu();
+        if (e.Handled || _addMenuPopup?.IsOpen != true) return;
+        if (e.Key == Key.Escape)
+        {
+            e.Handled = true;
+            HideAddMenu();
+            return;
+        }
+        var key = e.Key switch
+        {
+            Key.Up => HavenKey.Up,
+            Key.Down => HavenKey.Down,
+            Key.Home => HavenKey.Home,
+            Key.End => HavenKey.End,
+            _ => HavenKey.Unknown
+        };
+        if (_addMenu.TryGetAdjacentAttachCategory(key, out var next) && next is not null)
+        {
+            e.Handled = _addMenuPopupHost?.FocusElement(next) == true;
+            _addMenu.RevealFocusedAttachControl();
+        }
+        else if (e.Key == Key.Tab)
+        {
+            // The existing Haven router owns Tab. Reveal its settled target without moving
+            // focus or trapping the search input in a second keyboard/navigation owner.
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (!_disposed && !_retiringAddMenuPopup && _addMenuPopup?.IsOpen == true)
+                    _addMenu.RevealFocusedAttachControl();
+            }, DispatcherPriority.Input);
+        }
     }
 
     private void OnComposerAddMenuKeyDown(object? sender, KeyEventArgs e)
@@ -93,6 +122,38 @@ internal sealed partial class ChatHavenScene
 
     private void OnAddMenuDismissed(object? sender, EventArgs e) => CloseAddMenuPopup();
 
+    private void OnAddMenuOwnerLayoutUpdated(object? sender, EventArgs e)
+    {
+        if (!_disposed && !_retiringAddMenuPopup && _addMenuPopup?.IsOpen == true)
+            UpdateAddMenuPopupViewport();
+    }
+
+    private void UpdateAddMenuPopupViewport()
+    {
+        if (_addMenuPopup is null || _addMenuPopupHost is null || _addMenuPopupTarget is null
+            || _addMenuPopupOwner is not { } owner) return;
+        var viewportWidth = owner.ClientSize.Width;
+        var viewportHeight = owner.ClientSize.Height;
+        if (!double.IsFinite(viewportWidth) || !double.IsFinite(viewportHeight)
+            || viewportWidth <= 0 || viewportHeight <= 0) return;
+        var compact = viewportWidth <= 600;
+        var availableWidth = Math.Max(80, viewportWidth - 24);
+        var composerWidth = ComposerView.Bounds.Width > 0 ? ComposerView.Bounds.Width : availableWidth;
+        var width = Math.Min(820, Math.Min(composerWidth, availableWidth));
+        var maximumHeight = Math.Max(80, Math.Min(470, viewportHeight - (compact ? 190 : 200)));
+        _addMenu.UpdateAttachViewport(width, maximumHeight, compact);
+        _addMenuPopupHost.Width = width;
+        _addMenuPopupHost.MaxHeight = maximumHeight;
+        _addMenuPopupHost.MaxWidth = width;
+        if (ComposerView.TranslatePoint(default, owner) is { } composerPoint
+            && _addMenuPopupTarget.TranslatePoint(default, owner) is { } targetPoint)
+        {
+            var composerLeft = composerPoint.X + Math.Max(0, composerWidth - width) / 2;
+            var safeLeft = Math.Clamp(composerLeft, 12, Math.Max(12, viewportWidth - width - 12));
+            _addMenuPopup.HorizontalOffset = safeLeft - targetPoint.X;
+        }
+    }
+
     private void OpenAddMenuPopupIfAttached(bool focusPopup)
     {
         if (_retiringAddMenuPopup || _disposed || !_addMenu.IsOpen || _addMenuPopup is null
@@ -103,6 +164,7 @@ internal sealed partial class ChatHavenScene
             // Mention search updates arrive on every composer edit. Keep its real input/caret as
             // the keyboard owner; only an explicit Add-button invocation may move focus to a row.
             _focusPopupOnOpen = focusPopup;
+            UpdateAddMenuPopupViewport();
             if (focusPopup) FocusFirstAddMenuRow();
             return;
         }
@@ -116,6 +178,7 @@ internal sealed partial class ChatHavenScene
         _focusBeforeAddMenuPopup = owner.FocusManager?.GetFocusedElement() as Control;
         _restoreFocusAfterPopupClose = null;
         _focusPopupOnOpen = focusPopup;
+        UpdateAddMenuPopupViewport();
         try
         {
             // ContentPresenter realizes overlay content only while logically attached.
@@ -206,6 +269,7 @@ internal sealed partial class ChatHavenScene
         {
             ComposerView.AttachedToVisualTree -= OnComposerAttachedToVisualTree;
             ComposerView.DetachedFromVisualTree -= OnComposerDetachedFromVisualTree;
+            ComposerView.LayoutUpdated -= OnAddMenuOwnerLayoutUpdated;
             ComposerView.RemoveHandler(InputElement.KeyDownEvent, OnComposerAddMenuKeyDown);
             _addMenu.Dismissed -= OnAddMenuDismissed;
             if (_addMenuPopup is not null)

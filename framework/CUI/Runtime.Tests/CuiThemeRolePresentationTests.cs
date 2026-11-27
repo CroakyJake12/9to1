@@ -20,7 +20,8 @@ public sealed class CuiThemeRolePresentationTests
         // their theme-owned tonal derivation from that same chosen identity.
         var defaultPalette = CuiSurfacePaletteCatalog.For("Boards", CuiAppearance.Bright, theme, accentColour: null);
         var ownedPalette = CuiSurfacePaletteCatalog.For("Boards", CuiAppearance.Bright, theme, null, "app.boards");
-        Assert.Equal(Color.Parse("#7026D9"), defaultPalette.Accent);
+        var nativeColour = theme == CuiTheme.Glow ? "#7650C7" : "#7026D9";
+        Assert.Equal(Color.Parse(nativeColour), defaultPalette.Accent);
         Assert.Equal(defaultPalette, ownedPalette);
         var chosenPalette = CuiSurfacePaletteCatalog.For("Boards", CuiAppearance.Bright, theme, "#168B4F", "app.boards");
         Assert.Equal(Color.Parse("#168B4F"), chosenPalette.Accent);
@@ -28,7 +29,7 @@ public sealed class CuiThemeRolePresentationTests
         Assert.Null(chosenPalette.SurfaceAccent);
         foreach (var appearance in Enum.GetValues<CuiAppearance>())
         {
-            var explicitPurple = CuiSurfacePaletteCatalog.For("Boards", appearance, theme, "#7026D9", "app.boards");
+            var explicitPurple = CuiSurfacePaletteCatalog.For("Boards", appearance, theme, nativeColour, "app.boards");
             var appDefault = CuiSurfacePaletteCatalog.For("Boards", appearance, theme, null, "app.boards");
             Assert.Equal(explicitPurple.Accent, appDefault.Accent);
             Assert.Equal(explicitPurple.AccentSecondary, appDefault.AccentSecondary);
@@ -105,17 +106,16 @@ public sealed class CuiThemeRolePresentationTests
     }
 
     [Fact]
-    public void Glow_surface_gradients_follow_the_chosen_accent_without_replacing_solid_document_tokens()
+    public void Glow_surface_field_follows_the_chosen_accent_without_replacing_solid_document_tokens()
     {
         var purple = new ResourceDictionary(); var green = new ResourceDictionary();
         CuiThemeResourceApplier.ApplyToResources(purple, CuiSurfacePaletteCatalog.For("Boards", CuiAppearance.Dark, CuiTheme.Glow, "#7026D9"));
         CuiThemeResourceApplier.ApplyToResources(green, CuiSurfacePaletteCatalog.For("Boards", CuiAppearance.Dark, CuiTheme.Glow, "#168B4F"));
-        foreach (var key in new[] { "CuiShellMaterial", "CuiWorkspaceMaterial", "CuiSurfaceMaterial", "CuiFloatingSurfaceMaterial" })
-        {
-            var first = Assert.IsAssignableFrom<ILinearGradientBrush>(purple[key]);
-            var second = Assert.IsAssignableFrom<ILinearGradientBrush>(green[key]);
-            Assert.NotEqual(first.GradientStops.Select(stop => stop.Color), second.GradientStops.Select(stop => stop.Color));
-        }
+        foreach (var key in new[] { "CuiShellMaterial", "CuiWorkspaceMaterial" })
+            Assert.NotEqual(Assert.IsType<CuiGlowFieldBrush>(purple[key]), Assert.IsType<CuiGlowFieldBrush>(green[key]));
+        foreach (var key in new[] { "CuiSurfaceMaterial", "CuiFloatingSurfaceMaterial" })
+            Assert.NotEqual(Assert.IsAssignableFrom<ISolidColorBrush>(purple[key]).Color,
+                Assert.IsAssignableFrom<ISolidColorBrush>(green[key]).Color);
         Assert.IsAssignableFrom<ISolidColorBrush>(purple["CuiPanelBrush"]);
         Assert.IsAssignableFrom<ISolidColorBrush>(purple["CuiPanel2Brush"]);
         CuiCustomThemeResourceApplier.ApplyToResources(purple, CuiCustomThemeContract.CreateDefault());
@@ -224,6 +224,64 @@ public sealed class CuiThemeRolePresentationTests
                 Assert.True(text.IsKeyboardFocusWithin);
                 Assert.Same(Resource(text, "CuiFocusBrush"), text.BorderBrush);
                 Assert.True(root.GetVisualDescendants().OfType<ToggleSwitch>().Single().IsChecked);
+            }
+            finally { window.Close(); }
+        }, CancellationToken.None);
+    }
+
+    [Theory]
+    [InlineData("Glow", false)]
+    [InlineData("Glow", true)]
+    [InlineData("Professional", false)]
+    [InlineData("Professional", true)]
+    public async Task Selected_primary_navigation_uses_on_primary_ink_for_ordinary_labels_and_preserves_explicit_colours(
+        string theme, bool highContrast)
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            var source = new ScopedThemeSource();
+            source.Publish(source.Current with { Name = theme, Accessibility = new() { HighContrast = highContrast } });
+            using var preference = new CuiThemePreferenceContext(source);
+            using var loader = new CuiControlLoader();
+            loader.SetThemePreferenceContext(preference);
+            var (root, diagnostics) = loader.LoadMarkup("""
+                <Page><Container Type="Vertical Stack">
+                  <Button ID="primary" AccentRole="Primary" Background="{Resource CuiTransparentBrush}"
+                          Foreground="{Resource CuiTextSoftBrush}" BorderWidth="0">
+                    <Container Type="Horizontal Stack"><Text ID="label" Text="Dashboard"/>
+                      <Text ID="explicit" Text="Explicit colour" Foreground="#FF0000"/>
+                    </Container>
+                  </Button>
+                  <Button ID="ordinary" Content="Ordinary selection" Foreground="{Resource CuiTextSoftBrush}"/>
+                </Container></Page>
+                """);
+            Assert.Empty(diagnostics); Assert.NotNull(root);
+            var window = new Window { Content = root, Width = 500, Height = 240 };
+            try
+            {
+                window.Show(); window.UpdateLayout();
+                var primary = root!.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "primary");
+                var ordinary = root.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "ordinary");
+                var label = root.GetVisualDescendants().OfType<TextBlock>().Single(text => text.Name == "label");
+                var explicitLabel = root.GetVisualDescendants().OfType<TextBlock>().Single(text => text.Name == "explicit");
+                Assert.Equal(0, Assert.IsAssignableFrom<ISolidColorBrush>(primary.Background).Color.A);
+                CuiPropertyPresentation.SetSelected(primary, true);
+                CuiPropertyPresentation.SetSelected(ordinary, true);
+                Assert.Same(Resource(primary, "CuiAccentPrimaryBackground") ?? Resource(primary, "CuiAccentPrimaryBrush"), primary.Background);
+                Assert.Same(Resource(primary, "CuiAccentPrimaryForegroundBrush"), primary.Foreground);
+                Assert.Same(primary.Foreground, label.Foreground);
+                Assert.Equal(Colors.Red, Assert.IsAssignableFrom<ISolidColorBrush>(explicitLabel.Foreground).Color);
+                Assert.Equal(new Thickness(0), primary.BorderThickness);
+                Assert.Equal(Assert.IsAssignableFrom<ISolidColorBrush>(Resource(ordinary, "CuiSelectionBrush")).Color,
+                    Assert.IsAssignableFrom<ISolidColorBrush>(ordinary.Background).Color);
+                Assert.Equal(Assert.IsAssignableFrom<ISolidColorBrush>(Resource(ordinary, "CuiTextSoftBrush")).Color,
+                    Assert.IsAssignableFrom<ISolidColorBrush>(ordinary.Foreground).Color);
+                CuiPropertyPresentation.SetSelected(primary, false);
+                Assert.Equal(0, Assert.IsAssignableFrom<ISolidColorBrush>(primary.Background).Color.A);
+                Assert.Equal(Assert.IsAssignableFrom<ISolidColorBrush>(Resource(primary, "CuiTextSoftBrush")).Color,
+                    Assert.IsAssignableFrom<ISolidColorBrush>(primary.Foreground).Color);
+                Assert.Same(primary.Foreground, label.Foreground);
             }
             finally { window.Close(); }
         }, CancellationToken.None);

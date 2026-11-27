@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Services;
@@ -20,6 +21,7 @@ public sealed partial class SpaceDetailsPage : UserControl, IDesktopOriginalReti
     private readonly SpaceDetailsController _controller;
     private readonly SpaceDetailsCuiBindings _bindings;
     private readonly ICuiSceneReadiness _readiness;
+    private readonly CuiThemePreferenceContext? _interfaceTheme;
     private readonly CuiSceneHost _editorHost;
     private readonly DesktopOriginalWorkLifetime _work;
     private readonly Func<Task, bool>? _queueBack;
@@ -38,12 +40,14 @@ public sealed partial class SpaceDetailsPage : UserControl, IDesktopOriginalReti
     public SpaceDetailsPage(SpaceRegistry registry, Guid spaceId, ICuiSceneReadiness readiness)
         : this(registry, spaceId, readiness, null) { }
 
-    public SpaceDetailsPage(SpaceRegistry registry, Guid spaceId, ICuiSceneReadiness readiness, Func<Task, bool>? queueBack)
+    public SpaceDetailsPage(SpaceRegistry registry, Guid spaceId, ICuiSceneReadiness readiness, Func<Task, bool>? queueBack,
+        CuiThemePreferenceContext? interfaceTheme = null)
     {
         Dispatcher.UIThread.VerifyAccess();
         _controller = new(registry, spaceId);
         _readiness = readiness ?? throw new ArgumentNullException(nameof(readiness));
         _queueBack = queueBack;
+        _interfaceTheme = interfaceTheme;
         var document = SpaceDetailsCuiDocument.Load();
         _editorHost = new();
         _work = new(StopAsync, CleanupAsync);
@@ -87,7 +91,8 @@ public sealed partial class SpaceDetailsPage : UserControl, IDesktopOriginalReti
                     lock (_gate) _activated = true;
                     _bindings.Refresh();
                     show = _editorShow = Source(() => _editorHost.ShowAsync(new("spaces.details", "Space details", "Space details",
-                        Document, _bindings, _bindings, _readiness) { IsPublicationCurrent = IsPresentationCurrent }, linked.Token));
+                        Document, _bindings, _bindings, _readiness) { ThemePreference = _interfaceTheme,
+                            PresentationScope = new("Spaces", "app.spaces"), IsPublicationCurrent = IsPresentationCurrent }, linked.Token));
                 }).GetTask();
                 try { await original.AwaitAsync(dispatch).ConfigureAwait(false); }
                 catch (Exception error) { original.Capture(dispatch, error); }

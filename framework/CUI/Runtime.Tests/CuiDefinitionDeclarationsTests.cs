@@ -25,7 +25,7 @@ public sealed class CuiDefinitionDeclarationsTests
             </Cui>
             """);
         Assert.Empty(diagnostics);
-        var plain = Assert.IsType<CuiContainerControl>(Assert.Single(Assert.IsType<Panel>(root).Children));
+        var plain = Assert.IsType<CuiContainerControl>(Assert.Single(Assert.IsAssignableFrom<Panel>(root).Children));
         Assert.Equal(default, plain.Padding);
         var outer = Assert.IsType<CuiContainerControl>(Assert.Single(plain.AuthoredChildren));
         Assert.Equal(new Avalonia.Thickness(24), outer.Padding);
@@ -46,7 +46,7 @@ public sealed class CuiDefinitionDeclarationsTests
         using var loader = new CuiControlLoader();
         var (root, diagnostics) = loader.TryLoad(CuiEditorComponents.Compose(document));
         Assert.Empty(diagnostics);
-        var shell = Assert.IsType<CuiContainerControl>(Assert.Single(Assert.IsType<Panel>(root).Children));
+        var shell = Assert.IsType<CuiContainerControl>(Assert.Single(Assert.IsAssignableFrom<Panel>(root).Children));
         var toolbar = Assert.IsType<CuiContainerControl>(Assert.Single(shell.AuthoredChildren));
         var button = Assert.IsType<Button>(Assert.Single(toolbar.AuthoredChildren));
         Assert.Equal(36, button.Width); Assert.Equal(36, button.Height);
@@ -66,7 +66,7 @@ public sealed class CuiDefinitionDeclarationsTests
             "definition-root.cui");
 
         Assert.True(result.Success, $"Render failed: {string.Join("; ", result.Errors)}");
-        var page = Assert.IsType<Panel>(result.Root);
+        var page = Assert.IsAssignableFrom<Panel>(result.Root);
         Assert.Equal("actual", page.Name);
         var visible = Assert.IsType<TextBlock>(Assert.Single(page.Children));
         Assert.Equal("visible", visible.Text);
@@ -88,7 +88,7 @@ public sealed class CuiDefinitionDeclarationsTests
             "definition-nested.cui");
 
         Assert.True(result.Success, $"Render failed: {string.Join("; ", result.Errors)}");
-        var page = Assert.IsType<Panel>(result.Root);
+        var page = Assert.IsAssignableFrom<Panel>(result.Root);
         Assert.Equal("actual", page.Name);
         var visible = Assert.IsType<TextBlock>(Assert.Single(page.Children));
         Assert.Equal("visible", visible.Text);
@@ -128,7 +128,7 @@ public sealed class CuiDefinitionDeclarationsTests
             "definition-theme.cui");
 
         Assert.True(result.Success, $"Render failed: {string.Join("; ", result.Errors)}");
-        var page = Assert.IsType<Panel>(result.Root);
+        var page = Assert.IsAssignableFrom<Panel>(result.Root);
         var visible = Assert.IsType<TextBlock>(Assert.Single(page.Children));
         Assert.Equal("visible", visible.Text);
         Assert.Equal(2, result.ControlCount);
@@ -146,7 +146,7 @@ public sealed class CuiDefinitionDeclarationsTests
             "definition-conditional.cui");
 
         Assert.True(result.Success, $"Render failed: {string.Join("; ", result.Errors)}");
-        var page = Assert.IsType<Panel>(result.Root);
+        var page = Assert.IsAssignableFrom<Panel>(result.Root);
         var host = Assert.IsType<ContentControl>(Assert.Single(page.Children));
         var branch = Assert.IsType<Panel>(host.Content);
         var visible = Assert.IsType<TextBlock>(Assert.Single(branch.Children));
@@ -173,7 +173,7 @@ public sealed class CuiDefinitionDeclarationsTests
                 """);
 
             Assert.Empty(diagnostics);
-            var page = Assert.IsType<Panel>(root);
+            var page = Assert.IsAssignableFrom<Panel>(root);
             var host = Assert.IsType<StackPanel>(Assert.Single(page.Children));
             var itemRoot = Assert.IsType<Panel>(Assert.Single(host.Children));
             var visible = Assert.IsType<TextBlock>(Assert.Single(itemRoot.Children));
@@ -199,7 +199,7 @@ public sealed class CuiDefinitionDeclarationsTests
             """);
 
         Assert.Empty(diagnostics);
-        var page = Assert.IsType<Panel>(root);
+        var page = Assert.IsAssignableFrom<Panel>(root);
         var instance = Assert.IsType<TextBlock>(Assert.Single(page.Children));
         Assert.NotNull(instance.Text);
         Assert.Equal("rendered", instance.Text);
@@ -220,7 +220,7 @@ public sealed class CuiDefinitionDeclarationsTests
             """);
 
         Assert.Empty(diagnostics);
-        var page = Assert.IsType<Panel>(root);
+        var page = Assert.IsAssignableFrom<Panel>(root);
         var card = Assert.IsType<CuiContainerControl>(Assert.Single(page.Children));
         Assert.Equal("card", card.Name);
         var supplied = Assert.IsType<TextBlock>(Assert.Single(card.AuthoredChildren));
@@ -244,7 +244,7 @@ public sealed class CuiDefinitionDeclarationsTests
             """);
 
         Assert.Empty(diagnostics);
-        var page = Assert.IsType<Panel>(root);
+        var page = Assert.IsAssignableFrom<Panel>(root);
         var first = Assert.IsType<CuiContainerControl>(page.Children[0]);
         var second = Assert.IsType<CuiContainerControl>(page.Children[1]);
         Assert.Equal("id:first", CuiRuntimeIdentity.GetStableId(first));
@@ -270,7 +270,7 @@ public sealed class CuiDefinitionDeclarationsTests
             """);
 
         Assert.Empty(diagnostics);
-        var page = Assert.IsType<Panel>(root);
+        var page = Assert.IsAssignableFrom<Panel>(root);
         var first = Assert.IsType<CuiContainerControl>(page.Children[0]);
         var second = Assert.IsType<CuiContainerControl>(page.Children[1]);
         var firstInner = Assert.IsType<TextBlock>(Assert.Single(first.AuthoredChildren));
@@ -314,7 +314,7 @@ public sealed class CuiDefinitionDeclarationsTests
             """);
 
         Assert.Empty(diagnostics);
-        var page = Assert.IsType<Panel>(root);
+        var page = Assert.IsAssignableFrom<Panel>(root);
         var instance = Assert.IsType<Panel>(Assert.Single(page.Children));
         var rendered = Assert.IsType<TextBlock>(Assert.Single(instance.Children));
         Assert.NotNull(rendered.Text);
@@ -336,7 +336,7 @@ public sealed class CuiDefinitionDeclarationsTests
             """);
 
         Assert.Empty(diagnostics);
-        var page = Assert.IsType<Panel>(root);
+        var page = Assert.IsAssignableFrom<Panel>(root);
         var instance = Assert.IsType<CuiContainerControl>(Assert.Single(page.Children));
         var host = Assert.IsType<ContentControl>(Assert.Single(instance.AuthoredChildren));
         var branch = Assert.IsType<Panel>(host.Content);
@@ -371,7 +371,7 @@ public sealed class CuiDefinitionDeclarationsTests
                 """);
 
             Assert.Empty(diagnostics);
-            var page = Assert.IsType<Panel>(root);
+            var page = Assert.IsAssignableFrom<Panel>(root);
             var first = Assert.IsType<CuiContainerControl>(page.Children[0]);
             var second = Assert.IsType<CuiContainerControl>(page.Children[1]);
             // A canonical Repeat contributes its keyed children directly to the

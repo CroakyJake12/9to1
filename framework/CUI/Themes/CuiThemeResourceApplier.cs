@@ -381,6 +381,24 @@ public static class CuiThemeResourceApplier
         var secondary = palette.SurfaceAccent is { } tint ? Blend(tint, Colors.White, .22) : palette.AccentSecondary;
         var dark = Luminance(palette.Text) > Luminance(palette.Panel);
         var panel = WithAlpha(palette.Panel, 255);
+        if (dark)
+        {
+            // Atlas v5 uses one quiet field behind transparent host/sidebar chrome.
+            // The source field starts at .08 lightness beside the .09 background;
+            // retain that ratio after accessibility adjustments without re-saturating it.
+            var top = Blend(palette.TideBase, Colors.Black, 1d / 9d);
+            var bottom = palette.TideColour;
+            var field = new CuiGlowFieldBrush(top, bottom, bottom);
+            resources["CuiWorkspaceBrush"] = field;
+            resources["CuiShellMaterial"] = field;
+            resources["CuiWorkspaceMaterial"] = field;
+            resources["CuiChromeMaterial"] = Brushes.Transparent;
+            resources["CuiSurfaceMaterial"] = new SolidColorBrush(WithAlpha(panel, 0xE0));
+            resources["CuiFloatingSurfaceMaterial"] = new SolidColorBrush(panel);
+            resources["CuiPopupSurfaceBrush"] = new SolidColorBrush(panel);
+            resources["CuiPopupOpaqueFallbackBrush"] = new SolidColorBrush(panel);
+            return;
+        }
         // The old ramp started from the almost-black shell independently of the
         // page. On a full workspace it left a black sidebar beside a purple card.
         // Share the page's tonal ramp and lower it only slightly for its backing

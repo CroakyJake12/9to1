@@ -1,0 +1,53 @@
+<Cui id="chat.conversation-header" version="1">
+  <Actions>
+    <Action name="Temporary" command="chat.header.temporary" parameter="{Binding Header.Target}" />
+    <Action name="Work" command="chat.header.work" parameter="{Binding Header.Target}" />
+    <Action name="Summary" command="chat.header.summary" parameter="{Binding Header.Target}" />
+    <Action name="Latest" command="chat.header.latest" parameter="{Binding Header.Target}" />
+    <Action name="ClosePanel" command="chat.header.close-panel" parameter="{Binding Header.Target}" />
+  </Actions>
+  <Container id="chat-conversation-header" Type="Vertical Stack" OwnsBackdrop="True" Background="{Resource CuiTransparentBrush}" CellGap="8">
+    <Container id="chat-conversation-heading" Type="Grid" ColumnSizes="{Binding Header.Columns}" RowSizes="{Binding Header.Rows}" CellGap="8">
+      <Container id="chat-conversation-identity" Type="Vertical Stack" CellGap="2" VerticalAlignment="Center">
+        <Text id="chat-conversation-title" Text="{Binding Header.Title}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" AccessibleName="Conversation title" />
+        <Text id="chat-conversation-model" Text="{Binding Header.Model}" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" AccessibleName="Selected model for future messages" />
+      </Container>
+      <Container id="chat-conversation-controls" Type="Wrap" Column="{Binding Header.ControlsColumn}" Row="{Binding Header.ControlsRow}" CellGap="6" VerticalAlignment="Center">
+        <Container id="chat-conversation-temporary-group" Type="Horizontal Stack" CellGap="8" VerticalAlignment="Center" IsVisible="{Binding Header.TemporaryAvailable}">
+          <Text id="chat-conversation-temporary-label" Text="Temporary" FontSize="12" FontWeight="SemiBold" Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" />
+          <Input id="chat-conversation-temporary" Type="Switch" Content="Temporary" Checked="{Binding Header.Temporary}" Action="Temporary" IsVisible="{Binding Header.TemporaryAvailable}" Interactive="{Binding Header.CanToggleTemporary}" AccessibleName="{Binding Header.TemporaryAccessibleName}" Tooltip="Temporary Chat changes only after its owning conversation accepts the request" />
+        </Container>
+        <Button id="chat-conversation-work" Content="Work" Action="Work" Selected="{Binding Header.WorkVisible}" MinHeight="30" Padding="9 5" Background="{Resource CuiTransparentBrush}" BorderWidth="0" AccessibleName="View recorded work in this conversation" />
+        <Button id="chat-conversation-summary" Content="Summary" Action="Summary" Selected="{Binding Header.SummaryVisible}" MinHeight="30" Padding="9 5" Background="{Resource CuiTransparentBrush}" BorderWidth="0" AccessibleName="View saved conversation summaries" />
+        <Button id="chat-conversation-latest" Content="Latest ↓" Action="Latest" IsVisible="{Binding Header.ShowLatest}" MinHeight="30" Padding="9 5" AccessibleName="Return to latest message" />
+      </Container>
+    </Container>
+    <Text id="chat-conversation-header-notice" Text="{Binding Header.Notice}" IsVisible="{Binding Header.HasNotice}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+    <Container id="chat-conversation-inspector" Type="Vertical Stack" CellGap="6" Padding="12" CornerRadius="12" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" IsVisible="{Binding Header.PanelVisible}">
+      <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
+        <Text id="chat-conversation-inspector-title" Text="{Binding Header.PanelTitle}" FontWeight="SemiBold" VerticalAlignment="Center" />
+        <Button id="chat-conversation-inspector-close" Column="1" Content="Close" Action="ClosePanel" MinHeight="28" Padding="8 4" AccessibleName="Close conversation details" />
+      </Container>
+      <Container id="chat-conversation-work-panel" Type="Vertical Stack" CellGap="8" MaxHeight="180" VerticalScrolling="True" HorizontalScrolling="False" IsVisible="{Binding Header.WorkVisible}">
+        <Text id="chat-conversation-work-empty" Text="No tool activity has been recorded in this conversation." IsVisible="{Binding Header.NoActivities}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+        <Repeat Source="{Binding Header.Activities}" As="activity" Key="{Binding activity.Id}">
+          <Container Type="Vertical Stack" CellGap="2">
+            <Text Text="{Binding activity.Title}" FontWeight="SemiBold" FontSize="12" TextWrapping="Wrap" />
+            <Text Text="{Binding activity.Detail}" FontSize="12" TextWrapping="Wrap" />
+            <Text Text="{Binding activity.Meta}" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          </Container>
+        </Repeat>
+      </Container>
+      <Container id="chat-conversation-summary-panel" Type="Vertical Stack" CellGap="8" MaxHeight="180" VerticalScrolling="True" HorizontalScrolling="False" IsVisible="{Binding Header.SummaryVisible}">
+        <Text id="chat-conversation-summary-empty" Text="This conversation has no saved context summary. Existing summaries appear here after context compaction." IsVisible="{Binding Header.NoSummaries}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+        <Text Text="Saved context summaries are derived from this conversation; original messages remain in its history." IsVisible="{Binding Header.HasSummaries}" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+        <Repeat Source="{Binding Header.Summaries}" As="summary" Key="{Binding summary.Id}">
+          <Container Type="Vertical Stack" CellGap="4">
+            <Text Text="{Binding summary.Title}" FontWeight="SemiBold" FontSize="12" TextWrapping="Wrap" />
+            <Text Text="{Binding summary.Content}" FontSize="12" TextWrapping="Wrap" />
+          </Container>
+        </Repeat>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

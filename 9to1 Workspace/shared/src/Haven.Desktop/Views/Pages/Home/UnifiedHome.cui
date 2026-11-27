@@ -10,99 +10,141 @@
   <!-- At desktop widths the Home rail shows labels beside its icons. Compact widths keep the
        same actions, names and keyboard tooltips. Settings stays below the scrolling destinations. -->
   <Theme Name="user_preference">
-    <Page AccessibleName="9to1 Home">
+    <Page AccessibleName="9to1 Home" OwnsBackdrop="True">
       <Container id="unified-home-root" Type="Grid" ColumnSizes="Auto 1fr" RowSizes="1fr" Background="{Resource CuiWorkspaceBrush}">
-        <Container id="home-sidebar" MinWidth="56" IsVisible="{Binding rail.homeVisible, fallback=true}" Role="navigation" AccessibleName="Home navigation"
-                   Type="Grid" RowSizes="Auto 1fr Auto" Padding="{Binding rail.sidebarPadding}" CellGap="8"
-                   Background="{Resource CuiChromeMaterial}" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 1 0">
-          <Button id="home-brand" Action="home.newtab" AccessibleName="Home" Tooltip="Home" Width="{Binding rail.brandWidth, fallback=44}"
-                  Height="44" Padding="8" HorizontalAlignment="Left" HorizontalContentAlignment="Left"
-                  Background="{Resource CuiPanelBrush}" BorderWidth="0" CornerRadius="12">
-            <Container Type="Horizontal Stack" CellGap="10" VerticalAlignment="Center">
-              <Image id="home-brand-mark" Source="avares://Haven/Assets/haven-32.png" Width="28" Height="28" />
-              <Text Text="Home" FontSize="20" FontWeight="750" VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
+        <Container id="home-sidebar" Width="{Binding rail.sidebarWidth, fallback=68}" IsVisible="{Binding rail.homeVisible, fallback=true}"
+                   Role="navigation" AccessibleName="Home navigation" Type="Grid" RowSizes="Auto 1fr Auto"
+                   Padding="{Binding rail.sidebarPadding}" CellGap="4" Background="{Resource CuiChromeMaterial}" BorderWidth="0">
+          <Button id="home-brand" Action="home.newtab" AccessibleName="Home" Tooltip="Home"
+                  Width="{Binding rail.brandWidth, fallback=52}" MinHeight="42" Padding="{Binding rail.brandPadding}"
+                  HorizontalAlignment="Left" HorizontalContentAlignment="Left" Background="{Resource CuiPanelBrush}" BorderWidth="0" CornerRadius="14">
+            <Container Type="Horizontal Stack" CellGap="12" VerticalAlignment="Center">
+              <Image id="home-brand-mark" Source="avares://HavenOS.Apps.Browse.NativeUI/Assets/9to1-logo.png" Width="30" Height="30" />
+              <Text Text="Home" FontSize="18" FontWeight="750" VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
             </Container>
           </Button>
-          <Container id="home-rail-nav" Row="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="2">
-            <Text id="home-rail-explore" Text="Explore" FontSize="13" FontWeight="750" Foreground="{Resource CuiTextSoftBrush}"
-                  Margin="12 3 0 3" IsVisible="{Binding rail.showLabels, fallback=false}" />
-            <Button id="home-dashboard" action="home.dashboard" accessible-name="Dashboard" Tooltip="Dashboard" Selected="{Binding rail.dashboardSelected}" Width="{Binding rail.itemWidth, fallback=44}" Height="44" Padding="8" HorizontalAlignment="Center" HorizontalContentAlignment="Left" Background="{Resource CuiTransparentBrush}" BorderWidth="{Binding rail.dashboardBorderWidth, fallback=0}" CornerRadius="12">
-              <Container Type="Horizontal Stack" CellGap="10" VerticalAlignment="Center">
-                <Image id="home-dashboard-icon" Source="home-nav:layout-dashboard" Width="19" Height="19" />
-                <Text Text="Dashboard" FontWeight="700" VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
+          <Container id="home-rail-nav" Row="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="0" Padding="0 3 0 0">
+            <Button id="home-explore" Action="home.explore" AccessibleName="Explore" Tooltip="{Binding rail.exploreTooltip}" Selected="{Binding rail.exploreSelected}" IsEnabled="{Binding rail.exploreAvailable, fallback=false}"
+                    Width="{Binding rail.itemWidth, fallback=52}" MinHeight="40" Padding="{Binding rail.itemPadding}" Margin="0 3"
+                    HorizontalAlignment="Center" HorizontalContentAlignment="Left" AccentRole="Primary"
+                    Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextSoftBrush}" BorderWidth="0" CornerRadius="13">
+              <Container Type="Horizontal Stack" CellGap="12" VerticalAlignment="Center">
+                <Image id="home-explore-icon" Source="home-nav:compass" Width="19" Height="19" VerticalAlignment="Center" />
+                <Text Text="Explore" FontSize="13" FontWeight="{Binding rail.exploreFontWeight, fallback=550}"
+                      VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
               </Container>
             </Button>
-            <Button id="home-newtab" action="home.newtab" accessible-name="New Tab" Tooltip="New Tab" Selected="{Binding rail.newtabSelected}" Width="{Binding rail.itemWidth, fallback=44}" Height="44" Padding="8" HorizontalAlignment="Center" HorizontalContentAlignment="Left" Background="{Resource CuiTransparentBrush}" BorderWidth="{Binding rail.newtabBorderWidth, fallback=0}" CornerRadius="12">
-              <Container Type="Horizontal Stack" CellGap="10" VerticalAlignment="Center">
-                <Image id="home-newtab-icon" Source="home-nav:square-plus" Width="19" Height="19" />
-                <Text Text="New Tab" FontWeight="700" VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
+            <Button id="home-dashboard" Action="home.dashboard" AccessibleName="Dashboard" Tooltip="Dashboard" Selected="{Binding rail.dashboardSelected}"
+                    Width="{Binding rail.itemWidth, fallback=52}" MinHeight="40" Padding="{Binding rail.itemPadding}" Margin="0 3"
+                    HorizontalAlignment="Center" HorizontalContentAlignment="Left" AccentRole="Primary"
+                    Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextSoftBrush}" BorderWidth="0" CornerRadius="13">
+              <Container Type="Horizontal Stack" CellGap="12" VerticalAlignment="Center">
+                <Image id="home-dashboard-icon" Source="home-nav:layout-dashboard" Width="19" Height="19" VerticalAlignment="Center" />
+                <Text Text="Dashboard" FontSize="13" FontWeight="{Binding rail.dashboardFontWeight, fallback=550}"
+                      VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
               </Container>
             </Button>
-            <Text id="home-rail-workspace" Text="Workspace" FontSize="13" FontWeight="750" Foreground="{Resource CuiTextSoftBrush}"
-                  Margin="12 14 0 3" IsVisible="{Binding rail.showLabels, fallback=false}" />
-            <Button id="home-library" IsEnabled="{Binding rail.libraryAvailable, fallback=false}" action="home.library" accessible-name="Files" Tooltip="Files" Selected="{Binding rail.librarySelected}" Width="{Binding rail.itemWidth, fallback=44}" Height="44" Padding="8" HorizontalAlignment="Center" HorizontalContentAlignment="Left" Background="{Resource CuiTransparentBrush}" BorderWidth="{Binding rail.libraryBorderWidth, fallback=0}" CornerRadius="12">
-              <Container Type="Horizontal Stack" CellGap="10" VerticalAlignment="Center">
-                <Image id="home-library-icon" Source="home-nav:library-shelves" Width="19" Height="19" />
-                <Text Text="Files" FontWeight="700" VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
+            <Button id="home-newtab" Action="home.newtab" AccessibleName="New Tab" Tooltip="New Tab" Selected="{Binding rail.newtabSelected}"
+                    Width="{Binding rail.itemWidth, fallback=52}" MinHeight="40" Padding="{Binding rail.itemPadding}" Margin="0 3"
+                    HorizontalAlignment="Center" HorizontalContentAlignment="Left" AccentRole="Primary"
+                    Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextSoftBrush}" BorderWidth="0" CornerRadius="13">
+              <Container Type="Horizontal Stack" CellGap="12" VerticalAlignment="Center">
+                <Image id="home-newtab-icon" Source="home-nav:square-plus" Width="19" Height="19" VerticalAlignment="Center" />
+                <Text Text="New Tab" FontSize="13" FontWeight="{Binding rail.newtabFontWeight, fallback=550}"
+                      VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
               </Container>
             </Button>
-            <Button id="home-assistants" Action="home.assistants" AccessibleName="Assistants" Tooltip="Assistants" IsVisible="{Binding rail.assistantsAvailable, fallback=false}"
-                    Width="{Binding rail.itemWidth, fallback=44}" Height="44" Padding="8" HorizontalAlignment="Center"
-                    HorizontalContentAlignment="Left" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="12">
-              <Container Type="Horizontal Stack" CellGap="10" VerticalAlignment="Center">
-                <Image id="home-assistants-icon" Source="home-nav:assistant-bot" Width="19" Height="19" />
-                <Text Text="Assistants" FontWeight="700" VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
+            <Text id="home-rail-workspace" Text="Workspace" FontSize="12" FontWeight="650" Foreground="{Resource CuiTextSoftBrush}"
+                  Margin="14 22 0 11" IsVisible="{Binding rail.showLabels, fallback=false}" />
+            <Button id="home-library" Action="home.library" AccessibleName="Files" Tooltip="Files" Selected="{Binding rail.librarySelected}" IsEnabled="{Binding rail.libraryAvailable, fallback=false}"
+                    Width="{Binding rail.itemWidth, fallback=52}" MinHeight="40" Padding="{Binding rail.itemPadding}" Margin="0 3"
+                    HorizontalAlignment="Center" HorizontalContentAlignment="Left" AccentRole="Primary"
+                    Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextSoftBrush}" BorderWidth="0" CornerRadius="13">
+              <Container Type="Horizontal Stack" CellGap="12" VerticalAlignment="Center">
+                <Image id="home-library-icon" Source="home-nav:library-shelves" Width="19" Height="19" VerticalAlignment="Center" />
+                <Text Text="Files" FontSize="13" FontWeight="{Binding rail.libraryFontWeight, fallback=550}"
+                      VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
               </Container>
             </Button>
-            <Button id="home-events" action="home.events" accessible-name="Events" Tooltip="Events" Selected="{Binding rail.eventsSelected}" Width="{Binding rail.itemWidth, fallback=44}" Height="44" Padding="8" HorizontalAlignment="Center" HorizontalContentAlignment="Left" Background="{Resource CuiTransparentBrush}" BorderWidth="{Binding rail.eventsBorderWidth, fallback=0}" CornerRadius="12">
-              <Container Type="Horizontal Stack" CellGap="10" VerticalAlignment="Center">
-                <Image id="home-events-icon" Source="home-nav:calendar" Width="19" Height="19" />
-                <Text Text="Events" FontWeight="700" VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
+            <Button id="home-assistants" Action="home.assistants" AccessibleName="Assistants" Tooltip="Assistants" Selected="{Binding rail.assistantsSelected}" IsEnabled="{Binding rail.assistantsAvailable, fallback=false}"
+                    Width="{Binding rail.itemWidth, fallback=52}" MinHeight="40" Padding="{Binding rail.itemPadding}" Margin="0 3"
+                    HorizontalAlignment="Center" HorizontalContentAlignment="Left" AccentRole="Primary"
+                    Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextSoftBrush}" BorderWidth="0" CornerRadius="13">
+              <Container Type="Horizontal Stack" CellGap="12" VerticalAlignment="Center">
+                <Image id="home-assistants-icon" Source="home-nav:assistant-bot" Width="19" Height="19" VerticalAlignment="Center" />
+                <Text Text="Assistants" FontSize="13" FontWeight="{Binding rail.assistantsFontWeight, fallback=550}"
+                      VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
               </Container>
             </Button>
-            <Text id="home-rail-discover" Text="Discover" FontSize="13" FontWeight="750" Foreground="{Resource CuiTextSoftBrush}"
-                  Margin="12 14 0 3" IsVisible="{Binding rail.showLabels, fallback=false}" />
-            <Button id="home-apps" action="home.apps" accessible-name="9to1 Apps" Tooltip="9to1 Apps" Selected="{Binding rail.appsSelected}" Width="{Binding rail.itemWidth, fallback=44}" Height="44" Padding="8" HorizontalAlignment="Center" HorizontalContentAlignment="Left" Background="{Resource CuiTransparentBrush}" BorderWidth="{Binding rail.appsBorderWidth, fallback=0}" CornerRadius="12">
-              <Container Type="Horizontal Stack" CellGap="10" VerticalAlignment="Center">
-                <Image id="home-apps-icon" Source="home-nav:apps" Width="19" Height="19" />
-                <Text Text="9to1 Apps" FontWeight="700" VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
+            <Button id="home-specialists" Action="home.specialists" AccessibleName="Specialists" Tooltip="{Binding rail.specialistsTooltip}" Selected="{Binding rail.specialistsSelected}" IsEnabled="{Binding rail.specialistsAvailable, fallback=false}"
+                    Width="{Binding rail.itemWidth, fallback=52}" MinHeight="40" Padding="{Binding rail.itemPadding}" Margin="0 3"
+                    HorizontalAlignment="Center" HorizontalContentAlignment="Left" AccentRole="Primary"
+                    Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextSoftBrush}" BorderWidth="0" CornerRadius="13">
+              <Container Type="Horizontal Stack" CellGap="12" VerticalAlignment="Center">
+                <Image id="home-specialists-icon" Source="home-nav:user-check" Width="19" Height="19" VerticalAlignment="Center" />
+                <Text Text="Specialists" FontSize="13" FontWeight="{Binding rail.specialistsFontWeight, fallback=550}"
+                      VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
               </Container>
             </Button>
-            <Button id="home-models" action="home.models" accessible-name="Models" Tooltip="Models" Selected="{Binding rail.modelsSelected}" Width="{Binding rail.itemWidth, fallback=44}" Height="44" Padding="8" HorizontalAlignment="Center" HorizontalContentAlignment="Left" Background="{Resource CuiTransparentBrush}" BorderWidth="{Binding rail.modelsBorderWidth, fallback=0}" CornerRadius="12">
-              <Container Type="Horizontal Stack" CellGap="10" VerticalAlignment="Center">
-                <Image id="home-models-icon" Source="home-nav:cpu" Width="19" Height="19" />
-                <Text Text="Models" FontWeight="700" VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
+            <Text id="home-rail-discover" Text="Discover" FontSize="12" FontWeight="650" Foreground="{Resource CuiTextSoftBrush}"
+                  Margin="14 22 0 11" IsVisible="{Binding rail.showLabels, fallback=false}" />
+            <Button id="home-apps" Action="home.apps" AccessibleName="9to1 Apps" Tooltip="9to1 Apps" Selected="{Binding rail.appsSelected}"
+                    Width="{Binding rail.itemWidth, fallback=52}" MinHeight="40" Padding="{Binding rail.itemPadding}" Margin="0 3"
+                    HorizontalAlignment="Center" HorizontalContentAlignment="Left" AccentRole="Primary"
+                    Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextSoftBrush}" BorderWidth="0" CornerRadius="13">
+              <Container Type="Horizontal Stack" CellGap="12" VerticalAlignment="Center">
+                <Image id="home-apps-icon" Source="home-nav:apps" Width="19" Height="19" VerticalAlignment="Center" />
+                <Text Text="9to1 Apps" FontSize="13" FontWeight="{Binding rail.appsFontWeight, fallback=550}"
+                      VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
               </Container>
             </Button>
-            <Button id="home-mesh" action="home.mesh" accessible-name="Mesh" Tooltip="Mesh" Width="{Binding rail.itemWidth, fallback=44}" Height="44" Padding="8" HorizontalAlignment="Center" HorizontalContentAlignment="Left" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="12">
-              <Container Type="Horizontal Stack" CellGap="10" VerticalAlignment="Center">
-                <Image id="home-mesh-icon" Source="home-nav:devices-network" Width="19" Height="19" />
-                <Text Text="Mesh" FontWeight="700" VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
+            <Button id="home-models" Action="home.models" AccessibleName="Models" Tooltip="Models" Selected="{Binding rail.modelsSelected}"
+                    Width="{Binding rail.itemWidth, fallback=52}" MinHeight="40" Padding="{Binding rail.itemPadding}" Margin="0 3"
+                    HorizontalAlignment="Center" HorizontalContentAlignment="Left" AccentRole="Primary"
+                    Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextSoftBrush}" BorderWidth="0" CornerRadius="13">
+              <Container Type="Horizontal Stack" CellGap="12" VerticalAlignment="Center">
+                <Image id="home-models-icon" Source="home-nav:cpu" Width="19" Height="19" VerticalAlignment="Center" />
+                <Text Text="Models" FontSize="13" FontWeight="{Binding rail.modelsFontWeight, fallback=550}"
+                      VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
+              </Container>
+            </Button>
+            <Button id="home-mesh" Action="home.mesh" AccessibleName="Mesh" Tooltip="Mesh"
+                    Width="{Binding rail.itemWidth, fallback=52}" MinHeight="40" Padding="{Binding rail.itemPadding}" Margin="0 3"
+                    HorizontalAlignment="Center" HorizontalContentAlignment="Left" AccentRole="Primary"
+                    Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextSoftBrush}" BorderWidth="0" CornerRadius="13">
+              <Container Type="Horizontal Stack" CellGap="12" VerticalAlignment="Center">
+                <Image id="home-mesh-icon" Source="home-nav:devices-network" Width="19" Height="19" VerticalAlignment="Center" />
+                <Text Text="Mesh" FontSize="13" FontWeight="{Binding rail.meshFontWeight, fallback=550}"
+                      VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
               </Container>
             </Button>
           </Container>
-          <Container id="home-rail-footer" Row="2" Type="Vertical Stack" CellGap="2" Padding="0">
+          <Container id="home-rail-footer" Row="2" Type="Vertical Stack" CellGap="0" Padding="0 14 0 0">
             <Button id="home-account" Action="home.account" AccessibleName="Account" Tooltip="Account" IsEnabled="{Binding rail.settingsAvailable, fallback=false}"
-                    Width="{Binding rail.itemWidth, fallback=44}" Height="44" Padding="8" HorizontalAlignment="Center"
-                    HorizontalContentAlignment="Left" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="12">
-              <Container Type="Horizontal Stack" CellGap="10" VerticalAlignment="Center">
-                <Image id="home-account-icon" Source="home-nav:account-user" Width="19" Height="19" />
-                <Text Text="Account" FontWeight="700" VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
+                    Width="{Binding rail.itemWidth, fallback=52}" MinHeight="40" Padding="{Binding rail.itemPadding}" Margin="0 3"
+                    HorizontalAlignment="Center" HorizontalContentAlignment="Left" AccentRole="Primary"
+                    Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextSoftBrush}" BorderWidth="0" CornerRadius="13">
+              <Container Type="Horizontal Stack" CellGap="12" VerticalAlignment="Center">
+                <Image id="home-account-icon" Source="home-nav:account-user" Width="19" Height="19" VerticalAlignment="Center" />
+                <Text Text="Account" FontSize="13" FontWeight="{Binding rail.accountFontWeight, fallback=550}"
+                      VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
               </Container>
             </Button>
-            <Button id="home-settings" IsEnabled="{Binding rail.settingsAvailable, fallback=false}" action="home.settings" accessible-name="Settings" Tooltip="Settings" Selected="{Binding rail.settingsSelected}" Width="{Binding rail.itemWidth, fallback=44}" Height="44" Padding="8" HorizontalAlignment="Center" HorizontalContentAlignment="Left" Background="{Resource CuiTransparentBrush}" BorderWidth="{Binding rail.settingsBorderWidth, fallback=0}" CornerRadius="12">
-              <Container Type="Horizontal Stack" CellGap="10" VerticalAlignment="Center">
-                <Image id="home-settings-icon" Source="home-nav:settings" Width="19" Height="19" />
-                <Text Text="Settings" FontWeight="700" VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
+            <Button id="home-settings" Action="home.settings" AccessibleName="Settings" Tooltip="Settings" Selected="{Binding rail.settingsSelected}" IsEnabled="{Binding rail.settingsAvailable, fallback=false}"
+                    Width="{Binding rail.itemWidth, fallback=52}" MinHeight="40" Padding="{Binding rail.itemPadding}" Margin="0 3"
+                    HorizontalAlignment="Center" HorizontalContentAlignment="Left" AccentRole="Primary"
+                    Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextSoftBrush}" BorderWidth="0" CornerRadius="13">
+              <Container Type="Horizontal Stack" CellGap="12" VerticalAlignment="Center">
+                <Image id="home-settings-icon" Source="home-nav:settings" Width="19" Height="19" VerticalAlignment="Center" />
+                <Text Text="Settings" FontSize="13" FontWeight="{Binding rail.settingsFontWeight, fallback=550}"
+                      VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
               </Container>
             </Button>
           </Container>
         </Container>
-        <!-- Paint the workspace shell separately so its curved seam never intercepts rail or content input. -->
-        <Container id="home-canvas-backing" Column="1" Type="Overlay" IsHitTestVisible="False"
-                   IsVisible="{Binding rail.roundedCanvas}" Background="{Resource CuiPanelBrush}" />
+        <!-- This retained backdrop is also the owner of the user's independent New Tab background. -->
         <Container id="home-canvas" Column="1" Type="Overlay" IsHitTestVisible="False"
-                   IsVisible="{Binding rail.roundedCanvas}" Background="{Resource CuiWorkspaceBrush}" CornerRadius="16 0 0 0" />
+                   IsVisible="{Binding rail.customCanvas}" Background="{Resource CuiWorkspaceBrush}" />
         <Container id="home-main" Column="1" Type="Grid" RowSizes="Auto Auto 1fr Auto" CellGap="{Binding rail.pageGap}" Padding="{Binding rail.pagePadding}">
           <Text id="home-heading" Text="Apps" FontSize="24" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />
           <Container id="home-search-row" Row="2" Type="Vertical Stack" CellGap="24" IsVisible="False"

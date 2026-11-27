@@ -8,6 +8,35 @@ namespace Haven.Core.Tests;
 /// native session, browser login, quota balance or domain egress authority is manufactured.</summary>
 public sealed partial class TaskRunCloudContextTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Already_selected_compacted_raw_history_is_verified_without_borrowing_summary_and_changed_source_still_refuses(bool removed)
+    {
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        await RunAsync(async rig =>
+        {
+            var message = new ChatMessage(Guid.NewGuid(), rig.Conversation.Id, MessageRole.User,
+                "Exact retained raw source selected by the canonical Task", null, null, null, DateTimeOffset.UnixEpoch, IsCompacted: true);
+            rig.Conversations.History = [message];
+            var original = rig.Request(message.Content);
+            var inventory = rig.Inventory() with { OriginalHistory = [message] };
+
+            await rig.Source.CaptureOriginalAsync(rig.Snapshot, original, inventory, token);
+            await using var frame = await rig.Source.AcquireOriginalFrameAsync(rig.Issued, rig.Snapshot, original, rig.Route(original), token);
+            await frame.RevalidateAsync(token);
+
+            Assert.True(rig.Conversations.RawHistoryReads > 0);
+            Assert.Equal(0, rig.Conversations.FilteredHistoryReads);
+            Assert.True(Assert.Single(rig.Conversations.History).IsCompacted);
+            Assert.Equal(0, rig.Lease.Closes);
+            rig.Conversations.History = removed ? [] : [message with { Content = "A different effective source version" }];
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => frame.RevalidateAsync(token).AsTask());
+            Assert.Equal(0, rig.Lease.Closes);
+        });
+    }
+
     [Fact]
     public async Task Same_original_context_supports_healthy_frames_without_releasing_attempt_lease()
     {
@@ -560,9 +589,14 @@ public sealed partial class TaskRunCloudContextTests
     {
         public Conversation? Row;
         public int Reads; public int Writes;
+        public int RawHistoryReads; public int FilteredHistoryReads;
+        public IReadOnlyList<ChatMessage> History = [];
         public Task<Conversation?> GetAsync(Guid id, CancellationToken token) { Reads++; return Task.FromResult(Row?.Id == id ? Row : null); }
         public Task<IReadOnlyList<Conversation>> GetRecentAsync(HavenMode? mode, int limit, CancellationToken token) => Task.FromResult<IReadOnlyList<Conversation>>(Row is { } row ? [row] : []);
-        public Task<IReadOnlyList<ChatMessage>> GetMessagesAsync(Guid id, CancellationToken token) => Task.FromResult<IReadOnlyList<ChatMessage>>([]);
+        public Task<IReadOnlyList<ChatMessage>> GetMessagesAsync(Guid id, CancellationToken token)
+        { RawHistoryReads++; return Task.FromResult<IReadOnlyList<ChatMessage>>(History.Where(message => message.ConversationId == id).ToArray()); }
+        public Task<IReadOnlyList<ChatMessage>> GetContextMessagesAsync(Guid id, CancellationToken token)
+        { FilteredHistoryReads++; return Task.FromResult<IReadOnlyList<ChatMessage>>(History.Where(message => message.ConversationId == id && !message.IsCompacted).ToArray()); }
         public Task UpsertConversationAsync(Conversation conversation, CancellationToken token) { Writes++; Row = conversation; return Task.CompletedTask; }
         public Task AddMessageAsync(ChatMessage message, CancellationToken token) { Writes++; return Task.CompletedTask; }
         public Task DeleteConversationAsync(Guid id, CancellationToken token) => throw new NotSupportedException("This fixture does not delete conversations.");

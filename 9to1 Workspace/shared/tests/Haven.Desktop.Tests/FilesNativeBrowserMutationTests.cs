@@ -3,7 +3,9 @@ using System.Text;
 using System.Security.Cryptography;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Presenters;
 using Avalonia.Input;
+using Avalonia.Media;
 using System.Globalization;
 using Avalonia.Automation;
 using Avalonia.Interactivity;
@@ -12,6 +14,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Application;
 using HavenOS.Files;
 using HavenOS.Files.NativeHost;
@@ -24,8 +27,249 @@ namespace Haven.Desktop.Tests;
 
 /// <summary>Actual persistent Files/Home/broker/fence and issued browser selections.
 /// These controls do not certify installed bootstrap, production rendering or cloud connectivity.</summary>
-public sealed class FilesNativeBrowserMutationTests
+public sealed partial class FilesNativeBrowserMutationTests
 {
+    [AvaloniaFact]
+    public async Task Atlas_Files_list_grid_retains_issued_items_selection_sort_review_and_history()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var first = await CreateReviewedFolder(h, h.Parent.Value, "First folder", token);
+        var second = await CreateReviewedFolder(h, h.Parent.Value, "Second folder", token);
+        await using var view = new FilesNativeBrowserSurface(h.Browser, null, h.Workspace.Actor,
+            new OriginalPreviewFixtureReadiness(h), CancellationToken.None);
+        var window = new Window { Content = view, Width = 1440, Height = 900 }; window.Show();
+        try
+        {
+            await view.InitializeAsync(token); window.UpdateLayout();
+            var list = Assert.Single(view.GetVisualDescendants().OfType<ListBox>());
+            list.SelectedItem = list.Items.Cast<HostedItemMetadata>().Single(row => row.Id == h.Parent);
+            await view.DispatchAsync("9to1.Files.Open", null, token);
+            var selected = list.Items.Cast<HostedItemMetadata>().Single(row => row.Id == second);
+            list.SelectedItem = selected;
+            var sort = Assert.Single(view.GetVisualDescendants().OfType<ComboBox>(), control =>
+                AutomationProperties.GetName(control) == "Sort names on this displayed page");
+            sort.SelectedIndex = 1;
+            var originalSource = list.ItemsSource;
+            var originalOrder = list.Items.Cast<HostedItemMetadata>().ToArray();
+            var name = await ShowNativeNameEditorAsync(view, window, token);
+            name.Text = "Retained new folder";
+            await view.DispatchAsync("9to1.Files.CreateFolder", null, token);
+            var review = Assert.Single((await h.Permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
+            var description = ReadNativeValue(view, "PendingChange");
+            var before = await h.Workspace.Provider.GetStoreEvidenceAsync(h.Workspace.Configuration.StoreId, token);
+            foreach (var command in new[] { "View.Grid", "Details.Toggle", "View.List", "Details.Toggle", "View.Grid" })
+                await view.DispatchAsync("9to1.Files." + command, null, token);
+            window.UpdateLayout();
+            Assert.Same(originalSource, list.ItemsSource);
+            Assert.Equal(originalOrder, list.Items.Cast<HostedItemMetadata>());
+            Assert.Same(selected, list.SelectedItem);
+            Assert.Equal(1, sort.SelectedIndex); Assert.Equal("Retained new folder", name.Text);
+            Assert.Equal(description, ReadNativeValue(view, "PendingChange"));
+            Assert.True(view.IsActionAvailable("9to1.Files.Apply"));
+            Assert.Equal(review.RequestId, Assert.Single((await h.Permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests).RequestId);
+            Assert.Equal(before, await h.Workspace.Provider.GetStoreEvidenceAsync(h.Workspace.Configuration.StoreId, token));
+            await view.DispatchAsync("9to1.Files.CancelReview", null, token);
+            await view.DispatchAsync("9to1.Files.Name.Cancel", null, token);
+            await view.DispatchAsync("9to1.Files.ChooseMove", null, token);
+            var cut = ReadNativeValue(view, "MoveSelection");
+            await view.DispatchAsync("9to1.Files.View.List", null, token);
+            Assert.Equal(cut, ReadNativeValue(view, "MoveSelection"));
+            await view.DispatchAsync("9to1.Files.Back", null, token);
+            Assert.True(view.TryGetOriginalLocation(out var store, out var root, out _)); Assert.Null(root);
+            await view.DispatchAsync("9to1.Files.Forward", null, token);
+            Assert.True(view.TryGetOriginalLocation(out var returnedStore, out var returnedFolder, out _));
+            Assert.Equal(store, returnedStore); Assert.Equal(h.Parent.Value, returnedFolder);
+            Assert.Equal(new[] { second, first }, list.Items.Cast<HostedItemMetadata>().Select(row => row.Id));
+            Assert.True(view.IsActionAvailable("9to1.Files.CancelMove"));
+            await view.DispatchAsync("9to1.Files.CancelMove", null, token);
+            Assert.True(view.CanPrepareOriginalClose());
+            var close = view.CloseAndDrainAsync(); await close; Assert.Same(close, view.CloseAndDrainAsync());
+            Assert.False(view.IsActionAvailable("9to1.Files.View.Grid"));
+        }
+        finally { await view.CloseAndDrainAsync(); window.Close(); }
+    }
+
+    [AvaloniaTheory]
+    [InlineData("Glow")]
+    [InlineData("Professional")]
+    public async Task Atlas_Files_actual_list_grid_and_details_render_at_720_and_1440(string themeName)
+    {
+        // Original Files/Home component owners, real persisted disposable fixtures and real CUI.
+        // These frames do not claim an installed app, production storage or connected cloud account.
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        await CreateReviewedFolder(h, h.Parent.Value, "Assets", token);
+        await CreateReviewedFolder(h, h.Parent.Value, "Research", token);
+        var file = await CreatePresentationFileAsync(h, "Reference data.bin", token);
+        using var theme = new CuiThemePreferenceContext(new FilesPresentationTheme(themeName));
+        await using var view = new FilesNativeBrowserSurface(h.Browser, null, h.Workspace.Actor,
+            new OriginalPreviewFixtureReadiness(h), CancellationToken.None, interfaceTheme: theme);
+        var window = new Window { Content = view, Width = 1440, Height = 900 }; window.Show();
+        try
+        {
+            await view.InitializeAsync(token); window.UpdateLayout();
+            var list = Assert.Single(view.GetVisualDescendants().OfType<ListBox>());
+            list.SelectedItem = list.Items.Cast<HostedItemMetadata>().Single(row => row.Id == h.Parent);
+            await view.DispatchAsync("9to1.Files.Open", null, token);
+            var selected = list.Items.Cast<HostedItemMetadata>().Single(row => row.Id == file);
+            list.SelectedItem = selected;
+            var before = await h.Workspace.Provider.GetStoreEvidenceAsync(h.Workspace.Configuration.StoreId, token);
+            foreach (var size in new[] { new Size(1440, 900), new Size(720, 650) })
+            {
+                window.Width = size.Width; window.Height = size.Height;
+                foreach (var mode in new[] { "List", "Grid" })
+                {
+                    var button = FilesPresentationControl<Button>(view, "files-view-" + mode.ToLowerInvariant());
+                    button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    await AwaitNativeRoleStateAsync(window, () => Equals(ReadNativeValue(view, mode + "View"), true), token);
+                    window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                    Assert.Same(selected, list.SelectedItem);
+                    Assert.True(Assert.IsType<bool>(ReadNativeValue(view, "DeviceSelected")));
+                    Assert.False(Assert.IsType<bool>(ReadNativeValue(view, "TrashSelected")));
+                    Assert.False(Assert.IsType<bool>(ReadNativeValue(view, "DriveSelected")));
+                    Assert.Equal("Reference data.bin", FilesPresentationControl<TextBlock>(view, "files-selected-name").Text);
+                    Assert.True(FilesPresentationControl<Control>(view, "files-open-unavailable").IsEffectivelyVisible);
+                    Assert.False(FilesPresentationControl<Button>(view, "files-details-open").IsEnabled);
+                    var items = Assert.IsType<WrapPanel>(list.ItemsPanelRoot);
+                    Assert.Equal(mode == "Grid" ? 190 : double.NaN, items.ItemHeight);
+                    var container = Assert.IsType<ListBoxItem>(list.ContainerFromItem(selected));
+                    Assert.True(container.IsSelected);
+                    Assert.Equal(new Thickness(0), container.Padding);
+                    var row = FilesPresentationControl<Control>(container, "files-details-row");
+                    var point = row.TranslatePoint(default, container); Assert.NotNull(point);
+                    Assert.InRange(point.Value.X, -1, 2);
+                    Assert.True(row.Bounds.Width >= container.Bounds.Width - 3);
+                    var folderImage = FilesPresentationControl<Image>(list.ContainerFromItem(list.Items.Cast<HostedItemMetadata>().First(item => item.Kind == HostedItemKind.Folder))!, "files-row-folder-artwork");
+                    var folderDrawing = Assert.IsType<GeometryDrawing>(Assert.IsType<DrawingImage>(folderImage.Source).Drawing);
+                    Assert.Null(folderDrawing.Brush); Assert.Equal(1.75, Assert.IsType<Pen>(folderDrawing.Pen).Thickness);
+                    var details = FilesPresentationControl<CuiContainerControl>(view, "files-details-pane");
+                    var detailsPosition = details.TranslatePoint(default, view); Assert.NotNull(detailsPosition);
+                    Assert.True(detailsPosition.Value.X >= -1 && detailsPosition.Value.X + details.Bounds.Width <= view.Bounds.Width + 1);
+                    var expectedInset = size.Width >= 1180 ? 22d : 12d;
+                    Assert.Equal(new Thickness(expectedInset), details.Padding);
+                    Assert.Equal(size.Width >= 1180 ? 12d : 6d, Assert.IsType<Grid>(details.Layout).RowSpacing);
+                    var title = FilesPresentationControl<TextBlock>(view, "files-details-title");
+                    var titlePoint = title.TranslatePoint(default, details); Assert.NotNull(titlePoint);
+                    Assert.InRange(titlePoint.Value.X, expectedInset, expectedInset + 2);
+                    Assert.InRange(titlePoint.Value.Y, expectedInset, expectedInset + 2);
+                    var summary = FilesPresentationControl<Control>(view, "files-selected-summary");
+                    var summaryPoint = summary.TranslatePoint(default, details); Assert.NotNull(summaryPoint);
+                    Assert.True(summaryPoint.Value.X >= expectedInset &&
+                        summaryPoint.Value.X + summary.Bounds.Width <= details.Bounds.Width - expectedInset + 1,
+                        FilesPresentationGeometry(view, summary));
+                    var closeArtwork = FilesPresentationControl<Image>(view, "files-details-close-artwork");
+                    var closeDrawing = Assert.IsType<GeometryDrawing>(Assert.IsType<DrawingImage>(closeArtwork.Source).Drawing);
+                    Assert.Null(closeDrawing.Brush); Assert.NotNull(closeDrawing.Pen);
+                    Assert.InRange(closeArtwork.Bounds.Width, 15, 17); Assert.InRange(closeArtwork.Bounds.Height, 15, 17);
+                    var closePoint = closeArtwork.TranslatePoint(default, details); Assert.NotNull(closePoint);
+                    Assert.True(closePoint.Value.X >= expectedInset &&
+                        closePoint.Value.X + closeArtwork.Bounds.Width <= details.Bounds.Width - expectedInset + 1);
+                    var selectedOpen = FilesPresentationControl<Button>(view, "files-details-open");
+                    var openPoint = selectedOpen.TranslatePoint(default, view); Assert.NotNull(openPoint);
+                    Assert.True(openPoint.Value.Y + selectedOpen.Bounds.Height <= view.Bounds.Height + 1);
+                    if (size.Width == 720)
+                        await CaptureComponentSceneAsync(window, $"files-geometry-{mode.ToLowerInvariant()}-{themeName}-{size.Width:0}x{size.Height:0}");
+                    Assert.True(list.Bounds.Height > 150, FilesPresentationGeometry(view, list));
+                    foreach (var key in new[] { "back", "forward", "up", "refresh" })
+                    {
+                        var navigation = FilesPresentationControl<Button>(view, "files-" + key);
+                        var artwork = FilesPresentationControl<Image>(navigation, "files-" + key + "-artwork");
+                        var drawing = Assert.IsType<GeometryDrawing>(Assert.IsType<DrawingImage>(artwork.Source).Drawing);
+                        Assert.Equal(Assert.IsAssignableFrom<ISolidColorBrush>(navigation.Foreground).Color,
+                            Assert.IsAssignableFrom<ISolidColorBrush>(drawing.Brush).Color);
+                        Assert.InRange(artwork.Bounds.Width, 17, 19); Assert.InRange(artwork.Bounds.Height, 17, 19);
+                        Assert.Equal(new Thickness(0), navigation.Padding);
+                    }
+                    var sort = FilesPresentationControl<ComboBox>(view, "files-displayed-sort");
+                    Assert.Equal("Name A–Z", sort.SelectedItem);
+                    Assert.Equal("Sort names on this displayed page", AutomationProperties.GetName(sort));
+                    Assert.Equal("Sort names on this displayed page", ToolTip.GetTip(sort));
+                    if (size.Width == 720)
+                    {
+                        Assert.Equal("PC", FilesPresentationControl<Button>(view, "files-home").Content);
+                        Assert.Equal("Bin", FilesPresentationControl<Button>(view, "files-trash").Content);
+                        Assert.Equal("Web", FilesPresentationControl<Button>(view, "files-drive").Content);
+                        var providers = FilesPresentationControl<CuiMenuItem>(view, "files-providers-menu");
+                        Assert.True(providers.IsTopLevel); Assert.Equal("More", providers.Header);
+                        // Only the detail body scrolls; the selected item and Open remain reachable.
+                        var technical = FilesPresentationControl<Button>(view, "files-technical-details");
+                        RequireOriginalDetailsScrollPresenter(view, technical);
+                        var beforeScroll = FilesPresentationGeometry(view, technical);
+                        technical.BringIntoView(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                        var technicalPoint = technical.TranslatePoint(default, view); Assert.NotNull(technicalPoint);
+                        Assert.True(technicalPoint.Value.Y >= 0 && technicalPoint.Value.Y + technical.Bounds.Height <= view.Bounds.Height + 1,
+                            "Before BringIntoView: " + beforeScroll + "\nAfter BringIntoView: " + FilesPresentationGeometry(view, technical));
+                        FilesPresentationControl<TextBlock>(view, "files-open-unavailable").BringIntoView();
+                        window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                    }
+                    await CaptureComponentSceneAsync(window, $"files-{mode.ToLowerInvariant()}-{themeName}-{size.Width:0}x{size.Height:0}");
+                }
+            }
+            Assert.Equal(before, await h.Workspace.Provider.GetStoreEvidenceAsync(h.Workspace.Configuration.StoreId, token));
+            Assert.True(view.CanPrepareOriginalClose());
+        }
+        finally { await view.CloseAndDrainAsync(); window.Close(); }
+    }
+
+    private static async Task<TextBox> ShowNativeNameEditorAsync(FilesNativeBrowserSurface view, Window window, CancellationToken token)
+    {
+        FilesPresentationControl<Button>(view, "files-new").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        await AwaitNativeRoleStateAsync(window, () => Equals(ReadNativeValue(view, "NameEditorVisible"), true), token);
+        window.UpdateLayout();
+        var name = FilesPresentationControl<TextBox>(view, "files-name-input");
+        Assert.True(name.IsEffectivelyVisible);
+        return name;
+    }
+
+    private static T FilesPresentationControl<T>(Control root, string id) where T : Control => Assert.Single(
+        root.GetVisualDescendants().OfType<T>(), control => control.Name == id || AutomationProperties.GetAutomationId(control) == id);
+
+    private static string FilesPresentationGeometry(Control root, Control target)
+    {
+        var controls = root.GetVisualDescendants().OfType<Control>().ToArray();
+        var names = new[] { "files-content-layout", "files-main", "files-command-bar", "files-details-pane", "files-details-scroll" };
+        var regions = names.Select(name => controls.FirstOrDefault(control => control.Name == name))
+            .OfType<Control>()
+            .Select(control => $"{control.Name}: bounds={control.Bounds}, position={control.TranslatePoint(default, root)}, desired={control.DesiredSize}");
+        var scrolls = controls.OfType<ScrollViewer>().Take(8).Select(scroll =>
+            $"scroll: presenter={scroll.Presenter?.GetType().Name ?? "none"}, bounds={scroll.Bounds}, viewport={scroll.Viewport}, extent={scroll.Extent}, offset={scroll.Offset}, vertical={scroll.VerticalScrollBarVisibility}");
+        return $"root={root.Bounds}; target={target.Name}, bounds={target.Bounds}, position={target.TranslatePoint(default, root)}, measure={target.IsMeasureValid}, arrange={target.IsArrangeValid}; " +
+            string.Join("; ", regions.Concat(scrolls));
+    }
+
+    private static void RequireOriginalDetailsScrollPresenter(Control root, Control target)
+    {
+        var scroll = Assert.IsType<ScrollViewer>(target.GetVisualAncestors().OfType<ScrollViewer>().FirstOrDefault());
+        Assert.Contains(scroll.GetVisualAncestors().OfType<Control>(), control => control.Name == "files-details-scroll");
+        var presenter = Assert.IsType<ScrollContentPresenter>(scroll.Presenter);
+        Assert.True(presenter.CanVerticallyScroll);
+        Assert.True(scroll.Viewport.Width > 0 && scroll.Viewport.Height > 0, FilesPresentationGeometry(root, target));
+    }
+
+    private sealed class FilesPresentationTheme(string name) : ICuiThemePreferenceSource
+    {
+        public CuiThemePreferenceSnapshot Current { get; } = new(name, 1, "files-renderer-component", true,
+            CuiAccessibilitySettings.Default, CuiAppearance.Dark);
+        public event EventHandler? Changed { add { } remove { } }
+    }
+
+    private static async Task<HostedItemId> CreatePresentationFileAsync(Harness h, string name, CancellationToken token)
+    {
+        var actor = h.Workspace.Actor;
+        var folder = (await h.Workspace.Directories.ResolveProfileAsync(Guid.Parse(actor.ProfileId), "write", token)).Value!;
+        var bytes = Encoding.UTF8.GetBytes("Disposable Files rendering fixture. No executable content.\n");
+        await File.WriteAllBytesAsync(Path.Combine(folder.DirectoryPath, name), bytes, token);
+        var parent = (await h.Workspace.Provider.GetAsync(h.Parent, token)).Value!;
+        var upload = new FilesUploadedContent(HostedItemId.New(), h.Parent, name, "application/octet-stream", new(Guid.NewGuid()),
+            null, actor.ActorId, DateTimeOffset.UtcNow, bytes.Length, Convert.ToHexString(SHA256.HashData(bytes)), name);
+        var authority = h.Graph.GetRequiredService<NativeFilesWorkspaceAuthority>();
+        var commit = await authority.CaptureCommitAuthorityAsync(actor, h.Workspace.Provider, () => true, token);
+        Assert.True((await h.Workspace.Provider.CommitUploadedContentAsync(upload,
+            [new(h.Parent, parent.CurrentRevisionId)], commit, token)).IsSuccess);
+        return upload.FileId;
+    }
+
     [Fact]
     public async Task Create_and_rename_require_original_Home_review_and_commit_each_operation_once()
     {
@@ -325,7 +569,7 @@ public sealed class FilesNativeBrowserMutationTests
             await view.InitializeAsync(token); window.UpdateLayout();
             var list = Assert.Single(view.GetVisualDescendants().OfType<ListBox>());
             list.SelectedItem = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == h.Parent);
-            var name = view.GetVisualDescendants().OfType<TextBox>().Single(input => AutomationProperties.GetName(input) == "Folder or item name");
+            var name = await ShowNativeNameEditorAsync(view, window, token);
             name.Text = "Protected root";
             Assert.False(view.IsActionAvailable("9to1.Files.Rename"));
             await view.DispatchAsync("9to1.Files.Open", null, token);
@@ -424,6 +668,16 @@ public sealed class FilesNativeBrowserMutationTests
             var cut = Assert.Single(menu.Items.OfType<MenuItem>(), item => Equals(item.Header, "Cut"));
 
             list.SelectedItem = firstRow;
+            var firstContainer = Assert.IsType<ListBoxItem>(list.ContainerFromItem(firstRow));
+            Assert.True(firstContainer.Focus());
+            secondContainer.RaiseEvent(new ContextRequestedEventArgs());
+            Assert.True(menu.IsOpen); Assert.Same(secondRow, list.SelectedItem);
+            menu.Close(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+            Assert.True(secondContainer.IsKeyboardFocusWithin);
+            Assert.False(firstContainer.IsKeyboardFocusWithin);
+            Assert.False(view.IsActionAvailable("9to1.Files.CancelMove"));
+            Assert.Empty((await h.Permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
+
             secondContainer.RaiseEvent(new ContextRequestedEventArgs());
             Assert.True(menu.IsOpen);
             Assert.Same(secondRow, list.SelectedItem);
@@ -477,10 +731,12 @@ public sealed class FilesNativeBrowserMutationTests
             container.RaiseEvent(new ContextRequestedEventArgs());
             Assert.True(menu.IsOpen);
             Assert.True(rename.IsEnabled);
-            var name = Assert.Single(view.GetVisualDescendants().OfType<TextBox>(), box => AutomationProperties.GetName(box) == "Folder or item name");
-            Assert.True(name.IsEffectivelyVisible);
             rename.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
             menu.Close();
+            await AwaitNativeRoleStateAsync(window, () => Equals(ReadNativeValue(view, "NameEditorVisible"), true), token);
+            window.UpdateLayout();
+            var name = FilesPresentationControl<TextBox>(view, "files-name-input");
+            Assert.True(name.IsEffectivelyVisible);
             Assert.Equal("Second", name.Text);
             Assert.Equal("Second", name.SelectedText);
             Dispatcher.UIThread.RunJobs();
@@ -625,7 +881,7 @@ public sealed class FilesNativeBrowserMutationTests
             await view.InitializeAsync(token);
             await view.OpenOriginalLocationAsync(h.Workspace.Configuration.StoreId, h.Parent.Value, token);
             window.UpdateLayout();
-            var name = view.GetVisualDescendants().OfType<TextBox>().Single(input => AutomationProperties.GetName(input) == "Folder or item name");
+            var name = await ShowNativeNameEditorAsync(view, window, token);
             var originalContent = view.Content;
             name.Text = "Unsubmitted folder";
             Assert.False(view.CanPrepareOriginalClose()); Assert.Equal("Unsubmitted folder", name.Text);
@@ -940,6 +1196,7 @@ public sealed class FilesNativeBrowserMutationTests
             window.UpdateLayout();
             Assert.True(view.TryGetOriginalTextPreviewLocation(out var file, out var revision, out var name));
             Assert.Equal(upload.FileId.Value, file); Assert.Equal(upload.RevisionId.Value, revision); Assert.Equal("revision.cs", name);
+            Assert.Equal(upload.RevisionId.Value.ToString("N"), upload.RevisionId.ToString());
             Assert.Equal(text, Assert.IsType<string>(ReadNativeValue(view, "TextPreviewContent")));
             Assert.Equal(text, Assert.Single(view.GetVisualDescendants().OfType<TextBlock>(),
                 control => control.Name == "files-preview-content").Text);
@@ -981,6 +1238,29 @@ public sealed class FilesNativeBrowserMutationTests
             return current ? new(CuiSceneAvailabilityState.Ready, "ORIGINAL_COMPONENT", "Actual Home/Files component owners are current.")
                 : new(CuiSceneAvailabilityState.Unavailable, "COMPONENT_CHANGED", "The original component profile/store ownership changed.");
         }
+    }
+
+    [Theory]
+    [InlineData("9to1.Files.Share.Grant")]
+    [InlineData("9to1.Files.Share.Revoke")]
+    public async Task Native_sharing_resolver_admits_only_known_owned_current_write_scopes(string action)
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var itemId = await CreateReviewedFolder(h, h.Parent.Value, "Review access", token);
+        var page = await h.Browser.ListAsync(h.Workspace.Actor, h.Parent.Value, token: token);
+        var row = page.Items.Single(item => item.Id == itemId);
+        var scope = new ResourceScope("files.item", row.Id.ToString(), row.CurrentRevisionId!.Value.ToString(), ResourceAccess.Write);
+        var resolver = h.Graph.GetRequiredService<FilesArtifactResourceResolver>();
+        var observed = await resolver.EvaluateAsync(h.Workspace.Actor, action, scope, token);
+        Assert.True(observed.Allowed); Assert.Equal(scope.Revision, observed.ResourceRevision);
+        Assert.False((await resolver.EvaluateAsync(h.Workspace.Actor, action + ".Unknown", scope, token)).Allowed);
+        Assert.False((await resolver.EvaluateAsync(h.Workspace.Actor, action, scope with { Access = ResourceAccess.Read }, token)).Allowed);
+        Assert.False((await resolver.EvaluateAsync(h.Workspace.Actor, action, scope with { Access = ResourceAccess.Execute }, token)).Allowed);
+        Assert.False((await resolver.EvaluateAsync(h.Workspace.Actor, action, scope with { Revision = Guid.NewGuid().ToString("N") }, token)).Allowed);
+        Assert.False((await resolver.EvaluateAsync(h.Workspace.Actor, action, scope with { Id = Guid.NewGuid().ToString("N") }, token)).Allowed);
+        Assert.False((await resolver.EvaluateAsync(h.Workspace.Actor with { ProfileId = Guid.NewGuid().ToString("N") }, action, scope, token)).Allowed);
+        Assert.Empty((await h.Permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
     }
 
     [Fact]
@@ -1037,24 +1317,78 @@ public sealed class FilesNativeBrowserMutationTests
             Assert.False(view.IsActionAvailable("9to1.Files.Share.ReviewScope")); // No changed scope yet.
             var toggle = Assert.Single(view.GetVisualDescendants().OfType<ToggleSwitch>(), control => control.Name == "files-share-scope-expiry-switch");
             Assert.Equal(true, toggle.IsChecked);
+            var role = FilesPresentationControl<ComboBox>(view, "files-share-scope-role");
+            var input = FilesPresentationControl<TextBox>(view, "files-share-scope-expiry");
+            var originalExpiry = input.Text;
+            var expiryField = FilesPresentationControl<Control>(view, "files-share-scope-expiry-field");
+            var scopeEditor = FilesPresentationControl<Control>(view, "files-share-scope-editor");
+            var sharing = FilesPresentationControl<Control>(view, "files-sharing");
+            void RequireReturnedExpiryField()
+            {
+                Assert.Same(input, FilesPresentationControl<TextBox>(view, "files-share-scope-expiry"));
+                Assert.Same(expiryField, FilesPresentationControl<Control>(view, "files-share-scope-expiry-field"));
+                Assert.True(expiryField.IsVisible);
+                Assert.True(input.IsEffectivelyVisible);
+                Assert.Contains(input.GetVisualAncestors(), ancestor => ReferenceEquals(ancestor, view));
+                input.BringIntoView(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                RequireOriginalDetailsScrollPresenter(view, input);
+                Assert.True(input.Bounds.Width > 0 && input.Bounds.Height > 0, FilesPresentationGeometry(view, input));
+                var point = input.TranslatePoint(new Avalonia.Point(input.Bounds.Width / 2, input.Bounds.Height / 2), window);
+                Assert.NotNull(point);
+                Assert.InRange(point.Value.X, 0, window.ClientSize.Width - 1);
+                Assert.InRange(point.Value.Y, 0, window.ClientSize.Height - 1);
+            }
             void ClickExpirySwitch()
             {
+                // The admitted action can materialise the editor during the previous
+                // dispatcher pump. Arrange that real control before requesting its scroll.
+                window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                RequireOriginalDetailsScrollPresenter(view, toggle);
+                var beforeScroll = FilesPresentationGeometry(view, toggle);
                 toggle.BringIntoView(); window.UpdateLayout();
                 var point = toggle.TranslatePoint(new Avalonia.Point(toggle.Bounds.Width / 2, toggle.Bounds.Height / 2), window);
-                Assert.NotNull(point); window.MouseMove(point.Value); window.MouseDown(point.Value, MouseButton.Left); window.MouseUp(point.Value, MouseButton.Left);
+                Assert.NotNull(point);
+                Assert.InRange(point.Value.X, 0, window.ClientSize.Width - 1);
+                Assert.True(point.Value.Y >= 0 && point.Value.Y <= window.ClientSize.Height - 1,
+                    "Before BringIntoView: " + beforeScroll + "\nAfter BringIntoView: " + FilesPresentationGeometry(view, toggle));
+                window.MouseMove(point.Value); window.MouseDown(point.Value, MouseButton.Left); window.MouseUp(point.Value, MouseButton.Left);
             }
             ClickExpirySwitch();
             await AwaitNativeRoleStateAsync(window, () => Equals(ReadNativeValue(view, "ShareScopeExpiryEnabled"), false), token);
             Assert.Equal(false, toggle.IsChecked);
+            // CUI retains authored controls when their section is hidden. A detached
+            // input's own effective flag is not evidence that it is on this page.
+            Assert.False(expiryField.IsVisible);
+            Assert.DoesNotContain(input.GetVisualAncestors(), ancestor => ReferenceEquals(ancestor, view));
             ClickExpirySwitch();
             await AwaitNativeRoleStateAsync(window, () => Equals(ReadNativeValue(view, "ShareScopeExpiryEnabled"), true), token);
             Assert.Equal(true, toggle.IsChecked);
-            var input = Assert.Single(view.GetVisualDescendants().OfType<TextBox>(), control => control.Name == "files-share-scope-expiry");
+            RequireReturnedExpiryField(); Assert.Equal(originalExpiry, input.Text);
             input.Text = "invalid UTC date";
             Assert.False(view.IsActionAvailable("9to1.Files.Share.ReviewScope"));
             var utc = DateTimeOffset.UtcNow.AddHours(2).ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
             var expected = DateTimeOffset.ParseExact(utc, "yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture,
                 DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
+            input.Text = utc;
+            await AwaitNativeRoleStateAsync(window, () => view.IsActionAvailable("9to1.Files.Share.ReviewScope") == true, token);
+            FilesPresentationControl<Button>(view, "files-cancel-share-scope").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await AwaitNativeRoleStateAsync(window, () => Equals(ReadNativeValue(view, "ShareScopeVisible"), false), token);
+            Assert.False(scopeEditor.IsVisible);
+            Assert.DoesNotContain(input.GetVisualAncestors(), ancestor => ReferenceEquals(ancestor, view));
+            FilesPresentationControl<Button>(view, "files-close-access").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await AwaitNativeRoleStateAsync(window, () => Equals(ReadNativeValue(view, "SharingVisible"), false), token);
+            Assert.False(sharing.IsVisible);
+            Assert.DoesNotContain(role.GetVisualAncestors(), ancestor => ReferenceEquals(ancestor, view));
+            await view.DispatchAsync("9to1.Files.Share.Get", null, token);
+            window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+            FilesPresentationControl<Button>(view, "files-edit-share-scope").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await AwaitNativeRoleStateAsync(window, () => Equals(ReadNativeValue(view, "ShareScopeVisible"), true), token);
+            Assert.Same(role, FilesPresentationControl<ComboBox>(view, "files-share-scope-role"));
+            Assert.Same(scopeEditor, FilesPresentationControl<Control>(view, "files-share-scope-editor"));
+            Assert.Same(sharing, FilesPresentationControl<Control>(view, "files-sharing"));
+            RequireReturnedExpiryField();
+            Assert.Equal(originalExpiry, input.Text); // Cancel restored the original grant; it did not apply the draft.
+            Assert.Empty((await h.Permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
             input.Text = utc;
             await AwaitNativeRoleStateAsync(window, () => view.IsActionAvailable("9to1.Files.Share.ReviewScope") == true, token);
             await CaptureComponentSceneAsync(window, "files-existing-recipient-scope-editor");

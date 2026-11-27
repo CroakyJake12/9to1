@@ -1,6 +1,7 @@
 <Cui id="home.dashboard" version="1">
   <Actions>
     <Action name="ReviewModel" command="ReviewRecommendedModel" parameter="{Binding model.Key}" />
+    <Action name="ReviewAttention" command="ReviewDashboardAttention" parameter="{Binding DashboardAttentionKey}" />
   </Actions>
   <Theme Name="user_preference">
     <Page id="home-dashboard" AccessibleName="Home dashboard">
@@ -43,17 +44,45 @@
             </Container>
             <Container id="dashboard-home-briefing" Type="Vertical Stack" CellGap="24"
                        IsVisible="{Binding ShowHomeBriefing, fallback=false}">
+              <Container id="dashboard-attention" Type="Grid" ColumnSizes="{Binding DashboardAttentionColumns, fallback=1fr}"
+                         RowSizes="{Binding DashboardAttentionRows, fallback=Auto Auto}" CellGap="12" Padding="18" CornerRadius="16"
+                         Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiAccentBrush}" BorderWidth="1"
+                         IsVisible="{Binding HasDashboardAttention, fallback=false}">
+                <Container Type="Vertical Stack" CellGap="4">
+                  <Text id="dashboard-attention-title" Text="{Binding DashboardAttentionTitle}" FontWeight="750" FontSize="16" TextWrapping="Wrap" />
+                  <Text id="dashboard-attention-detail" Text="{Binding DashboardAttentionDetail}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                  <Text id="dashboard-attention-freshness" Text="{Binding DashboardAttentionFreshness}" FontSize="12"
+                        Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                </Container>
+                <Container Row="{Binding DashboardAttentionActionRow, fallback=1}" Column="{Binding DashboardAttentionActionColumn, fallback=0}"
+                           Type="Vertical Stack" CellGap="4" VerticalAlignment="Center" HorizontalAlignment="Left">
+                  <Button id="dashboard-attention-review" Action="ReviewAttention" Content="Review request"
+                          AccessibleName="Review the selected pending request in Home permissions" IsEnabled="{Binding CanReviewDashboardAttention, fallback=false}" />
+                  <Button id="dashboard-attention-update" Action="RefreshDashboardAttention" Content="Refresh requests" Chromeless="True"
+                          IsEnabled="{Binding CanRefreshDashboardAttention, fallback=false}" />
+                </Container>
+              </Container>
+              <Container id="dashboard-attention-status" Type="Vertical Stack" CellGap="8"
+                         IsVisible="{Binding HasDashboardAttentionStatus, fallback=false}">
+                <Text id="dashboard-attention-status-text" Text="{Binding DashboardAttentionStatus}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                <Button id="dashboard-attention-refresh" Action="RefreshDashboardAttention" Content="Refresh requests"
+                        IsEnabled="{Binding CanRefreshDashboardAttention, fallback=false}" HorizontalAlignment="Left" Chromeless="True" />
+              </Container>
               <Container id="dashboard-continue-working" Type="Vertical Stack" CellGap="8" IsVisible="{Binding HasBriefingLibrary, fallback=false}">
                 <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="10">
                   <Text Text="Continue working" FontSize="20" FontWeight="750" VerticalAlignment="Center" />
                   <Button id="dashboard-briefing-library" Column="1" Action="OpenBriefingLibrary" Content="View files"
                           AccessibleName="View files in Home Library" VerticalAlignment="Center" Chromeless="True" />
                 </Container>
-                <Text Text="Recently opened documents are unavailable here. Browse your files and notebooks in Library."
-                      Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                <Text Text="Recently modified documents from Library. Each opens in its original app."
+                      IsVisible="{Binding HasBriefingLibrarySource, fallback=false}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                <Container id="dashboard-library-host" Type="Overlay" IsVisible="{Binding HasBriefingLibrarySource, fallback=false}" />
+                <Text Text="Documents are unavailable here. Browse your files and notebooks in Library."
+                      IsVisible="{Binding HasBriefingLibraryFallback, fallback=false}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
               </Container>
               <Container id="dashboard-briefing-agenda" Type="Grid" ColumnSizes="{Binding BriefingColumns, fallback=1fr}" RowSizes="{Binding BriefingRows, fallback=Auto Auto}" CellGap="16">
-                <Container id="dashboard-today" Type="Vertical Stack" CellGap="12">
+                <Container id="dashboard-today" Type="Vertical Stack" CellGap="12" Padding="18" CornerRadius="16"
+                           Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
                   <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
                     <Container Type="Vertical Stack" CellGap="3">
                       <Text Text="Today" FontSize="20" FontWeight="750" />
@@ -79,11 +108,13 @@
                   </Repeat>
                 </Container>
                 <Container id="dashboard-study-week" Row="{Binding BriefingStudyRow, fallback=1}" Column="{Binding BriefingStudyColumn, fallback=0}"
-                           Type="Vertical Stack" CellGap="8" Padding="18" CornerRadius="16" Background="{Resource CuiPanelBrush}">
+                           Type="Vertical Stack" CellGap="8" Padding="18" CornerRadius="16" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
                   <Text Text="Study this week" FontSize="20" FontWeight="750" TextWrapping="Wrap" />
                   <Text Text="{Binding BriefingStudyTime}" IsVisible="{Binding HasBriefingStudyTime, fallback=false}"
                         FontSize="32" FontWeight="800" TextWrapping="Wrap" />
                   <Text Text="{Binding BriefingStudyStatus}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                  <Text Text="Measured from Study lessons. A weekly target is not provided by this source."
+                        FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" IsVisible="{Binding HasBriefingStudyTime, fallback=false}" />
                   <Button id="dashboard-briefing-study" Action="OpenBriefingStudy" Content="View progress" AccessibleName="View progress in Study Space"
                           IsVisible="{Binding HasBriefingStudy, fallback=false}" HorizontalAlignment="Left" Chromeless="True" />
                 </Container>

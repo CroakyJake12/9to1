@@ -29,6 +29,8 @@ public sealed partial class NewDashboardPage
     {
         _briefingLibraryAvailable = available;
         _dashboardBindings.Set("HasBriefingLibrary", available);
+        _dashboardBindings.Set("HasBriefingLibrarySource", _briefingLibraryFactory is not null);
+        _dashboardBindings.Set("HasBriefingLibraryFallback", available && _briefingLibraryFactory is null);
     }
 
     private void ApplyBriefingWidth(double width)
@@ -38,6 +40,10 @@ public sealed partial class NewDashboardPage
         _dashboardBindings.Set("BriefingRows", wide ? "Auto" : "Auto Auto");
         _dashboardBindings.Set("BriefingStudyRow", wide ? 0 : 1);
         _dashboardBindings.Set("BriefingStudyColumn", wide ? 1 : 0);
+        _dashboardBindings.Set("DashboardAttentionColumns", width >= 600 ? "1fr Auto" : "1fr");
+        _dashboardBindings.Set("DashboardAttentionRows", width >= 600 ? "Auto" : "Auto Auto");
+        _dashboardBindings.Set("DashboardAttentionActionColumn", width >= 600 ? 1 : 0);
+        _dashboardBindings.Set("DashboardAttentionActionRow", width >= 600 ? 0 : 1);
     }
 
     internal bool ShowsHomeBriefing => _homeBriefingEnabled && _selectedPageId == HomePageId &&
@@ -50,6 +56,8 @@ public sealed partial class NewDashboardPage
         _publishedBriefingVisibility = show;
         _dashboardBindings.Set("ShowHomeBriefing", show);
         _dashboardBindings.Set("ShowDashboardGreeting", !show);
+        PublishAttentionBindings();
+        if (!show) _briefingLibraryPage?.Deactivate();
         HomeBriefingVisibilityChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -71,6 +79,7 @@ public sealed partial class NewDashboardPage
         if (!ShowsHomeBriefing) return;
         await RefreshTodayAsync(snapshot, token);
         await RefreshStudyWeekAsync(token);
+        await RefreshBriefingLibraryAsync(token);
     }
 
     private async Task RefreshTodayAsync(DashboardSnapshot snapshot, CancellationToken token)

@@ -249,7 +249,9 @@ public sealed partial class TaskRunConfiguredCloudAdmissionSource : ITaskRunClou
         // history incurs no artificial persistence operation.
         if (capture.History.Count != 0)
         {
-            var history = await _conversations.GetContextMessagesAsync(capture.Owner.ContextId, token).ConfigureAwait(false);
+            // Verify the exact already-selected source records. Prompt compaction is not
+            // an authorization boundary; its global flags cannot hide retained raw evidence.
+            var history = await _conversations.GetMessagesAsync(capture.Owner.ContextId, token).ConfigureAwait(false);
             foreach (var pair in capture.History)
                 if (history.FirstOrDefault(message => message.Id == pair.Key) is not { } current || Digest(current) != pair.Value)
                     throw new UnauthorizedAccessException("An actual selected history record changed or was removed.");

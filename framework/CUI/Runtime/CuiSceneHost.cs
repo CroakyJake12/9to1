@@ -23,6 +23,9 @@ public sealed record CuiNativeScene(string AppId, string Title, string Surface, 
     /// <summary>Borrowed canonical Home preference context, including authorised offline cache.
     /// The source owner retains its lifetime; a scene retires only its own subscriptions.</summary>
     public CuiThemePreferenceContext? ThemePreference { get; init; }
+    /// <summary>Optional selected-app chrome scope. The scene keeps its original
+    /// content, readiness and action owners while its presentation follows this app.</summary>
+    public CuiScenePresentationScope? PresentationScope { get; init; }
     /// <summary>Trusted in-process owning app factories for typed native Object controls.</summary>
     public CuiControlRegistry? ControlRegistry { get; init; }
     /// <summary>Optional synchronous native-owner observation for each publication notification.
@@ -62,6 +65,8 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
     private CuiSceneThemeBinding? _themeBinding;
     private CuiNativeScene? _currentScene;
     private bool _ownsBackdrop;
+    private bool _publishingPresentation;
+    private CuiScenePresentationScope? _pendingPresentation, _appliedPresentation;
 
     private readonly CancellationTokenSource _lifetime = new();
     private long _generation;
@@ -425,7 +430,9 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
             _failureLoader?.Dispose(); _failureLoader = null; _failureModel = null; LastActionFailure = null;
             _loader = next;
             _currentScene = scene;
+            _appliedPresentation = null;
             _themeBinding = nextTheme;
+            _ownsBackdrop = next.RootOwnsBackdrop;
             if (_visualResources is not null) Resources.MergedDictionaries.Remove(_visualResources);
             _visualResources = nextTheme.Resources;
             Resources.MergedDictionaries.Add(_visualResources);
@@ -605,6 +612,7 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
             _failureLoader = null; _failureModel = null; LastActionFailure = null;
             _loader = next;
             _currentScene = scene;
+            _appliedPresentation = null;
             _themeBinding = publication.ThemeBinding;
             _contentLoader = next; _contentRoot = root; // Exact assigned Content custody before its notification.
             transferred = true;
@@ -896,13 +904,60 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
         Foreground = SceneResource<Avalonia.Media.IBrush>(resources, "CuiTextBrush");
     }
 
+    /// <summary>
+    /// Updates only the currently retained scene's visual app scope. Drafts,
+    /// focus, native views, readiness and accepted actions keep their owners.
+    /// False means the original publication was absent or revoked; no replacement
+    /// scene is created and callers must not interpret this as route admission.
+    /// </summary>
+    public bool UpdatePresentationScope(CuiScenePresentationScope presentation)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        ArgumentNullException.ThrowIfNull(presentation);
+        if (_disposed || _currentScene is null || _loader is null || _themeBinding is null ||
+            _currentScene.IsPublicationCurrent?.Invoke() == false) return false;
+        // Resource notifications can synchronously re-enter through the shared
+        // host's bindings. Coalesce that observation; keep the latest selected
+        // app without recursively rebuilding resources or losing a newer scope.
+        _pendingPresentation = presentation;
+        if (_publishingPresentation) return true;
+        _publishingPresentation = true;
+        try
+        {
+            while (_pendingPresentation is { } next)
+            {
+                _pendingPresentation = null;
+                if (_appliedPresentation == next) continue;
+                if (_currentScene is not { } scene || _loader is not { } loader || _themeBinding is not { } binding)
+                    return false;
+                bool Current() => !_disposed && ReferenceEquals(_loader, loader) &&
+                    ReferenceEquals(_themeBinding, binding) && scene.IsPublicationCurrent?.Invoke() != false;
+                if (!Current()) return false;
+                // A revoked or failed publication may already have changed one provider. Do not
+                // retain the earlier cache key and skip repainting that scope on readmission.
+                _appliedPresentation = null;
+                _currentScene = scene with { PresentationScope = next };
+                binding.UpdatePresentationScope(next);
+                if (!Current()) return false;
+                loader.UpdatePresentationScope(next);
+                if (!Current()) return false;
+                _failureLoader?.UpdatePresentationScope(next);
+                if (!Current()) return false;
+                _appliedPresentation = next;
+            }
+            return true;
+        }
+        finally { _publishingPresentation = false; }
+    }
+
     private static T SceneResource<T>(ResourceDictionary resources, string key) =>
         resources.TryGetResource(key, null, out var value) && value is T typed ? typed :
             throw new InvalidOperationException($"CUI_SCENE_THEME_RESOURCE: missing '{key}'.");
 
     private static void ConfigureSceneLoader(CuiControlLoader loader, CuiNativeScene scene)
     {
-        loader.SetSurface(scene.Surface, CuiSceneVisualResources.AccentAppId(scene));
+        var presentation = CuiSceneVisualResources.PresentationScope(scene);
+        loader.SetSurface(presentation.Surface, presentation.AppId);
         if (scene.ThemePreference is { } context) loader.SetThemePreferenceContext(context);
         // An explicit scene appearance is a preview override. Otherwise leave
         // it unset so live Home appearance updates remain reactive.

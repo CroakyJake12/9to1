@@ -24,8 +24,13 @@ internal sealed partial class SpacesBrowseAppContentSession
     private readonly List<Exception> _preparedCloseFailures = [];
     private Task? _lastQueuedNavigation;
     private long _routeEpoch;
+    internal sealed record SupersededSpaceNavigation(Guid RequestedSpaceId, SpacesActionKind Action,
+        long AdmittedRouteEpoch, long CurrentRouteEpoch, Guid? CurrentSpaceId);
+    private SupersededSpaceNavigation? _lastSupersededSpaceNavigation;
 
     internal Task? OriginalQueuedNavigation { get { lock (_gate) return _lastQueuedNavigation; } }
+    internal SupersededSpaceNavigation? LastSupersededSpaceNavigation
+    { get { lock (_gate) return _lastSupersededSpaceNavigation; } }
 
     private bool QueueSpaceAction(SpacesAction action, Task actualOriginAndLoaderSettlement)
     {
@@ -80,8 +85,7 @@ internal sealed partial class SpacesBrowseAppContentSession
                 try
                 {
                     linked.Token.ThrowIfCancellationRequested(); DemandAlive();
-                    if (_routeEpoch != epoch || !ReferenceEquals(_spacesPage?.Controller.State.Selection, selection))
-                        throw new InvalidOperationException("The admitted Spaces selection or route changed before navigation.");
+                    if (SettleSupersededSpaceNavigation(action, selection, epoch, execution)) return;
                     await ExecuteActionOnUiAsync(action, linked.Token);
                 }
                 finally { ExecutingCommand.Value = prior; }
@@ -135,6 +139,33 @@ internal sealed partial class SpacesBrowseAppContentSession
             ThrowActualCauses(failures, "The original queued Spaces action failed.");
         }
         finally { Volatile.Write(ref execution.Active, false); if (serialEntered) _commandSerial.Release(); }
+    }
+
+    private bool SettleSupersededSpaceNavigation(SpacesAction action, SpacesHomeSelection selection,
+        long epoch, CommandExecution execution)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        SpacesHomePage? unchangedTargetHome = null;
+        lock (_gate)
+        {
+            DemandAlive();
+            var currentSelection = _spacesPage?.Controller.State.Selection;
+            if (_routeEpoch == epoch && ReferenceEquals(currentSelection, selection)) return false;
+
+            // The origin and loader have settled, and no navigation effect has begun. A newer
+            // selection/route invalidates this entry; retain that explicit outcome without
+            // turning a handled refusal into an original failure that permanently vetoes close.
+            _lastSupersededSpaceNavigation = new(selection.Id, action.Kind, epoch, _routeEpoch, currentSelection?.Id);
+
+            // A refresh of the same target needs a visible retry outcome. An older entry must
+            // never replace a newer queued action's status or the newly published route.
+            if (_routeEpoch == epoch && currentSelection?.Id == selection.Id &&
+                ReferenceEquals(_lastQueuedNavigation, execution.Original) && _publishedDetailsRoute is null)
+                unchangedTargetHome = _spacesPage;
+        }
+        unchangedTargetHome?.Controller.ReportWorkspaceActionRefusal(
+            "This Space changed before it opened. Select it again.");
+        return true;
     }
 
     private async Task ExecuteActionOnUiAsync(SpacesAction action, CancellationToken token)
@@ -215,7 +246,7 @@ internal sealed partial class SpacesBrowseAppContentSession
                 if (!_detailsBySpace.TryGetValue(id, out page) || page.OriginalClose is not null)
                 {
                     page = new SpaceDetailsPage(registry, id, SpacesHomePage.ImmediateReadinessInstance,
-                        settlement => QueueHomeReturn(page!, settlement));
+                        settlement => QueueHomeReturn(page!, settlement), interfaceTheme: _interfaceTheme);
                     lock (_gate) _ownedDetails.Add(page); // Custody before activation or another currentness check.
                     acquired = true;
                     await page.ActivateAsync(token);

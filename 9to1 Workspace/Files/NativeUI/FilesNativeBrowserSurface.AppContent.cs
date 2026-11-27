@@ -72,7 +72,7 @@ public sealed partial class FilesNativeBrowserSurface
             _textPreviewPage is not { } page || !ReferenceEquals(_page, page) ||
             _textPreviewRow is not { } row || !ReferenceEquals(_items.SelectedItem, row) ||
             !page.Items.Any(item => ReferenceEquals(item, row)) || preview.FileId != row.Id.Value ||
-            !Guid.TryParseExact(preview.Revision, "D", out var revision) || revision == Guid.Empty ||
+            !Guid.TryParseExact(preview.Revision, "N", out var revision) || revision == Guid.Empty ||
             row.CurrentRevisionId?.Value != revision) return false;
         fileId = row.Id.Value; revisionId = revision; name = row.Name; return true;
     }

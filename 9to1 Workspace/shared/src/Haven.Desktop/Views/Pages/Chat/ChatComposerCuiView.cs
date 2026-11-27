@@ -74,6 +74,7 @@ internal interface IChatComposerTaskActions
 public interface IChatComposerSource
 {
     object? ActionIdentity => null;
+    IChatComposerConversationActions? ConversationActions => null;
     bool CanRefreshTaskControls => false;
     ValueTask RefreshTaskControls() => ValueTask.FromException(new NotSupportedException("No actual task controls owner is bound."));
     bool CanEnterVoice => false;
@@ -131,7 +132,7 @@ public interface IChatComposerSource
 /// not in domain. Dispatching returns the real admitted source operation instead of a swallowed
 /// completed task.
 /// </summary>
-public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActionDispatcher,
+public sealed partial class ChatComposerBindings : ICuiWritableBindingContext, ICuiActionDispatcher,
     ICuiActionAvailability, ICuiRepeatItemBindingContext, INotifyPropertyChanged
 {
     private readonly IChatComposerSource _source;
@@ -148,6 +149,7 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
     private bool _emojiOpen;
     private bool _focused;
     private bool _expanded;
+    private bool _narrow;
     // Query/cursor/page state is authored in canonical CUI via the generic runtime QueryViewport
     // (which owns the query string + opaque cursor) backed by the typed ICuiPagedSource port exposed
     // below. No application C# page/query/selection cache exists here.
@@ -163,26 +165,26 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
         var actions = new List<CuiActionShelfItem>(4);
         CuiActionShelfItem Item(string id, string command, string label, string icon, string tooltip) =>
             new(id, command, label, "avares://Haven/Assets/" + (icon == "send" ? "send" : "composer-" + icon) + ".svg", tooltip, ContextIdentity: _source.ActionIdentity);
-        if (_source.CanResume || _source.IsPassPaused || _source.CanEndPass)
+        if ((!_source.IsSafetyLocked && _source.CanResume) || _source.IsPassPaused || _source.CanEndPass)
         {
-            if (_source.CanResume)
+            if (!_source.IsSafetyLocked && _source.CanResume)
                 actions.Add(Item("resume", "composer.resume", "Resume", "resume", "Continue this same task from its approved continuation boundary"));
             if (_source.CanEndPass)
                 actions.Add(Item("end-pass", "composer.end-pass", "End Pass", "stop", "End this acknowledged paused pass; retain draft and queued content"));
             return actions; // Inspection is never an invented continuation.
         }
-        if (_source.CanSteer)
+        if (!_source.IsSafetyLocked && _source.CanSteer)
             actions.Add(Item("steer", "composer.steer", "Steer", "steer", "Send this instruction to the current task"));
         if (_source.CanPause)
             actions.Add(Item("pause", "composer.pause", "Stop", "stop", "Request a supported resumable pause; wait for the task owner's acknowledgement"));
         else if (_source.CanStop)
             actions.Add(Item("cancel", "composer.stop", "Cancel response", "stop", _source.StopTooltip));
-        if (_source.CanQueue)
+        if (!_source.IsSafetyLocked && _source.CanQueue)
             actions.Add(Item("queue", "composer.queue", "Queue", "queue", "Queue this instruction without replacing the current pass"));
-        if (!_source.IsSending && _source.HasPendingMessage && _source.CanSend)
+        if (!_source.IsSafetyLocked && !_source.IsSending && _source.HasPendingMessage && _source.CanSend)
             actions.Insert(0, Item("send", "composer.send", _source.IsEditing ? "Update message" : "Send", "send",
                 _source.IsEditing ? "Update the message being edited" : "Send message"));
-        if (_source.CanEnterVoice)
+        if (!_source.IsSafetyLocked && _source.CanEnterVoice)
             actions.Add(new("voice", "composer.voice", "Voice", "avares://Haven/Assets/composer-voice.svg",
                 "Open Voice in this same conversation; capture starts only with its Start command", ContextIdentity: _source.ActionIdentity));
         return actions;
@@ -206,13 +208,26 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
     public IChatComposerSource Source => _source;
 
     private bool IsExpanded => _focused || _source.HasPendingMessage || _source.Chips.Count > 0 || _source.IsSending || _emojiOpen;
-    private bool ShowFormatting => _source.HasFormatting && _expanded && (_focused || _emojiOpen);
+    private bool IsLayoutExpanded => (_settingsOpen ? _optionsExpanded : IsExpanded) ||
+        (_narrow && EligibleShelfActions().Count > 0);
+    private bool ShowFormatting => !_source.IsSafetyLocked && _source.HasFormatting && _expanded && (_focused || _emojiOpen);
+
+    internal void SetViewportWidth(double width)
+    {
+        if (!double.IsFinite(width) || width <= 0) return;
+        var narrow = width < 420;
+        if (_narrow == narrow) return;
+        _narrow = narrow;
+        Refresh();
+    }
 
     public bool TryGetValue(string path, out object? value)
     {
+        if (TryGetConversationOptionValue(path, out value)) return true;
         value = null;
         const string actionChoice = "Composer.ActionChoice.";
         const string responseChoice = "Composer.ResponseChoice.";
+        const string responseIndicator = "Composer.ResponseIndicator.";
         if (path.StartsWith(actionChoice, StringComparison.Ordinal))
         {
             value = path[actionChoice.Length..] == _draftActionMode.ToString();
@@ -223,18 +238,31 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
             value = path[responseChoice.Length..] == _source.ResponseMode.ToString();
             return true;
         }
+        if (path.StartsWith(responseIndicator, StringComparison.Ordinal))
+        {
+            value = path[responseIndicator.Length..] == _source.ResponseMode.ToString() ? "✓" : string.Empty;
+            return true;
+        }
         switch (path)
         {
+            case "Composer.ResponseLabel": value = ResponsePresentationLabel + "  ▾"; return true;
+            case "Composer.ResponseAccessibleLabel": value = "Response presentation: " + ResponsePresentationLabel; return true;
             case "Composer.CanRefreshTaskControls": value = _source.CanRefreshTaskControls; return true;
             case "Composer.ActionShelf": value = EligibleShelfActions(); return true;
+            case "Composer.HasActionShelf": value = EligibleShelfActions().Count > 0; return true;
+            case "Composer.EditorRows": value = IsLayoutExpanded ? "Auto Auto" : "Auto"; return true;
+            case "Composer.EditorGap": value = _narrow ? 4d : 8d; return true;
+            case "Composer.ControlGap": value = _narrow ? 0d : 6d; return true;
             case "Composer.Draft":
                 value = _source.Draft;
                 return true;
             case "Composer.Placeholder":
                 value = _source.Placeholder;
                 return true;
+            case "Composer.CanEditDraft": value = !_source.IsSafetyLocked; return true;
+            case "Composer.CanAdd": value = !_source.IsSafetyLocked && _source.HasAdd; return true;
             case "Composer.IsExpanded":
-                value = _settingsOpen ? _optionsExpanded : IsExpanded;
+                value = IsLayoutExpanded;
                 return true;
             case "Composer.HasChips":
                 value = _source.Chips.Count > 0;
@@ -243,20 +271,20 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
                 value = _source.Chips;
                 return true;
             case "Composer.CanSend":
-                value = _source.CanSend;
+                value = !_source.IsSafetyLocked && _source.CanSend;
                 return true;
             case "Composer.ShowSend":
-                value = !_source.IsSending && _source.HasPendingMessage && _source.CanSend;
+                value = !_source.IsSafetyLocked && !_source.IsSending && _source.HasPendingMessage && _source.CanSend;
                 return true;
             case "Composer.HasAdd": value = _source.HasAdd; return true;
             case "Composer.HasSettings": value = _source.HasSettings; return true;
             case "Composer.HasSendModePreference": value = _source.HasSendModePreference; return true;
             case "Composer.PreferredSendModeLabel": value = _source.PreferredSendMode?.ToString() ?? "Choose send action"; return true;
-            case "Composer.CanSteer": value = _source.CanSteer; return true;
+            case "Composer.CanSteer": value = !_source.IsSafetyLocked && _source.CanSteer; return true;
             case "Composer.CanPause": value = _source.CanPause; return true;
-            case "Composer.CanResume": value = _source.CanResume; return true;
+            case "Composer.CanResume": value = !_source.IsSafetyLocked && _source.CanResume; return true;
             case "Composer.CanQueue":
-                value = _source.CanQueue;
+                value = !_source.IsSafetyLocked && _source.CanQueue;
                 return true;
             case "Composer.StopAccessibleName": value = _source.StopAccessibleName; return true;
             case "Composer.StopTooltip": value = _source.StopTooltip; return true;
@@ -283,7 +311,7 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
                 value = _settingsOpen;
                 return true;
             case "Composer.ShowEmoji":
-                value = _emojiOpen;
+                value = !_source.IsSafetyLocked && _emojiOpen;
                 return true;
             case "Composer.EmojiCatalogueSource":
                 // Typed data-only port for the runtime QueryViewport. Query filtering/pagination
@@ -309,6 +337,7 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
     {
         if (path == "Composer.Draft")
         {
+            if (_source.IsSafetyLocked) return false;
             _source.Draft = Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
             return true;
@@ -341,6 +370,7 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
 
     public bool? IsActionAvailable(string command)
     {
+        if (IsBlockedBySafetyLock(command)) return false;
         return command switch
         {
             "composer.refresh-task-controls" => _source.CanRefreshTaskControls,
@@ -356,7 +386,10 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
             "composer.resume" => _source.CanResume,
             "composer.add" => _source.HasAdd,
             "composer.emoji" or "composer.emoji-toggle" or "composer.emoji-search" or "composer.emoji-insert" => _source.HasFormatting,
-            "composer.settings" => _source.HasSettings,
+            "composer.settings" or "composer.permissions" => _source.HasSettings,
+            "composer.toggle-permissions" => HasCurrentOptions,
+            "composer.temporary" => HasCurrentConversationOptions && _optionsConversationOwner?.Current?.CanChangeTemporary == true,
+            "composer.compact-context" => HasCurrentConversationOptions && _optionsConversationOwner?.Current?.CanCompactContext == true,
             "composer.cancel-options" => _settingsOpen,
             "composer.save-options" => CanSaveOptions,
             "composer.set-action-mode" or "composer.set-response-mode" => HasCurrentOptions,
@@ -364,8 +397,18 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
         };
     }
 
+    // The source remains authoritative. A control issued before the lock cannot mutate the
+    // draft or admit new work after it; the exact owner's Stop/Pause/End Pass remain available.
+    private bool IsBlockedBySafetyLock(string command) => _source.IsSafetyLocked && command is
+        "composer.submit" or "composer.send" or "composer.queue" or "composer.steer" or "composer.resume" or
+        "composer.voice" or "composer.add" or "composer.remove-chip" or "composer.format" or
+        "composer.emoji" or "composer.emoji-toggle" or "composer.emoji-search" or "composer.emoji-insert" or "composer.cancel-edit" or
+        "composer.temporary" or "composer.compact-context";
+
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (IsBlockedBySafetyLock(command) || command == "composer.add" && !_source.HasAdd)
+            return ValueTask.FromException(new InvalidOperationException("This conversation action is no longer available. The draft was retained."));
         switch (command)
         {
             case "composer.submit" when parameter is CuiInputSubmitRequest request && _ownsSubmitSender?.Invoke(request.Sender) == true &&
@@ -400,6 +443,16 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
                 return _source.Add();
             case "composer.settings" when _source.HasSettings:
                 return _settingsOpen ? CancelOptions() : OpenOptionsAsync();
+            case "composer.permissions" when _source.HasSettings:
+                return OpenPermissionsAsync();
+            case "composer.toggle-permissions" when HasCurrentOptions:
+                _permissionsExpanded = !_permissionsExpanded;
+                Refresh();
+                return ValueTask.CompletedTask;
+            case "composer.temporary":
+                return RunConversationOptionAsync(compact: false);
+            case "composer.compact-context":
+                return RunConversationOptionAsync(compact: true);
             case "composer.cancel-options":
                 return CancelOptions();
             case "composer.set-action-mode" when HasCurrentOptions && parameter is string mode &&
@@ -452,11 +505,14 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
             System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(sourceFailure).Throw();
     }
 
-    private async ValueTask OpenOptionsAsync()
+    private async ValueTask OpenOptionsAsync(bool permissions = false)
     {
         var generation = ++_optionsGeneration;
+        OptionsOpenedFromPermissions = permissions;
         _openingActionMode = _draftActionMode = _source.ActionMode;
         _optionsTarget = _source.ActionIdentity;
+        var conversationOwner = _optionsConversationOwner = _source.ConversationActions;
+        _permissionsExpanded = permissions;
         _optionsExpanded = IsExpanded;
         _optionsFormatting = ShowFormatting;
         _settingsOpen = true;
@@ -465,6 +521,18 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
         {
             await _source.OpenSettings();
             if (generation != _optionsGeneration || !_settingsOpen) return;
+            if (!HasCurrentOptions || !ReferenceEquals(conversationOwner, _source.ConversationActions))
+            {
+                DismissOptions();
+                return;
+            }
+            if (conversationOwner is not null) await conversationOwner.RefreshAsync();
+            if (generation != _optionsGeneration || !_settingsOpen) return;
+            if (!HasCurrentOptions || !ReferenceEquals(conversationOwner, _source.ConversationActions))
+            {
+                DismissOptions();
+                return;
+            }
             RefreshSource();
             if (_settingsOpen) OptionsVisibilityChanged?.Invoke(true);
         }
@@ -494,6 +562,7 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
         if (!_settingsOpen) return;
         _settingsOpen = false;
         _optionsTarget = null;
+        _optionsConversationOwner = null;
         OptionsVisibilityChanged?.Invoke(false);
         Refresh();
     }
@@ -526,6 +595,16 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
             if (_optionsGeneration == generation) Refresh();
         }
     }
+
+    private string ResponsePresentationLabel => _source.ResponseMode switch
+    {
+        GenerativeUiResponseMode.Auto => "Automatic",
+        GenerativeUiResponseMode.AlwaysVisual => "Always visual",
+        GenerativeUiResponseMode.PreferVisual => "Prefer visual",
+        GenerativeUiResponseMode.PreferText => "Prefer text",
+        GenerativeUiResponseMode.AlwaysText => "Always text",
+        _ => "Not selected"
+    };
 
     private async ValueTask SetResponseModeAsync(string mode)
     {
@@ -779,6 +858,7 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
         AutomationProperties.SetName(this, "Chat composer");
         HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
         VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch;
+        SizeChanged += OnComposerSizeChanged;
         Content = _host;
         _input = new CuiComposerInputPort(() => FindComposerTextBox(), focused => _bindings.IsFocused = focused);
         _owningAppId = owningAppId;
@@ -793,6 +873,11 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
     public IChatComposerInputPort Input => _input;
     public ChatComposerBindings Bindings => _bindings;
     public IChatComposerSource Source => _bindings.Source;
+
+    private void OnComposerSizeChanged(object? sender, SizeChangedEventArgs args)
+    {
+        if (!_closing) _bindings.SetViewportWidth(args.NewSize.Width);
+    }
 
     /// <summary>Idempotent guarded initialization: the real scene show plus real input wiring.
     /// Faults/cancellation reach this same task; readiness is never claimed before the input is
@@ -904,7 +989,11 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
         // the UI thread because these are real TextBox subscriptions/visual-tree operations.
         if (faults.Count == 0)
         {
-            await Dispatcher.UIThread.InvokeAsync(() => _input.Detach()).GetTask().ConfigureAwait(false);
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                _input.Detach();
+                SizeChanged -= OnComposerSizeChanged;
+            }).GetTask().ConfigureAwait(false);
         }
 
         if (faults.Count == 1) throw faults[0];
@@ -927,8 +1016,9 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
             _optionsPopup?.Close();
             return;
         }
+        var anchorId = _bindings.OptionsOpenedFromPermissions ? "permissions-button" : "settings-button";
         var anchor = this.GetVisualDescendants().OfType<Button>().FirstOrDefault(control =>
-            AutomationProperties.GetAutomationId(control) == "settings-button");
+            AutomationProperties.GetAutomationId(control) == anchorId);
         if (_closing || anchor is null || TopLevel.GetTopLevel(anchor) is not { } owner ||
             _optionsSlot.Children.SingleOrDefault() is not { } panel)
         {

@@ -16,8 +16,10 @@ public sealed class ChatProgressTextTests
     }
 
     [Fact]
-    public void Format_keeps_thinking_detail_under_the_single_progress_label()
+    public void Format_keeps_provider_detail_out_of_the_public_elapsed_progress_label()
     {
-        Assert.Equal("Working for 12 seconds\nChecked the available context.", ChatProgressText.Format(true, 12, "  Checked the available context.  "));
+        const string providerDetail = "A provider reasoning fragment, not a recorded tool event.";
+        Assert.Equal("Working for 12 seconds", ChatProgressText.Format(true, 12, providerDetail));
+        Assert.Equal("Worked for 12 seconds", ChatProgressText.Format(false, 12, providerDetail));
     }
 }

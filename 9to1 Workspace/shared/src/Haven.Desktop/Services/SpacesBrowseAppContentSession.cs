@@ -8,6 +8,7 @@ using HavenOS.Apps.Assistants.Contracts;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Application;
 using Haven.Browser;
 using Haven.Core;
@@ -98,14 +99,17 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     private volatile AppContentAddress _address;
     private volatile bool _published;
     private volatile bool _closing;
+    private readonly CuiThemePreferenceContext? _interfaceTheme;
 
     internal SpacesBrowseAppContentSession(BrowseAppContentRequest request, IServiceProvider services,
         CancellationToken hostLifetime, Func<BrowseNavigationIntent, Task, bool>? queueNavigation = null,
         Func<Haven.Desktop.Views.Pages.Tasks.SpaceTaskWidgetPage, NativeCanonicalTaskSceneReadiness>? bindTaskFrame = null,
-        CancellationToken appLifetime = default, App? actualApp = null, Window? actualWindow = null)
+        CancellationToken appLifetime = default, App? actualApp = null, Window? actualWindow = null,
+        CuiThemePreferenceContext? interfaceTheme = null)
     {
         _request = request;
         _services = services;
+        _interfaceTheme = interfaceTheme;
         _hostQueueNavigation = queueNavigation;
         _bindTaskFrame = bindTaskFrame;
         _appLifetime = appLifetime;
@@ -221,7 +225,8 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 workspaceCommandHost: ExecuteWorkspaceCommandAsync,
                 conversationSearchProvider: _services.GetRequiredService<IConversationRepository>() is ISpaceConversationSearch
                     ? FindSpaceConversationTitlesAsync : null,
-                publishConversationRows: PublishOriginalConversationRowsAsync);
+                publishConversationRows: PublishOriginalConversationRowsAsync,
+                interfaceTheme: _interfaceTheme);
             _spacesPage = page;
             BindTaskSidebar(page);
             try
@@ -248,6 +253,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 }
                 _page = _root;
                 _published = true;
+                await TryRestoreRequestedOrganisationAsync(token);
                 // The bootstrap publication guard is now set, so the selected Space's real recent
                 // history can be read for the FINAL restored selection through the canonical provider
                 // (ReadSpaceConversationsAsync). This is the genuine initial read: it runs at the
@@ -330,6 +336,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         BeginDetailsRetirement(failures);
         BeginBuilderRetirement(failures);
         BeginTaskViewRetirement(failures);
+        await BeginOrganisationRetirementAsync(failures).ConfigureAwait(false);
         if (_initialization is { } initialization)
             try { await initialization.ConfigureAwait(false); }
             catch (OperationCanceledException) when (initialization.IsCanceled && _token.IsCancellationRequested) { }
@@ -352,11 +359,15 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         BeginDetailsRetirement(failures);
         BeginBuilderRetirement(failures);
         BeginTaskViewRetirement(failures);
+        await BeginOrganisationRetirementAsync(failures).ConfigureAwait(false);
         await JoinDetailsRetirementAsync(failures).ConfigureAwait(false);
         await JoinBuilderRetirementAsync(failures).ConfigureAwait(false);
         await JoinTaskViewRetirementAsync(failures).ConfigureAwait(false);
         await OnUiAsync(async () =>
         {
+            foreach (var organisation in _ownedOrganisations.ToArray())
+                try { await organisation.CloseAndDrainAsync(); _ownedOrganisations.Remove(organisation); }
+                catch (Exception error) { failures.Add(error); }
 #if !ANDROID
             try { await RetireAssistantPresentationOnUiAsync(restorePriorChat: false); }
             catch (Exception error) { failures.Add(error); }
@@ -491,7 +502,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     {
         lock (_gate)
         {
-            if (_publishedAssistantRoute is { } assistant)
+            if (_publishedOrganisationRoute is { } organisation)
+                _address = organisation.Address;
+            else if (_publishedAssistantRoute is { } assistant)
                 _address = assistant.Address;
             else if (_publishedDetailsRoute is { } details)
                 _address = details.Address;
@@ -553,6 +566,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         Dispatcher.UIThread.VerifyAccess();
         var home = _spacesPage;
         if (home is not null) home.ClearSpaceWorkspace();
+        DeactivatePublishedOrganisation();
         _publishedChatRoute = null;
         _publishedTaskRoute = null;
         _routeEpoch++;
@@ -582,6 +596,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     private void SetRootContent(Control? content)
     {
         Dispatcher.UIThread.VerifyAccess();
+        if (_publishedOrganisationRoute is { } organisation &&
+            (!ReferenceEquals(content, _spacesPage) || !ReferenceEquals(_spacesPage?.SpaceWorkspaceContent, organisation.Page)))
+            DeactivatePublishedOrganisation();
         CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
         {
             _root.Content = content;
@@ -1794,6 +1811,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                         if (_studyPage?.HasDraft == true)
                             throw new SpacesWorkspaceActionRefusal("Create the subject or clear its name before leaving Study.");
                         if (command == "spaces.new-chat") await NewConversationOnUiAsync((Guid)target, linked.Token);
+                        else if (command is "spaces.open-groups" or "spaces.open-specialists")
+                            await WithCurrentEditorPreparationAsync(() => OpenOrganisationOnUiAsync((Guid)target,
+                                command == "spaces.open-groups" ? SpacesOrganisationKind.Groups : SpacesOrganisationKind.Specialists, linked.Token), linked.Token);
                         else if (command == "spaces.tasks.open") await OpenSidebarTaskOnUiAsync((TaskOpenTicket)target, linked.Token);
                         else if (command == "spaces.open-conversation") await OpenConversationOnUiAsync((HistoryOpenTicket)target, linked.Token);
                         else throw new InvalidOperationException($"The Spaces workspace command '{command}' is not owned by this host.");

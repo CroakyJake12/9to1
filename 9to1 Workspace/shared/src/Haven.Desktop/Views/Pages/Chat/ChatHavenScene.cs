@@ -33,7 +33,8 @@ internal sealed record ChatSceneMessage(
     string AgentName,
     bool IsStreaming,
     string Thinking,
-    IReadOnlyList<ToolActivity>? ToolActivities = null);
+    IReadOnlyList<ToolActivity>? ToolActivities = null,
+    string? ModelName = null);
 
 /// <summary>
 /// One persisted conversation context row projected into the collapsible Context card.
@@ -98,6 +99,7 @@ internal sealed partial class ChatHavenScene : IDisposable
         _composerInit = ComposerView.InitializeAsync();
         _nativeResolver.Register(ComposerHost, ComposerView);
         Messages = (DynamicUIRuntime)Root.DescendantsAndSelf().Single(element => element.Name == "Messages");
+        InitializeConversationPresentation();
         EmptyState = Root.DescendantsAndSelf().Single(element => element.Name == "EmptyState");
         Status = (HavenText)Root.DescendantsAndSelf().Single(element => element.Name == "Status");
         TemporaryToggle = (HavenButton)Root.DescendantsAndSelf().Single(element => element.Name == "TemporaryToggle");
@@ -162,7 +164,10 @@ internal sealed partial class ChatHavenScene : IDisposable
     internal void SetTemporaryControl(bool available, bool isTemporary)
     {
         var state = isTemporary ? "Temporary: on" : "Temporary: off";
-        TemporaryToggle.SetValue(HavenProperties.Visibility, available ? HavenVisibility.Visible : HavenVisibility.Collapsed);
+        // The legacy semantic port remains for compatible callers; the authored CUI header is
+        // the only visible Temporary control and projects the same accepted owner state.
+        TemporaryToggle.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
+        _headerBindings.SetTemporary(available, isTemporary);
         if (TemporaryToggle.Content == state) return;
         TemporaryToggle.Content = state;
         TemporaryToggle.Accessibility.AccessibleName = isTemporary
@@ -270,6 +275,9 @@ internal sealed partial class ChatHavenScene : IDisposable
     public void SetManageLocalModelsVisible(bool visible)
     {
         _recoveryBindings.Visible = visible;
+        // Keep the retained native view and its original owners, but reserve layout
+        // space only while the same observed recovery state is actually presented.
+        RecoveryHost.SetValue(HavenProperties.Visibility, visible ? HavenVisibility.Visible : HavenVisibility.Collapsed);
         RecoveryView.Refresh();
         // Re-evaluate the legacy status suppression: when the recovery row becomes the active
         // projection the duplicate model status sentence is retired, and when it closes any genuine
@@ -401,6 +409,7 @@ internal sealed partial class ChatHavenScene : IDisposable
             _dynamicUi.DeleteItem("Messages", stale.ToString("N"));
             _messageItems.Remove(stale);
             _generatedContent.Remove(stale);
+            _activityDisclosures.Remove(stale);
         }
 
         var expectedTools = messages.SelectMany(message => message.ToolActivities ?? []).Select(activity => activity.Id).ToHashSet();
@@ -425,6 +434,7 @@ internal sealed partial class ChatHavenScene : IDisposable
             RestoreGeneratedContent(message.Id, item);
         }
         SetHasMessages(messages.Count > 0);
+        RefreshHeaderActivities();
     }
 
     public void UpdateMessage(ChatSceneMessage message)
@@ -439,6 +449,7 @@ internal sealed partial class ChatHavenScene : IDisposable
         SyncToolActivities(message, Math.Max(0, messageIndex + 1));
         RestoreGeneratedContent(message.Id, item);
         SetHasMessages(true);
+        RefreshHeaderActivities();
     }
 
     public void SetGeneratedContent(Guid messageId, IReadOnlyList<HavenElement> elements)
@@ -455,7 +466,11 @@ internal sealed partial class ChatHavenScene : IDisposable
             foreach (var child in host.Children.ToArray()) host.Remove(child);
     }
 
-    public void ScrollToEnd() => Messages.ScrollY = Messages.MaxScrollY;
+    public void ScrollToEnd()
+    {
+        ConversationViewport.ScrollY = ConversationViewport.MaxScrollY;
+        RefreshTranscriptPosition();
+    }
 
     public void ShowResolveProblemsMenu(string title, string description, IReadOnlyList<(string Label, Action Action)> choices)
     {
@@ -593,6 +608,7 @@ internal sealed partial class ChatHavenScene : IDisposable
         var index = startIndex;
         foreach (var activity in activities)
         {
+            _presentedActivities[activity.Id] = activity;
             if (!_toolItems.TryGetValue(activity.Id, out var item))
             {
                 item = _dynamicUi.CreateItem("ChatToolActivity", "Messages", "tool-" + activity.Id.ToString("N"), ValuesFor(activity), index);
@@ -608,6 +624,8 @@ internal sealed partial class ChatHavenScene : IDisposable
             }
             index++;
         }
+        if (_messageItems.TryGetValue(message.Id, out var messageItem))
+            RefreshActivityDisclosure(message, messageItem);
         return index;
     }
 
@@ -616,11 +634,12 @@ internal sealed partial class ChatHavenScene : IDisposable
         if (_toolItems.Remove(activityId, out var item))
             _dynamicUi.DeleteItem("Messages", item.InstanceID);
         _toolOwners.Remove(activityId);
+        _presentedActivities.Remove(activityId);
     }
 
     private static Dictionary<string, object?> ValuesFor(ToolActivity activity) => new()
     {
-        ["STATUS"] = activity.Succeeded ? "Completed" : "Failed",
+        ["STATUS"] = ToolActivityStatus(activity),
         ["TITLE"] = activity.Title,
         ["DETAIL"] = activity.Detail,
         ["META"] = ToolActivityMeta(activity)
@@ -631,7 +650,7 @@ internal sealed partial class ChatHavenScene : IDisposable
         var parts = new List<string>();
         if (activity.Duration > TimeSpan.Zero) parts.Add($"{activity.Duration.TotalSeconds:0.#}s");
         if (activity.LinesAdded != 0 || activity.LinesRemoved != 0) parts.Add($"+{activity.LinesAdded} -{activity.LinesRemoved}");
-        return string.Join(" Â· ", parts);
+        return string.Join(" · ", parts);
     }
 
     private DynamicUIItem CreateMessage(ChatSceneMessage message, int index)
@@ -640,6 +659,7 @@ internal sealed partial class ChatHavenScene : IDisposable
         var template = message.Role == MessageRole.Assistant ? "ChatAssistantMessage" : "ChatUserMessage";
         var item = _dynamicUi.CreateItem(template, "Messages", message.Id.ToString("N"), values, index);
         WireMessageActions(item, message.Id, message.Role);
+        if (message.Role == MessageRole.Assistant) WireActivityDisclosure(item, message.Id);
         return item;
     }
 
@@ -657,6 +677,8 @@ internal sealed partial class ChatHavenScene : IDisposable
         {
             ["CONTENT"] = message.Content,
             ["AGENT"] = string.IsNullOrWhiteSpace(message.AgentName) ? "Haven" : message.AgentName,
+            ["MODEL"] = message.ModelName ?? string.Empty,
+            ["MODELVISIBILITY"] = string.IsNullOrWhiteSpace(message.ModelName) ? "Collapsed" : "Visible",
             ["THINKING"] = message.Thinking,
             ["THINKINGVISIBILITY"] = string.IsNullOrWhiteSpace(message.Thinking) ? "Collapsed" : "Visible"
         };
@@ -790,17 +812,17 @@ internal sealed partial class ChatHavenScene : IDisposable
     {
         const string markup = """
             <Page Name="ChatRoot" Layout="Overlay" Background="Transparent">
-              <Container Name="Workspace" Layout="Grid" Width="100%" Height="100%" Rows="Auto 1fr Auto" Padding="32px 10px 32px 4px" Gap="12px">
-                <Button Name="TemporaryToggle" Row="0" Variant="Ghost" Content="Temporary Chat" MinHeight="30px"
-                        HorizontalAlignment="End" Visibility="Collapsed" />
-                <Container Name="ConversationViewport" Row="1" Layout="Overlay" Width="100%" Overflow="Scroll" Clip="true">
+              <Container Name="Workspace" Layout="Grid" Width="100%" Height="100%" Rows="Auto 1fr Auto" Padding="10px 16px 6px 16px" Gap="10px">
+                <NativeHost Name="ConversationHeaderHost" Row="0" Width="100%" MinHeight="42px" />
+                <Container Name="ConversationBody" Row="1" RowSpan="2" Layout="Overlay" Background="Surface" Radius="16px" />
+                <Container Name="ConversationViewport" Row="1" Layout="Overlay" Width="100%" Margin="16px 20px 0px 20px" Overflow="Scroll" Clip="true">
                   <Container Name="EmptyState" Layout="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" Gap="10px">
                     <Text Content="How can I help?" Level="H1" HorizontalAlignment="Center" />
                     <Text Content="Start a conversation or attach context below." FontSize="13" Foreground="TextSecondary" HorizontalAlignment="Center" />
                   </Container>
-                  <DynamicUIRuntime Name="Messages" Width="100%" MaxWidth="980px" HorizontalAlignment="Center" />
+                  <DynamicUIRuntime Name="Messages" Width="100%" MaxWidth="900px" HorizontalAlignment="Center" />
                 </Container>
-                <Container Name="Footer" Row="2" Layout="Vertical" Width="100%" MaxWidth="900px" HorizontalAlignment="Center" Gap="7px">
+                <Container Name="Footer" Row="2" Layout="Vertical" Width="100%" MaxWidth="900px" Margin="0px 20px 10px 20px" HorizontalAlignment="Center" Gap="7px">
                   <Container Name="ContextCard" Layout="Vertical" Width="100%" HorizontalAlignment="Center" Gap="6px" Padding="12px 14px" Visibility="Collapsed">
                     <Container Name="ContextHeaderRow" Layout="Horizontal" Width="100%" Gap="8px">
                       <Button Name="ContextToggle" Variant="Ghost" Content="Show context" MinHeight="30px" />
@@ -813,14 +835,15 @@ internal sealed partial class ChatHavenScene : IDisposable
                     <Button Name="NewTask" Variant="Ghost" Content="New task" MinHeight="34px" />
                     <Button Name="TaskHistory" Variant="Ghost" Content="Task history" MinHeight="34px" />
                   </Container>
-                  <Button Name="ResolveProblems" Variant="Ghost" Content="Resolve problems" MinHeight="34px" HorizontalAlignment="Center" Visibility="Collapsed" />
+                  <Button Name="ResolveProblems" Variant="Ghost" Content="Recover conversation" FontSize="11" MinHeight="26px" HorizontalAlignment="End" Visibility="Collapsed" />
                   <Text Name="Status" Content="" FontSize="11" Foreground="TextSecondary" HorizontalAlignment="Center" Visibility="Collapsed" />
-                  <NativeHost Name="RecoveryHost" Width="100%" MinHeight="32px" HorizontalAlignment="Center" />
+                  <NativeHost Name="RecoveryHost" Width="100%" MinHeight="32px" HorizontalAlignment="Center" Visibility="Collapsed" />
                   <Text Name="AttachmentStatus" Content="" FontSize="11" Foreground="TextSecondary" HorizontalAlignment="Center" Visibility="Collapsed" />
                   <Button Name="ManageAttachments" Variant="Ghost" Content="Manage attachments" MinHeight="32px" HorizontalAlignment="Center" Visibility="Collapsed" />
                   <NativeHost Name="ComposerHost" Width="100%" MinHeight="44px" />
                 </Container>
               </Container>
+              <Button Name="TemporaryToggle" Variant="Ghost" Content="Temporary Chat" Visibility="Collapsed" />
             </Page>
             """;
         return (Page)new HavenMarkupParser(_prefabs).Parse(markup, "ChatPage.hui");
@@ -968,7 +991,9 @@ internal sealed partial class ChatHavenScene : IDisposable
         _activeMessagePopup?.Dismiss();
         _activeMessagePopup = null;
         _messageItems.Clear();
+        _activityDisclosures.Clear();
         _generatedContent.Clear();
+        _presentedActivities.Clear();
         ResolveProblems.Invoked -= OnResolveInvoked;
         ContextToggle.Invoked -= OnContextToggleInvoked;
         ContextClose.Invoked -= OnContextCloseInvoked;
@@ -983,6 +1008,7 @@ internal sealed partial class ChatHavenScene : IDisposable
         // (JoinRecoveryCloseAndReleaseAsync) owned by the page lifecycle, mirroring the composer.
         _recoveryBindings.Retire();
         StartRecoveryClose();
+        StartHeaderClose();
         // Synchronous Dispose requests the SAME child close but cannot claim the async join
         // completed or release the physical mapping early; that release follows the joined ACK
         // path (JoinComposerCloseAndReleaseAsync) owned by the page lifecycle.

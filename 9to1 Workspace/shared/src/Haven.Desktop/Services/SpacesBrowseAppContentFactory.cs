@@ -1,3 +1,4 @@
+using CakeOS.Cui.Themes;
 using Haven.Desktop.Views.Pages.Tasks;
 using Haven.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +19,7 @@ internal sealed class SpacesBrowseAppContentFactory : IBrowseAppContentFactory
 {
     private readonly IServiceProvider _services;
     private readonly CancellationToken _hostLifetime, _appLifetime;
+    private readonly CuiThemePreferenceContext? _interfaceTheme;
     private readonly Func<SpaceTaskWidgetPage, NativeCanonicalTaskSceneReadiness> _bindTaskFrame;
     // The same typed host navigation contract the Home launcher already uses. Spaces reuses it rather
     // than inventing a second channel, so tab ownership, origin checks and retirement stay host-owned.
@@ -28,7 +30,7 @@ internal sealed class SpacesBrowseAppContentFactory : IBrowseAppContentFactory
     private SpacesBrowseAppContentFactory(IServiceProvider services, CancellationToken appLifetime, CancellationToken hostLifetime,
         Func<BrowseNavigationIntent, Task, bool>? queueNavigation,
         Func<SpaceTaskWidgetPage, NativeCanonicalTaskSceneReadiness> bindTaskFrame,
-        App? actualApp = null, Window? actualWindow = null)
+        App? actualApp = null, Window? actualWindow = null, CuiThemePreferenceContext? interfaceTheme = null)
     {
         _services = services ?? throw new ArgumentNullException(nameof(services));
         _appLifetime = appLifetime;
@@ -36,6 +38,7 @@ internal sealed class SpacesBrowseAppContentFactory : IBrowseAppContentFactory
         _queueNavigation = queueNavigation;
         _actualApp = actualApp;
         _actualWindow = actualWindow;
+        _interfaceTheme = interfaceTheme;
         _bindTaskFrame = bindTaskFrame;
     }
 
@@ -43,7 +46,7 @@ internal sealed class SpacesBrowseAppContentFactory : IBrowseAppContentFactory
         HomeNativeWindowsComposition sameHome, CancellationToken originalAppLifetime,
         CancellationToken originalHostLifetime,
         Func<BrowseNavigationIntent, Task, bool>? queueNavigation = null,
-        App? actualApp = null, Window? actualWindow = null)
+        App? actualApp = null, Window? actualWindow = null, CuiThemePreferenceContext? interfaceTheme = null)
     {
         WindowsHomeSameProcessRuntimeObservation.DemandOriginalBinding(originalProvider, sameHome);
         ArgumentNullException.ThrowIfNull(originalProvider);
@@ -56,7 +59,7 @@ internal sealed class SpacesBrowseAppContentFactory : IBrowseAppContentFactory
         return new(originalProvider, originalAppLifetime, originalHostLifetime, queueNavigation,
             page => NativeCanonicalTaskSceneReadiness.BindOriginalSameProcess(page, originalProvider, sameHome,
                 originalProvider.GetRequiredService<HostLocalTaskActorSource>(), originalAppLifetime, originalHostLifetime),
-            actualApp, actualWindow);
+            actualApp, actualWindow, interfaceTheme);
     }
 
     public IBrowseAppContentSession CreateSession(BrowseAppContentRequest request)
@@ -69,6 +72,6 @@ internal sealed class SpacesBrowseAppContentFactory : IBrowseAppContentFactory
         if (request.Privacy != BrowserTabPrivacy.Standard)
             throw new NotSupportedException("Spaces is not available in a private browser session.");
         return new SpacesBrowseAppContentSession(request, _services, _hostLifetime, _queueNavigation, _bindTaskFrame, _appLifetime,
-            _actualApp, _actualWindow);
+            _actualApp, _actualWindow, _interfaceTheme);
     }
 }

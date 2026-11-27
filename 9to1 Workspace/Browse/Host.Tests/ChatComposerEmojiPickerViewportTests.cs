@@ -13,8 +13,10 @@ using Avalonia.VisualTree;
 using Avalonia.Media;
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Desktop.Prefabs;
 using Haven.Desktop.Views.Pages.Chat;
+using Haven.Desktop.Tests;
 using System.Globalization;
 using System.IO;
 using Xunit;
@@ -55,6 +57,9 @@ public sealed class ChatComposerEmojiPickerViewportTests
         public int InsertCount { get; private set; }
         public int InsertCaret { get; set; } = -1;
         public int SendCount { get; private set; }
+        public int StopCount { get; private set; }
+        public bool CanEnterVoice { get; set; }
+        public ValueTask EnterVoice() => ValueTask.CompletedTask;
 
         public ValueTask InsertEmoji(string emoji)
         {
@@ -75,7 +80,7 @@ public sealed class ChatComposerEmojiPickerViewportTests
         }
 
         public ValueTask Send() { SendCount++; return ValueTask.CompletedTask; }
-        public ValueTask Stop() => ValueTask.CompletedTask;
+        public ValueTask Stop() { StopCount++; return ValueTask.CompletedTask; }
         public ValueTask Add() => ValueTask.CompletedTask;
         public ValueTask OpenSettings() => ValueTask.CompletedTask;
         public ValueTask CloseSettings() => ValueTask.CompletedTask;
@@ -669,7 +674,7 @@ public sealed class ChatComposerEmojiPickerViewportTests
             await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
             PumpLayout(window);
 
-            foreach (var id in new[] { "add-button", "settings-button", "send-button" })
+            foreach (var id in new[] { "add-button", "settings-button", "permissions-button", "send-button" })
             {
                 var button = FindButton(view, id);
                 Assert.NotNull(button);
@@ -686,6 +691,173 @@ public sealed class ChatComposerEmojiPickerViewportTests
                 Assert.True(Math.Abs(imageInButton.Center.X - buttonLocal.Center.X) < 1d
                     && Math.Abs(imageInButton.Center.Y - buttonLocal.Center.Y) < 1d,
                     $"{id} glyph must be centered in its hit target");
+            }
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally { await FinishComposerTestAsync(window, view, testFailure); }
+    }
+
+    private sealed class CompactThemeSource(string name) : ICuiThemePreferenceSource
+    {
+        public CuiThemePreferenceSnapshot Current { get; } = new(name, 1, "composer-compact-component",
+            false, CuiAccessibilitySettings.Default, CuiAppearance.Dark);
+        public event EventHandler? Changed { add { } remove { } }
+    }
+
+    [AvaloniaTheory]
+    [InlineData("Glow")]
+    [InlineData("Professional")]
+    public async Task Compact_composer_keeps_input_and_real_action_shelf_reachable_at_400_pixels(string theme)
+    {
+        var token = TestContext.Current.CancellationToken;
+        using var context = new CuiThemePreferenceContext(new CompactThemeSource(theme));
+        var source = new DraftInsertingSource();
+        var view = new ChatComposerCuiView(source, "app.spaces", context)
+        {
+            // The retained 400px Spaces footer has 16px workspace +20px transcript inset per side.
+            Margin = new Thickness(36, 0, 36, 16),
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Bottom
+        };
+        var outside = new Border { Child = view, Focusable = true };
+        var window = new Window { Width = 400, Height = 650, Content = outside };
+        Exception? testFailure = null;
+        try
+        {
+            window.Show();
+            await view.InitializeAsync(token).WaitAsync(TimeSpan.FromSeconds(10), token);
+            outside.Focus(); PumpLayout(window);
+            var input = FindInput(view); Assert.NotNull(input);
+            var originalInput = input!;
+            var surface = Authored<Control>("composer-surface");
+            var shelf = Authored<CuiActionShelf>("conversation-actions");
+            Assert.True(input.TryFindResource("CuiEffectiveThemeName", out var actualTheme));
+            Assert.Equal(theme, actualTheme);
+            Assert.True(input.TryFindResource("CuiBackgroundBrush", out var backdrop));
+            window.Background = Assert.IsAssignableFrom<IBrush>(backdrop);
+
+            AssertCompactEmpty();
+            Capture("empty");
+
+            // Keyboard submission still addresses the SAME editable input and actual source.
+            view.Input.Text = "Keep this original draft";
+            originalInput.Focus(); view.Input.SetSelection(5, 9); PumpLayout(window);
+            Assert.Same(originalInput, FindInput(view));
+            Assert.True(originalInput.IsFocused);
+            Assert.Equal(5, originalInput.SelectionStart); Assert.Equal(9, originalInput.SelectionEnd);
+            foreach (var id in new[] { "add-button", "format-button", "emoji-button", "settings-button", "permissions-button", "send-button" })
+                AssertFullyWithin(Authored<Button>(id), surface);
+            AssertFullyWithin(originalInput, surface);
+            Assert.True(originalInput.Bounds.Width >= 280, "An expanded narrow composer must give the retained input its full row.");
+            window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
+            await view.CaptureOriginalActionSettlement().WaitAsync(TimeSpan.FromSeconds(10), token);
+            Assert.Equal(1, source.SendCount);
+            Assert.Equal("Keep this original draft", source.Draft);
+
+            // Changing geometry must preserve the shelf's chosen real command, draft and caret.
+            source.CanEnterVoice = true; view.RefreshSurface(); PumpLayout(window);
+            Authored<Button>("action-shelf-next").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await view.CaptureOriginalActionSettlement().WaitAsync(TimeSpan.FromSeconds(10), token);
+            view.Input.SetSelection(5, 9); originalInput.Focus();
+            window.Width = 720; PumpLayout(window);
+            window.Width = 400; PumpLayout(window);
+            Assert.Same(shelf, Authored<CuiActionShelf>("conversation-actions"));
+            Assert.Same(originalInput, FindInput(view));
+            Assert.Equal("Voice, 2 of 2", AutomationProperties.GetName(Authored<Button>("send-button")));
+            Assert.Equal("Keep this original draft", source.Draft);
+            Assert.True(originalInput.IsFocused);
+            Assert.Equal(5, originalInput.SelectionStart); Assert.Equal(9, originalInput.SelectionEnd);
+            AssertFullyWithin(Authored<Button>("send-button"), surface);
+            Capture("expanded");
+
+            view.Input.Text = string.Empty; outside.Focus(); view.RefreshSurface(); PumpLayout(window);
+            Assert.False(originalInput.IsFocused);
+            Assert.False(Authored<Button>("format-button").IsEffectivelyVisible);
+            Assert.True(shelf.IsEffectivelyVisible);
+            Assert.Equal("Voice, 1 of 1", AutomationProperties.GetName(Authored<Button>("send-button")));
+            AssertFullyWithin(originalInput, surface);
+            AssertFullyWithin(Authored<Button>("send-button"), surface);
+            Assert.True(originalInput.Bounds.Width >= 280, "An idle Voice action must not squeeze the narrow placeholder.");
+
+            // Options freezes focus expansion, not viewport geometry. A wide, unfocused Voice
+            // session must still gain a full input row when its SAME popup owner is resized narrow.
+            window.Width = 720; PumpLayout(window);
+            Assert.False(originalInput.IsFocused);
+            Assert.True(originalInput.Bounds.Width < surface.Bounds.Width - 100);
+            Authored<Button>("settings-button").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await view.CaptureOriginalActionSettlement().WaitAsync(TimeSpan.FromSeconds(10), token);
+            PumpLayout(window);
+            var options = view.OptionsPopup; Assert.NotNull(options);
+            Assert.True(options!.IsOpen);
+            var optionsBody = Assert.IsAssignableFrom<Control>(options.Child);
+            window.Width = 400; PumpLayout(window);
+            Assert.Same(options, view.OptionsPopup); Assert.Same(optionsBody, options.Child);
+            Assert.True(options.IsOpen);
+            Assert.Same(originalInput, FindInput(view));
+            Assert.Equal(string.Empty, source.Draft);
+            Assert.False(originalInput.IsFocused);
+            Assert.True(originalInput.Bounds.Width >= 280, "Resizing with Options open must retain the narrow full input row.");
+            AssertFullyWithin(originalInput, surface);
+            AssertFullyWithin(Authored<Button>("send-button"), surface);
+            window.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.Escape, null); PumpLayout(window);
+            await view.CaptureOriginalActionSettlement().WaitAsync(TimeSpan.FromSeconds(10), token);
+            Assert.False(options.IsOpen);
+            outside.Focus(); PumpLayout(window);
+            Capture("voice");
+
+            source.CanEnterVoice = false; source.IsSending = true;
+            view.Input.Text = "Keep this while stopping"; view.RefreshSurface(); PumpLayout(window);
+            var stop = Authored<Button>("send-button");
+            Assert.Equal("Cancel response, 1 of 2", AutomationProperties.GetName(stop));
+            AssertFullyWithin(stop, surface); AssertFullyWithin(originalInput, surface);
+            Capture("stop");
+            stop.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await view.CaptureOriginalActionSettlement().WaitAsync(TimeSpan.FromSeconds(10), token);
+            Assert.Equal(1, source.StopCount);
+            Assert.Equal("Keep this while stopping", source.Draft);
+            source.IsSending = false; view.Input.Text = string.Empty;
+            outside.Focus(); view.RefreshSurface(); PumpLayout(window);
+            AssertCompactEmpty();
+            Assert.Same(shelf, Authored<CuiActionShelf>("conversation-actions"));
+            Assert.Same(originalInput, FindInput(view));
+
+            void AssertCompactEmpty()
+            {
+                Assert.False(originalInput.IsFocused);
+                Assert.False(shelf.IsEffectivelyVisible);
+                Assert.InRange(surface.Bounds.Height, 44, 72);
+                Assert.True(originalInput.Bounds.Width >= 140);
+                var placeholder = Assert.Single(originalInput.GetVisualDescendants().OfType<TextBlock>(),
+                    text => text.Text == source.Placeholder);
+                Assert.True(placeholder.IsEffectivelyVisible);
+                Assert.Single(placeholder.TextLayout.TextLines);
+                AssertFullyWithin(originalInput, surface);
+                foreach (var id in new[] { "add-button", "settings-button", "permissions-button" })
+                    AssertFullyWithin(Authored<Button>(id), surface);
+            }
+
+            T Authored<T>(string id) where T : Control => Assert.IsAssignableFrom<T>(
+                Assert.Single(AuthoredCuiControls.Enumerate(view), control => AutomationProperties.GetAutomationId(control) == id));
+
+            void AssertFullyWithin(Control control, Control owner)
+            {
+                var origin = control.TranslatePoint(default, owner); Assert.NotNull(origin);
+                Assert.True(control.IsEffectivelyVisible);
+                Assert.True(control.Bounds.Width > 0 && control.Bounds.Height > 0);
+                var bounds = new Rect(origin!.Value, control.Bounds.Size);
+                Assert.True(bounds.Left >= -.5 && bounds.Top >= -.5 &&
+                    bounds.Right <= owner.Bounds.Width + .5 && bounds.Bottom <= owner.Bounds.Height + .5,
+                    $"{AutomationProperties.GetAutomationId(control)} {bounds} must fit the actual composer {owner.Bounds.Size}.");
+                var inWindow = control.TranslatePoint(default, window); Assert.NotNull(inWindow);
+                Assert.True(inWindow!.Value.X >= 0 && inWindow.Value.X + control.Bounds.Width <= window.Width + .5);
+                Assert.True(inWindow.Value.Y >= 0 && inWindow.Value.Y + control.Bounds.Height <= window.Height + .5);
+            }
+
+            void Capture(string state)
+            {
+                if (Environment.GetEnvironmentVariable("CUI_EVIDENCE_DIRECTORY") is not { Length: > 0 } directory) return;
+                Directory.CreateDirectory(directory);
+                using var capture = window.CaptureRenderedFrame(); Assert.NotNull(capture);
+                capture.Save(Path.Combine(directory, $"composer-compact-{state}-{theme}-400x650.png"));
             }
         }
         catch (Exception error) { testFailure = error; throw; }
@@ -760,7 +932,10 @@ public sealed class ChatComposerEmojiPickerViewportTests
             {
                 Click(settings);
                 Assert.True(view.OptionsPopup?.IsOpen);
-                return Assert.IsAssignableFrom<Control>(view.OptionsPopup!.Child);
+                var opened = Assert.IsAssignableFrom<Control>(view.OptionsPopup!.Child);
+                Click(Assert.Single(opened.GetVisualDescendants().OfType<Button>(), control =>
+                    AutomationProperties.GetAutomationId(control) == "options-permissions-toggle"));
+                return opened;
             }
             static Button Choice(Control panel, string label) =>
                 panel.GetVisualDescendants().OfType<Button>().Single(control => Equals(control.Content, label));
@@ -768,7 +943,8 @@ public sealed class ChatComposerEmojiPickerViewportTests
             var typography = new (string Label, FontWeight Weight)[]
             {
                 ("Options", (FontWeight)750),
-                ("Response style", (FontWeight)750),
+                ("Response", (FontWeight)750),
+                ("Presentation", (FontWeight)600),
                 ("Allowed actions", (FontWeight)750),
                 ("This conversation", (FontWeight)600),
                 ("Applies to future responses in this chat.", (FontWeight)600),
@@ -796,7 +972,14 @@ public sealed class ChatComposerEmojiPickerViewportTests
             Assert.True(visited.Count >= 4);
             Assert.Same(close, panelTop.FocusManager?.GetFocusedElement());
             Assert.Equal(composerBounds, view.Bounds);
-            Click(Choice(panel, "Prefer visual"));
+            var presentation = Assert.Single(AuthoredCuiControls.Enumerate(panel).OfType<MenuItem>(), control =>
+                AutomationProperties.GetAutomationId(control) == "options-presentation");
+            presentation.IsSubMenuOpen = true; PumpLayout(window);
+            var preferVisual = Assert.Single(presentation.Items.OfType<MenuItem>(), control => Equals(control.Header, "Prefer visual"));
+            Assert.True(preferVisual.IsEffectivelyEnabled);
+            preferVisual.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            await view.CaptureOriginalActionSettlement().WaitAsync(TimeSpan.FromSeconds(10));
+            presentation.IsSubMenuOpen = false; PumpLayout(window);
             Assert.Equal(GenerativeUiResponseMode.PreferVisual, source.ResponseMode);
             Assert.True(view.OptionsPopup?.IsOpen);
             Click(Choice(panel, "All actions"));

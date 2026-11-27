@@ -26,6 +26,8 @@ public static class CuiNativeHost
         "avares://CakeOS.Cui.Runtime/Assets/Fonts/NotoEmoji#Noto Emoji";
     public const string BundledSymbolFontFamily =
         "avares://CakeOS.Cui.Runtime/Assets/Fonts/DejaVuSans#DejaVu Sans";
+    public const string BundledMonospaceFontFamily =
+        "avares://CakeOS.Cui.Runtime/Assets/Fonts/DejaVuSansMono#DejaVu Sans Mono";
 
     public static AppBuilder ConfigureFonts(AppBuilder builder)
     {
@@ -39,7 +41,10 @@ public static class CuiNativeHost
             FontFallbacks = CreateFontFallbacks(PlatformEmojiFontFamily(), OperatingSystem.IsBrowser()),
             FontFamilyMappings = new Dictionary<string, FontFamily>(StringComparer.OrdinalIgnoreCase)
             {
-                ["Montserrat"] = new(BundledInterfaceFontFamily)
+                ["Montserrat"] = new(BundledInterfaceFontFamily),
+                // Generic code typography must resolve without a platform-installed
+                // font; otherwise unavailable "monospace" falls back to Montserrat.
+                ["monospace"] = new(BundledMonospaceFontFamily)
             }
         });
     }

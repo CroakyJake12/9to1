@@ -924,7 +924,8 @@ public sealed class SpacesConversationRouteTests
         internal Rig(bool withHome = false, bool allowConversationWrites = false, IVersionedSettingsStore? settings = null,
             InstalledExtensionPackage[]? extensionPackages = null,
             Func<CancellationToken, Task<IReadOnlyList<InstalledExtensionPackage>>>? getInstalledAsync = null,
-            bool withTitleSearch = false, ITrustedHostPrincipalSource? principals = null)
+            bool withTitleSearch = false, ITrustedHostPrincipalSource? principals = null,
+            Action<IServiceCollection>? configureServices = null)
         {
             Directory.CreateDirectory(_directory);
             Spaces = new(settings ?? new Settings());
@@ -1008,6 +1009,7 @@ public sealed class SpacesConversationRouteTests
                         Proxy<INativePluginProcessFactory>(), Proxy<IExecutionEventSink>(), extensionRepository),
                     paths));
             }
+            configureServices?.Invoke(services);
             _services = services.BuildServiceProvider();
         }
         private Task<Conversation?> ReadOriginalRowAsync(Guid id, CancellationToken token)
@@ -1039,9 +1041,10 @@ public sealed class SpacesConversationRouteTests
         }
         internal SpacesBrowseAppContentSession Session(string address, Guid? tabId = null, string profileId = "profile",
             BrowserTabPrivacy privacy = BrowserTabPrivacy.Standard,
-            Func<BrowseNavigationIntent, Task, bool>? queueNavigation = null) => new(
+            Func<BrowseNavigationIntent, Task, bool>? queueNavigation = null,
+            CakeOS.Cui.Themes.CuiThemePreferenceContext? interfaceTheme = null) => new(
             new BrowseAppContentRequest(tabId ?? Guid.NewGuid(), AppContentAddress.Parse(address), profileId, privacy),
-            _services, CancellationToken.None, queueNavigation);
+            _services, CancellationToken.None, queueNavigation, interfaceTheme: interfaceTheme);
         public void Dispose() { _services.Dispose(); Directory.Delete(_directory, true); }
     }
 

@@ -621,70 +621,6 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
     public Task CompactContextAsync() => RunChatOriginalAsync(() => CompactContextOriginalBodyAsync());
 
-    private async Task CompactContextOriginalBodyAsync()
-    {
-        if (!await AwaitChatOriginalAsync(EnsureConversationMayActAsync("chat.compact-context"))) return;
-        if (!CanUseSelectedModel)
-        {
-            SetModelGateStatus("Choose an available model before compacting context.");
-            return;
-        }
-
-        var compactable = _messages
-            .Where(message => !message.IsCompacted && message.Role is MessageRole.User or MessageRole.Assistant)
-            .SkipLast(6)
-            .ToArray();
-        if (compactable.Length < 4)
-        {
-            SetProjectionStatus("There is not enough older context to compact yet.");
-            return;
-        }
-
-        SetProjectionStatus("Compacting older context…");
-        var transcript = string.Join("\n\n", compactable.Select(message => $"{message.Role}: {message.Content}"));
-        if (transcript.Length > 180_000) transcript = transcript[^180_000..];
-        string summary;
-        try
-        {
-            summary = await AwaitChatOriginalAsync(_ollama.CompleteAsync(
-                new OllamaChatRequest(
-                    _selectedModel!.Name,
-                    [new OllamaMessage("user", "Summarise this conversation context for a future assistant. Preserve requirements, decisions, named files, unresolved questions, errors, and verified evidence. Do not invent facts.\n\n" + transcript)],
-                    EffortLevel.Medium,
-                    Options: _preferences.GenerationOptions with { Temperature = 0.2 }),
-                RequireChatOriginal().Token));
-        }
-        catch (Exception exception) when (exception is HttpRequestException or InvalidOperationException or IOException)
-        {
-            RetainHandledOriginalChatCause(exception);
-            SetProjectionStatus("Context compaction failed: " + exception.Message);
-            return;
-        }
-
-        var now = DateTimeOffset.UtcNow;
-        if (!_conversation.IsTemporary)
-        {
-            await AwaitChatOriginalAsync(_conversations.AddContextEntryAsync(
-                new ConversationContextEntry(
-                    Guid.NewGuid(), _conversation.Id, ContextEntryKind.CompactSummary,
-                    "Manual compact summary", summary,
-                    $"Compacted {compactable.Length} messages at {now:O}", now),
-                RequireChatOriginal().Token));
-            await AwaitChatOriginalAsync(_conversations.MarkMessagesCompactedAsync(
-                _conversation.Id, compactable.Select(message => message.Id).ToArray(), RequireChatOriginal().Token));
-            _conversation = _conversation with { CompactedAt = now, UpdatedAt = now };
-            await AwaitChatOriginalAsync(_conversations.UpsertConversationAsync(_conversation, RequireChatOriginal().Token));
-        }
-
-        var compactedIds = compactable.Select(message => message.Id).ToHashSet();
-        for (var index = 0; index < _messages.Count; index++)
-            if (compactedIds.Contains(_messages[index].Id)) _messages[index] = _messages[index] with { IsCompacted = true };
-        _redoMessages.Clear();
-        RefreshMessages();
-        SetProjectionStatus($"Compacted {compactable.Length} older messages into a durable summary.");
-        await AwaitChatOriginalAsync(RefreshContextEntriesAsync());
-    }
-
     public void StartFreshConversation(Guid? chatGroupId = null) => RunOriginalChatTargetNotification(() => StartFreshConversationOriginalTarget(chatGroupId));
 
     private void StartFreshConversationOriginalTarget(Guid? chatGroupId = null)
@@ -796,6 +732,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                 string.Equals(_composerInput.Text, outbound.ComposerText, StringComparison.Ordinal))
                 ClearOriginalComposerDraft();
             CommitOriginalDraftTransitionOwnership(conversation, outbound);
+            if (outbound.Outgoing.Target.IsTemporary && outbound.Outgoing.Target.Id != conversation.Id)
+                _temporaryCompactions.Remove(outbound.Outgoing.Target.Id);
         }
         _activeAgent = null;
         _activeInstructions.Clear();
@@ -1210,7 +1148,13 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     private async Task SaveTemporaryOriginalAsync(Guid id, long generation)
     {
         if (_conversation.Id != id || _originalPresentationGeneration != generation || !_conversation.IsTemporary ||
-            IsSending || HasAdmittedOriginalSend() || Interlocked.CompareExchange(ref _temporarySaveInProgress, 1, 0) != 0) return;
+            IsSending || HasAdmittedOriginalSend()) return;
+        if (Volatile.Read(ref _contextCompactionInProgress) != 0)
+        {
+            SetProjectionStatus("Wait for context compaction to finish before saving this Temporary Chat.");
+            return;
+        }
+        if (Interlocked.CompareExchange(ref _temporarySaveInProgress, 1, 0) != 0) return;
         var acknowledged = false;
         try
         {
@@ -1237,7 +1181,10 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                     return;
                 }
                 request = new(_conversation, _messages.ToArray(),
-                    CaptureUnsentDraftText(_composerInput.Text, _scene.QueuedComposerMessages), []);
+                    CaptureUnsentDraftText(_composerInput.Text, _scene.QueuedComposerMessages), [])
+                {
+                    Compactions = CurrentTemporaryCompactions().ToArray()
+                };
                 SetProjectionStatus("Saving this Temporary Chat locally…");
             }));
             if (request is null) return;
@@ -1247,15 +1194,23 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                     SetProjectionStatus("Atomic local save is unavailable. This chat remains Temporary.")));
                 return;
             }
+            if (request.Compactions.Count > 0 && !owner.SupportsCompactionSummaries)
+            {
+                await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() =>
+                    SetProjectionStatus("This local store cannot save the retained summaries atomically. Your Temporary Chat and its full history are unchanged.")));
+                return;
+            }
             var receipt = await AwaitChatOriginalAsync(owner.SaveTemporaryChatAsync(request, RequireChatOriginal().Token));
             acknowledged = true;
             if (receipt.BranchId == Guid.Empty ||
-                receipt.Conversation != (request.Original with { IsTemporary = false, UpdatedAt = receipt.Conversation.UpdatedAt }))
+                receipt.Conversation != (request.Original with { IsTemporary = false, UpdatedAt = receipt.Conversation.UpdatedAt }) ||
+                !receipt.CompactionSummaryIds.Order().SequenceEqual(request.Compactions.Select(compaction => compaction.Summary.Id).Order()))
                 throw new InvalidOperationException("The save receipt does not match the confirmed chat.");
             await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() =>
             {
                 if (_conversation.Id != id || _originalPresentationGeneration != generation) return;
                 _conversation = receipt.Conversation;
+                _temporaryCompactions.Remove(id);
                 _unpublishedFreshChat.TryRemove(id, out _);
                 RememberOriginalDraftBranch(id, receipt.BranchId);
                 if (OriginalDraftInputOwner.Id == id)
@@ -1329,11 +1284,15 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
         _scene.SendRequested += (_, _) => _ = SubmitCurrentInstructionAsync();
         _scene.TemporaryToggleRequested += (_, _) => _ = ToggleTemporaryAsync();
+        _scene.BindHeaderActions(
+            context => !_disposed && !_originalWork.IsRetiring && Equals(context, CaptureOriginalConversationTarget()),
+            _ => new ValueTask(ToggleTemporaryAsync()));
         // The shared composer's direct send path returns the SAME admitted send task the page runs,
         // instead of discarding SubmitCurrentInstructionAsync through the legacy event.
         _scene.ComposerDirectSend = _ => new ValueTask(SubmitCurrentInstructionAsync());
         _scene.ComposerSource.TaskActions = new NativeTaskComposerActions(this);
         _scene.ComposerSource.ActionContextIdentity = CaptureOriginalComposerActionIdentity;
+        _scene.ComposerSource.ConversationActions = new NativeConversationOptions(this);
         _scene.StopRequested += OnStopRequested;
         _composerInput.Invalidated += OnComposerEditCompleted;
         _scene.ResolveProblemsRequested += (_, _) =>
@@ -1362,10 +1321,15 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         _scene.CatalogItemSelected += (_, selection) =>
         {
             if (_originalWork.IsRetiring) return;
-            if (_activeMention is not null) ConsumeActiveMention();
+            // Settings use the same canonical selection owner, but do not accept or
+            // replace a pending catalogue mention in the retained message draft.
+            var appliesCatalogueSelection = selection.Kind is not
+                (AddMenu.AddMenuAction.AllowActions or AddMenu.AddMenuAction.VisualResponses);
+            if (appliesCatalogueSelection && _activeMention is not null)
+                ConsumeActiveMention();
             ApplyAddSelection(selection);
             AddCatalogItemSelected?.Invoke(this, selection);
-            FocusComposer();
+            if (appliesCatalogueSelection) FocusComposer();
         };
         _scene.MessageActionRequested += OnMessageActionRequested;
         _scene.MarkdownCodeActionRequested += OnMarkdownCodeActionRequested;
@@ -1383,6 +1347,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         // conversation target is published/restored, so the composer is never presented as a
         // ready empty mount before its real input is wired.
         await AwaitChatOriginalAsync(_scene.ComposerInitialization);
+        await AwaitChatOriginalAsync(_scene.HeaderInitialization);
         await AwaitChatOriginalAsync(SetStatusAsync("Connecting to local modelsâ€¦"));
         await AwaitChatOriginalAsync(RefreshModelsAsync());
     }
@@ -1755,7 +1720,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                                originalSendToken,
                                prompts: _activeInstructions.Select(item => new ActivePrompt(item.Name, item.IconKey, item.Persists, item.Instructions)).ToArray(),
                                registeredContext: regeneration is null ? BuildRegisteredContext() : BuildRegisteredContext(regeneration.AttachmentContext),
-                               generationOptions: _preferences.GenerationOptions with { SpecialistId = _activeAgent?.Id },
+                               generationOptions: CaptureCompactionGenerationOptions(originalConversation),
                                filePermission: _preferences.FilePermission,
                                commandPermission: _preferences.CommandPermission,
                                browserPermission: _preferences.BrowserPermission,
@@ -2179,6 +2144,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         }
         var followLatest = IsFollowingLatest();
         PruneGeneratedSurfaces();
+        _scene.SetConversationHeader(CaptureOriginalConversationTarget(), _conversation.Title, _selectedModel?.Name);
         var sceneMessages = _messages.Select(BuildSceneMessage).ToArray();
         DemandOriginalChatCurrent();
         _scene.SyncMessages(sceneMessages);
@@ -2203,8 +2169,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         PublishProjectionState();
     }
 
-    private bool IsFollowingLatest() =>
-        ChatTranscriptScrollPolicy.ShouldFollow(_scene.Messages.MaxScrollY, _scene.Messages.ScrollY);
+    private bool IsFollowingLatest() => _scene.IsFollowingLatest;
 
     private void ScrollToEndIfFollowing(bool wasFollowing)
     {
@@ -2278,7 +2243,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             message.AgentName ?? "Haven",
             _streamingMessages.Contains(message.Id),
             thinking,
-            ReadToolActivities(message));
+            ReadToolActivities(message),
+            message.ModelName);
     }
 
     private void RefreshGeneratedContent(ChatMessage message)
@@ -2740,6 +2706,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         DemandOriginalChatCurrent();
         _sendCancellation?.Cancel();
         DemandOriginalChatCurrent();
+        if (_conversation.IsTemporary) _temporaryCompactions.Remove(_conversation.Id);
         ++_originalPresentationGeneration;
         _conversation = CreateConversation(mode, containerId, lessonId, spaceId);
         TrackUnpublishedFreshChat(_conversation);
@@ -2812,8 +2779,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         _scene.SetAttachmentChips(BuildAttachmentChips());
 
     /// <summary>
-    /// Reloads the persisted context rows for the active conversation into the scene Context card,
-    /// using the same conversation_context source that registered-context injection reads.
+    /// Reloads context rows for the active conversation. Summary display uses the same
+    /// applicable branch coverage as ordinary prompt assembly, never conversation ID alone.
     /// </summary>
     private Task RefreshContextEntriesAsync() => RunChatNestedOriginalAsync(() => RefreshContextEntriesOriginalBodyAsync());
 
@@ -2823,10 +2790,19 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         IReadOnlyList<ConversationContextEntry> entries = [];
         try
         {
-            if (!_conversation.IsTemporary)
-                entries = await AwaitChatOriginalAsync(_conversations.GetContextEntriesAsync(conversationId, RequireChatOriginal().Token));
+            if (_conversation.IsTemporary)
+                entries = CurrentTemporaryCompactions().Select(compaction => compaction.Summary).ToArray();
+            else
+            {
+                var retained = await AwaitChatOriginalAsync(_conversations.GetContextEntriesAsync(conversationId, RequireChatOriginal().Token));
+                var applicable = _conversations is IConversationPromptContextRepository source
+                    ? (await AwaitChatOriginalAsync(source.GetPromptContextAsync(conversationId, RequireChatOriginal().Token)))
+                        .Compactions.Select(compaction => compaction.Summary).ToArray() : [];
+                entries = retained.Where(entry => entry.Kind != ContextEntryKind.CompactSummary).Concat(applicable)
+                    .OrderBy(entry => entry.CreatedAt).ToArray();
+            }
         }
-        catch (Exception exception) when (exception is IOException or InvalidOperationException)
+        catch (Exception exception) when (exception is IOException or InvalidOperationException or System.Data.Common.DbException)
         {
             RetainHandledOriginalChatCause(exception);
             if (_conversation.Id == conversationId)
@@ -2834,6 +2810,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             return;
         }
         if (_conversation.Id != conversationId || _disposed) return;
+        _scene.SetConversationHeader(CaptureOriginalConversationTarget(), _conversation.Title, _selectedModel?.Name);
+        _scene.SetConversationSummaries(entries);
         var mapped = entries.Select(entry => new ChatSceneContextEntry(
             entry.Id,
             ContextEntryViewModel.CategoryLabelFor(entry.Kind),
@@ -3013,6 +2991,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     private void PublishProjectionState()
     {
         DemandOriginalChatCurrent();
+        _scene.SetConversationHeader(CaptureOriginalConversationTarget(), _conversation.Title, _selectedModel?.Name);
         _scene.SetTemporaryControl(_conversation.Mode == HavenMode.Chat && _conversation.Kind == ConversationKind.Chat,
             _conversation.IsTemporary);
         // Rebuilding the projection snapshots every message on each stream delta.

@@ -12,11 +12,17 @@
     <Compile Include="UnifiedClosePreparationTests.cs" />
     <Compile Include="NativeAdmissionShutdownTests.cs" />
     <Compile Include="HomeAppsLauncherTests.cs" />
+    <Compile Include="HomeHubsTests.cs" />
+    <Compile Include="../../shared/tests/Haven.Desktop.Tests/AuthoredCuiControls.cs" Link="AuthoredCuiControls.cs" />
+    <Compile Include="HomeSpecialistsTests.cs" />
+    <Compile Include="HomeExploreTests.cs" />
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/UnifiedWorkspaceHostLifetimeTests.cs" Link="UnifiedWorkspaceHostLifetimeTests.cs" />
     <Compile Include="LinuxWebKitEngineAvailabilityTests.cs" />
     <Compile Include="OverlayChatInitializationTests.cs" />
     <Compile Include="AutomationRunContinuationPersistenceTests.cs" />
     <Compile Include="SpacesConversationRouteTests.cs" />
+    <Compile Include="SpacesOrganisationRouteTests.cs" />
+    <Compile Include="SpacesQueuedNavigationSupersessionTests.cs" />
     <Compile Include="SpacesSidebarContributionRouteTests.cs" />
     <Compile Include="SpacesDetailsRouteTests.cs" />
     <Compile Include="SpaceDetailsPageTests.cs" />
@@ -24,6 +30,8 @@
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/NativeAppContentRegistryTests.cs" Link="NativeAppContentRegistryTests.cs" />
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/HavenAppRoutePolicyTests.cs" Link="HavenAppRoutePolicyTests.cs" />
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/UnifiedHomeContentTests.cs" Link="UnifiedHomeContentTests.cs" />
+    <Compile Include="../../shared/tests/Haven.Desktop.Tests/UnifiedHomeContentTests.AtlasApps.cs" Link="UnifiedHomeContentTests.AtlasApps.cs" />
+    <Compile Include="../../shared/tests/Haven.Desktop.Tests/UnifiedHomeContentTests.ExploreRoutes.cs" Link="UnifiedHomeContentTests.ExploreRoutes.cs" />
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/WorkspaceSessionSourceTests.cs" Link="WorkspaceSessionSourceTests.cs" />
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/UnifiedWorkspaceTabStateTests.cs" Link="UnifiedWorkspaceTabStateTests.cs" />
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/UnifiedWorkspaceSessionTests.cs" Link="UnifiedWorkspaceSessionTests.cs" />

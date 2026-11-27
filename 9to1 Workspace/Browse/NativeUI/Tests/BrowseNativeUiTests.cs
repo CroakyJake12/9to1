@@ -663,7 +663,8 @@ public sealed partial class BrowseNativeUiTests
             // menu for a detached page control or an unavailable inline fallback.
             Assert.True(AuthoredContains(Authored(window, "BrowseProfileMenu"), button));
             if (!IsTrue(workspace, "ProfileMenuOpen"))
-                await ClickCore(window, workspace, FindMounted(window, "HavenProfileButton"));
+                await ClickCore(window, workspace, FindMounted(window,
+                    Find(window, "HavenProfileButton").IsEffectivelyVisible ? "HavenProfileButton" : "BrowseOverflowButton"));
             Settle(window);
             // A requested header is the one final click below. It is never also
             // clicked here as an opener, which would toggle it twice and close it.

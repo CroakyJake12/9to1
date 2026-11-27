@@ -263,7 +263,7 @@ public sealed class CuiControlRegistry
         error = null;
         control = component.Type.ToLowerInvariant() switch
         {
-            "page" or "layer" => new Panel(),
+            "page" or "layer" => new CuiMaterialPanel(),
             "container" => CreateContainer(component, resolveValue, out error),
             "text" => new TextBlock(),
             "image" => new Image(),

@@ -161,6 +161,8 @@ public static class CuiSurfacePaletteCatalog
             ? CuiAppAccentCatalog.Find(surface)?.Colour
             : CuiAppAccentCatalog.Find(owningAppId)?.Colour
                 ?? (theme == CuiTheme.Professional ? null : CuiAppAccentCatalog.Find(surface)?.Colour);
+        if (theme == CuiTheme.Glow)
+            appColour = CuiGlowAppAccentCatalog.Find(owningAppId ?? surface)?.Colour ?? appColour;
         // Professional has no app-specific default accent for unknown/no-app surfaces;
         // use the existing canonical blue anchors instead of the legacy surface hue
         // (e.g. Spaces purple). This is palette resolution only: explicit Home
@@ -191,24 +193,24 @@ public static class CuiSurfacePaletteCatalog
             ? GlowDark(palette, appearance, surfaceAccent ?? accent) : palette;
     }
 
-    // The v4 dark field follows the scoped hue. Neutral accents stay neutral. Only the
-    // interface materials change; the original app/override accent still owns its actions.
+    // Atlas v5 buildGlowMaterial: the interface field keeps the scoped hue but caps
+    // saturation. Action accents remain independent; a dark page is not an accent fill.
     private static CuiPalette GlowDark(CuiPalette palette, CuiAppearance appearance, Color surfaceAccent)
     {
         var hue = surfaceAccent.ToHsl();
-        var saturation = hue.S < .025 ? 0 : Math.Max(.9, hue.S);
+        var saturation = hue.S < .025 ? 0 : Math.Min(.42, hue.S * .43);
         var scale = appearance == CuiAppearance.SuperDark ? .86 : 1.0;
-        var secondaryInk = Color.Parse("#ABB7DC");
+        var secondaryInk = Color.Parse("#C7BDB6");
         Color Tone(double lightness) => CuiContrast.EnsureForegroundContrast(
             new HslColor(1, hue.H, saturation, lightness * scale).ToRgb(), secondaryInk, 4.6);
         return palette with
         {
-            TideBase = Tone(.12), TideColour = Tone(.215), Panel = Tone(.155),
-            Panel2 = Tone(.19), Panel3 = Tone(.135), PanelHover = Tone(.245),
-            Button = Tone(.20), ButtonHover = Tone(.25), ButtonPressed = Tone(.28),
-            Text = Color.Parse("#F5F5FF"), TextSoft = Color.Parse("#B5BEE5"),
+            TideBase = Tone(.09), TideColour = Tone(.19), Panel = Tone(.13),
+            Panel2 = Tone(.16), Panel3 = Tone(.10), PanelHover = Tone(.19),
+            Button = Tone(.16), ButtonHover = Tone(.19), ButtonPressed = Tone(.13),
+            Text = Colors.White, TextSoft = Color.Parse("#DED5CF"),
             Muted = secondaryInk, Muted2 = secondaryInk,
-            Line = Blend(Tone(.155), secondaryInk, .17), LineStrong = Blend(Tone(.155), secondaryInk, .32)
+            Line = Blend(Tone(.13), secondaryInk, .17), LineStrong = Blend(Tone(.13), secondaryInk, .32)
         };
     }
 

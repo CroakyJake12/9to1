@@ -20,5 +20,10 @@ public static class CuiAppAccentCatalog
         app.AppId.Equals(appIdOrSurface, StringComparison.OrdinalIgnoreCase)
         || app.Surface.Equals(appIdOrSurface, StringComparison.OrdinalIgnoreCase));
 
+    /// <summary>Canonical app identities shared by native surface names and routes.
+    /// Glow has a broader Atlas catalogue; this does not change Professional defaults.</summary>
+    public static string? IdentityFor(string appIdOrSurface) =>
+        Find(appIdOrSurface)?.AppId ?? CuiGlowAppAccentCatalog.Find(appIdOrSurface)?.AppId;
+
     public static string SurfaceForRoute(string routeId) => Find(routeId)?.Surface ?? "Home";
 }

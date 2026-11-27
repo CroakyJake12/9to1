@@ -326,6 +326,9 @@ public static class BoardsCuiIconResolver
     {
         switch (brush)
         {
+            case CuiGlowFieldBrush field:
+                colors.AddRange([field.FieldTop, field.FieldBottom, field.Light]);
+                break;
             case ISolidColorBrush solid:
                 colors.Add(solid.Color);
                 break;

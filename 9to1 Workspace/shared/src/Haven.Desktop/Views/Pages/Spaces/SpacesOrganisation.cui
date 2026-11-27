@@ -1,0 +1,104 @@
+<Cui id="spaces.organisation" version="1">
+  <Actions>
+    <Action name="Refresh" command="organisation.refresh" />
+    <Action name="Return" command="organisation.return" />
+    <Action name="InspectGroup" command="organisation.inspect-group" parameter="{Binding group.target}" />
+    <Action name="InspectSpecialist" command="organisation.inspect-specialist" parameter="{Binding specialist.target}" />
+    <Action name="OpenMember" command="organisation.open-member" parameter="{Binding member.target}" />
+    <Action name="Attach" command="organisation.attach" />
+  </Actions>
+  <Theme Name="user_preference">
+  <Page id="spaces-organisation" OwnsBackdrop="True" Background="{Resource CuiWorkspaceBrush}">
+    <Container id="organisation-layout" Type="Grid" RowSizes="Auto 1fr Auto" ColumnSizes="1fr" CellGap="14" Padding="20">
+      <Container id="organisation-header" Row="0" Type="Vertical Stack" CellGap="10">
+        <Container id="organisation-heading-row" Type="Grid" ColumnSizes="1fr Auto" CellGap="10">
+          <Text id="organisation-heading" Text="{Binding organisation.title}" FontSize="26" FontWeight="Bold" TextWrapping="Wrap" />
+          <Button id="organisation-refresh" Column="1" action="Refresh" Content="Refresh" />
+        </Container>
+        <Text id="organisation-subtitle" Text="{Binding organisation.subtitle}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+        <Input id="organisation-search" Type="Text" Value="{Binding organisation.query, mode=TwoWay}" PlaceholderText="Search by name or expertise" accessible-name="Search this catalogue" Interactive="{Binding organisation.canBrowse}" />
+      </Container>
+      <Container id="organisation-scroll" Row="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="16">
+        <Container id="organisation-catalogue" Type="Grid" ColumnSizes="{Binding organisation.columns}" RowSizes="{Binding organisation.rows}" CellGap="12">
+          <Repeat id="organisation-groups" Source="{Binding organisation.groups}" As="group" Key="{Binding group.id}" ItemRow="{Binding group.row}" ItemColumn="{Binding group.column}">
+            <Button id="organisation-group" action="InspectGroup" Selected="{Binding group.selected}" Padding="16" HorizontalContentAlignment="Stretch" Background="{Resource CuiPanelBrush}" CornerRadius="{Resource CuiCardRadius}" accessible-name="{Binding group.name}">
+              <Container id="organisation-group-card" Type="Vertical Stack" CellGap="8">
+                <Text id="organisation-group-name" Text="{Binding group.name}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" />
+                <Text id="organisation-group-description" Text="{Binding group.description}" MaxHeight="60" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                <Text id="organisation-group-updated" Text="{Binding group.updated}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+                <Text id="organisation-group-details-label" Text="Inspect group" Foreground="{Resource CuiAccentPrimaryBrush}" />
+              </Container>
+            </Button>
+          </Repeat>
+          <Repeat id="organisation-specialists" Source="{Binding organisation.specialists}" As="specialist" Key="{Binding specialist.id}" ItemRow="{Binding specialist.row}" ItemColumn="{Binding specialist.column}">
+            <Button id="organisation-specialist" action="InspectSpecialist" Selected="{Binding specialist.selected}" Padding="16" HorizontalContentAlignment="Stretch" Background="{Resource CuiPanelBrush}" CornerRadius="{Resource CuiCardRadius}" accessible-name="{Binding specialist.name}">
+              <Container id="organisation-specialist-card" Type="Vertical Stack" CellGap="8">
+                <Container id="organisation-specialist-title-row" Type="Grid" ColumnSizes="24 1fr" CellGap="8">
+                  <Image id="organisation-specialist-icon" Source="{Binding specialist.icon}" Width="22" Height="22" />
+                  <Text id="organisation-specialist-name" Column="1" Text="{Binding specialist.name}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" />
+                </Container>
+                <Text id="organisation-specialist-description" Text="{Binding specialist.description}" MaxHeight="70" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                <Text id="organisation-specialist-status" Text="{Binding specialist.status}" FontSize="12" />
+                <Text id="organisation-specialist-scope" Text="{Binding specialist.scope}" TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+                <Text id="organisation-specialist-details-label" Text="Inspect expertise and scope" Foreground="{Resource CuiAccentPrimaryBrush}" />
+              </Container>
+            </Button>
+          </Repeat>
+        </Container>
+        <Text id="organisation-empty" IsVisible="{Binding organisation.empty}" Text="{Binding organisation.emptyText}" TextWrapping="Wrap" />
+        <Container id="organisation-inspector" IsVisible="{Binding organisation.hasSelection}" Type="Vertical Stack" CellGap="12" Padding="18" Background="{Resource CuiPanelBrush}" CornerRadius="{Resource CuiCardRadius}">
+          <Container id="organisation-group-inspector" IsVisible="{Binding organisation.hasGroup}" Type="Vertical Stack" CellGap="10">
+            <Text id="organisation-selected-group" Text="{Binding organisation.groupName}" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap" />
+            <Text id="organisation-context-heading" Text="Shared context" FontWeight="SemiBold" />
+            <Text id="organisation-context" Text="{Binding organisation.groupContext}" TextWrapping="Wrap" />
+            <Text id="organisation-rules-heading" Text="Instructions" FontWeight="SemiBold" />
+            <Text id="organisation-rules" Text="{Binding organisation.groupInstructions}" TextWrapping="Wrap" />
+            <Text id="organisation-sources-heading" Text="Source references" FontWeight="SemiBold" />
+            <Repeat id="organisation-source-rows" Source="{Binding organisation.references}" As="source" Key="{Binding source.id}">
+              <Container id="organisation-source-row" Type="Vertical Stack" CellGap="3">
+                <Text id="organisation-source-name" Text="{Binding source.name}" TextWrapping="Wrap" />
+                <Text id="organisation-source-type" Text="{Binding source.type}" Foreground="{Resource CuiTextSoftBrush}" FontSize="12" />
+              </Container>
+            </Repeat>
+            <Text id="organisation-sources-empty" IsVisible="{Binding organisation.noReferences}" Text="No source references are configured." Foreground="{Resource CuiTextSoftBrush}" />
+            <Text id="organisation-members-heading" Text="Saved chats in this Space" FontWeight="SemiBold" />
+            <Repeat id="organisation-member-rows" Source="{Binding organisation.members}" As="member" Key="{Binding member.id}">
+              <Button id="organisation-member-open" action="OpenMember" Interactive="{Binding organisation.canOpenMember}" HorizontalContentAlignment="Stretch" Padding="12" accessible-name="{Binding member.title}">
+                <Container id="organisation-member-content" Type="Vertical Stack" CellGap="4">
+                  <Text id="organisation-member-title" Text="{Binding member.title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                  <Text id="organisation-member-updated" Text="{Binding member.updated}" FontSize="12" />
+                  <Text id="organisation-member-action" Text="Open chat in new tab" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+              </Button>
+            </Repeat>
+            <Text id="organisation-members-empty" IsVisible="{Binding organisation.noMembers}" Text="No saved chats from this group are available in this Space." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            <Text id="organisation-group-mutation-reason" Text="Creating, moving or changing containers is not available in this view. Existing containers and conversations are preserved." TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+          <Container id="organisation-specialist-inspector" IsVisible="{Binding organisation.hasSpecialist}" Type="Vertical Stack" CellGap="10">
+            <Text id="organisation-selected-specialist" Text="{Binding organisation.specialistName}" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap" />
+            <Text id="organisation-selected-description" Text="{Binding organisation.description}" TextWrapping="Wrap" />
+            <Text id="organisation-specialist-instructions-heading" Text="Instructions" FontWeight="SemiBold" />
+            <Text id="organisation-specialist-instructions" Text="{Binding organisation.instructions}" TextWrapping="Wrap" />
+            <Text id="organisation-specialist-model-heading" Text="Preferred model and configured fallback" FontWeight="SemiBold" />
+            <Text id="organisation-specialist-model" Text="{Binding organisation.model}" TextWrapping="Wrap" />
+            <Text id="organisation-specialist-fallback" Text="{Binding organisation.fallback}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            <Text id="organisation-specialist-tools-heading" Text="Configured tools" FontWeight="SemiBold" />
+            <Text id="organisation-specialist-tools" Text="{Binding organisation.tools}" TextWrapping="Wrap" />
+            <Text id="organisation-specialist-sources-heading" Text="Knowledge sources" FontWeight="SemiBold" />
+            <Text id="organisation-specialist-sources" Text="{Binding organisation.sources}" TextWrapping="Wrap" />
+            <Text id="organisation-specialist-policy" Text="{Binding organisation.policy}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            <Text id="organisation-specialist-updated" Text="{Binding organisation.updated}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+            <Button id="organisation-specialist-attach" action="Attach" Interactive="{Binding organisation.canAttach}" Content="Attach to conversation" HorizontalAlignment="Left" AccentRole="Primary" />
+            <Text id="organisation-specialist-attach-reason" Text="{Binding organisation.attachReason}" TextWrapping="Wrap" FontSize="12" />
+            <Text id="organisation-specialist-configuration-reason" Text="AI Studio configuration is unavailable in this native workspace. This view does not change the canonical definition." TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+        </Container>
+      </Container>
+      <Container id="organisation-footer" Row="2" Type="Vertical Stack" CellGap="8">
+        <Text id="organisation-status" Text="{Binding organisation.status}" TextWrapping="Wrap" role="status" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+        <Button id="organisation-return" action="Return" Content="{Binding organisation.returnLabel}" HorizontalAlignment="Left" />
+      </Container>
+    </Container>
+  </Page>
+  </Theme>
+</Cui>

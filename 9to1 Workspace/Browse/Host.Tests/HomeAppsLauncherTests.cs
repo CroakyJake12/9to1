@@ -45,12 +45,24 @@ public sealed class HomeAppsLauncherTests
             new HomeAppItem("automations", "Automations", "Reusable, scheduled, recurring and triggered workflows", "not-a-catalog-key"),
             new HomeAppItem("boards", "Boards", "Context workspace", "boards")
         };
-        return new HomeAppsViewState(all, HomeAppsViewState.Filter(all, query), query, status);
+        return new HomeAppsViewState(all, HomeAppsViewState.FilterByQuery(all, query), query, status);
     }
+
+    private static Image AppIcon(Control row) => Assert.Single(row.GetVisualDescendants().OfType<Image>(),
+        image => image.Name == "home-app-icon");
+
+    private static Image HubAppIcon(Control row) => Assert.Single(row.GetVisualDescendants().OfType<Image>(),
+        image => image.Name == "home-hub-app-icon");
+
+    private static HomeAppsViewState HubsStateFor(IReadOnlyList<HomeAppItem> catalogue,
+        string selected = "create", string query = "") => new(catalogue, catalogue, string.Empty,
+        "Select an app to open it in this tab.", Filter: HomeAppsFilter.All,
+        HubsView: new HomeHubsViewState(1, false, false, true, HomeAppHubCatalogue.StandardHubs(catalogue),
+            selected, query, string.Empty, new Dictionary<string, string>(), false, string.Empty));
 
     private static (Control Root, CuiControlLoader Loader) Render(HomeAppsCuiBindings bindings, out IReadOnlyList<CuiDiagnostic> diagnostics)
     {
-        var registry = HomeAppsCuiDocument.CreateControlRegistry();
+        var registry = HomeAppsCuiDocument.CreateControlRegistry(bindings);
         var loader = new CuiControlLoader(registry);
         loader.SetBindingContext(bindings);
         loader.SetActionDispatcher(bindings);
@@ -83,7 +95,7 @@ public sealed class HomeAppsLauncherTests
         var document = HomeAppsCuiDocument.Parse();
         var (_, diagnostics) = loader.TryLoad(document);
         var errors = diagnostics.Where(item => item.Severity == CuiDiagnosticSeverity.Error).ToArray();
-        Assert.Contains(errors, item => item.Code == "CUIR053" && item.Message.Contains("icon:close", StringComparison.Ordinal));
+        Assert.Contains(errors, item => item.Code == "CUIR053" && item.Message.Contains("icon:search", StringComparison.Ordinal));
     }
 
     /// <summary>The production registry renders the exact resource with zero loader errors while the
@@ -100,7 +112,7 @@ public sealed class HomeAppsLauncherTests
             Assert.DoesNotContain(root.GetVisualDescendants().OfType<Button>(), button => button.Name == "home-app-tile");
             // The honest empty state, not a blank region and not a silently removed launcher.
             Assert.Contains(root.GetVisualDescendants().OfType<TextBlock>().Select(text => text.Text),
-                text => text != null && text.Contains("No apps are available", StringComparison.Ordinal));
+                text => text != null && text.Contains("No apps are installed", StringComparison.Ordinal));
         }
     }
 
@@ -136,9 +148,9 @@ public sealed class HomeAppsLauncherTests
             Assert.Equal(3, tiles.Length);
             Assert.Equal(new[] { "Open Files", "Open Automations", "Open Boards" }, tiles.Select(AutomationProperties.GetName));
             // Every tile carries a real resolved vector icon, including the unrecognised catalogue key.
-            Assert.All(tiles, tile => Assert.IsType<DrawingImage>(Assert.Single(tile.GetVisualDescendants().OfType<Image>()).Source));
+            Assert.All(tiles, tile => Assert.IsType<DrawingImage>(AppIcon(tile).Source));
             Assert.All(tiles, tile => Assert.False(string.IsNullOrWhiteSpace(
-                Assert.Single(tile.GetVisualDescendants().OfType<TextBlock>()).Text)));
+                Assert.Single(tile.GetVisualDescendants().OfType<TextBlock>(), text => text.Name == "home-app-name").Text)));
             Assert.Equal("Private browser workspace", ToolTip.GetTip(tiles[0]));
 
             // One action per tile opens that app directly; the old separate commit control is gone.
@@ -147,7 +159,7 @@ public sealed class HomeAppsLauncherTests
             await loader.WhenActionsIdleAsync();
             // Exactly one activation for the clicked tile, with the exact registered identity. Other
             // commands (query/clear) are legitimate and are not counted here.
-            Assert.Equal([("home.open-app", (object?)"automations")],
+            Assert.Equal([("home.open-app", (object?)"catalogue:automations")],
                 actions.Where(action => action.Command == "home.open-app").ToArray());
         }
     }
@@ -183,8 +195,8 @@ public sealed class HomeAppsLauncherTests
             Dispatcher.UIThread.RunJobs();
             Assert.DoesNotContain(root.GetVisualDescendants().OfType<Button>(), button => button.Name == "home-app-tile");
             var texts = string.Join(" | ", root.GetVisualDescendants().OfType<TextBlock>().Select(text => text.Text));
-            Assert.Contains("No app matches", texts);
-            Assert.Contains("Clear the search", texts);
+            Assert.Contains("No apps found", texts);
+            Assert.Contains("clear the search", texts);
 
             await bindings.DispatchAsync("home.clear-app-query", null, CancellationToken.None);
             await loader.WhenActionsIdleAsync();
@@ -383,120 +395,60 @@ public sealed class HomeAppsLauncherTests
         Assert.Equal(3, HomeCreateGroup.ResolveGroupVisible(group, "Open").Count);
     }
 
-    /// <summary>Rendered proof of the Create group through the real authored CUI document and typed
-    /// bindings: a single Create tile opens via an actual rendered click (CUI document Variable
-    /// state), Picture/Motion appear exactly once and enabled, Wave is a truthful disabled/unavailable
-    /// row, member clicks route the canonical key, Back restores the launcher, reopen works, and
-    /// searching a child key still surfaces Create.</summary>
+    /// <summary>The actual Hubs document selects a canonical hub, keeps absent references disabled,
+    /// and opens a real installed placement with its revision, hub and stable app identity.</summary>
     [AvaloniaFact]
-    public async Task Create_group_tile_is_navigation_and_opens_three_rows_picture_motion_enabled_wave_disabled()
+    public async Task Authored_hub_selection_keeps_typed_identity_and_truthful_member_availability()
     {
-        var state = GroupState();
+        var state = HubsStateFor(RealCatalogue(), selected: "organise");
         var actions = new List<(string Command, object? Parameter)>();
         HomeAppsCuiBindings bindings = null!;
         bindings = new HomeAppsCuiBindings(() => state, (command, parameter, _) =>
         {
             actions.Add((command, parameter));
-            if (command == "home.set-app-query") state = GroupState((parameter as string ?? string.Empty).Trim());
-            if (command == "home.clear-app-query") state = GroupState(string.Empty);
+            if (command == "home.hub-select" && parameter is HomeHubActionTarget target)
+                state = state with { HubsView = state.HubsView! with { SelectedHub = target.HubKey } };
             bindings.Refresh();
             return ValueTask.CompletedTask;
         });
-        var (root, loader) = Render(bindings, out var diagnostics);
-        using (loader)
+        var (root, loader) = RenderClosing(bindings, out var diagnostics, out var window, section: "hubs");
+        try
         {
             Assert.DoesNotContain(diagnostics, item => item.Severity == CuiDiagnosticSeverity.Error);
+            var hubs = root.GetVisualDescendants().OfType<Button>().Where(button => button.Name == "home-hub-card").ToArray();
+            Assert.Equal(7, hubs.Length);
+            Assert.Single(hubs, button => AutomationProperties.GetName(button) == "Open Create hub")
+                .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await loader.WhenActionsIdleAsync(); Dispatcher.UIThread.RunJobs();
+            Assert.Equal("create", state.HubsView!.SelectedHub);
+            Assert.Equal(new HomeHubActionTarget(1, "create"),
+                Assert.Single(actions, action => action.Command == "home.hub-select").Parameter);
 
-            // Closed launcher: exactly one Create tile; Picture/Motion are not duplicated at top level.
-            var createTile = Assert.Single(root.GetVisualDescendants().OfType<Button>(),
-                button => button.Name == "home-create-tile");
-            Assert.Equal("Open Create", AutomationProperties.GetName(createTile));
-            Assert.DoesNotContain(root.GetVisualDescendants().OfType<Button>(),
-                button => button.Name == "home-create-member");
-            var topTiles = root.GetVisualDescendants().OfType<Button>()
-                .Where(button => button.Name == "home-app-tile").Select(button => Assert.IsType<string>(AutomationProperties.GetName(button))).ToArray();
-            Assert.DoesNotContain(topTiles, name => name.Contains("Picture", StringComparison.Ordinal) || name.Contains("Motion", StringComparison.Ordinal));
-
-            // Open via an ACTUAL rendered click on the Create tile (document Variable state).
-            createTile.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            await loader.WhenActionsIdleAsync();
-            Dispatcher.UIThread.RunJobs();
-
-            // Exactly three member rows render: Picture and Motion enabled, Wave disabled/unavailable.
             var members = root.GetVisualDescendants().OfType<Button>()
-                .Where(button => button.Name == "home-create-member").ToArray();
-            Assert.Equal(3, members.Length);
-            var enabled = members.Where(button => button.IsEnabled).ToArray();
-            Assert.Equal(2, enabled.Length);
-            Assert.Equal(new[] { "Open Motion", "Open Picture" },
-                enabled.Select(AutomationProperties.GetName).OrderBy(name => name));
-            var disabledWave = Assert.Single(members, button => !button.IsEnabled);
-            Assert.Equal("Unavailable: Wave", AutomationProperties.GetName(disabledWave));
+                .Where(button => button.Name == "home-hub-app-open").ToArray();
+            Assert.Equal(4, members.Length);
+            Assert.Equal(new[] { "Open Frame", "Open Motion" }, members.Where(button => button.IsEnabled)
+                .Select(AutomationProperties.GetName).OrderBy(name => name));
+            var wave = Assert.Single(members, button => AutomationProperties.GetName(button) == "Unavailable: Wave");
+            Assert.False(wave.IsEnabled);
+            Assert.False(Assert.Single(members, button => AutomationProperties.GetName(button) == "Unavailable: Sculpt").IsEnabled);
+            Assert.Contains("Not installed", Assert.IsType<string>(ToolTip.GetTip(wave)), StringComparison.OrdinalIgnoreCase);
+            Assert.IsAssignableFrom<IImage>(HubAppIcon(wave).Source);
 
-            // Wave is honestly unavailable via the member note (and mentions audio).
-            var waveNote = Assert.Single(root.GetVisualDescendants().OfType<TextBlock>(),
-                text => text.Name == "home-create-member-note");
-            Assert.Contains("Wave", waveNote.Text, StringComparison.Ordinal);
-            Assert.Contains("not installed", waveNote.Text, StringComparison.OrdinalIgnoreCase);
-
-            // An ACTUAL member click routes the canonical key (positive routing identity).
-            var picture = Assert.Single(members, button => button.IsEnabled
-                && AutomationProperties.GetName(button) == "Open Picture");
-            picture.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            await loader.WhenActionsIdleAsync();
-            Dispatcher.UIThread.RunJobs();
-            Assert.Contains(actions, action => action.Command == "home.open-app" && (string?)action.Parameter == "imagine");
-            // Wave is disabled and cannot dispatch as ready.
-            Assert.DoesNotContain(actions, action => action.Command == "home.open-app" && (string?)action.Parameter == "wave");
-
-            // Back (actual rendered click on the Back button) restores the launcher.
-            var back = Assert.Single(root.GetVisualDescendants().OfType<Button>(),
-                button => button.Name == "home-create-back");
-            back.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            await loader.WhenActionsIdleAsync();
-            Dispatcher.UIThread.RunJobs();
-            Assert.Single(root.GetVisualDescendants().OfType<Button>(),
-                button => button.Name == "home-create-tile");
-            Assert.DoesNotContain(root.GetVisualDescendants().OfType<Button>(),
-                button => button.Name == "home-create-member");
-
-            // Reopen still works (document Variable toggles again).
-            root.GetVisualDescendants().OfType<Button>()
-                .Single(button => button.Name == "home-create-tile")
+            Assert.Single(members, button => AutomationProperties.GetName(button) == "Open Frame")
                 .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await loader.WhenActionsIdleAsync();
-            Dispatcher.UIThread.RunJobs();
-            Assert.Equal(3, root.GetVisualDescendants().OfType<Button>()
-                .Count(button => button.Name == "home-create-member"));
-
-            // Back again, then searching a CHILD key/name still surfaces the Create group.
-            root.GetVisualDescendants().OfType<Button>()
-                .Single(button => button.Name == "home-create-back")
-                .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            await loader.WhenActionsIdleAsync();
-            Dispatcher.UIThread.RunJobs();
-            await bindings.DispatchAsync("home.set-app-query", "imagine", CancellationToken.None);
-            await loader.WhenActionsIdleAsync();
-            Dispatcher.UIThread.RunJobs();
-            Assert.Single(root.GetVisualDescendants().OfType<Button>(),
-                button => button.Name == "home-create-tile");
-
-            // Clear restores the full launcher (Files, Boards, Create).
-            await bindings.DispatchAsync("home.clear-app-query", null, CancellationToken.None);
-            await loader.WhenActionsIdleAsync();
-            Dispatcher.UIThread.RunJobs();
-            Assert.Equal(2, root.GetVisualDescendants().OfType<Button>()
-                .Count(button => button.Name == "home-app-tile"));
-            Assert.Single(root.GetVisualDescendants().OfType<Button>(),
-                button => button.Name == "home-create-tile");
+            Assert.Equal(new HomeHubActionTarget(1, "create", "mode:a0000000-0000-0000-0000-000000000008"),
+                Assert.Single(actions, action => action.Command == "home.hub-open-app").Parameter);
+            Assert.DoesNotContain(actions, action => action.Parameter is HomeHubActionTarget { AppIdentity: "reference:wave" });
         }
+        finally { bindings.RetireAppearanceObservation(); window.Close(); loader.Dispose(); }
     }
 
-    /// <summary>Rendered proof of the fixed search-then-open flow: searching "create" keeps the Create
-    /// tile visible, and actually clicking it opens the group showing all THREE rows (Picture, Motion,
-    /// Wave) rather than filtering its children away by the retained "create" query.</summary>
+    /// <summary>Searching the real grouped Apps catalogue by a hub name keeps its installed apps
+    /// directly actionable; the authored Explore hubs control opens the separate Hubs route.</summary>
     [AvaloniaFact]
-    public async Task Search_create_then_click_Create_opens_all_three_member_rows()
+    public async Task Grouped_apps_search_matches_hub_name_and_exposes_the_authored_hubs_action()
     {
         var state = GroupState();
         var actions = new List<(string Command, object? Parameter)>();
@@ -505,86 +457,69 @@ public sealed class HomeAppsLauncherTests
         {
             actions.Add((command, parameter));
             if (command == "home.set-app-query") state = GroupState((parameter as string ?? string.Empty).Trim());
-            if (command == "home.clear-app-query") state = GroupState(string.Empty);
             bindings.Refresh();
             return ValueTask.CompletedTask;
         });
-        var (root, loader) = Render(bindings, out var diagnostics);
-        using (loader)
+        var (root, loader) = RenderClosing(bindings, out var diagnostics, out var window);
+        try
         {
             Assert.DoesNotContain(diagnostics, item => item.Severity == CuiDiagnosticSeverity.Error);
-
-            // Searching "create" keeps the Create navigation tile visible.
             await bindings.DispatchAsync("home.set-app-query", "create", CancellationToken.None);
+            await loader.WhenActionsIdleAsync(); Dispatcher.UIThread.RunJobs();
+            var members = root.GetVisualDescendants().OfType<Button>().Where(button => button.Name == "home-app-tile").ToArray();
+            Assert.Equal(new[] { "Open Frame", "Open Motion" }, members.Select(AutomationProperties.GetName));
+            Assert.All(members, button => Assert.True(button.IsEnabled));
+            Assert.Single(members, button => AutomationProperties.GetName(button) == "Open Frame")
+                .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await loader.WhenActionsIdleAsync();
-            Dispatcher.UIThread.RunJobs();
-            var createTile = Assert.Single(root.GetVisualDescendants().OfType<Button>(),
-                button => button.Name == "home-create-tile");
-            Assert.Equal("Open Create", AutomationProperties.GetName(createTile));
-
-            // Clicking Create opens the group with all three member rows (Picture, Motion, Wave), not
-            // filtered away by the retained "create" query.
-            createTile.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.Equal("mode:a0000000-0000-0000-0000-000000000008",
+                Assert.Single(actions, action => action.Command == "home.open-app").Parameter);
+            Assert.Single(root.GetVisualDescendants().OfType<Button>(), button => button.Name == "home-apps-explore-hubs")
+                .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await loader.WhenActionsIdleAsync();
-            Dispatcher.UIThread.RunJobs();
-            var members = root.GetVisualDescendants().OfType<Button>()
-                .Where(button => button.Name == "home-create-member").ToArray();
-            Assert.Equal(3, members.Length);
-            Assert.Equal(new[] { "Open Motion", "Open Picture", "Unavailable: Wave" },
-                members.Select(AutomationProperties.GetName).OrderBy(name => name));
+            Assert.Single(actions, action => action.Command == "home.explore-hubs");
+            Assert.DoesNotContain(root.GetVisualDescendants().OfType<Button>(), button => button.Name == "home-create-tile");
         }
+        finally { bindings.RetireAppearanceObservation(); window.Close(); loader.Dispose(); }
     }
 
-    /// <summary>Rendered proof of the honest open-group no-match surface: with the group open and a
-    /// query that matches nothing, the CUI shows a clear "No Create members match your search." text
-    /// and a "Clear search" button (not a blank region); clicking Clear restores all three rows.</summary>
+    /// <summary>The authored selected-hub search shows a real no-match state; its visible clear
+    /// action restores the same selected hub without deleting navigation or enabling absent apps.</summary>
     [AvaloniaFact]
-    public async Task Open_group_no_match_shows_clear_prompt_and_clear_search_restores_rows()
+    public async Task Selected_hub_no_match_and_authored_clear_preserve_selection_and_restore_rows()
     {
-        var state = GroupState();
-        var actions = new List<(string Command, object? Parameter)>();
+        var state = HubsStateFor(RealCatalogue());
         HomeAppsCuiBindings bindings = null!;
         bindings = new HomeAppsCuiBindings(() => state, (command, parameter, _) =>
         {
-            actions.Add((command, parameter));
-            if (command == "home.set-app-query") state = GroupState((parameter as string ?? string.Empty).Trim());
-            if (command == "home.clear-app-query") state = GroupState(string.Empty);
+            if (command == "home.hub-set-query")
+                state = state with { HubsView = state.HubsView! with { Query = (parameter as string ?? string.Empty).Trim() } };
+            if (command == "home.hub-clear-query")
+                state = state with { HubsView = state.HubsView! with { Query = string.Empty } };
             bindings.Refresh();
             return ValueTask.CompletedTask;
         });
-        var (root, loader) = Render(bindings, out var diagnostics);
-        using (loader)
+        var (root, loader) = RenderClosing(bindings, out var diagnostics, out var window, section: "hubs");
+        try
         {
             Assert.DoesNotContain(diagnostics, item => item.Severity == CuiDiagnosticSeverity.Error);
-
-            // Open the group first (empty query -> all three rows).
-            root.GetVisualDescendants().OfType<Button>()
-                .Single(button => button.Name == "home-create-tile")
-                .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            await loader.WhenActionsIdleAsync();
-            Dispatcher.UIThread.RunJobs();
-            Assert.Equal(3, root.GetVisualDescendants().OfType<Button>()
-                .Count(button => button.Name == "home-create-member"));
-
-            // A no-match query while open shows the honest group-empty text and the Clear search button.
-            await bindings.DispatchAsync("home.set-app-query", "zzz-no-such-member", CancellationToken.None);
-            await loader.WhenActionsIdleAsync();
-            Dispatcher.UIThread.RunJobs();
-            Assert.DoesNotContain(root.GetVisualDescendants().OfType<Button>(),
-                button => button.Name == "home-create-member");
-            var texts = string.Join(" | ", root.GetVisualDescendants().OfType<TextBlock>().Select(text => text.Text));
-            Assert.Contains("No Create members match your search.", texts);
-            var clear = Assert.Single(root.GetVisualDescendants().OfType<Button>(),
-                button => button.Name == "home-create-group-clear");
-            Assert.Equal("Clear search", AutomationProperties.GetName(clear));
-
-            // Clicking Clear restores all three rows.
+            Assert.Equal(4, root.GetVisualDescendants().OfType<Button>().Count(button => button.Name == "home-hub-app-open"));
+            await bindings.DispatchAsync("home.hub-set-query", "zzz-no-such-member", CancellationToken.None);
+            await loader.WhenActionsIdleAsync(); Dispatcher.UIThread.RunJobs();
+            Assert.DoesNotContain(root.GetVisualDescendants().OfType<Button>(), button => button.Name == "home-hub-app-open");
+            Assert.Contains(root.GetVisualDescendants().OfType<TextBlock>(), text => text.IsEffectivelyVisible && text.Text == "No apps match this search");
+            Assert.Equal(7, root.GetVisualDescendants().OfType<Button>().Count(button => button.Name == "home-hub-card"));
+            var clear = Assert.Single(root.GetVisualDescendants().OfType<Button>(), button => AutomationProperties.GetName(button) == "Clear hub search");
+            Assert.True(clear.IsEffectivelyVisible);
             clear.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            await loader.WhenActionsIdleAsync();
-            Dispatcher.UIThread.RunJobs();
-            Assert.Equal(3, root.GetVisualDescendants().OfType<Button>()
-                .Count(button => button.Name == "home-create-member"));
+            await loader.WhenActionsIdleAsync(); Dispatcher.UIThread.RunJobs();
+            Assert.Equal("create", state.HubsView!.SelectedHub);
+            Assert.Empty(state.HubsView.Query);
+            var members = root.GetVisualDescendants().OfType<Button>().Where(button => button.Name == "home-hub-app-open").ToArray();
+            Assert.Equal(4, members.Length);
+            Assert.False(Assert.Single(members, button => AutomationProperties.GetName(button) == "Unavailable: Wave").IsEnabled);
         }
+        finally { bindings.RetireAppearanceObservation(); window.Close(); loader.Dispose(); }
     }
 
     /// <summary>Pins all 19 canonical built-in app GUID → PNG identities. A missing native Wave
@@ -716,7 +651,7 @@ public sealed class HomeAppsLauncherTests
             new HomeAppItem("boards", "Boards", "Context workspace", "boards",
                 CanonicalId: Guid.Parse("a0000000-0000-0000-0000-000000000023"), Source: ModeSource.BuiltIn)
         };
-        var state = new HomeAppsViewState(all, HomeAppsViewState.Filter(all, string.Empty), string.Empty,
+        var state = new HomeAppsViewState(all, HomeAppsViewState.FilterByQuery(all, string.Empty), string.Empty,
             "Select an app to open it in this tab.");
         var bindings = new HomeAppsCuiBindings(() => state, (_, _, _) => ValueTask.CompletedTask);
         var (root, loader) = Render(bindings, out var diagnostics);
@@ -729,7 +664,7 @@ public sealed class HomeAppsLauncherTests
             // Every tile resolves SOME IImage (real PNG once integrated, or the honest vector fallback
             // before), never a blank or loader error.
             Assert.All(tiles, tile => Assert.IsAssignableFrom<IImage>(
-                Assert.Single(tile.GetVisualDescendants().OfType<Image>()).Source));
+                AppIcon(tile).Source));
             // Direct resolver proof: a known brand source resolves to a real IImage.
             Assert.IsAssignableFrom<IImage>(HomeAppBrandingIcons.Resolve("ownerbrand:files|folder", root));
             // Unknown brand tokens resolve to nothing (bounded) so the chain can continue honestly.
@@ -773,39 +708,34 @@ public sealed class HomeAppsLauncherTests
         Assert.Equal("icon:wave", HomeAppBrandingIcons.SourceForGroupMember(lookalike));
     }
 
+    /// <summary>The actual Apps rows and pinned cards use their separate Atlas image geometry,
+    /// while both preserve the same canonical app identity and packaged image resolution.</summary>
     [AvaloniaFact]
-    public async Task Canonical_app_and_Create_tile_icons_use_the_larger_authored_size()
+    public void Canonical_app_rows_and_pinned_cards_use_their_authored_icon_sizes()
     {
-        var bindings = new HomeAppsCuiBindings(() => GroupState(), (_, _, _) => ValueTask.CompletedTask);
-        var (root, loader) = Render(bindings, out var diagnostics);
-        using (loader)
+        var frameId = Guid.Parse("a0000000-0000-0000-0000-000000000008");
+        var state = GroupState() with { Pins = new[] { new ModePin(Guid.NewGuid(), frameId, 0, DateTimeOffset.UtcNow) }, CanEditPins = true };
+        var bindings = new HomeAppsCuiBindings(() => state, (_, _, _) => ValueTask.CompletedTask);
+        var (root, loader) = RenderClosing(bindings, out var diagnostics, out var window);
+        try
         {
             Assert.DoesNotContain(diagnostics, item => item.Severity == CuiDiagnosticSeverity.Error);
-            var icons = root.GetVisualDescendants().OfType<Image>()
-                .Where(image => image.Name is "home-app-tile-icon" or "home-create-tile-icon").ToArray();
-            Assert.NotEmpty(icons);
-            foreach (var icon in icons)
+            var rows = root.GetVisualDescendants().OfType<Button>().Where(button => button.Name == "home-app-tile").ToArray();
+            Assert.Equal(4, rows.Length);
+            foreach (var row in rows)
             {
-                Assert.Equal(56, icon.Width);
-                Assert.Equal(56, icon.Height);
-                Assert.NotNull(icon.Source);
+                var icon = AppIcon(row);
+                Assert.Equal(36, icon.Width); Assert.Equal(36, icon.Height); Assert.NotNull(icon.Source);
             }
-            Assert.Single(root.GetVisualDescendants().OfType<Button>(), button => button.Name == "home-create-tile")
-                .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            await loader.WhenActionsIdleAsync();
-            Dispatcher.UIThread.RunJobs();
-            var members = root.GetVisualDescendants().OfType<Button>()
-                .Where(button => button.Name == "home-create-member").ToArray();
-            Assert.Equal(3, members.Length);
-            foreach (var member in members)
-            {
-                var icon = Assert.Single(member.GetVisualDescendants().OfType<Image>());
-                Assert.Equal(56, icon.Width);
-                Assert.Equal(56, icon.Height);
-                Assert.NotNull(icon.Source);
-            }
-            Assert.False(Assert.Single(members, member => AutomationProperties.GetName(member) == "Unavailable: Wave").IsEnabled);
+            var pinned = Assert.Single(root.GetVisualDescendants().OfType<Button>(), button => button.Name == "home-app-pin-open");
+            Assert.Equal("Open Frame", AutomationProperties.GetName(pinned));
+            var pinnedIcon = Assert.Single(pinned.GetVisualDescendants().OfType<Image>());
+            Assert.Equal(48, pinnedIcon.Width); Assert.Equal(48, pinnedIcon.Height);
+            Assert.IsType<Avalonia.Media.Imaging.Bitmap>(pinnedIcon.Source);
+            Assert.IsType<Avalonia.Media.Imaging.Bitmap>(AppIcon(Assert.Single(rows,
+                row => AutomationProperties.GetName(row) == "Open Frame")).Source);
         }
+        finally { bindings.RetireAppearanceObservation(); window.Close(); loader.Dispose(); }
     }
 
     /// <summary>Uses the real seed and the same route policy as UnifiedHomePage, rather than a second
@@ -904,7 +834,7 @@ public sealed class HomeAppsLauncherTests
     {
         var filesTile = Assert.Single(root.GetVisualDescendants().OfType<Button>(),
             button => button.Name == "home-app-tile" && AutomationProperties.GetName(button) == "Open Files");
-        var filesImage = Assert.Single(filesTile.GetVisualDescendants().OfType<Image>());
+        var filesImage = AppIcon(filesTile);
         var weakImage = new WeakReference(filesImage);
         retainedByOwner?.Add(filesImage);
 
@@ -912,7 +842,7 @@ public sealed class HomeAppsLauncherTests
         // loader stay alive in the caller, so collectability proves the owner does not retain the
         // removed target.
         state[0] = new HomeAppsViewState(new[] { files, boards },
-            HomeAppsViewState.Filter(new[] { files, boards }, "boards"), "boards", "...");
+            HomeAppsViewState.FilterByQuery(new[] { files, boards }, "boards"), "boards", "...");
         bindings.Refresh();
         Dispatcher.UIThread.RunJobs();
 
@@ -961,7 +891,7 @@ public sealed class HomeAppsLauncherTests
                 new HomeAppItem("files", "Files", "Private browser workspace", "folder",
                     CanonicalId: Guid.Parse("a0000000-0000-0000-0000-000000000030"), Source: ModeSource.BuiltIn)
             };
-            var state = new HomeAppsViewState(all, HomeAppsViewState.Filter(all, string.Empty), string.Empty,
+            var state = new HomeAppsViewState(all, HomeAppsViewState.FilterByQuery(all, string.Empty), string.Empty,
                 "Select an app to open it in this tab.");
             var host = new ContentControl();
             host.Resources["CuiAppearance"] = "Bright";
@@ -972,7 +902,7 @@ public sealed class HomeAppsLauncherTests
             Assert.DoesNotContain(diagnostics, item => item.Severity == CuiDiagnosticSeverity.Error);
             var tile = Assert.Single(root.GetVisualDescendants().OfType<Button>(),
                 button => button.Name == "home-app-tile");
-            var image = Assert.Single(tile.GetVisualDescendants().OfType<Image>());
+            var image = AppIcon(tile);
             // Missing provider -> the honest vector fallback, never a blank/loader error.
             Assert.IsType<DrawingImage>(image.Source);
             // Light folder was requested for the mapped Files brand.
@@ -1008,7 +938,7 @@ public sealed class HomeAppsLauncherTests
                 new HomeAppItem("files", "Files", "Private browser workspace", "folder",
                     CanonicalId: Guid.Parse("a0000000-0000-0000-0000-000000000030"), Source: ModeSource.BuiltIn)
             };
-            var state = new HomeAppsViewState(all, HomeAppsViewState.Filter(all, string.Empty), string.Empty,
+            var state = new HomeAppsViewState(all, HomeAppsViewState.FilterByQuery(all, string.Empty), string.Empty,
                 "Select an app to open it in this tab.");
             var host = new ContentControl();
             host.Resources["CuiAppearance"] = "Bright";
@@ -1017,7 +947,7 @@ public sealed class HomeAppsLauncherTests
             loader = loadedLoader;
             var tile = Assert.Single(root.GetVisualDescendants().OfType<Button>(),
                 button => button.Name == "home-app-tile");
-            Assert.IsType<DrawingImage>(Assert.Single(tile.GetVisualDescendants().OfType<Image>()).Source);
+            Assert.IsType<DrawingImage>(AppIcon(tile).Source);
             // Attached: initial Bright baseline produced a light request.
             Assert.Contains(armed.Recording.Attempts, uri => uri.EndsWith("/light/files.png", StringComparison.Ordinal));
 
@@ -1155,14 +1085,15 @@ public sealed class HomeAppsLauncherTests
         new HomeAppItem("boards", "Boards", "Context workspace", "boards")
     };
 
-    private static HomeAppsViewState GroupStateFor(IReadOnlyList<HomeAppItem> catalogue, string query = "")
-    {
-        var launcher = HomeCreateGroup.BuildLauncher(catalogue);
-        var group = HomeCreateGroup.Build(catalogue);
-        var groupVisible = HomeCreateGroup.ResolveGroupVisible(group, query);
-        return new HomeAppsViewState(catalogue, HomeCreateGroup.FilterLauncher(launcher, group, query),
-            query, "Select an app to open it in this tab.", launcher, group, groupVisible);
-    }
+    private static HomeAppsViewState GroupedAppsStateFor(IReadOnlyList<HomeAppItem> catalogue, string query = "") =>
+        new(catalogue, HomeAppsViewState.FilterByQuery(catalogue, query), query, "Select an app to open it in this tab.",
+            Filter: HomeAppsFilter.All);
+
+    // Keep both the stable row identity and its authored parent hub unchanged while changing only
+    // source presentation. Moving an app between hubs would test removal, not same-target reconciliation.
+    private static HomeAppsViewState StablePlacementState(HomeAppItem app) => new([app], [app], string.Empty,
+        "Select an app to open it in this tab.", Hubs:
+        [new HomeAppHub("custom-retained", "Retained apps", "Saved custom arrangement", "folder", [app.StableIdentity])]);
 
     private static readonly (string Text, string Folder)[] Modes =
     [
@@ -1185,13 +1116,13 @@ public sealed class HomeAppsLauncherTests
     /// <summary>Render helper that returns the shown Window so callers can close it (and the loader) in
     /// a finally block, so the test doesn't leak a Window.</summary>
     private static (Control Root, CuiControlLoader Loader) RenderClosing(
-        HomeAppsCuiBindings bindings, out IReadOnlyList<CuiDiagnostic> diagnostics, out Window window)
+        HomeAppsCuiBindings bindings, out IReadOnlyList<CuiDiagnostic> diagnostics, out Window window, string section = "apps")
     {
         var registry = HomeAppsCuiDocument.CreateControlRegistry(bindings);
         var loader = new CuiControlLoader(registry);
         loader.SetBindingContext(bindings);
         loader.SetActionDispatcher(bindings);
-        var document = HomeAppsCuiDocument.Parse();
+        var document = HomeAppsCuiDocument.Parse(section);
         var loaded = loader.TryLoad(document);
         diagnostics = loaded.Diagnostics;
         var root = loaded.Root ?? throw new InvalidDataException("The Home apps document produced no surface: " +
@@ -1205,90 +1136,63 @@ public sealed class HomeAppsLauncherTests
         return (root, loader);
     }
 
-    /// <summary>Rendered proof with a REAL Create fixture: Picture installed, Motion/Wave unavailable.
-    /// The real canonical Picture drives the genuine Create tile. Installed Picture uses its artwork,
-    /// absent Motion stays generic, and Wave's new reference artwork does not enable its row. Create
-    /// itself requests the original Canvas brush, without becoming an installable app.</summary>
+    /// <summary>Real Create hub: Frame installed, Motion/Wave/Sculpt unavailable. Approved Wave art
+    /// resolves without enabling its reference; absent Motion retains its generic fallback.</summary>
     [AvaloniaFact]
-    public void Rendered_Create_with_Picture_installed_retains_unavailable_Motion_and_Wave_truth()
+    public void Rendered_Create_hub_with_Frame_installed_keeps_unavailable_Motion_and_Wave_truth()
     {
         using var armed = new ArmedImaging();
-        Window? window = null;
+        var state = HubsStateFor(PictureInstalledMotionUnavailableCatalogue());
+        var bindings = new HomeAppsCuiBindings(() => state, (_, _, _) => ValueTask.CompletedTask);
+        var (root, loader) = RenderClosing(bindings, out var diagnostics, out var window, section: "hubs");
         try
         {
-            var state = GroupStateFor(PictureInstalledMotionUnavailableCatalogue());
-            var bindings = new HomeAppsCuiBindings(() => state, (_, _, _) => ValueTask.CompletedTask);
-            var (root, loader) = RenderClosing(bindings, out var diagnostics, out window);
-            using (loader)
-            {
-                Assert.DoesNotContain(diagnostics, item => item.Severity == CuiDiagnosticSeverity.Error);
-                // A real canonical member exists (Picture), so a genuine Create tile is present.
-                var createTile = Assert.Single(root.GetVisualDescendants().OfType<Button>(),
-                    button => button.Name == "home-create-tile");
-                Assert.IsType<DrawingImage>(Assert.Single(createTile.GetVisualDescendants().OfType<Image>()).Source);
-                createTile.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                loader.WhenActionsIdleAsync().GetAwaiter().GetResult();
-                Dispatcher.UIThread.RunJobs();
-
-                var members = root.GetVisualDescendants().OfType<Button>()
-                    .Where(button => button.Name == "home-create-member").ToArray();
-                Assert.Equal(3, members.Length);
-                var pictureRow = Assert.Single(members, b => b.IsEnabled && AutomationProperties.GetName(b) == "Open Picture");
-                var motionRow = Assert.Single(members, b => !b.IsEnabled && AutomationProperties.GetName(b) == "Unavailable: Motion");
-                var waveRow = Assert.Single(members, b => !b.IsEnabled && AutomationProperties.GetName(b) == "Unavailable: Wave");
-                Assert.Contains(armed.Recording.Attempts, uri => uri.EndsWith("/picture.png", StringComparison.Ordinal));
-                Assert.DoesNotContain(armed.Recording.Attempts, uri => uri.Contains("/motion.png", StringComparison.Ordinal));
-                Assert.Contains(armed.Recording.Attempts, uri => uri.EndsWith("/wave.png", StringComparison.Ordinal));
-                Assert.Contains(armed.Recording.Attempts, uri => uri.EndsWith("/canvas.png", StringComparison.Ordinal));
-                Assert.IsType<DrawingImage>(Assert.Single(motionRow.GetVisualDescendants().OfType<Image>()).Source);
-                Assert.IsType<DrawingImage>(Assert.Single(waveRow.GetVisualDescendants().OfType<Image>()).Source);
-            }
+            Assert.DoesNotContain(diagnostics, item => item.Severity == CuiDiagnosticSeverity.Error);
+            var members = root.GetVisualDescendants().OfType<Button>().Where(button => button.Name == "home-hub-app-open").ToArray();
+            Assert.Equal(4, members.Length);
+            Assert.Single(members, button => button.IsEnabled && AutomationProperties.GetName(button) == "Open Frame");
+            var motion = Assert.Single(members, button => !button.IsEnabled && AutomationProperties.GetName(button) == "Unavailable: Motion");
+            var wave = Assert.Single(members, button => !button.IsEnabled && AutomationProperties.GetName(button) == "Unavailable: Wave");
+            Assert.Single(members, button => !button.IsEnabled && AutomationProperties.GetName(button) == "Unavailable: Sculpt");
+            Assert.Contains(armed.Recording.Attempts, uri => uri.EndsWith("/picture.png", StringComparison.Ordinal));
+            Assert.DoesNotContain(armed.Recording.Attempts, uri => uri.EndsWith("/motion.png", StringComparison.Ordinal));
+            Assert.Contains(armed.Recording.Attempts, uri => uri.EndsWith("/wave.png", StringComparison.Ordinal));
+            Assert.DoesNotContain(armed.Recording.Attempts, uri => uri.EndsWith("/canvas.png", StringComparison.Ordinal));
+            Assert.IsType<DrawingImage>(HubAppIcon(motion).Source);
+            Assert.IsType<DrawingImage>(HubAppIcon(wave).Source);
         }
-        finally { window?.Close(); }
+        finally { bindings.RetireAppearanceObservation(); window.Close(); loader.Dispose(); }
     }
 
-    /// <summary>Converse real fixture: Motion installed, Picture/Wave unavailable. Missing Picture
-    /// stays generic; Wave requests its reference artwork while its row remains disabled.</summary>
+    /// <summary>Converse real Create hub: Motion installed, Frame/Wave/Sculpt unavailable. The missing
+    /// Frame cannot acquire installed artwork; Wave stays a disabled approved reference.</summary>
     [AvaloniaFact]
-    public void Rendered_Create_with_Motion_installed_retains_unavailable_Picture_and_Wave_truth()
+    public void Rendered_Create_hub_with_Motion_installed_keeps_unavailable_Frame_and_Wave_truth()
     {
         using var armed = new ArmedImaging();
-        Window? window = null;
+        var state = HubsStateFor(MotionInstalledPictureUnavailableCatalogue());
+        var bindings = new HomeAppsCuiBindings(() => state, (_, _, _) => ValueTask.CompletedTask);
+        var (root, loader) = RenderClosing(bindings, out var diagnostics, out var window, section: "hubs");
         try
         {
-            var state = GroupStateFor(MotionInstalledPictureUnavailableCatalogue());
-            var bindings = new HomeAppsCuiBindings(() => state, (_, _, _) => ValueTask.CompletedTask);
-            var (root, loader) = RenderClosing(bindings, out var diagnostics, out window);
-            using (loader)
-            {
-                Assert.DoesNotContain(diagnostics, item => item.Severity == CuiDiagnosticSeverity.Error);
-                var createTile = Assert.Single(root.GetVisualDescendants().OfType<Button>(),
-                    button => button.Name == "home-create-tile");
-                Assert.IsType<DrawingImage>(Assert.Single(createTile.GetVisualDescendants().OfType<Image>()).Source);
-                createTile.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                loader.WhenActionsIdleAsync().GetAwaiter().GetResult();
-                Dispatcher.UIThread.RunJobs();
-
-                var members = root.GetVisualDescendants().OfType<Button>()
-                    .Where(button => button.Name == "home-create-member").ToArray();
-                Assert.Equal(3, members.Length);
-                Assert.Single(members, b => b.IsEnabled && AutomationProperties.GetName(b) == "Open Motion");
-                Assert.Single(members, b => !b.IsEnabled && AutomationProperties.GetName(b) == "Unavailable: Picture");
-                Assert.Single(members, b => !b.IsEnabled && AutomationProperties.GetName(b) == "Unavailable: Wave");
-                Assert.Contains(armed.Recording.Attempts, uri => uri.EndsWith("/motion.png", StringComparison.Ordinal));
-                Assert.DoesNotContain(armed.Recording.Attempts, uri => uri.Contains("/picture.png", StringComparison.Ordinal));
-                Assert.Contains(armed.Recording.Attempts, uri => uri.EndsWith("/wave.png", StringComparison.Ordinal));
-                Assert.Contains(armed.Recording.Attempts, uri => uri.EndsWith("/canvas.png", StringComparison.Ordinal));
-            }
+            Assert.DoesNotContain(diagnostics, item => item.Severity == CuiDiagnosticSeverity.Error);
+            var members = root.GetVisualDescendants().OfType<Button>().Where(button => button.Name == "home-hub-app-open").ToArray();
+            Assert.Equal(4, members.Length);
+            Assert.Single(members, button => button.IsEnabled && AutomationProperties.GetName(button) == "Open Motion");
+            Assert.Single(members, button => !button.IsEnabled && AutomationProperties.GetName(button) == "Unavailable: Frame");
+            Assert.Single(members, button => !button.IsEnabled && AutomationProperties.GetName(button) == "Unavailable: Wave");
+            Assert.Single(members, button => !button.IsEnabled && AutomationProperties.GetName(button) == "Unavailable: Sculpt");
+            Assert.Contains(armed.Recording.Attempts, uri => uri.EndsWith("/motion.png", StringComparison.Ordinal));
+            Assert.DoesNotContain(armed.Recording.Attempts, uri => uri.EndsWith("/picture.png", StringComparison.Ordinal));
+            Assert.Contains(armed.Recording.Attempts, uri => uri.EndsWith("/wave.png", StringComparison.Ordinal));
+            Assert.DoesNotContain(armed.Recording.Attempts, uri => uri.EndsWith("/canvas.png", StringComparison.Ordinal));
         }
-        finally { window?.Close(); }
+        finally { bindings.RetireAppearanceObservation(); window.Close(); loader.Dispose(); }
     }
 
-    /// <summary>Live retained-UI proof: the same rendered Apps brand image and an ALREADY-OPEN Create
-    /// installed-member image remain (same control instances) across all four appearances, each source
-    /// is genuinely re-resolved through the typed CUI binding, unavailable members remain disabled, and a
-    /// NONEMPTY authored query plus a focused real search input / selection / open-group / current theme
-    /// survive every appearance change.</summary>
+    /// <summary>Live retained-UI proof: the same authored Apps rows remain across all four appearances,
+    /// including the selected Create search and truthful unavailable references. Actual typed image
+    /// bindings refresh without losing the focused search input, text selection or stable row identity.</summary>
     [AvaloniaFact]
     public async Task Live_home_brand_imaging_retains_same_controls_across_all_four_appearances()
     {
@@ -1299,13 +1203,13 @@ public sealed class HomeAppsLauncherTests
         try
         {
             var host = new ContentControl();
-            var state = GroupStateFor(BrandedLiveCatalogue());
+            var state = GroupedAppsStateFor(BrandedLiveCatalogue());
             bindings = new HomeAppsCuiBindings(() => state, (command, parameter, _) =>
             {
                 if (command == "home.set-app-query")
-                    state = GroupStateFor(BrandedLiveCatalogue(), (parameter as string ?? string.Empty).Trim());
+                    state = GroupedAppsStateFor(BrandedLiveCatalogue(), (parameter as string ?? string.Empty).Trim());
                 if (command == "home.clear-app-query")
-                    state = GroupStateFor(BrandedLiveCatalogue());
+                    state = GroupedAppsStateFor(BrandedLiveCatalogue());
                 bindings.Refresh();
                 return ValueTask.CompletedTask;
             });
@@ -1317,7 +1221,7 @@ public sealed class HomeAppsLauncherTests
             var filesTile = Assert.Single(root.GetVisualDescendants().OfType<Button>(),
                 button => button.Name == "home-app-tile" && AutomationProperties.GetName(button) == "Open Files");
             var retainedFileTile = filesTile;
-            var retainedFileImage = Assert.Single(filesTile.GetVisualDescendants().OfType<Image>());
+            var retainedFileImage = AppIcon(filesTile);
             foreach (var (text, folder) in Modes)
             {
                 var before = armed.Recording.Attempts.Count;
@@ -1326,7 +1230,7 @@ public sealed class HomeAppsLauncherTests
                 var tileNow = Assert.Single(root.GetVisualDescendants().OfType<Button>(),
                     button => button.Name == "home-app-tile" && AutomationProperties.GetName(button) == "Open Files");
                 Assert.Same(retainedFileTile, tileNow);
-                Assert.Same(retainedFileImage, Assert.Single(tileNow.GetVisualDescendants().OfType<Image>()));
+                Assert.Same(retainedFileImage, AppIcon(tileNow));
                 Assert.True(armed.Recording.Attempts.Count > before, $"stimulus {text} must yield a fresh request");
                 Assert.Contains(armed.Recording.Attempts.Skip(before), uri =>
                     uri == $"avares://Haven/Assets/OwnerAppIcons/{folder}/files.png");
@@ -1348,24 +1252,18 @@ public sealed class HomeAppsLauncherTests
             search.SelectionStart = 1;
             var selectionBefore = search.SelectionStart;
 
-            // Open the Create group and keep it open; capture the Picture row/image BEFORE first stimulus.
-            var createTile = Assert.Single(root.GetVisualDescendants().OfType<Button>(),
-                button => button.Name == "home-create-tile");
-            createTile.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            await loader.WhenActionsIdleAsync();
-            Dispatcher.UIThread.RunJobs();
-
-            // Phase 3: ALREADY-OPEN Create installed-member image (Picture) across all four appearances.
+            // Phase 3: the actual grouped Create rows are already shown by the retained query.
+            // Capture their real image controls before changing appearance.
             Button? retainedPictureRow = null;
             Image? retainedPictureImage = null;
             foreach (var (text, folder) in Modes)
             {
                 var members = root.GetVisualDescendants().OfType<Button>()
-                    .Where(button => button.Name == "home-create-member").ToArray();
-                var pictureRow = Assert.Single(members, b => b.IsEnabled && AutomationProperties.GetName(b) == "Open Picture");
+                    .Where(button => button.Name == "home-app-tile").ToArray();
+                var pictureRow = Assert.Single(members, b => b.IsEnabled && AutomationProperties.GetName(b) == "Open Frame");
                 if (retainedPictureRow is null) retainedPictureRow = pictureRow;
                 else Assert.Same(retainedPictureRow, pictureRow);
-                var pictureImage = Assert.Single(pictureRow.GetVisualDescendants().OfType<Image>());
+                var pictureImage = AppIcon(pictureRow);
                 if (retainedPictureImage is null) retainedPictureImage = pictureImage;
                 else Assert.Same(retainedPictureImage, pictureImage);
 
@@ -1381,25 +1279,26 @@ public sealed class HomeAppsLauncherTests
 
                 var motionRow = Assert.Single(members, b => !b.IsEnabled && AutomationProperties.GetName(b) == "Unavailable: Motion");
                 var waveRow = Assert.Single(members, b => !b.IsEnabled && AutomationProperties.GetName(b) == "Unavailable: Wave");
-                Assert.IsType<DrawingImage>(Assert.Single(motionRow.GetVisualDescendants().OfType<Image>()).Source);
-                Assert.IsType<DrawingImage>(Assert.Single(waveRow.GetVisualDescendants().OfType<Image>()).Source);
+                Assert.Single(members, b => !b.IsEnabled && AutomationProperties.GetName(b) == "Unavailable: Sculpt");
+                Assert.IsType<DrawingImage>(AppIcon(motionRow).Source);
+                Assert.IsType<DrawingImage>(AppIcon(waveRow).Source);
 
                 // Identity must survive THIS update too (the update above may have replaced controls).
                 var afterMembers = root.GetVisualDescendants().OfType<Button>()
-                    .Where(button => button.Name == "home-create-member").ToArray();
-                var afterRow = Assert.Single(afterMembers, b => b.IsEnabled && AutomationProperties.GetName(b) == "Open Picture");
+                    .Where(button => button.Name == "home-app-tile").ToArray();
+                var afterRow = Assert.Single(afterMembers, b => b.IsEnabled && AutomationProperties.GetName(b) == "Open Frame");
                 Assert.Same(retainedPictureRow, afterRow);
-                Assert.Same(retainedPictureImage, Assert.Single(afterRow.GetVisualDescendants().OfType<Image>()));
+                Assert.Same(retainedPictureImage, AppIcon(afterRow));
             }
 
-            // NONEMPTY query / open-group / focus / selection / current theme survived.
+            // Nonempty query, grouped rows, focus, text selection and current theme survived.
             Assert.Equal("create", state.Query);
             var finalMembers = root.GetVisualDescendants().OfType<Button>()
-                .Where(button => button.Name == "home-create-member").ToArray();
-            Assert.Equal(3, finalMembers.Length);
-            var finalPictureRow = Assert.Single(finalMembers, b => b.IsEnabled && AutomationProperties.GetName(b) == "Open Picture");
+                .Where(button => button.Name == "home-app-tile").ToArray();
+            Assert.Equal(4, finalMembers.Length);
+            var finalPictureRow = Assert.Single(finalMembers, b => b.IsEnabled && AutomationProperties.GetName(b) == "Open Frame");
             Assert.Same(retainedPictureRow, finalPictureRow);
-            Assert.Same(retainedPictureImage, Assert.Single(finalPictureRow.GetVisualDescendants().OfType<Image>()));
+            Assert.Same(retainedPictureImage, AppIcon(finalPictureRow));
             Assert.Same(search, Assert.Single(root.GetVisualDescendants().OfType<TextBox>(), tb => tb.Name == "home-app-search"));
             Assert.True(search.IsKeyboardFocusWithin);
             Assert.Equal(selectionBefore, search.SelectionStart);
@@ -1427,7 +1326,7 @@ public sealed class HomeAppsLauncherTests
                 new HomeAppItem("files", "Files", "Private browser workspace", "folder",
                     CanonicalId: Guid.Parse("a0000000-0000-0000-0000-000000000030"), Source: ModeSource.BuiltIn)
             };
-            var state = new HomeAppsViewState(all, HomeAppsViewState.Filter(all, string.Empty), string.Empty,
+            var state = new HomeAppsViewState(all, HomeAppsViewState.FilterByQuery(all, string.Empty), string.Empty,
                 "Select an app to open it in this tab.");
             var host = new ContentControl();
             host.Resources["CuiAppearance"] = "Bright"; // parent page scope stays unchanged
@@ -1438,7 +1337,7 @@ public sealed class HomeAppsLauncherTests
 
             var tile = Assert.Single(root.GetVisualDescendants().OfType<Button>(),
                 button => button.Name == "home-app-tile");
-            var image = Assert.Single(tile.GetVisualDescendants().OfType<Image>());
+            var image = AppIcon(tile);
 
             // Initial: parent Bright -> light request.
             Assert.Contains(armed.Recording.Attempts, uri => uri.EndsWith("/light/files.png", StringComparison.Ordinal));
@@ -1456,7 +1355,7 @@ public sealed class HomeAppsLauncherTests
             Dispatcher.UIThread.RunJobs();
             Assert.True(armed.Recording.Attempts.Count > beforeBright, "child-scope change back must trigger a fresh request");
             Assert.Equal("avares://Haven/Assets/OwnerAppIcons/light/files.png", armed.LastAttempt);
-            Assert.Same(image, Assert.Single(tile.GetVisualDescendants().OfType<Image>()));
+            Assert.Same(image, AppIcon(tile));
         }
         finally { bindings?.RetireAppearanceObservation(); window?.Close(); loader?.Dispose(); }
     }
@@ -1487,7 +1386,7 @@ public sealed class HomeAppsLauncherTests
             var hostA = new ContentControl();
             hostA.Resources["CuiAppearance"] = "Bright";
             HomeAppsViewState stateA = new(new[] { files },
-                HomeAppsViewState.Filter(new[] { files }, string.Empty), string.Empty, "...");
+                HomeAppsViewState.FilterByQuery(new[] { files }, string.Empty), string.Empty, "...");
             bindingsA = new HomeAppsCuiBindings(() => stateA, (_, _, _) => ValueTask.CompletedTask);
             var (_, la) = RenderUnderHost(bindingsA, hostA, out var diagnosticsA, out windowA);
             loaderA = la;
@@ -1513,7 +1412,7 @@ public sealed class HomeAppsLauncherTests
 
             // CREATE a genuinely NEW B target after A retired (real catalogue/reconciliation).
             stateB = new HomeAppsViewState(new[] { picture },
-                HomeAppsViewState.Filter(new[] { picture }, string.Empty), string.Empty, "...");
+                HomeAppsViewState.FilterByQuery(new[] { picture }, string.Empty), string.Empty, "...");
             bindingsB.Refresh();
             Dispatcher.UIThread.RunJobs();
             Assert.Contains(armed.Recording.Attempts, uri => uri.EndsWith("/dark/picture.png", StringComparison.Ordinal));
@@ -1562,9 +1461,7 @@ public sealed class HomeAppsLauncherTests
             host.Resources["CuiAppearance"] = "Bright";
             var brandFiles = new HomeAppItem("files", "Files", "Private browser workspace", "folder",
                 CanonicalId: Guid.Parse("a0000000-0000-0000-0000-000000000030"), Source: ModeSource.BuiltIn);
-            HomeAppsViewState state = new(new[] { brandFiles },
-                HomeAppsViewState.Filter(new[] { brandFiles }, string.Empty), string.Empty,
-                "Select an app to open it in this tab.");
+            HomeAppsViewState state = StablePlacementState(brandFiles);
             bindings = new HomeAppsCuiBindings(() => state, (_, _, _) => ValueTask.CompletedTask);
             var invalidations = 0;
             bindings.PropertyChanged += (_, _) => invalidations++;
@@ -1574,7 +1471,7 @@ public sealed class HomeAppsLauncherTests
 
             var tile = Assert.Single(root.GetVisualDescendants().OfType<Button>(),
                 button => button.Name == "home-app-tile");
-            var retainedImage = Assert.Single(tile.GetVisualDescendants().OfType<Image>());
+            var retainedImage = AppIcon(tile);
             invalidations = 0; // baseline after initial render/attach
 
             // Phase 1: brand @ Bright -> light request; a theme change drives a real invalidation.
@@ -1587,13 +1484,13 @@ public sealed class HomeAppsLauncherTests
             var brandAttempts = armed.Recording.Attempts.Count;
 
             // Phase 2: generic rail source (icon:folder) on the SAME target -> observation dropped.
-            var railFiles = new HomeAppItem("files", "Files", "Private browser workspace", "folder");
-            state = new HomeAppsViewState(new[] { railFiles },
-                HomeAppsViewState.Filter(new[] { railFiles }, string.Empty), string.Empty, "...");
+            var railFiles = brandFiles with { Source = ModeSource.Created };
+            state = StablePlacementState(railFiles);
             invalidations = 0;
             bindings.Refresh();
             Dispatcher.UIThread.RunJobs();
-            Assert.Same(retainedImage, Assert.Single(tile.GetVisualDescendants().OfType<Image>()));
+            Assert.Same(tile, Assert.Single(root.GetVisualDescendants().OfType<Button>(), button => button.Name == "home-app-tile"));
+            Assert.Same(retainedImage, AppIcon(tile));
             Assert.DoesNotContain(armed.Recording.Attempts.Skip(brandAttempts),
                 uri => uri.EndsWith("/files.png", StringComparison.Ordinal));
             var railRefreshInvalidations = invalidations;
@@ -1606,21 +1503,21 @@ public sealed class HomeAppsLauncherTests
                 uri => uri.EndsWith("/files.png", StringComparison.Ordinal));
 
             // Phase 3: canonical generic (icon:boards) on the SAME target.
-            var canonicalFiles = new HomeAppItem("files", "Files", "Private browser workspace", "boards");
-            state = new HomeAppsViewState(new[] { canonicalFiles },
-                HomeAppsViewState.Filter(new[] { canonicalFiles }, string.Empty), string.Empty, "...");
+            var canonicalFiles = railFiles with { IconKey = "boards" };
+            state = StablePlacementState(canonicalFiles);
             bindings.Refresh();
             Dispatcher.UIThread.RunJobs();
-            Assert.Same(retainedImage, Assert.Single(tile.GetVisualDescendants().OfType<Image>()));
+            Assert.Same(tile, Assert.Single(root.GetVisualDescendants().OfType<Button>(), button => button.Name == "home-app-tile"));
+            Assert.Same(retainedImage, AppIcon(tile));
             Assert.DoesNotContain(armed.Recording.Attempts.Skip(brandAttempts),
                 uri => uri.EndsWith("/files.png", StringComparison.Ordinal));
 
             // Phase 4: back to brand on the SAME target -> ownership resumes, current (dark) scope.
-            state = new HomeAppsViewState(new[] { brandFiles },
-                HomeAppsViewState.Filter(new[] { brandFiles }, string.Empty), string.Empty, "...");
+            state = StablePlacementState(brandFiles);
             bindings.Refresh();
             Dispatcher.UIThread.RunJobs();
-            Assert.Same(retainedImage, Assert.Single(tile.GetVisualDescendants().OfType<Image>()));
+            Assert.Same(tile, Assert.Single(root.GetVisualDescendants().OfType<Button>(), button => button.Name == "home-app-tile"));
+            Assert.Same(retainedImage, AppIcon(tile));
             Assert.Equal("avares://Haven/Assets/OwnerAppIcons/dark/files.png", armed.LastAttempt);
             var liveBaseline = invalidations;
             host.Resources["CuiAppearance"] = "Bright";
@@ -1661,7 +1558,7 @@ public sealed class HomeAppsLauncherTests
                 CanonicalId: Guid.Parse("a0000000-0000-0000-0000-000000000030"), Source: ModeSource.BuiltIn);
             var boards = new HomeAppItem("boards", "Boards", "Context workspace", "boards");
             HomeAppsViewState state = new(new[] { files, boards },
-                HomeAppsViewState.Filter(new[] { files, boards }, string.Empty), string.Empty,
+                HomeAppsViewState.FilterByQuery(new[] { files, boards }, string.Empty), string.Empty,
                 "Select an app to open it in this tab.");
             bindings = new HomeAppsCuiBindings(() => state, (_, _, _) => ValueTask.CompletedTask);
             var (root, loadedLoader) = RenderUnderHost(bindings, host, out var diagnostics, out window);
@@ -1673,7 +1570,7 @@ public sealed class HomeAppsLauncherTests
             for (var cycle = 0; cycle < 3; cycle++)
             {
                 // Remove the brand target by filtering it out; the page/registry/loader stays alive.
-                state = new HomeAppsViewState(all, HomeAppsViewState.Filter(all, "boards"), "boards", "");
+                state = new HomeAppsViewState(all, HomeAppsViewState.FilterByQuery(all, "boards"), "boards", "");
                 bindings.Refresh();
                 Dispatcher.UIThread.RunJobs();
 
@@ -1685,7 +1582,7 @@ public sealed class HomeAppsLauncherTests
 
                 // Reattach/current-scope refresh: bring the brand back; it resolves the CURRENT scope.
                 host.Resources["CuiAppearance"] = "Bright";
-                state = new HomeAppsViewState(all, HomeAppsViewState.Filter(all, string.Empty), string.Empty, "...");
+                state = new HomeAppsViewState(all, HomeAppsViewState.FilterByQuery(all, string.Empty), string.Empty, "...");
                 bindings.Refresh();
                 Dispatcher.UIThread.RunJobs();
                 Assert.Single(root.GetVisualDescendants().OfType<Button>(),
@@ -1731,7 +1628,7 @@ public sealed class HomeAppsLauncherTests
             // the removal helper without re-capturing a local.
             var state = new HomeAppsViewState[1];
             state[0] = new HomeAppsViewState(new[] { files, boards },
-                HomeAppsViewState.Filter(new[] { files, boards }, string.Empty), string.Empty, "...");
+                HomeAppsViewState.FilterByQuery(new[] { files, boards }, string.Empty), string.Empty, "...");
             bindings = new HomeAppsCuiBindings(() => state[0], (_, _, _) => ValueTask.CompletedTask);
             var (root, loadedLoader) = RenderUnderHost(bindings, host, out var diagnostics, out window);
             loader = loadedLoader;
@@ -1772,7 +1669,7 @@ public sealed class HomeAppsLauncherTests
             var boards = new HomeAppItem("boards", "Boards", "Context workspace", "boards");
             var state = new HomeAppsViewState[]
             {
-                new(new[] { files, boards }, HomeAppsViewState.Filter(new[] { files, boards }, string.Empty),
+                new(new[] { files, boards }, HomeAppsViewState.FilterByQuery(new[] { files, boards }, string.Empty),
                     string.Empty, "...")
             };
             bindings = new HomeAppsCuiBindings(() => state[0], (_, _, _) => ValueTask.CompletedTask);
@@ -1817,7 +1714,7 @@ public sealed class HomeAppsLauncherTests
             host.Resources["CuiAppearance"] = "Bright"; // pre-attach scope A
             var all = new[] { new HomeAppItem("files", "Files", "Private browser workspace", "folder",
                 CanonicalId: Guid.Parse("a0000000-0000-0000-0000-000000000030"), Source: ModeSource.BuiltIn) };
-            HomeAppsViewState state = new(all, HomeAppsViewState.Filter(all, string.Empty), string.Empty, "...");
+            HomeAppsViewState state = new(all, HomeAppsViewState.FilterByQuery(all, string.Empty), string.Empty, "...");
             bindings = new HomeAppsCuiBindings(() => state, (_, _, _) => ValueTask.CompletedTask);
 
             // Load + wire WITHOUT attaching to a shown window yet.
@@ -1848,7 +1745,7 @@ public sealed class HomeAppsLauncherTests
             Assert.Equal("avares://Haven/Assets/OwnerAppIcons/dark/files.png", armed.LastAttempt);
             var tile = Assert.Single(root.GetVisualDescendants().OfType<Button>(),
                 button => button.Name == "home-app-tile");
-            Assert.IsType<DrawingImage>(Assert.Single(tile.GetVisualDescendants().OfType<Image>()).Source);
+            Assert.IsType<DrawingImage>(AppIcon(tile).Source);
         }
         finally { bindings?.RetireAppearanceObservation(); window?.Close(); loader?.Dispose(); }
     }
@@ -1869,11 +1766,9 @@ public sealed class HomeAppsLauncherTests
             host.Resources["CuiAppearance"] = "Bright";
             var brandFiles = new HomeAppItem("files", "Files", "Private browser workspace", "folder",
                 CanonicalId: Guid.Parse("a0000000-0000-0000-0000-000000000030"), Source: ModeSource.BuiltIn);
-            var railFiles = new HomeAppItem("files", "Files", "Private browser workspace", "folder");
-            var brandState = new HomeAppsViewState(new[] { brandFiles },
-                HomeAppsViewState.Filter(new[] { brandFiles }, string.Empty), string.Empty, "...");
-            var railState = new HomeAppsViewState(new[] { railFiles },
-                HomeAppsViewState.Filter(new[] { railFiles }, string.Empty), string.Empty, "...");
+            var railFiles = brandFiles with { Source = ModeSource.Created };
+            var brandState = StablePlacementState(brandFiles);
+            var railState = StablePlacementState(railFiles);
             HomeAppsViewState state = brandState;
             bindings = new HomeAppsCuiBindings(() => state, (_, _, _) => ValueTask.CompletedTask);
 
@@ -1896,9 +1791,11 @@ public sealed class HomeAppsLauncherTests
                 }
             };
 
-            var (_, loadedLoader) = RenderUnderHost(bindings, host, out var diagnostics, out window);
+            var (root, loadedLoader) = RenderUnderHost(bindings, host, out var diagnostics, out window);
             loader = loadedLoader;
             Assert.DoesNotContain(diagnostics, item => item.Severity == CuiDiagnosticSeverity.Error);
+            var retainedRow = Assert.Single(root.GetVisualDescendants().OfType<Button>(), button => button.Name == "home-app-tile");
+            var retainedImage = AppIcon(retainedRow);
 
             // Live brand observation drives a genuine invalidation on a theme change.
             invalidations = 0;
@@ -1923,6 +1820,8 @@ public sealed class HomeAppsLauncherTests
             Dispatcher.UIThread.RunJobs();
             invalidations = 0;
             var afterSwapAttempts = armed.Recording.Attempts.Count;
+            Assert.Same(retainedRow, Assert.Single(root.GetVisualDescendants().OfType<Button>(), button => button.Name == "home-app-tile"));
+            Assert.Same(retainedImage, AppIcon(retainedRow));
             host.Resources["CuiAppearance"] = "Bright";
             Dispatcher.UIThread.RunJobs();
             Assert.Equal(0, invalidations);

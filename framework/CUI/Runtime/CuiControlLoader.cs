@@ -101,7 +101,7 @@ public sealed partial class CuiControlLoader : IDisposable
     private string? _definitionScope;
     private CuiThemeScopeStack _themeStack = new(CuiSurfacePaletteCatalog.ActiveTheme);
     private string _currentSurface = "Home";
-    private string? _accentAppId;
+    private string? _accentAppId = "app.home";
     private CuiAppearance? _appearance;
     private int _currentLayer;
     private string? _currentRepeatIdentity;
@@ -610,7 +610,7 @@ public sealed partial class CuiControlLoader : IDisposable
     }
 
     /// <summary>Set the surface name for theme resolution (default: "Home").</summary>
-    public void SetSurface(string surface) => SetSurface(surface, CuiAppAccentCatalog.Find(surface)?.AppId);
+    public void SetSurface(string surface) => SetSurface(surface, CuiAppAccentCatalog.IdentityFor(surface));
     public void SetSurface(string surface, string? appId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(surface);
@@ -621,7 +621,7 @@ public sealed partial class CuiControlLoader : IDisposable
             // catalog and validate the RESOLVED identity, never rejecting a bare
             // registered surface name. Per-app accent colour assignment itself flows
             // through the typed settings owner, not this presentation registration.
-            var resolved = CuiAppAccentCatalog.Find(appId)?.AppId
+            var resolved = CuiAppAccentCatalog.IdentityFor(appId)
                 ?? (appId.StartsWith("app.", StringComparison.Ordinal) ? appId : null);
             if (resolved is null)
             {
@@ -636,6 +636,15 @@ public sealed partial class CuiControlLoader : IDisposable
         else _accentAppId = null;
         _currentSurface = surface;
     }
+    /// <summary>Refreshes existing controls for a selected-app chrome scope without
+    /// reloading markup, bindings, focus or pending action owners.</summary>
+    public void UpdatePresentationScope(CuiScenePresentationScope presentation)
+    {
+        ArgumentNullException.ThrowIfNull(presentation);
+        SetSurface(presentation.Surface, presentation.AppId);
+        ThemePreferenceChanged(this, EventArgs.Empty);
+    }
+
     public void SetAppearance(CuiAppearance appearance)
     {
         if (!Enum.IsDefined(appearance)) throw new ArgumentOutOfRangeException(nameof(appearance));

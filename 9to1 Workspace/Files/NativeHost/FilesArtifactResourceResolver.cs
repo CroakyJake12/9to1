@@ -178,6 +178,8 @@ public sealed partial class FilesArtifactResourceResolver : IOriginalCanonicalRe
         var trashRestore = actionId == "9to1.Files.Restore" && scope.Access == ResourceAccess.Write;
         var browserWrite = (actionId is "9to1.Files.CreateFolder" or "9to1.Files.Rename" or "9to1.Files.Move" or "9to1.Files.Delete" or "9to1.Files.RegisterBrowserDownload")
             && scope.Access == ResourceAccess.Write;
+        var browserShare = (actionId is "9to1.Files.Share.Grant" or "9to1.Files.Share.Revoke")
+            && scope.Access == ResourceAccess.Write;
         var packageRead = actionId == "os.compatibility.package.read" && scope.Access == ResourceAccess.Read;
         var textPreviewRead = actionId == "files.preview.read" && scope.Access == ResourceAccess.Read
             && originalProvider is DurableDriveProvider && originalStoreId is not null;
@@ -199,7 +201,7 @@ public sealed partial class FilesArtifactResourceResolver : IOriginalCanonicalRe
         };
         if ((sitesWrite || pictureImport) && scope.Access != ResourceAccess.Write) return Deny("FilesActionInvalid");
         if ((pictureExport || pictureCopy) && scope.Access is not (ResourceAccess.Read or ResourceAccess.Write)) return Deny("FilesActionInvalid");
-        if (!pictureExport && !pictureCopy && !sitesWrite && !mediaRead && !packageRead && !mailAttachmentRead && !textPreviewRead && !boardDocumentRead && !boardDocumentWrite && !boardDocumentCreate && !folderRead && !browserRead && !browserWrite && !trashRead && !trashRestore && (ownerApp is null || scope.Access != ((actionId.EndsWith(".open", StringComparison.Ordinal) || actionId == "games.scene.observe") ? ResourceAccess.Read : ResourceAccess.Write)))
+        if (!pictureExport && !pictureCopy && !sitesWrite && !mediaRead && !packageRead && !mailAttachmentRead && !textPreviewRead && !boardDocumentRead && !boardDocumentWrite && !boardDocumentCreate && !folderRead && !browserRead && !browserWrite && !browserShare && !trashRead && !trashRestore && (ownerApp is null || scope.Access != ((actionId.EndsWith(".open", StringComparison.Ordinal) || actionId == "games.scene.observe") ? ResourceAccess.Read : ResourceAccess.Write)))
             return Deny("FilesActionInvalid");
         var provider = originalProvider ?? await _providers(actor, cancellationToken).ConfigureAwait(false);
         if (provider is null) return Deny("FilesProviderUnauthorised");
@@ -245,6 +247,9 @@ public sealed partial class FilesArtifactResourceResolver : IOriginalCanonicalRe
             return new(true, "Allowed", actor.ActorId, revision, null);
         if (folderRead) return item.Kind == HostedItemKind.Folder
             ? new(true, "Allowed", actor.ActorId, revision, null) : Deny("FilesNativeFolderInvalid");
+        if (browserShare) return item.CurrentRevisionId is not null &&
+            provider.Location.Capabilities.HasFlag(FilesProviderCapabilities.Sharing)
+            ? new(true, "Allowed", actor.ActorId, revision, null) : Deny("FilesSharingUnavailable");
         if (browserRead || trashRead || trashRestore) return new(true, "Allowed", actor.ActorId, revision, null);
         if (browserWrite) return actionId is "9to1.Files.Rename" or "9to1.Files.Move" or "9to1.Files.Delete" || item.Kind == HostedItemKind.Folder
             ? new(true, "Allowed", actor.ActorId, revision, null) : Deny("FilesDestinationInvalid");

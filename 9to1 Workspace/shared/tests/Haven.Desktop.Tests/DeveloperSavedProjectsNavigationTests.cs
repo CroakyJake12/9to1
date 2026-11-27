@@ -1,5 +1,13 @@
+using Avalonia;
+using Avalonia.Automation;
+using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Desktop.Views.Pages.Development;
 using HavenOS.Apps.Dev;
 using Xunit;
@@ -48,7 +56,7 @@ public sealed partial class CanonicalCompatibleTaskContextCompositionTests
                 Assert.Equal(100, Rows().Length);
                 await page.DispatchAsync("dev.references.next-projects", null, token);
                 var selected = Assert.Single(Rows()); var oldKey = Field(selected, "SelectionKey");
-                Assert.Equal("Project 100", Field(selected, "Title")); Assert.Equal("Open this root manually", Field(selected, "OpenLabel"));
+                Assert.Equal("Project 100", Field(selected, "Title")); Assert.Equal("Open project", Field(selected, "OpenLabel"));
                 Assert.Contains("container:dev", Field(selected, "CheckpointLabel")); Assert.Contains("repository:remote", Field(selected, "CheckpointLabel"));
                 Assert.False(page.IsActionAvailable("dev.references.next-projects")); Assert.True(page.IsActionAvailable("dev.references.previous-projects"));
                 await page.DispatchAsync("dev.references.open-task", oldKey, token);
@@ -171,6 +179,162 @@ public sealed partial class CanonicalCompatibleTaskContextCompositionTests
             }
             finally { await page.CloseAndDrainAsync(); }
         });
+    }
+
+    [AvaloniaFact]
+    public async Task Atlas_Build_keyboard_navigation_retains_the_exact_folder_and_review_without_creating_a_project()
+    {
+        await Run(async rig =>
+        {
+            var token = TestContext.Current.CancellationToken;
+            var landing = BuildLanding(rig); var store = new NavigationMetadataStore([]);
+            var provider = new NavigationTemplateProvider("installed.cui", new("page", "CUI page", "cui",
+                ["CUI"], [], [], ["Build"], [], "installed.cui", true));
+            var createCalls = 0; var openCalls = 0;
+            using var connection = CancellationTokenSource.CreateLinkedTokenSource(token);
+            using var windowLifetime = CancellationTokenSource.CreateLinkedTokenSource(token);
+            var page = new DeveloperSavedProjectsPage(landing.Catalog, landing.Spaces, ReadyReadiness.Instance, () => { },
+                _ => { openCalls++; return Task.CompletedTask; }, (_, _) => { openCalls++; return Task.CompletedTask; },
+                store, _ => { openCalls++; return Task.CompletedTask; }, connection.Token, windowLifetime.Token, _ => { },
+                createManualProject: (_, _) => { createCalls++; throw new InvalidOperationException("Navigation must not create a project."); },
+                templateCatalog: new([provider]), templateMaterializer: new([provider]),
+                registerTemplateProject: (_, _, _) => { createCalls++; throw new InvalidOperationException("Navigation must not register a template."); },
+                openTemplateProject: (_, _) => { openCalls++; return Task.CompletedTask; });
+            var window = new Window { Width = 1440, Height = 900, Content = page };
+            try
+            {
+                window.Show(); await page.ActivateAsync(token); StartLayout(window);
+                await PressStartButtonAsync(page, window, "dev-start-new", "StartIsNew", token);
+                var folder = Path.Combine(rig.Root, "Current project draft");
+                Assert.True(page.TrySetValue("ManualFolderPath", folder));
+                Assert.True(page.TryGetValue("Templates", out var templates));
+                var template = Assert.Single(Assert.IsAssignableFrom<object[]>(templates));
+                Assert.True(((ICuiRepeatItemBindingContext)page).TryGetItemValue(template, "SelectionKey", out var key));
+                await page.DispatchAsync("dev.templates.select", key, token);
+                await page.DispatchAsync("dev.templates.review", null, token);
+                Assert.True(page.IsActionAvailable("dev.templates.create"));
+                Assert.True(page.TryGetValue("TemplateReviewStatus", out var originalReview));
+
+                await PressStartButtonAsync(page, window, "dev-start-open", "StartIsOpen", token);
+                Assert.True(StartControl<Button>(page, "dev-create-manual").IsEffectivelyVisible);
+                await PressStartButtonAsync(page, window, "dev-start-projects", "StartIsProjects", token);
+                Assert.False(StartControl<Button>(page, "dev-create-manual").IsEffectivelyVisible);
+                await PressStartButtonAsync(page, window, "dev-start-new", "StartIsNew", token);
+                Assert.True(page.TryGetValue("ManualFolderPath", out var retainedFolder)); Assert.Equal(folder, retainedFolder);
+                Assert.True(page.TryGetValue("TemplateReviewStatus", out var retainedReview)); Assert.Equal(originalReview, retainedReview);
+                Assert.True(page.IsActionAvailable("dev.templates.create"));
+                Assert.Equal(0, createCalls); Assert.Equal(0, openCalls); Assert.Equal(0, store.Writes);
+
+                await page.DispatchAsync("dev.start.extension", null, token); StartLayout(window);
+                Assert.True(StartControl<Control>(page, "dev-extension-unavailable").IsEffectivelyVisible);
+                Assert.False(StartControl<Button>(page, "dev-create-template-project").IsEffectivelyVisible);
+                Assert.Equal(0, createCalls);
+            }
+            finally { await page.CloseAndDrainAsync(); window.Content = null; window.Close(); }
+        });
+    }
+
+    [AvaloniaTheory]
+    [InlineData("Glow")]
+    [InlineData("Professional")]
+    public async Task Atlas_Build_start_uses_actual_compiled_controls_at_720_and_1440(string themeName)
+    {
+        await Run(async rig =>
+        {
+            var token = TestContext.Current.CancellationToken; var landing = BuildLanding(rig);
+            var root = new DeveloperWorkspaceRoot(Guid.NewGuid(), Path.Combine(rig.Root, "source"));
+            var workspace = DeveloperWorkspace.Create([root]) with
+            { Projects = [new(Guid.NewGuid(), "code", "Existing source project", [root.RootId], "CUI", null, "none", [], [], [], [], null)] };
+            var provider = new NavigationTemplateProvider("installed.cui", new("page", "CUI page", "cui",
+                ["CUI"], [], [], ["Build"], [], "installed.cui", true));
+            var store = new NavigationMetadataStore([workspace]);
+            var source = new BuildThemeSource(); if (themeName == "Professional") source.SelectProfessional();
+            using var theme = new CuiThemePreferenceContext(source);
+            using var connection = CancellationTokenSource.CreateLinkedTokenSource(token);
+            using var windowLifetime = CancellationTokenSource.CreateLinkedTokenSource(token);
+            var page = new DeveloperSavedProjectsPage(landing.Catalog, landing.Spaces, ReadyReadiness.Instance, () => { },
+                _ => Task.CompletedTask, (_, _) => Task.CompletedTask, store, _ => Task.CompletedTask,
+                connection.Token, windowLifetime.Token, _ => { }, templateCatalog: new([provider]), templateMaterializer: new([provider]),
+                registerTemplateProject: (_, _, _) => throw new InvalidOperationException("Rendering must not register a project."),
+                openTemplateProject: (_, _) => throw new InvalidOperationException("Rendering must not open a project."));
+            page.BindInterfaceTheme(theme);
+            var window = new Window { Width = 1440, Height = 900, Content = page };
+            try
+            {
+                window.Show(); await page.ActivateAsync(token);
+                foreach (var size in new[] { new Size(1440, 900), new Size(720, 650) })
+                {
+                    window.Width = size.Width; window.Height = size.Height; StartLayout(window);
+                    await page.DispatchAsync("dev.start.projects", null, token); StartLayout(window);
+                    Assert.Equal(size.Width == 1440 ? 210 : 72, StartControl<Control>(page, "dev-start-sidebar").Bounds.Width);
+                    Assert.True(StartControl<Button>(page, "dev-start-new-card").IsEffectivelyVisible);
+                    AssertStartFits(page, "dev-project-query", "dev-start-new-card", "dev-start-open-card", "dev-start-extension-card");
+                    Assert.True(page.TryGetValue("Projects", out var value));
+                    var row = Assert.Single(Assert.IsAssignableFrom<object[]>(value));
+                    Assert.True(((ICuiRepeatItemBindingContext)page).TryGetItemValue(row, "DisplaySummary", out var location));
+                    Assert.Equal(root.Location, location);
+                    Assert.True(((ICuiRepeatItemBindingContext)page).TryGetItemValue(row, "DetailsVisible", out var details));
+                    Assert.Equal(false, details);
+                    CaptureStartFrame(window, $"build-projects-{themeName}-{size.Width:0}x{size.Height:0}");
+
+                    await page.DispatchAsync("dev.start.new", null, token); StartLayout(window);
+                    Assert.True(StartControl<Control>(page, "dev-setup-summary").IsEffectivelyVisible);
+                    Assert.False(StartControl<Control>(page, "dev-landing-saved-section").IsEffectivelyVisible);
+                    AssertStartFits(page, "dev-manual-folder", "dev-template-query", "dev-setup-summary");
+                    CaptureStartFrame(window, $"build-new-project-{themeName}-{size.Width:0}x{size.Height:0}");
+
+                    await page.DispatchAsync("dev.start.open", null, token); StartLayout(window);
+                    Assert.True(StartControl<Button>(page, "dev-create-manual").IsEffectivelyVisible);
+                    Assert.False(StartControl<Control>(page, "dev-setup-summary").IsEffectivelyVisible);
+                    AssertStartFits(page, "dev-manual-folder", "dev-project-query");
+                    CaptureStartFrame(window, $"build-open-project-{themeName}-{size.Width:0}x{size.Height:0}");
+                }
+                Assert.Equal(0, store.Writes);
+            }
+            finally { await page.CloseAndDrainAsync(); window.Content = null; window.Close(); }
+        });
+    }
+
+    private static T StartControl<T>(Control root, string id) where T : Control => Assert.Single(
+        AuthoredCuiControls.Enumerate(root).OfType<T>(), control => control.Name == id || AutomationProperties.GetAutomationId(control) == id);
+
+    private static void StartLayout(Window window)
+    { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+
+    private static async Task PressStartButtonAsync(DeveloperSavedProjectsPage page, Window window, string id,
+        string expectedBinding, CancellationToken token)
+    {
+        var changed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        void Observe(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+        { if (page.TryGetValue(expectedBinding, out var value) && value is true) changed.TrySetResult(); }
+        page.PropertyChanged += Observe;
+        try
+        {
+            var button = StartControl<Button>(page, id); Assert.True(button.IsEffectivelyEnabled); Assert.True(button.Focus());
+            window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.None, null);
+            window.KeyRelease(Key.Enter, RawInputModifiers.None, PhysicalKey.None, null);
+            await changed.Task.WaitAsync(TimeSpan.FromSeconds(5), token); StartLayout(window);
+        }
+        finally { page.PropertyChanged -= Observe; }
+    }
+
+    private static void AssertStartFits(Control page, params string[] ids)
+    {
+        foreach (var id in ids)
+        {
+            var control = StartControl<Control>(page, id); var point = control.TranslatePoint(default, page);
+            Assert.True(control.IsEffectivelyVisible, id); Assert.NotNull(point); Assert.True(control.Bounds.Width > 0, id);
+            Assert.InRange(point.Value.X, -1, page.Bounds.Width);
+            Assert.True(point.Value.X + control.Bounds.Width <= page.Bounds.Width + 1, id + " exceeds the horizontal viewport.");
+        }
+    }
+
+    private static void CaptureStartFrame(Window window, string name)
+    {
+        var directory = Environment.GetEnvironmentVariable("HAVEN_VISUAL_CAPTURE_DIR") ?? Environment.GetEnvironmentVariable("CUI_EVIDENCE_DIRECTORY");
+        if (string.IsNullOrWhiteSpace(directory)) return;
+        Directory.CreateDirectory(directory); using var frame = window.CaptureRenderedFrame(); Assert.NotNull(frame);
+        frame.Save(Path.Combine(directory, name + ".png"));
     }
 
     private sealed class NavigationTemplateProvider(string providerId, DeveloperProjectTemplate template,

@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.VisualTree;
 using CakeOS.Cui;
@@ -16,11 +17,16 @@ namespace Haven.Desktop.Views.Pages.Home;
 /// source) is carried so group membership is resolved by actual identity, not by a name-lookalike
 /// key match.</summary>
 public sealed record HomeAppItem(string Key, string Name, string Description, string IconKey,
-    bool IsGroup = false, Guid? CanonicalId = null, ModeSource? Source = null)
+    bool IsGroup = false, Guid? CanonicalId = null, ModeSource? Source = null,
+    bool IsAvailable = true, bool IsInstalled = true, string AvailabilityNote = "",
+    ModeInstallState? InstallState = null)
 {
     /// <summary>The accessible action a tile performs, so the launcher never relies on the visible
     /// name alone to say what activation does.</summary>
-    public string OpenLabel => "Open " + Name;
+    public string OpenLabel => (IsAvailable ? "Open " : "Unavailable: ") + Name;
+    public string StableIdentity => CanonicalId is { } id && id != Guid.Empty ? "mode:" + id.ToString("D") :
+        (!IsInstalled ? "reference:" : "catalogue:") + Key;
+    public string Detail => IsAvailable ? Description : AvailabilityNote.Length > 0 ? AvailabilityNote : "Unavailable in this profile.";
 }
 
 /// <summary>A single member of a Home group. Real canonical members are projected from their actual
@@ -197,7 +203,13 @@ public sealed record HomeAppsViewState(
     string Status,
     IReadOnlyList<HomeAppItem>? Launcher = null,
     HomeAppGroup? Group = null,
-    IReadOnlyList<HomeGroupMember>? GroupVisible = null)
+    IReadOnlyList<HomeGroupMember>? GroupVisible = null,
+    IReadOnlyList<ModePin>? Pins = null,
+    HomeAppsFilter Filter = HomeAppsFilter.Installed,
+    bool CanEditPins = false,
+    IReadOnlyList<HomeAppHub>? Hubs = null,
+    string? SelectedHub = null,
+    HomeHubsViewState? HubsView = null)
 {
     public static HomeAppsViewState Empty { get; } =
         new([], [], string.Empty, "Loading the installed apps.");
@@ -245,7 +257,7 @@ public sealed record HomeAppsViewState(
         ? "Clear the search, or use the address bar to open an app by name."
         : "Install an app from Home, then open it here.";
 
-    public static IReadOnlyList<HomeAppItem> Filter(IReadOnlyList<HomeAppItem> items, string query) =>
+    public static IReadOnlyList<HomeAppItem> FilterByQuery(IReadOnlyList<HomeAppItem> items, string query) =>
         query.Length == 0
             ? items
             : items.Where(app => app.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
@@ -268,8 +280,20 @@ public sealed class HomeAppsCuiBindings : ICuiWritableBindingContext, ICuiAction
 {
     private static readonly IReadOnlySet<string> KnownCommands = new HashSet<string>(StringComparer.Ordinal)
     {
-        "home.open-app", "home.set-app-query", "home.clear-app-query"
+        "home.open-app", "home.set-app-query", "home.clear-app-query", "home.app-filter",
+        "home.app-pin", "home.app-move-earlier", "home.app-move-later", "home.manage-apps", "home.explore-hubs", "home.app-filters"
     };
+    private static readonly IReadOnlySet<string> HubCommands = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "home.hub-all-apps", "home.hub-customise", "home.hub-back", "home.hub-select", "home.hub-open-app",
+        "home.hub-set-query", "home.hub-clear-query", "home.hub-filter", "home.hub-toggle", "home.hub-set-new-name",
+        "home.hub-add", "home.hub-set-name", "home.hub-rename", "home.hub-move-up", "home.hub-move-down",
+        "home.hub-remove", "home.hub-reset", "home.hub-confirm", "home.hub-cancel-confirm", "home.hub-undo",
+        "home.hub-choose", "home.hub-add-app-menu", "home.hub-add-app", "home.hub-remove-app",
+        "home.hub-app-up", "home.hub-app-down"
+    };
+
+    internal static bool IsHubCommand(string command) => HubCommands.Contains(command);
 
     private readonly CuiViewModel _values = new();
     private readonly Func<HomeAppsViewState> _state;
@@ -280,6 +304,15 @@ public sealed class HomeAppsCuiBindings : ICuiWritableBindingContext, ICuiAction
     private readonly List<WeakReference<BrandTargetObservation>> _activeObservations = new();
     private long _generation;
     private bool _targetsRetired;
+    private double _contentWidth;
+    private double _hostWidth;
+    private HomeAppsViewState? _presentationState;
+    private HomeAppsPresentation? _presentation;
+    private HomeAppsViewState? _hubsPresentationState;
+    private HomeHubsPresentation? _hubsPresentation;
+    private CornerRadius _cardRadius = new(16);
+    private CornerRadius _rowRadius = new(11);
+    private CornerRadius _buttonRadius = new(24);
 
     public HomeAppsCuiBindings(
         Func<HomeAppsViewState> state,
@@ -295,12 +328,83 @@ public sealed class HomeAppsCuiBindings : ICuiWritableBindingContext, ICuiAction
 
     public HomeAppsViewState Snapshot => _state();
 
+    public HomeAppsPresentation Presentation
+    {
+        get
+        {
+            var state = Snapshot;
+            if (!ReferenceEquals(state, _presentationState) || _presentation is null)
+            {
+                _presentationState = state;
+                _presentation = HomeAppHubCatalogue.Project(state.All, state.Pins ?? [], state.Query,
+                    state.Filter, state.CanEditPins, _contentWidth, state.Hubs, state.SelectedHub);
+            }
+            return _presentation;
+        }
+    }
+
+    public HomeHubsPresentation HubsPresentation
+    {
+        get
+        {
+            var state = Snapshot;
+            if (!ReferenceEquals(state, _hubsPresentationState) || _hubsPresentation is null)
+            {
+                _hubsPresentationState = state;
+                _hubsPresentation = HomeAppHubCatalogue.ProjectHubs(state.All, state.HubsView ?? HomeHubsViewState.Empty,
+                    state.Filter, state.Pins ?? [], _contentWidth);
+            }
+            return _hubsPresentation;
+        }
+    }
+
+    internal void SetViewportWidth(double width, double? hostWidth = null)
+    {
+        var host = hostWidth ?? width;
+        if (!double.IsFinite(width) || width < 0 || !double.IsFinite(host) || host < 0 ||
+            Math.Abs(width - _contentWidth) < .5 && Math.Abs(host - _hostWidth) < .5) return;
+        _contentWidth = width;
+        _hostWidth = host;
+        _presentation = null;
+        _hubsPresentation = null;
+        Refresh();
+    }
+
+    internal void SetThemeName(string? name, CornerRadius? cardRadius = null, CornerRadius? controlRadius = null)
+    {
+        var expression = CuiThemeCatalog.FindBuiltIn(name);
+        var fallback = expression ?? CuiThemeCatalog.Resolve(CuiTheme.Professional);
+        var card = expression?.Theme switch
+        {
+            CuiTheme.Glow => new CornerRadius(22), CuiTheme.Professional => new CornerRadius(16),
+            _ => cardRadius ?? new CornerRadius(Math.Round(CuiThemeExpression.BaseCardRadius * fallback.CardRadiusScale))
+        };
+        var row = expression?.Theme switch
+        {
+            CuiTheme.Glow => new CornerRadius(999), CuiTheme.Professional => new CornerRadius(11),
+            _ => controlRadius ?? new CornerRadius(Math.Round(CuiThemeExpression.BaseControlRadius * fallback.ControlRadiusScale))
+        };
+        var button = expression?.Theme switch
+        {
+            CuiTheme.Glow => new CornerRadius(40), CuiTheme.Professional => new CornerRadius(24), _ => row
+        };
+        if (_cardRadius == card && _rowRadius == row && _buttonRadius == button) return;
+        _cardRadius = card; _rowRadius = row; _buttonRadius = button;
+        Refresh();
+    }
+
     public void Refresh()
     {
         _snapshot = _state();
         _values.Set("Revision", _revision++);
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     }
+
+    // A target can attach while Avalonia is walking the existing child collection.
+    // Re-resolve image bindings only: refreshing repeats or visibility here can mutate
+    // that collection mid-attach. Every Home brand source uses the iconSource leaf.
+    private void RefreshBrandImages() =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("iconSource"));
 
     /// <summary>Permanently retires every per-target brand observation. No subsequent attach/detach or
     /// appearance change runs any callback — even after later teardown work fails. Called by the Home
@@ -375,6 +479,89 @@ public sealed class HomeAppsCuiBindings : ICuiWritableBindingContext, ICuiAction
             "apps.emptyTitle" => snapshot.EmptyTitle,
             "apps.emptyDetail" => snapshot.EmptyDetail,
             "apps.status" => snapshot.Status,
+            "apps.hubs" => Presentation.Hubs,
+            "apps.pinned" => Presentation.Pinned,
+            "apps.hasPinned" => Presentation.HasPinned,
+            "apps.hasResults" => Presentation.HasApps,
+            "apps.hasNoResults" => !Presentation.HasApps,
+            "apps.resultCount" => Presentation.CountLabel,
+            "apps.resultEmptyTitle" => Presentation.EmptyTitle,
+            "apps.resultEmptyDetail" => Presentation.EmptyDetail,
+            "apps.catalogueColumns" => Presentation.CatalogueGridColumns,
+            "apps.pinnedColumns" => Presentation.PinnedGridColumns,
+            "apps.pinnedRows" => Presentation.PinnedGridRows,
+            "apps.filterLabel" => "Filters: " + Presentation.FilterLabel + " selected",
+            "apps.filterInstalled" => snapshot.Filter == HomeAppsFilter.Installed,
+            "apps.filterAll" => snapshot.Filter == HomeAppsFilter.All,
+            "apps.filterPinned" => snapshot.Filter == HomeAppsFilter.Pinned,
+            "apps.canOpenBuild" => snapshot.All.Any(app => app.Key == "dev" && app.IsAvailable),
+            "apps.showBuildLabel" => _contentWidth > 500,
+            "apps.headingColumns" => _contentWidth > 900 ? "1fr 2.125fr" : "1fr",
+            "apps.headingRows" => _contentWidth > 900 ? "Auto" : "Auto Auto",
+            "apps.controlsRow" => _contentWidth > 900 ? 0 : 1,
+            "apps.controlsColumn" => _contentWidth > 900 ? 1 : 0,
+            "apps.controlsColumns" => _contentWidth > 500 ? "1fr Auto Auto" : "1fr Auto",
+            "apps.controlsRows" => _contentWidth > 500 ? "Auto" : "Auto Auto",
+            "apps.searchColumnSpan" => _contentWidth > 500 ? 1 : 2,
+            "apps.filterRow" => _contentWidth > 500 ? 0 : 1,
+            "apps.filterColumn" => _contentWidth > 500 ? 1 : 0,
+            "apps.manageRow" => _contentWidth > 500 ? 0 : 1,
+            "apps.manageColumn" => _contentWidth > 500 ? 2 : 1,
+            "apps.headingSize" => _contentWidth > 500 ? 36d : 30d,
+            "apps.pagePadding" => _hostWidth > 750 ? "30 28 30 52" : "16 20 16 40",
+            "apps.cardRadius" => _cardRadius,
+            "apps.rowRadius" => _rowRadius,
+            "apps.buttonRadius" => _buttonRadius,
+            "hubs.browsing" => !HubsPresentation.State.Editing,
+            "hubs.editing" => HubsPresentation.State.Editing,
+            "hubs.customise" => HubsPresentation.State.Customise,
+            "hubs.canToggle" => HubsPresentation.State.CanEdit,
+            "hubs.editEnabled" => HubsPresentation.State.CanEdit && HubsPresentation.State.Customise,
+            "hubs.navigation" => HubsPresentation.Navigation,
+            "hubs.navigationColumns" => HubsPresentation.NavigationGridColumns,
+            "hubs.navigationRows" => HubsPresentation.NavigationGridRows,
+            "hubs.editorHubs" => HubsPresentation.EditorHubs,
+            "hubs.apps" => HubsPresentation.Apps,
+            "hubs.addableApps" => HubsPresentation.AddableApps,
+            "hubs.canAddApp" => HubsPresentation.State.CanEdit && HubsPresentation.State.Customise && HubsPresentation.AddableApps.Count > 0,
+            "hubs.appColumns" => HubsPresentation.AppGridColumns,
+            "hubs.appRows" => HubsPresentation.AppGridRows,
+            "hubs.editorColumns" => _contentWidth > 800 ? "1.05fr .95fr" : "1fr",
+            "hubs.editorRows" => _contentWidth > 800 ? "Auto" : "Auto Auto",
+            "hubs.editorAppsColumn" => _contentWidth > 800 ? 1 : 0,
+            "hubs.editorAppsRow" => _contentWidth > 800 ? 0 : 1,
+            "hubs.headerColumns" => _contentWidth > 650 ? "1fr Auto" : "1fr",
+            "hubs.headerRows" => _contentWidth > 650 ? "Auto" : "Auto Auto",
+            "hubs.actionsColumn" => _contentWidth > 650 ? 1 : 0,
+            "hubs.actionsRow" => _contentWidth > 650 ? 0 : 1,
+            "hubs.hasHubs" => HubsPresentation.Navigation.Count > 0,
+            "hubs.noHubs" => HubsPresentation.Navigation.Count == 0,
+            "hubs.hasSelection" => HubsPresentation.Selected is not null,
+            "hubs.selectedName" => HubsPresentation.Selected?.Name ?? "Choose a hub",
+            "hubs.selectedDescription" => HubsPresentation.Selected?.Description ?? string.Empty,
+            "hubs.placementHeading" => HubsPresentation.Selected is { } selected ? "Apps in " + selected.Name : "App placements",
+            "hubs.arrangementLabel" => HubsPresentation.State.Customise ? "Your arrangement" : "Standard arrangement",
+            "hubs.query" => HubsPresentation.State.Query,
+            "hubs.hasQuery" => HubsPresentation.State.Query.Length > 0,
+            "hubs.noApps" => HubsPresentation.Apps.Count == 0,
+            "hubs.emptyTitle" => HubsPresentation.State.Query.Length > 0 ? "No apps match this search" : "No apps to show",
+            "hubs.emptyDetail" => HubsPresentation.State.Query.Length > 0 ? "Try a different search, or clear it." :
+                snapshot.Filter == HomeAppsFilter.Installed ? "Choose All apps to see saved placements and their availability." : "Add an app in Customise hubs.",
+            "hubs.hasBuildProjects" => HubsPresentation.BuildProjects is not null,
+            "hubs.canOpenBuildProjects" => HubsPresentation.BuildProjects?.App.IsAvailable == true,
+            "hubs.buildProjectsTarget" => HubsPresentation.BuildProjects?.Target,
+            "hubs.newName" => HubsPresentation.State.NewHubName,
+            "hubs.canAddHub" => HubsPresentation.State.CanEdit && HubsPresentation.State.Customise &&
+                HubsPresentation.EditorHubs.Count < 32 && HubsPresentation.State.NewHubName.Trim().Length is > 0 and <= 80,
+            "hubs.canUndo" => HubsPresentation.State.CanEdit && HubsPresentation.State.Customise && HubsPresentation.State.CanUndo,
+            "hubs.undoDescription" => HubsPresentation.State.UndoDescription,
+            "hubs.hasUndo" => HubsPresentation.State.CanUndo,
+            "hubs.hasConfirmation" => HubsPresentation.State.ConfirmationTitle is not null,
+            "hubs.confirmationTitle" => HubsPresentation.State.ConfirmationTitle ?? string.Empty,
+            "hubs.confirmationDetail" => HubsPresentation.State.ConfirmationDetail ?? string.Empty,
+            "hubs.confirmationAction" => HubsPresentation.State.ConfirmationAction,
+            "hubs.confirmationCancel" => HubsPresentation.State.ConfirmationCancel,
+            "hubs.readOnly" => !HubsPresentation.State.CanEdit && !HubsPresentation.State.IsSaving,
             "apps.group.name" => snapshot.Group?.Name,
             "apps.group.iconSource" => HomeAppBrandingIcons.SourceForGroup(snapshot.Group?.Key, snapshot.Group?.IconKey),
             "apps.group.members" => snapshot.EffectiveGroupVisible,
@@ -390,29 +577,53 @@ public sealed class HomeAppsCuiBindings : ICuiWritableBindingContext, ICuiAction
 
     public bool TrySetValue(string path, object? value)
     {
-        if (!path.Equals("apps.query", StringComparison.OrdinalIgnoreCase)) return false;
-        _ = _dispatch("home.set-app-query", value, CancellationToken.None);
+        var command = path.ToLowerInvariant() switch
+        {
+            "apps.query" => "home.set-app-query", "hubs.query" => "home.hub-set-query",
+            "hubs.newname" => "home.hub-set-new-name", "hubs.customise" => "home.hub-toggle", _ => null
+        };
+        if (command is null) return false;
+        _ = _dispatch(command, value, CancellationToken.None);
         return true;
     }
 
     public bool? IsActionAvailable(string command)
     {
-        if (!KnownCommands.Contains(command)) return null;
+        if (!KnownCommands.Contains(command) && !HubCommands.Contains(command)) return null;
         var snapshot = Snapshot;
         return command switch
         {
             // Clearing is only offered when a query is actually narrowing the catalogue.
             "home.clear-app-query" => snapshot.HasQuery,
             // Opening needs a real entry on the currently relevant surface (launcher or group).
-            "home.open-app" => snapshot.HasVisibleApps,
+            "home.open-app" => snapshot.All.Any(app => app.IsAvailable),
+            "home.app-pin" or "home.app-move-earlier" or "home.app-move-later" => snapshot.CanEditPins,
+            "home.hub-toggle" => HubsPresentation.State.CanEdit,
+            "home.hub-add" or "home.hub-set-name" or "home.hub-rename" or "home.hub-move-up" or
+                "home.hub-move-down" or "home.hub-remove" or "home.hub-reset" or "home.hub-confirm" or
+                "home.hub-undo" or "home.hub-add-app-menu" or "home.hub-add-app" or "home.hub-remove-app" or
+                "home.hub-app-up" or "home.hub-app-down" => HubsPresentation.State.CanEdit && HubsPresentation.State.Customise,
             _ => true
         };
     }
 
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
-        if (!KnownCommands.Contains(command))
+        if (!KnownCommands.Contains(command) && !HubCommands.Contains(command))
             throw new InvalidOperationException($"Home apps CUI command '{command}' is not owned by this binding.");
+        if (parameter is CuiInputSubmitRequest submit)
+        {
+            // The input route supplies its actual accepted event, not the row's
+            // parameter. Resolve the same retained row before admitting its command.
+            if (command == "home.hub-rename" && submit.Sender.Name == "home-hub-name" &&
+                submit.Sender.DataContext is ICuiBindingContext row &&
+                row.TryGetValue("hub.target", out var target) && target is HomeHubActionTarget)
+                parameter = target;
+            else if (command == "home.hub-add" && submit.Sender.Name == "home-hub-new-name")
+                parameter = null;
+            else
+                throw new InvalidOperationException("This hub input no longer owns the submitted action.");
+        }
         await _dispatch(command, parameter, cancellationToken);
     }
 
@@ -421,6 +632,79 @@ public sealed class HomeAppsCuiBindings : ICuiWritableBindingContext, ICuiAction
         value = null;
         switch (item)
         {
+            case HomeHubNavigationRow navigation:
+                value = path.ToLowerInvariant() switch
+                {
+                    "key" => navigation.Hub.Key, "name" => navigation.Hub.Name,
+                    "iconsource" => "home-nav:" + navigation.Hub.IconKey,
+                    "target" => navigation.Target, "selected" => navigation.Selected,
+                    "count" => navigation.CountLabel, "row" => navigation.Row, "column" => navigation.Column,
+                    "label" => "Open " + navigation.Hub.Name + " hub", _ => null
+                };
+                break;
+            case HomeHubEditorRow editor:
+                value = path.ToLowerInvariant() switch
+                {
+                    "key" => editor.Hub.Key, "name" => editor.Hub.Name, "draftname" => editor.DraftName,
+                    "target" => editor.Target, "position" => editor.Position,
+                    "count" => editor.Hub.AppIdentities.Count + " app placements",
+                    "canedit" => editor.CanEdit, "canmoveearlier" => editor.CanMoveEarlier,
+                    "canmovelater" => editor.CanMoveLater, "renamelabel" => "Rename " + editor.Hub.Name,
+                    "earlierlabel" => "Move " + editor.Hub.Name + " up", "laterlabel" => "Move " + editor.Hub.Name + " down",
+                    "removelabel" => "Remove " + editor.Hub.Name + " hub", "appslabel" => "Edit apps in " + editor.Hub.Name,
+                    _ => null
+                };
+                break;
+            case HomeHubAppRow hubApp:
+                value = path.ToLowerInvariant() switch
+                {
+                    "identity" => hubApp.Identity, "target" => hubApp.Target,
+                    "name" => hubApp.App.Name, "detail" => hubApp.App.Detail,
+                    "openlabel" => hubApp.App.OpenLabel,
+                    "iconsource" => PlacementIconSource(hubApp.App),
+                    "canopen" => hubApp.App.IsInstalled && hubApp.App.IsAvailable,
+                    "canedit" => hubApp.CanEdit, "row" => hubApp.Row, "column" => hubApp.Column,
+                    "canmoveearlier" => hubApp.CanMoveEarlier, "canmovelater" => hubApp.CanMoveLater,
+                    "earlierlabel" => "Move " + hubApp.App.Name + " up", "laterlabel" => "Move " + hubApp.App.Name + " down",
+                    "removelabel" => "Remove " + hubApp.App.Name + " placement",
+                    "addlabel" => "Add " + hubApp.App.Name + (hubApp.App.IsInstalled ? string.Empty : " (not installed)"),
+                    _ => null
+                };
+                break;
+            case HomeAppHubSection hub:
+                value = path.ToLowerInvariant() switch
+                {
+                    "key" => hub.Key, "name" => hub.Name, "description" => hub.Description,
+                    "count" => hub.Count, "apps" => hub.Apps, "rows" => hub.GridRows,
+                    _ => null
+                };
+                break;
+            case HomeAppPlacement placement:
+                value = path.ToLowerInvariant() switch
+                {
+                    "identity" => placement.Identity,
+                    "key" => placement.App.Key,
+                    "name" => placement.App.Name,
+                    "description" => placement.App.Description,
+                    "detail" => placement.App.Detail,
+                    "openlabel" => placement.App.OpenLabel,
+                    "iconsource" => PlacementIconSource(placement.App),
+                    "row" => placement.Row, "column" => placement.Column,
+                    "canopen" => placement.App.IsAvailable,
+                    "unavailable" => !placement.App.IsAvailable,
+                    "ispinned" => placement.IsPinned,
+                    "canpin" => placement.CanPin,
+                    "pinlabel" => placement.PinLabel,
+                    "pinid" => placement.App.CanonicalId?.ToString("D") ?? string.Empty,
+                    "canmoveearlier" => placement.CanMoveEarlier,
+                    "canmovelater" => placement.CanMoveLater,
+                    "moveearlierlabel" => placement.MoveEarlierLabel,
+                    "movelaterlabel" => placement.MoveLaterLabel,
+                    "automationid" => "home-app-pin-" + placement.Identity,
+                    "openautomationid" => "home-app-open-" + placement.Identity,
+                    _ => null
+                };
+                break;
             case HomeAppItem app:
                 value = path switch
                 {
@@ -458,7 +742,17 @@ public sealed class HomeAppsCuiBindings : ICuiWritableBindingContext, ICuiAction
         return value is not null;
     }
 
-    public bool TrySetItemValue(object item, string path, object? value) => false;
+    public bool TrySetItemValue(object item, string path, object? value)
+    {
+        if (item is not HomeHubEditorRow editor || !path.Equals("draftName", StringComparison.OrdinalIgnoreCase)) return false;
+        _ = _dispatch("home.hub-set-name", new HomeHubRenameValue(editor.Target, value?.ToString() ?? string.Empty), CancellationToken.None);
+        return true;
+    }
+
+    private static string PlacementIconSource(HomeAppItem app) => app.IsInstalled
+        ? HomeAppBrandingIcons.SourceFor(app.IconKey, app.CanonicalId, app.Source)
+        : HomeAppBrandingIcons.SourceForGroupMember(new HomeGroupMember(app.Key, app.Name,
+            app.Description, app.IconKey, false, app.AvailabilityNote, app.CanonicalId, app.Source));
 
     private static string IconSource(string? key)
     {
@@ -538,7 +832,7 @@ public sealed class HomeAppsCuiBindings : ICuiWritableBindingContext, ICuiAction
             // baseline). Refreshing here re-runs the existing typed image binding invalidation on the
             // actual target; the registration above is already owned, so retirement/removal during it
             // cannot resurrect a subscription.
-            _owner.Refresh();
+            _owner.RefreshBrandImages();
         }
 
         private void Detach()
@@ -563,7 +857,7 @@ public sealed class HomeAppsCuiBindings : ICuiWritableBindingContext, ICuiAction
         private void OnEmitted(long generation)
         {
             if (_owner._targetsRetired || generation != _generation || !_attached) return;
-            _owner.Refresh();
+            _owner.RefreshBrandImages();
         }
 
         private sealed class InstanceObserver : IObserver<object?>

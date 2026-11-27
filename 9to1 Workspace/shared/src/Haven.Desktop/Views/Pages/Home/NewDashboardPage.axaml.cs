@@ -117,6 +117,7 @@ public sealed partial class NewDashboardPage : UserControl, IActivatablePage, ID
         _dashboardAssistantCancellation?.Cancel();
         _modelRefreshCancellation?.Cancel();
         _modelBrowser?.Deactivate();
+        _briefingLibraryPage?.Deactivate();
         _dashboardBindings.Set("IsReviewingModel", false);
     }
 

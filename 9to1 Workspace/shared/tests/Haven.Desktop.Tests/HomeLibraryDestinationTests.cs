@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Avalonia.Headless;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -9,6 +10,8 @@ using Avalonia.VisualTree;
 using CakeOS.Apps.Boards.App;
 using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
+using CakeOS.Cui;
+using CakeOS.Cui.Language;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Services;
@@ -205,7 +208,7 @@ public sealed class HomeLibraryDestinationTests
             await page.ActivateAsync(CancellationToken.None); window = Show(page);
             Assert.Equal("Recent", Assert.Single(page.GetVisualDescendants().OfType<TextBlock>(),
                 control => HasAuthoredIdentity(control, "home-library-recent")).Text);
-            Assert.Equal("Pinned", Assert.Single(page.GetVisualDescendants().OfType<TextBlock>(),
+            Assert.Equal("Favourite", Assert.Single(page.GetVisualDescendants().OfType<TextBlock>(),
                 control => HasAuthoredIdentity(control, "home-library-pinned")).Text);
             Assert.Equal("Shared by", Assert.Single(page.GetVisualDescendants().OfType<TextBlock>(),
                 control => HasAuthoredIdentity(control, "home-library-shared")).Text);
@@ -260,7 +263,9 @@ public sealed class HomeLibraryDestinationTests
         try
         {
             await page.ActivateAsync(CancellationToken.None); window = Show(page);
-            Assert.Single(page.GetVisualDescendants().OfType<TextBox>(), item => item.Name == "library-owner-filter").Text = "boards";
+            await page.DispatchAsync("ToggleLibraryFilters", null);
+            var apps = Assert.Single(page.GetVisualDescendants().OfType<ComboBox>(), item => item.Name == "library-owner-filter");
+            apps.SelectedItem = apps.ItemsSource!.Cast<object>().Single(item => item.ToString() == "Boards");
             Assert.Single(page.GetVisualDescendants().OfType<TextBox>(), item => item.Name == "library-type-filter").Text = "Boards notebook";
             Assert.Single(page.GetVisualDescendants().OfType<ComboBox>(), item => item.Name == "library-sort").SelectedIndex = 1;
             Assert.Single(page.GetVisualDescendants().OfType<ComboBox>(), item => item.Name == "library-pinned-filter").SelectedIndex = 2;
@@ -300,6 +305,209 @@ public sealed class HomeLibraryDestinationTests
             Assert.False(preferences.IsPinned("boards", pinned.ArtifactId));
         }
         finally { try { await page.CloseAndDrainAsync(); } finally { window?.Close(); } }
+    }
+
+    [AvaloniaFact]
+    public async Task Library_views_and_named_app_filter_use_canonical_membership_without_copying_artifacts()
+    {
+        static HomeArtifactReference Row(string app, string name, bool shared)
+        {
+            var id = Guid.NewGuid().ToString("D");
+            return new(app, id, name, app == "boards" ? "Boards notebook" : "Files document", "Work", "fixture", shared ? "Morgan" : null,
+                DateTimeOffset.UtcNow, false, false, shared, false, [], new(HomeRoute.Library, app, id, "open", app + ".document"));
+        }
+        var rows = new[] { Row("boards", "Shared research", true), Row("files", "Local outline", false), Row("boards", "Private notes", false) };
+        var preferences = new Preferences();
+        foreach (var row in rows.Take(2)) await preferences.SetPinnedAsync(row.OwnerApp, row.ArtifactId, true, CancellationToken.None);
+        var index = new Index(rows); var page = Page(index, new(), (_, _) => true, preferences);
+        Window? window = null;
+        try
+        {
+            await page.ActivateAsync(CancellationToken.None); window = Show(page);
+            FindAuthoredButton(page, "library-view-favourites").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal(2, page.Current!.Items.Count); Assert.True(index.LastQuery!.Pinned);
+            var apps = Assert.Single(page.GetVisualDescendants().OfType<ComboBox>(), control => control.Name == "library-owner-filter");
+            Assert.Equal(new[] { "All apps", "Boards", "Files" }, apps.ItemsSource!.Cast<object>().Select(item => item.ToString()));
+            apps.SelectedItem = apps.ItemsSource!.Cast<object>().Single(item => item.ToString() == "Boards");
+            await page.DispatchAsync("SearchLibrary", null);
+            Assert.Same(rows[0].OpenLink, Assert.Single(page.Current!.Items).OpenLink);
+            Assert.Equal("boards", index.LastQuery!.OwnerApp);
+            var star = FindLibraryButton(page, "home-library-toggle-pin");
+            Assert.Equal("Remove Shared research from favourites", AutomationProperties.GetName(star));
+            star.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Empty(page.Current!.Items); Assert.Equal(3, index.Rows.Count);
+            FindAuthoredButton(page, "library-view-shared").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Same(rows[0].OpenLink, Assert.Single(page.Current!.Items).OpenLink);
+            Assert.True(index.LastQuery!.Shared); Assert.Null(index.LastQuery.Pinned);
+            FindAuthoredButton(page, "library-view-recent").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal(2, page.Current!.Items.Count); Assert.Equal("recent", index.LastQuery!.Sort);
+            Assert.Null(index.LastQuery.Pinned); Assert.Null(index.LastQuery.Shared);
+        }
+        finally { try { await page.CloseAndDrainAsync(); } finally { window?.Close(); } }
+    }
+
+    [AvaloniaTheory]
+    [InlineData("Glow", 1440, 900)]
+    [InlineData("Glow", 1280, 720)]
+    [InlineData("Glow", 720, 600)]
+    [InlineData("Professional", 1440, 900)]
+    [InlineData("Professional", 1280, 720)]
+    [InlineData("Professional", 720, 600)]
+    public async Task Library_columns_align_on_wide_windows_and_stack_inside_narrow_rows(string themeName, int width, int height)
+    {
+        using var theme = new CuiThemePreferenceContext(new ThemeSource(themeName, CuiAppearance.Dark));
+        var page = Page(new Index(2), new(), (_, _) => true, theme: theme);
+        var window = new Window { Content = page, Width = width, Height = height };
+        using var background = page.BindWindowBackground(window);
+        try
+        {
+            await page.ActivateAsync(CancellationToken.None); window.Show();
+            window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+            var controls = page.GetVisualDescendants().OfType<Control>().ToArray();
+            var rows = controls.Where(control => HasAuthoredIdentity(control, "home-library-row")).ToArray();
+            Assert.Equal(2, rows.Length);
+            var search = controls.OfType<TextBox>().Single(box => box.Name == "library-search");
+            Assert.True(search.TryFindResource("CuiEffectiveThemeName", out var effectiveTheme));
+            Assert.Equal(themeName, effectiveTheme);
+            var tabs = controls.Single(control => control.Name == "library-view-recent");
+            var note = controls.OfType<TextBlock>().Single(text => text.Text ==
+                "Recent shows the most recently modified items. Access is checked again when you open an item.");
+            var status = controls.Single(control => control.Name == "library-status");
+            AssertBelow(tabs, search); AssertBelow(search, note); AssertBelow(note, status);
+            AssertBelow(status, rows[0]); AssertBelow(rows[0], rows[1]);
+            Assert.DoesNotContain(controls.OfType<TextBox>(), box => box.IsEffectivelyVisible && box.Name == "library-type-filter");
+            foreach (var row in rows)
+            {
+                var position = row.TranslatePoint(default, page)!.Value;
+                Assert.True(position.X >= 0 && position.X + row.Bounds.Width <= page.Bounds.Width + 1);
+            }
+            var name = controls.First(control => HasAuthoredIdentity(control, "home-library-name-cell"));
+            var app = controls.First(control => HasAuthoredIdentity(control, "home-library-app-cell"));
+            var modified = controls.First(control => HasAuthoredIdentity(control, "home-library-modified-cell"));
+            if (width >= 780)
+            {
+                var headerApp = controls.Single(control => control.Name == "library-heading-app");
+                var headerDate = controls.Single(control => control.Name == "library-heading-modified");
+                Assert.Equal(headerApp.TranslatePoint(default, page)!.Value.X, app.TranslatePoint(default, page)!.Value.X, 1);
+                Assert.Equal(headerDate.TranslatePoint(default, page)!.Value.X, modified.TranslatePoint(default, page)!.Value.X, 1);
+                AssertBelow(headerApp, rows[0]); AssertBelow(headerDate, rows[0]);
+            }
+            else
+            {
+                Assert.True(app.TranslatePoint(default, page)!.Value.Y >= name.TranslatePoint(default, page)!.Value.Y + name.Bounds.Height);
+                Assert.True(modified.TranslatePoint(default, page)!.Value.Y > app.TranslatePoint(default, page)!.Value.Y);
+            }
+            Assert.Contains(controls.OfType<TextBlock>(), text => text.IsEffectivelyVisible && text.Text == "Checked on open");
+            Assert.DoesNotContain(controls.OfType<TextBlock>(), text => text.IsEffectivelyVisible && text.Text is "Synced" or "Saved locally");
+            if (Environment.GetEnvironmentVariable("HAVEN_VISUAL_CAPTURE_DIR") is { Length: > 0 } captures)
+            {
+                Directory.CreateDirectory(captures);
+                using var frame = window.CaptureRenderedFrame(); Assert.NotNull(frame);
+                frame.Save(Path.Combine(captures, $"home-library-{themeName.ToLowerInvariant()}-{width}x{height}.png"));
+            }
+        }
+        finally { try { await page.CloseAndDrainAsync(); } finally { window.Close(); } }
+
+        void AssertBelow(Control above, Control below)
+        {
+            var upper = above.TranslatePoint(default, page)!.Value;
+            var lower = below.TranslatePoint(default, page)!.Value;
+            Assert.True(lower.Y >= upper.Y + above.Bounds.Height - .5,
+                $"{below.Name} at {lower} must follow {above.Name} at {upper}, height {above.Bounds.Height}.");
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Library_preflight_joins_delayed_original_and_cancelling_its_wait_does_not_retire_the_page()
+    {
+        var index = new Index(1) { Held = new(TaskCreationOptions.RunContinuationsAsynchronously) };
+        var page = Page(index, new(), (_, _) => true);
+        var initialization = page.ActivateAsync(CancellationToken.None);
+        await index.Entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        using var waiter = new CancellationTokenSource();
+        var first = page.TryPrepareToCloseAsync(waiter.Token);
+        Assert.False(first.IsCompleted); waiter.Cancel();
+        Assert.IsAssignableFrom<OperationCanceledException>(await Record.ExceptionAsync(() => first));
+        Assert.True(page.IsAlive); Assert.False(initialization.IsCompleted);
+        index.Held.TrySetResult(index.Rows);
+        await initialization.WaitAsync(TimeSpan.FromSeconds(10));
+        Assert.True(await page.TryPrepareToCloseAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10)));
+        Assert.Single(page.Current!.Items);
+        await page.CloseAndDrainAsync();
+    }
+
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Shared_Library_fragment_keeps_legacy_canonical_rows_and_status_without_new_native_bindings(bool standaloneProjection)
+    {
+        var id = Guid.NewGuid().ToString("D");
+        var link = new HomeDeepLink(HomeRoute.Library, "boards", id, "open", "boards.notebook");
+        var entry = new HomeArtifactReference("boards", id, "Existing notebook", "Boards notebook", "Shared folder", "fixture", "Morgan",
+            DateTimeOffset.UtcNow, true, true, true, true, [], link);
+        var observed = new HomeLibraryPage([entry], 0, 25, false);
+        var surface = HomeCuiSurface.LoadDefault(); surface.ApplyLibraryPage(observed);
+        var document = surface.Document;
+        static IEnumerable<CuiComponent> Nodes(CuiComponent node) => new[] { node }
+            .Concat(node.Children.SelectMany(Nodes)).Concat(node.ElseChildren.SelectMany(Nodes));
+        var scope = document.Components.Single(component => component.IsThemeScope);
+        var library = Nodes(scope).Single(component => component.AuthoredId == "library-page");
+        var isolatedScope = new CuiComponent(scope.Type, scope.Name, scope.Classes, scope.Properties, scope.Actions,
+            [library], scope.Condition, scope.List, scope.Span, scope.DefaultTheme, scope.Repeat,
+            scope.ElseChildren, scope.Groups, scope.IsDefinition, scope.PropertyRegion);
+        var legacy = new CuiViewModel(); object? opened = null;
+        legacy.Set("LibraryRows", NativeHomeArtifactLibrarySource.ProjectRows(observed));
+        legacy.Set("LibrarySummary", "Observed legacy Library results.");
+        legacy.Set("CanOpenHomeLibraryArtifact", true);
+        legacy.On("OpenHomeLibraryArtifact", parameter => opened = parameter);
+        using var loader = new CuiControlLoader(HomeAppsCuiDocument.CreateControlRegistry());
+        loader.SetBindingContext(standaloneProjection ? legacy : surface);
+        if (standaloneProjection) loader.SetActionDispatcher(legacy);
+        var loaded = loader.TryLoad(document with { Components = [isolatedScope] });
+        Assert.DoesNotContain(loaded.Diagnostics, value => value.Severity == CuiDiagnosticSeverity.Error);
+        var root = Assert.IsAssignableFrom<Control>(loaded.Root); loader.WireBindings(root);
+        var window = new Window { Content = root, Width = 620, Height = 600 };
+        try
+        {
+            window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+            var row = Assert.Single(root.GetVisualDescendants().OfType<Button>(), button => HasAuthoredIdentity(button, "home-library-item"));
+            Assert.Equal(entry.DisplayName, AutomationProperties.GetName(row));
+            var status = root.GetVisualDescendants().OfType<TextBlock>().Single(text => text.Name == "library-status");
+            Assert.True(status.IsEffectivelyVisible); Assert.False(string.IsNullOrWhiteSpace(status.Text));
+            var star = Assert.Single(root.GetVisualDescendants().OfType<Button>(), button => HasAuthoredIdentity(button, "home-library-toggle-pin"));
+            Assert.Equal("★", star.Content); Assert.False(star.IsEnabled); // No new pin authority is invented.
+            if (standaloneProjection)
+            {
+                row.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await loader.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+                Assert.Same(link, opened);
+                legacy.Set("LibraryRows", NativeHomeArtifactLibrarySource.ProjectRows(null));
+            }
+            else
+            {
+                Assert.False(row.IsEnabled); // Read-only domain projection has no native router grant.
+                surface.ApplyLibraryPage(new([entry], 0, 25, false, "Unavailable", "The current source is unavailable."));
+            }
+            loader.RefreshBindings(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+            Assert.DoesNotContain(root.GetVisualDescendants().OfType<Button>(), button => HasAuthoredIdentity(button, "home-library-item"));
+        }
+        finally { window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Library_preflight_preserves_genuine_admission_failure_as_a_close_veto()
+    {
+        var index = new Index(1);
+        var failure = new InvalidOperationException("original library admission failed");
+        var page = new HomeLibraryDestinationPage(router => new(index, new Authorization(), router, new Preferences()),
+            _ => Task.FromException(failure), (_, _) => throw new InvalidOperationException("No navigation was admitted."));
+        Assert.Contains(failure.Message, (await Record.ExceptionAsync(() => page.ActivateAsync(CancellationToken.None)))!.ToString());
+        Assert.Contains(failure.Message, (await Record.ExceptionAsync(() => page.TryPrepareToCloseAsync(CancellationToken.None)))!.ToString());
+        Assert.Contains(failure.Message, (await Record.ExceptionAsync(() => page.CloseAndDrainAsync()))!.ToString());
     }
     [AvaloniaFact]
     public async Task Library_close_waits_for_its_actual_delayed_query_and_does_not_publish_retired_rows()
@@ -558,10 +766,10 @@ public sealed class HomeLibraryDestinationTests
         public Task SetPinnedAsync(string app, string id, bool pinned, CancellationToken token)
         { var key = app + "/" + id; if (pinned) _pinned.Add(key); else _pinned.Remove(key); return Task.CompletedTask; }
     }
-    private sealed class ThemeSource : ICuiThemePreferenceSource
+    private sealed class ThemeSource(string name = "Glow", CuiAppearance appearance = CuiAppearance.Bright) : ICuiThemePreferenceSource
     {
         public CuiThemePreferenceSnapshot Current { get; private set; } =
-            new("Glow", 0, "home-library-theme-test", false, CuiAccessibilitySettings.Default, CuiAppearance.Bright);
+            new(name, 0, "home-library-theme-test", false, CuiAccessibilitySettings.Default, appearance);
         public event EventHandler? Changed;
         internal void SetAppearance(CuiAppearance appearance)
         {

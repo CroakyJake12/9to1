@@ -824,6 +824,11 @@ public sealed partial class BrowseNativeUiTests
             foreach (var id in new[] { "HavenModelButton", "HavenNotificationsButton", "HavenProfileButton" })
             {
                 var control = Named(id);
+                if (width <= 420 && id != "HavenModelButton")
+                {
+                    Assert.False(control.IsEffectivelyVisible);
+                    continue;
+                }
                 Assert.True(control.IsEffectivelyVisible, $"{id} must be visible in embedded context.");
                 Assert.True(control.IsEnabled, $"{id} must be enabled in embedded context.");
                 // The control must be a descendant of the persistent navigation bar.
@@ -833,8 +838,7 @@ public sealed partial class BrowseNativeUiTests
                     $"{id} must have usable bounds at embedded width {width}.");
                 Assert.InRange(origin.X, -.5, window.ClientSize.Width - control.Bounds.Width + .5);
                 Assert.InRange(origin.Y, -.5, window.ClientSize.Height - control.Bounds.Height + .5);
-                Assert.InRange(Math.Abs(origin.Y - addressOrigin.Y), 0, 1);
-                Assert.InRange(Math.Abs(origin.Y + control.Bounds.Height - addressOrigin.Y - address.Bounds.Height), 0, 1);
+                Assert.InRange(Math.Abs(origin.Y + control.Bounds.Height / 2 - addressOrigin.Y - address.Bounds.Height / 2), 0, 1);
                 Assert.True(origin.X >= addressRight - .5, $"{id} is not right of the address field.");
                 // Ordering: model, notifications, profile left-to-right, no overlap.
                 Assert.True(origin.X >= previousRight - .5, $"{id} overlaps or precedes its neighbour.");
@@ -851,11 +855,11 @@ public sealed partial class BrowseNativeUiTests
 
             // Establish a native tab so the host is exercised, then assert the browser content
             // retains that proper host under the remapped content column.
-            await Click(window, workspace, Find(window, "BrowseMoreButton"));
+            await Click(window, workspace, Find(window, "BrowseOverflowButton"));
             // Materialize the opened tools before Click decides whether a detached control needs
             // the panel opened; otherwise its attachment precheck can toggle the real panel shut.
             Layout();
-            Assert.Equal(true, Value("ToolsOpen"));
+            Assert.Equal(true, Value("ProfileMenuOpen"));
             await Click(window, workspace, Find(window, "BrowseChromiumTabButton")); Layout();
             Assert.True(workspace.TrySetValue("Address", "https://layout.example/"));
             await Click(window, workspace, Find(window, "BrowseNavigateButton")); Layout();

@@ -45,19 +45,19 @@ public sealed class CuiRecordedSurfaceLayoutTests
             {
                 window.Show(); Pump(window);
                 var title = Text(root, "Library");
-                var description = Text(root, "Authorised references to your artifacts. Items open in their owning app.");
+                var description = Text(root, "Your documents and files, in one place.");
                 AssertBefore(window, title, description, "The Library description must follow its heading.");
                 Assert.DoesNotContain(root.GetVisualDescendants().OfType<TextBlock>(), item => item.Text == "Choose Boards folder");
 
                 state.NotifyAll(); Pump(window);
                 Assert.Same(title, Text(root, "Library"));
-                Assert.Same(description, Text(root, "Authorised references to your artifacts. Items open in their owning app."));
+                Assert.Same(description, Text(root, "Your documents and files, in one place."));
 
                 state.Set("IsLibraryBrowseMode", false);
                 state.Set("IsBoardFolderSelection", true);
                 state.NotifyAll(); Pump(window);
                 var folderTitle = Text(root, "Choose Boards folder");
-                var folderDescription = Text(root, "Select the configured Boards folder, then create the board with the name above.");
+                var folderDescription = Text(root, "Select the configured Boards folder and enter a file name, then choose Create.");
                 var fieldLabel = Text(root, "New Board file name (.9to1board)");
                 var name = Assert.Single(root.GetVisualDescendants().OfType<TextBox>());
                 Assert.Equal("New board", name.Text);
@@ -72,7 +72,7 @@ public sealed class CuiRecordedSurfaceLayoutTests
                 state.Set("IsLibraryBrowseMode", true);
                 state.NotifyAll(); Pump(window);
                 var returnedTitle = Text(root, "Library");
-                var returnedDescription = Text(root, "Authorised references to your artifacts. Items open in their owning app.");
+                var returnedDescription = Text(root, "Your documents and files, in one place.");
                 AssertBefore(window, returnedTitle, returnedDescription, "The Library description must follow its heading after returning from folder selection.");
                 Assert.Empty(root.GetVisualDescendants().OfType<TextBox>());
             }

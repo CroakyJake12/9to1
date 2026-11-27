@@ -1,27 +1,158 @@
 <Cui id="home.discover" version="1">
+  <Actions>
+    <Action name="InspectModel" command="models.details" parameter="{Binding model.target}" />
+    <Action name="CompareModel" command="models.compare-selection" parameter="{Binding model.target}" />
+    <Action name="InspectSavedModel" command="models.saved-details" parameter="{Binding saved.target}" />
+    <Action name="RemoveSavedModel" command="models.remove-saved" parameter="{Binding saved.target}" />
+    <Action name="FilterAllModels" command="models.filter" parameter="all" />
+    <Action name="FilterChatModels" command="models.filter" parameter="chat" />
+    <Action name="FilterCodeModels" command="models.filter" parameter="code" />
+    <Action name="FilterVisionModels" command="models.filter" parameter="vision" />
+    <Action name="FilterSpeechModels" command="models.filter" parameter="speech" />
+    <Action name="FilterImageModels" command="models.filter" parameter="image" />
+    <Action name="FilterVideoModels" command="models.filter" parameter="video" />
+  </Actions>
   <Theme Name="user_preference">
-    <Page AccessibleName="Home models">
-      <Container id="discover-root" Type="Vertical Stack" Margin="16 12 16 20" CellGap="16" VerticalScrolling="True" HorizontalScrolling="False" MinWidth="0">
-        <Container id="discover-dulche-mount" Type="Vertical Stack" IsVisible="{Binding HasDulche, fallback=false}" AccessibleName="Dulche local models and inference" />
-        <Container Type="Wrap" CellGap="8" Padding="0 8 0 0">
-          <Button id="discover-browse" Content="Find or install models" AccessibleName="Show or hide the model catalogue" />
-          <Button id="discover-manage" Content="Manage providers" AccessibleName="Open shared model and provider settings" />
-        </Container>
-        <Container id="discover-catalogue" Type="Vertical Stack" CellGap="12" IsVisible="{Binding BrowseVisible, fallback=true}" AccessibleName="Find and install models">
-          <Text Text="Find and install models" FontSize="20" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />
-          <Container Type="Wrap" CellGap="8">
-            <Input id="discover-search" Type="Text" PlaceholderText="Search models or providers" AccessibleName="Search model catalogue" Width="220" />
-            <Input id="discover-category" Type="Select" AccessibleName="Model capability category" Width="150" />
-            <Input id="discover-locality" Type="Select" AccessibleName="Model location" Width="120" />
-            <Button id="discover-refresh" Content="Search" AccessibleName="Search registered model providers" />
+    <Page id="home-models-page" AccessibleName="Home models" Role="main" OwnsBackdrop="True" Background="{Resource CuiWorkspaceBrush}">
+      <Container id="discover-root" Type="Vertical Stack" Padding="{Binding models.padding}" CellGap="{Binding models.spacing, fallback=16}" VerticalScrolling="True" HorizontalScrolling="False" MinWidth="0" Background="{Resource CuiTransparentBrush}">
+        <Container Type="Grid" ColumnSizes="{Binding models.headerColumns}" RowSizes="{Binding models.headerRows}" CellGap="16" IsVisible="{Binding models.headingVisible, fallback=true}">
+          <Container Type="Vertical Stack" CellGap="8">
+            <Text Text="{Binding models.title, fallback=Models}" FontSize="{Binding models.headingSize, fallback=36}" FontWeight="800" />
+            <Text Text="{Binding models.subtitle}" FontSize="13" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
           </Container>
-          <Text id="discover-status" Text="Open the catalogue to read registered providers." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
-          <Container id="discover-huggingface-mount" Type="Vertical Stack" AccessibleName="Hugging Face model search and verified installation" />
-          <Text Text="Models from your providers" FontSize="18" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />
-          <Input id="discover-models" Type="List" Height="180" AccessibleName="Models; select entries to compare their reported metadata" />
-          <Button id="discover-compare" Content="Compare selected" AccessibleName="Refresh and compare selected models" IsEnabled="False" HorizontalAlignment="Left" />
-          <Text id="discover-details" Text="Select a model to inspect its provider, capability and location information." TextWrapping="Wrap" Foreground="{Resource CuiTextBrush}" />
+          <Button id="discover-browse" Content="Find or install models" AccessibleName="Find and install model files"
+                  Column="{Binding models.headerActionColumn}" Row="{Binding models.headerActionRow}" HorizontalAlignment="Left" VerticalAlignment="Center"
+                  MinHeight="38" Padding="16 9" AccentRole="Primary" CornerRadius="{Binding models.navigationRadius}" BorderWidth="0" />
         </Container>
+        <Container Type="Grid" ColumnSizes="{Binding models.headerColumns}" RowSizes="{Binding models.headerRows}" CellGap="12" Margin="0 8 0 12"
+                   AccessibleName="Model navigation" IsVisible="{Binding models.navigationVisible, fallback=true}">
+          <Container Type="Wrap" CellGap="4">
+            <Button id="discover-tab" Content="Discover" Action="models.discover" Selected="{Binding models.discover}" MinHeight="38" Padding="14 9"
+                    Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextBrush}" CornerRadius="{Binding models.navigationRadius}" BorderWidth="0" />
+            <Button id="discover-my-models" Content="My models" Action="models.mine" Selected="{Binding models.mine}" MinHeight="38" Padding="14 9"
+                    Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextBrush}" CornerRadius="{Binding models.navigationRadius}" BorderWidth="0" />
+            <Button id="discover-manage" Content="Providers &amp; routing" AccessibleName="Open shared model and provider settings" MinHeight="38" Padding="14 9"
+                    Background="{Resource CuiTransparentBrush}" CornerRadius="{Binding models.navigationRadius}" BorderWidth="0" />
+          </Container>
+          <Button id="discover-model-picker" Action="models.picker" IsEnabled="{Binding models.canChoose, fallback=false}" AccessibleName="Model picker"
+                  AccessibleDescription="{Binding models.pickerReason}" Tooltip="{Binding models.pickerReason}" MinHeight="36" Padding="10 8"
+                  Column="{Binding models.headerActionColumn}" Row="{Binding models.headerActionRow}" HorizontalAlignment="Left" Background="{Resource CuiTransparentBrush}" BorderWidth="0">
+            <Container Type="Horizontal Stack" CellGap="8" VerticalAlignment="Center">
+              <Image Source="icon:sliders" Width="16" Height="16" /><Text Text="Model picker" FontSize="13" FontWeight="650" />
+            </Container>
+          </Button>
+        </Container>
+        <Container Type="Wrap" CellGap="10" IsVisible="{Binding models.backVisible, fallback=false}">
+          <Button id="discover-back" Content="Back to models" Action="models.back" HorizontalAlignment="Left" MinHeight="30" Padding="10 6" Chromeless="True" />
+          <Button id="discover-save-model" Content="{Binding model.saveLabel, fallback=Save model}" Action="models.save" IsVisible="{Binding models.modelActionsVisible, fallback=false}" IsEnabled="{Binding model.canSave, fallback=false}" Tooltip="{Binding model.saveReason}" AccessibleDescription="{Binding model.saveReason}" MinHeight="30" Padding="10 6" />
+          <Button id="discover-use-local-model" Content="Use model" Action="models.use" IsVisible="{Binding models.localDetails, fallback=false}" IsEnabled="{Binding model.canUse, fallback=false}" Tooltip="{Binding model.useReason}" AccessibleDescription="{Binding model.useReason}" AccentRole="Primary" MinHeight="30" Padding="10 6" />
+        </Container>
+        <Container id="discover-catalogue" Type="Vertical Stack" CellGap="15" IsVisible="{Binding models.discover, fallback=true}" AccessibleName="Discover model catalogue">
+          <Container Type="Grid" ColumnSizes="{Binding models.searchColumns}" RowSizes="{Binding models.searchRows}" CellGap="12">
+            <Container id="discover-search-field" Type="Grid" ColumnSizes="Auto 1fr" CellGap="12" MinHeight="50" MinWidth="0"
+                       Padding="15 10" CornerRadius="{Resource CuiControlRadius}" Background="{Resource CuiPanelBrush}">
+              <Image Source="icon:search" Width="18" Height="18" VerticalAlignment="Center" />
+              <Input id="discover-search" Column="1" Type="Text" PlaceholderText="Search models or capabilities" AccessibleName="Search model catalogue"
+                     MinWidth="0" Background="{Resource CuiTransparentBrush}" BorderWidth="0" Padding="0" VerticalContentAlignment="Center" />
+            </Container>
+            <Container Type="Horizontal Stack" CellGap="10" Column="{Binding models.searchActionColumn}" Row="{Binding models.searchActionRow}" VerticalAlignment="Center">
+              <Text Text="Runs on" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" />
+              <Input id="discover-locality" Type="Select" AccessibleName="Model location" Width="155" MinHeight="42" />
+              <Button id="discover-refresh" AccessibleName="Refresh registered model providers" Tooltip="Refresh registered model providers" Width="36" Height="36"
+                      Padding="9" Background="{Resource CuiTransparentBrush}" BorderWidth="0"><Image Source="icon:refresh" Width="18" Height="18" /></Button>
+            </Container>
+          </Container>
+          <Container Type="Wrap" CellGap="6" AccessibleName="Model capabilities">
+            <Button id="discover-filter-all" Content="All models" Action="FilterAllModels" Selected="{Binding models.filterAll}" AccentRole="Primary" Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextBrush}" BorderWidth="0" MinHeight="36" Padding="13 8" CornerRadius="{Binding models.navigationRadius}" />
+            <Button id="discover-filter-chat" Content="Chat" Action="FilterChatModels" Selected="{Binding models.filterChat}" AccentRole="Primary" Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextBrush}" BorderWidth="0" MinHeight="36" Padding="13 8" CornerRadius="{Binding models.navigationRadius}" />
+            <Button id="discover-filter-code" Content="Code" Action="FilterCodeModels" Selected="{Binding models.filterCode}" AccentRole="Primary" Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextBrush}" BorderWidth="0" MinHeight="36" Padding="13 8" CornerRadius="{Binding models.navigationRadius}" />
+            <Button id="discover-filter-vision" Content="Vision" Action="FilterVisionModels" Selected="{Binding models.filterVision}" AccentRole="Primary" Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextBrush}" BorderWidth="0" MinHeight="36" Padding="13 8" CornerRadius="{Binding models.navigationRadius}" />
+            <Button id="discover-filter-speech" Content="Speech" Action="FilterSpeechModels" Selected="{Binding models.filterSpeech}" AccentRole="Primary" Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextBrush}" BorderWidth="0" MinHeight="36" Padding="13 8" CornerRadius="{Binding models.navigationRadius}" />
+            <Button id="discover-filter-image" Content="Image" Action="FilterImageModels" Selected="{Binding models.filterImage}" AccentRole="Primary" Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextBrush}" BorderWidth="0" MinHeight="36" Padding="13 8" CornerRadius="{Binding models.navigationRadius}" />
+            <Button id="discover-filter-video" Content="Video" Action="FilterVideoModels" Selected="{Binding models.filterVideo}" AccentRole="Primary" Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextBrush}" BorderWidth="0" MinHeight="36" Padding="13 8" CornerRadius="{Binding models.navigationRadius}" />
+            <Button id="discover-more-filters" Content="{Binding models.moreFiltersLabel, fallback=More filters}" Action="models.filters" Selected="{Binding models.filtersExpanded}" AccessibleName="More model filters" MinHeight="36" Padding="13 8" Background="{Resource CuiTransparentBrush}" BorderWidth="0" />
+          </Container>
+          <Container id="discover-advanced-filters" Type="Wrap" CellGap="8" IsVisible="{Binding models.filtersExpanded, fallback=false}">
+            <Input id="discover-category" Type="Select" AccessibleName="Model capability category" Width="180" />
+            <Input id="discover-provider" Type="Select" AccessibleName="Model provider filter" Width="180" />
+            <Input id="discover-install-state" Type="Select" AccessibleName="Model availability filter" Width="180" />
+            <Button id="discover-show-comparison" Content="{Binding models.compareCount, fallback=Compare models}" Action="models.compare" />
+          </Container>
+        </Container>
+        <Container Type="Wrap" CellGap="8" IsVisible="{Binding models.catalogue, fallback=false}" AccessibleName="Installation catalogue source">
+          <Button id="discover-local-catalogue" Content="Dulche catalogue" Action="models.catalogue-local" Selected="{Binding models.localCatalogue}" IsVisible="{Binding models.hasDulche, fallback=false}" />
+          <Button id="discover-huggingface-catalogue" Content="Hugging Face" Action="models.catalogue-huggingface" Selected="{Binding models.huggingFaceCatalogue}" />
+        </Container>
+        <Container id="discover-dulche-mount" Type="Vertical Stack" IsVisible="{Binding models.dulcheVisible, fallback=false}" AccessibleName="Dulche local models and inference" />
+        <Container id="discover-huggingface-mount" Type="Vertical Stack" IsVisible="{Binding models.huggingFaceVisible, fallback=false}" AccessibleName="Hugging Face model search and verified installation" />
+        <Container id="discover-model-cards" Type="Vertical Stack" CellGap="12" IsVisible="{Binding models.cardsVisible, fallback=true}">
+          <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="12" Margin="0 8 0 0">
+            <Text Text="{Binding models.providerHeading, fallback=Model catalogue}" FontSize="20" FontWeight="750" />
+            <Text Column="1" Text="{Binding models.count}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" />
+          </Container>
+          <Repeat Source="{Binding models.rows}" As="model" Key="{Binding model.key}" Panel="Vertical Stack">
+            <Container id="discover-model-card" Type="Grid" ColumnSizes="{Binding models.catalogueCardColumns}" RowSizes="{Binding models.cardRows}" CellGap="18" Padding="22" Margin="0 0 0 10" CornerRadius="{Resource CuiCardRadius}" Background="{Resource CuiPanelBrush}">
+              <Container Type="Overlay" Width="48" Height="48" VerticalAlignment="Center" CornerRadius="12" Background="{Resource CuiPanel2Brush}">
+                <Text id="discover-model-monogram" Text="{Binding model.monogram}" FontSize="25" FontWeight="800" HorizontalAlignment="Center" VerticalAlignment="Center" />
+              </Container>
+              <Container Column="1" Type="Vertical Stack" CellGap="8" MinWidth="0">
+                <Container Type="Wrap" CellGap="9">
+                  <Text id="discover-model-name" Text="{Binding model.name}" FontSize="18" FontWeight="750" TextWrapping="Wrap" />
+                  <Text Text="{Binding model.availability}" FontSize="11" FontWeight="650" Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" />
+                </Container>
+                <Text Text="{Binding model.capabilities}" FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                <Text id="discover-model-route" Text="{Binding model.routeSummary}" FontSize="11" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                <Text id="discover-model-attention" Text="{Binding model.attention}" IsVisible="{Binding model.needsAttention}" FontSize="11" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              </Container>
+              <Container Type="Wrap" CellGap="8" Column="{Binding models.catalogueActionColumn}" Row="{Binding models.cardActionRow}" VerticalAlignment="Center">
+                <Button id="discover-model-details" Content="Details" Action="InspectModel" AccessibleName="{Binding model.detailslabel}" Padding="12 7" MinHeight="32" />
+                <Button id="discover-model-compare" Content="{Binding model.comparelabel}" Action="CompareModel" Selected="{Binding model.selected}" IsVisible="{Binding models.filtersExpanded, fallback=false}" Padding="12 7" MinHeight="32" />
+              </Container>
+            </Container>
+          </Repeat>
+        </Container>
+        <Container id="discover-empty" Type="Vertical Stack" CellGap="8" Padding="24" CornerRadius="{Resource CuiCardRadius}" Background="{Resource CuiPanelBrush}" IsVisible="{Binding models.empty, fallback=false}">
+          <Text Text="No models in this view" FontSize="19" FontWeight="750" />
+          <Text Text="Adjust the filters, refresh your providers, or find a model to install. Unreported installation and capability checks stay unverified." FontSize="13" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+        </Container>
+        <Container id="discover-provider-details" Type="Vertical Stack" CellGap="15" IsVisible="{Binding models.details, fallback=false}">
+          <Container Type="Vertical Stack" CellGap="10" Padding="21" CornerRadius="{Resource CuiCardRadius}" Background="{Resource CuiPanelBrush}">
+            <Text Text="{Binding model.name}" FontSize="28" FontWeight="800" TextWrapping="Wrap" />
+            <Text Text="{Binding model.capabilities}" FontSize="13" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            <Button id="discover-use-model" Content="Use model" Action="models.use" IsEnabled="{Binding model.canUse, fallback=false}" AccessibleDescription="{Binding model.useReason}" Tooltip="{Binding model.useReason}" AccentRole="Primary" HorizontalAlignment="Left" />
+          </Container>
+          <Container Type="Vertical Stack" CellGap="10" Padding="21" CornerRadius="{Resource CuiCardRadius}" Background="{Resource CuiPanelBrush}">
+            <Text Text="Before you use it" FontSize="19" FontWeight="750" />
+            <Text Text="{Binding model.metadata}" FontSize="13" TextWrapping="Wrap" />
+            <Text Text="Resource fit" FontSize="14" FontWeight="700" Margin="0 7 0 0" />
+            <Text Text="{Binding model.fit}" FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            <Text Text="Context capacity, the configured runtime limit, current conversation usage and provider allowance are separate values." FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+        </Container>
+        <Container id="discover-saved-models" Type="Vertical Stack" CellGap="12" IsVisible="{Binding models.savedVisible, fallback=false}">
+          <Text Text="Saved for later" FontSize="20" FontWeight="750" />
+          <Text Text="{Binding models.savedStatus}" TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" Role="status" />
+          <Repeat Source="{Binding models.savedRows}" As="saved" Key="{Binding saved.key}" Panel="Vertical Stack">
+            <Container id="discover-saved-model-card" Type="Grid" ColumnSizes="{Binding models.cardColumns}" RowSizes="{Binding models.cardRows}" CellGap="12" Padding="18" Margin="0 0 0 8" CornerRadius="{Resource CuiCardRadius}" Background="{Resource CuiPanelBrush}">
+              <Container Type="Vertical Stack" CellGap="7">
+                <Text Text="{Binding saved.name}" FontSize="18" FontWeight="750" TextWrapping="Wrap" />
+                <Text Text="{Binding saved.provider}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+                <Text Text="{Binding saved.availability}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+              </Container>
+              <Container Type="Wrap" CellGap="8" Column="{Binding models.cardActionColumn}" Row="{Binding models.cardActionRow}" VerticalAlignment="Center">
+                <Button id="discover-saved-model-details" Content="Details" Action="InspectSavedModel" IsEnabled="{Binding saved.caninspect, fallback=false}" AccessibleName="{Binding saved.detailslabel}" MinHeight="32" Padding="12 7" />
+                <Button id="discover-saved-model-remove" Content="Remove" Action="RemoveSavedModel" IsEnabled="{Binding models.canRemoveSaved, fallback=false}" AccessibleName="{Binding saved.removelabel}" MinHeight="32" Padding="12 7" />
+              </Container>
+            </Container>
+          </Repeat>
+        </Container>
+        <Container id="discover-comparison" Type="Vertical Stack" CellGap="12" IsVisible="{Binding models.comparison, fallback=false}">
+          <Text Text="Select up to 20 models to compare their reported metadata." FontSize="13" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          <Input id="discover-models" Type="List" Height="200" AccessibleName="Models; select entries to compare their reported metadata" />
+          <Button id="discover-compare" Content="Compare selected" AccessibleName="Refresh and compare selected models" IsEnabled="False" HorizontalAlignment="Left" />
+          <Text id="discover-details" Text="Select models to inspect their provider, capability and location information." TextWrapping="Wrap" Foreground="{Resource CuiTextBrush}" />
+        </Container>
+        <Text id="discover-status" Text="Reading registered providers…" TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" Role="status" />
       </Container>
     </Page>
   </Theme>

@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Services;
@@ -30,10 +31,14 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
     IDesktopOriginalRetirementParticipant, IDesktopOriginalRetirementJoinGuard,
     INotifyPropertyChanged, IDisposable, IAsyncDisposable
 {
+    internal static bool SupportsOrganisationDestinations(Guid spaceId) => spaceId != Guid.Empty &&
+        spaceId != SpaceRegistry.TasksSpaceId && spaceId != SpaceRegistry.StudySpaceId && spaceId != SpaceRegistry.AgentSpaceId;
+
     private readonly SpaceRegistry _registry;
     private readonly SpacesHomeController _controller;
     private readonly SpacesHomeCuiBindings _bindings;
     private readonly ICuiSceneReadiness _readiness;
+    private readonly CuiThemePreferenceContext? _interfaceTheme;
     private readonly CuiSceneHost _host;
     private readonly DesktopOriginalWorkLifetime _work;
     private readonly object _gate = new();
@@ -97,11 +102,13 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         Func<string, object?, CancellationToken, Task?, Task>? workspaceCommandHost = null,
         Func<SpacesHomeSelection, CancellationToken, Task<IReadOnlyList<SpacesHomeSidebarRow>>>? sidebarItemsProvider = null,
         Func<Guid, string, CancellationToken, Task<IReadOnlyList<SpacesHomeConversationRow>>>? conversationSearchProvider = null,
-        Func<IReadOnlyList<SpacesHomeConversationRow>, Action<bool>, CancellationToken, Task>? publishConversationRows = null)
+        Func<IReadOnlyList<SpacesHomeConversationRow>, Action<bool>, CancellationToken, Task>? publishConversationRows = null,
+        CuiThemePreferenceContext? interfaceTheme = null)
     {
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
         if (navigationHost is null) throw new ArgumentNullException(nameof(navigationHost));
         _readiness = readiness ?? throw new ArgumentNullException(nameof(readiness));
+        _interfaceTheme = interfaceTheme;
         _conversationsProvider = conversationsProvider;
         _conversationSearchProvider = conversationSearchProvider;
         _publishConversationRows = publishConversationRows;
@@ -172,7 +179,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
                 {
                     original.DemandPublication();
                     var show = InvokeOriginalSource(() => _host.ShowAsync(new("spaces.home", "Spaces", "Spaces",
-                        Document, this, this, _readiness) { IsPublicationCurrent = () => IsCurrent(generation) }, scope.Token));
+                        Document, this, this, _readiness) { ThemePreference = _interfaceTheme, IsPublicationCurrent = () => IsCurrent(generation) }, scope.Token));
                     _exactOriginalShow = show;
                     showJoin = original.AwaitAsync(show);
                 }).GetTask();
@@ -237,6 +244,11 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
     public bool TryGetValue(string path, out object? value)
     {
         if (TryGetTaskSidebarValue(path, out value)) return true;
+        if (path == "spaces.hasOrganisationDestinations")
+        { value = _workspaceCommandHost is not null && _controller.State.Selection is { } selection && SupportsOrganisationDestinations(selection.Id); return true; }
+        if (path is "spaces.groupsSelected" or "spaces.specialistsSelected")
+        { value = _spaceWorkspace?.Content is SpacesOrganisationPage organisation && organisation.Kind ==
+            (path == "spaces.groupsSelected" ? SpacesOrganisationKind.Groups : SpacesOrganisationKind.Specialists); return true; }
         if (path == "spaces.canMutate") { lock (_gate) value = CanAdmitHomeMutation(); return true; }
         if (path == "spaces.hasAppContent") { lock (_gate) value = _spaceWorkspace?.Content is not null; return true; }
         if (path == "spaces.hasSpaceSummary") { lock (_gate) value = _spaceWorkspace?.Content is null; return true; }
@@ -332,6 +344,8 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         lock (_gate)
             return command.StartsWith("spaces.tasks.", StringComparison.Ordinal) ? IsTaskSidebarActionAvailable(command) :
                 CanAdmitHomeMutation() && _bindings.IsActionAvailable(command) == true &&
+                (command is not ("spaces.open-groups" or "spaces.open-specialists") ||
+                 _workspaceCommandHost is not null && _controller.State.Selection is { } selected && SupportsOrganisationDestinations(selected.Id)) &&
                 (command is not ("spaces.search-conversations" or "spaces.clear-conversation-search") ||
                  (_conversationSearchProvider is not null && _controller.State.Selection is not null));
     }
@@ -438,6 +452,12 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
                 if (_workspaceCommandHost is not { } newChatHost)
                     throw new InvalidOperationException("No Spaces workspace host is available to start a conversation.");
                 await original.AwaitAsync(InvokeOriginalSource(() => newChatHost("spaces.new-chat", id, token, null))).ConfigureAwait(false);
+                break;
+            case "spaces.open-groups":
+            case "spaces.open-specialists":
+                if (_workspaceCommandHost is not { } organisationHost)
+                    throw new InvalidOperationException("The original Spaces organisation host is unavailable.");
+                await original.AwaitAsync(InvokeOriginalSource(() => organisationHost(command, id, token, null))).ConfigureAwait(false);
                 break;
             case "spaces.open-conversation":
                 if (_workspaceCommandHost is not { } conversationHost)

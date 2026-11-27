@@ -45,6 +45,7 @@ public sealed partial class NewDashboardPage
         loader.BindAuthoredControl("dashboard-page-tabs", _ => PageTabsPanel);
         loader.BindAuthoredControl("dashboard-live-widgets", _ => DynamicRowsPanel);
         loader.BindAuthoredControl("dashboard-pinned-apps", _ => PinnedPanel);
+        loader.BindAuthoredControl("dashboard-library-host", _ => _briefingLibraryHost);
         loader.BindAuthoredControl("dashboard-welcome", _ => WelcomeText);
         loader.BindAuthoredControl("dashboard-date", _ => DateText);
         loader.BindAuthoredControl("dashboard-pinned-empty", _ => PinnedEmptyText);

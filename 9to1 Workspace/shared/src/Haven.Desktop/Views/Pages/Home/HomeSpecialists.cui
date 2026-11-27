@@ -1,0 +1,140 @@
+<Cui id="home.specialists" version="1">
+  <Actions>
+    <Action name="InspectSpecialist" command="specialists.select" parameter="{Binding specialist.target}" />
+    <Action name="FilterAll" command="specialists.filter" parameter="all" />
+    <Action name="FilterEnabled" command="specialists.filter" parameter="enabled" />
+    <Action name="FilterDisabled" command="specialists.filter" parameter="disabled" />
+  </Actions>
+  <Theme Name="user_preference">
+    <Page id="home-specialists-page" Role="main" AccessibleName="Specialists" OwnsBackdrop="True" Background="{Resource CuiWorkspaceBrush}">
+      <Container id="specialists-body" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False"
+                 Padding="{Binding specialists.pagePadding}" CellGap="17" Background="{Resource CuiTransparentBrush}">
+        <Container Type="Grid" ColumnSizes="{Binding specialists.headerColumns}" RowSizes="{Binding specialists.headerRows}" CellGap="14">
+          <Container Type="Vertical Stack" CellGap="8">
+            <Text Text="CONFIGURED EXPERTISE" FontSize="11" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
+            <Text Text="Specialists" FontSize="36" FontWeight="800" />
+            <Text Text="Find a Specialist by name, skill or task." FontSize="13" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+          <Button id="specialists-create" Row="{Binding specialists.actionRow}" Column="{Binding specialists.actionColumn}"
+                  Content="Create Specialist" Action="specialists.create" IsEnabled="{Binding specialists.canCreate}"
+                  Tooltip="{Binding specialists.configurationReason}" AccessibleDescription="{Binding specialists.configurationReason}"
+                  AccentRole="Primary" MinHeight="38" Padding="16 9" CornerRadius="{Binding specialists.buttonRadius}" VerticalAlignment="Center" HorizontalAlignment="Left" />
+        </Container>
+        <Container Type="Wrap" CellGap="12">
+          <Container Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="10" Width="{Binding specialists.searchWidth}" MinHeight="40"
+                     Padding="12 7" CornerRadius="{Binding specialists.buttonRadius}" Background="{Resource CuiPanelBrush}">
+            <Image Source="icon:search" Width="17" Height="17" VerticalAlignment="Center" />
+            <Input id="specialists-search" Column="1" Type="Text" Value="{Binding specialists.query, mode=TwoWay}"
+                   AccessibleName="Search Specialists" PlaceholderText="Search by name, skill or task" IsEnabled="{Binding specialists.canBrowse}"
+                   MinWidth="0" Background="{Resource CuiTransparentBrush}" BorderWidth="0" Padding="0" VerticalContentAlignment="Center" />
+            <Button id="specialists-clear-search" Column="2" Action="specialists.clear-query" AccessibleName="Clear Specialist search"
+                    IsVisible="{Binding specialists.hasQuery}" Width="26" Height="26" Padding="6" Chromeless="True">
+              <Image Source="icon:close" Width="14" Height="14" />
+            </Button>
+          </Container>
+          <Button id="specialists-filter" Content="{Binding specialists.filterLabel}" Action="specialists.filters"
+                  AccessibleName="Filter Specialists" MinHeight="38" Padding="13 8" CornerRadius="{Binding specialists.buttonRadius}">
+            <Container Type="Context Menu" AccessibleName="Specialist status">
+              <Button Type="Menu Item" Content="All Specialists" Action="FilterAll" ToggleType="Radio" Checked="{Binding specialists.all}" />
+              <Button Type="Menu Item" Content="Enabled" Action="FilterEnabled" ToggleType="Radio" Checked="{Binding specialists.enabled}" />
+              <Button Type="Menu Item" Content="Disabled" Action="FilterDisabled" ToggleType="Radio" Checked="{Binding specialists.disabled}" />
+            </Container>
+          </Button>
+          <Text id="specialists-count" Text="{Binding specialists.count}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" />
+          <Button id="specialists-refresh" Action="specialists.refresh" AccessibleName="Refresh Specialists" Tooltip="Refresh Specialists" Width="32" Height="32" Padding="8" Chromeless="True">
+            <Image Source="icon:refresh" Width="16" Height="16" />
+          </Button>
+        </Container>
+        <Text Text="{Binding specialists.configurationReason}" IsVisible="{Binding specialists.configurationUnavailable}"
+              FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+        <Container id="specialists-grid" Type="Grid" ColumnSizes="{Binding specialists.columns}" RowSizes="{Binding specialists.gridRows}" CellGap="15">
+          <Repeat Source="{Binding specialists.rows}" As="specialist" Key="{Binding specialist.id}" ItemRow="{Binding specialist.row}" ItemColumn="{Binding specialist.column}">
+            <Container id="specialist-card" Type="Vertical Stack" Padding="17 17 17 12" CellGap="11" CornerRadius="{Binding specialists.cardRadius}"
+                       Background="{Resource CuiPanelBrush}" BorderWidth="0">
+              <Container Type="Grid" ColumnSizes="Auto 1fr" CellGap="11">
+                <Container Type="Overlay" Width="39" Height="39" CornerRadius="20" Background="{Resource CuiPanel2Brush}" Padding="9">
+                  <Image Source="{Binding specialist.iconSource}" Width="21" Height="21" />
+                </Container>
+                <Text Column="1" Text="{Binding specialist.name}" FontSize="14" FontWeight="750" TextWrapping="Wrap" VerticalAlignment="Center" />
+              </Container>
+              <Text Text="{Binding specialist.description}" FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Container Type="Wrap" CellGap="8">
+                <Text Text="{Binding specialist.status}" FontSize="11" FontWeight="700" />
+                <Text Text="{Binding specialist.origin}" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" />
+              </Container>
+              <Text Text="{Binding specialist.scope}" FontSize="11" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="10" Margin="0 5 0 0">
+                <Button id="specialist-details" Action="InspectSpecialist" Content="Details" AccessibleName="{Binding specialist.detailsLabel}"
+                        Selected="{Binding specialist.selected}" MinHeight="30" Padding="10 5" CornerRadius="{Binding specialists.buttonRadius}" HorizontalAlignment="Left" />
+                <Button id="specialist-invite" Column="1" Content="Invite" Action="specialists.invite" IsEnabled="False"
+                        Tooltip="{Binding specialist.inviteReason}" AccessibleDescription="{Binding specialist.inviteReason}"
+                        MinHeight="30" Padding="10 5" CornerRadius="{Binding specialists.buttonRadius}" />
+              </Container>
+            </Container>
+          </Repeat>
+        </Container>
+        <Container id="specialists-empty" Type="Vertical Stack" CellGap="8" Padding="24" CornerRadius="{Binding specialists.cardRadius}"
+                   Background="{Resource CuiPanelBrush}" IsVisible="{Binding specialists.empty}" Role="status">
+          <Text Text="{Binding specialists.emptyTitle}" FontSize="18" FontWeight="750" />
+          <Text Text="{Binding specialists.emptyDetail}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+        </Container>
+        <Container id="specialist-inspector" Type="Vertical Stack" CellGap="16" Padding="22" CornerRadius="{Binding specialists.cardRadius}"
+                   Background="{Resource CuiPanelBrush}" IsVisible="{Binding specialists.hasSelection}" AccessibleName="Specialist definition">
+          <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="12">
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="{Binding specialist.name}" FontSize="24" FontWeight="800" TextWrapping="Wrap" />
+              <Text Text="{Binding specialist.description}" FontSize="13" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            </Container>
+            <Button id="specialist-close-details" Column="1" Action="specialists.close-details" AccessibleName="Close Specialist details"
+                    Width="30" Height="30" Padding="7" Chromeless="True" VerticalAlignment="Top"><Image Source="icon:close" Width="16" Height="16" /></Button>
+          </Container>
+          <Container Type="Wrap" CellGap="14">
+            <Text Text="{Binding specialist.status}" FontWeight="700" />
+            <Text Text="{Binding specialist.origin}" Foreground="{Resource CuiTextSoftBrush}" />
+            <Text Text="Last updated" Foreground="{Resource CuiTextSoftBrush}" />
+            <Text id="specialist-updated" Text="{Binding specialist.updated}" Foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+          <Container Type="Vertical Stack" CellGap="7">
+            <Text Text="Instructions" FontSize="14" FontWeight="750" />
+            <Text id="specialist-instructions" Text="{Binding specialist.instructions}" TextWrapping="Wrap" />
+          </Container>
+          <Container Type="Vertical Stack" CellGap="7">
+            <Text Text="Task detection rules" FontSize="14" FontWeight="750" />
+            <Text id="specialist-inputs" Text="{Binding specialist.inputs}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+          <Container Type="Vertical Stack" CellGap="7">
+            <Text Text="Model policy" FontSize="14" FontWeight="750" />
+            <Text Text="Preferred model" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" />
+            <Text id="specialist-preferred-model" Text="{Binding specialist.preferred}" TextWrapping="Wrap" />
+            <Text Text="Fallback model" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" />
+            <Text id="specialist-fallback-model" Text="{Binding specialist.fallback}" TextWrapping="Wrap" />
+            <Text Text="The actual model route is resolved when the request is submitted." FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+          <Container Type="Vertical Stack" CellGap="7">
+            <Text Text="Configured tools" FontSize="14" FontWeight="750" />
+            <Text id="specialist-tools" Text="{Binding specialist.tools}" TextWrapping="Wrap" />
+            <Text Text="Knowledge sources" FontSize="14" FontWeight="750" Margin="0 5 0 0" />
+            <Text id="specialist-sources" Text="{Binding specialist.sources}" TextWrapping="Wrap" />
+            <Text id="specialist-policy" Text="{Binding specialist.policy}" TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+          <Container Type="Vertical Stack" CellGap="7">
+            <Text Text="Definition ID" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" />
+            <Text id="specialist-identity" Text="{Binding specialist.identity}" FontSize="11" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+          <Container Type="Wrap" CellGap="12">
+            <Button id="specialist-configure" Action="specialists.configure" Content="Configure in AI Studio" AccentRole="Primary"
+                    IsEnabled="{Binding specialist.canConfigure}" Tooltip="{Binding specialists.configurationReason}"
+                    AccessibleDescription="{Binding specialists.configurationReason}" MinHeight="36" Padding="14 8" CornerRadius="{Binding specialists.buttonRadius}" />
+            <Text Text="{Binding specialist.inviteReason}" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+        </Container>
+        <Container Type="Vertical Stack" CellGap="6" Padding="17 15" CornerRadius="{Binding specialists.cardRadius}" Background="{Resource CuiPanel2Brush}">
+          <Text Text="Expertise with an explicit scope." FontSize="13" FontWeight="750" />
+          <Text Text="Inspect the definition, then choose the conversation or document context. Browsing a Specialist does not start work."
+                FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+        </Container>
+        <Text id="specialists-status" Text="{Binding specialists.status}" FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" Role="status" />
+      </Container>
+    </Page>
+  </Theme>
+</Cui>

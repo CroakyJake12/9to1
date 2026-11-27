@@ -93,10 +93,12 @@ public sealed class ChatAddMenuNativePopupTests
                     Path.Combine(captureDirectory, "chat-add-menu-native-popup.png"));
             }
 
-            // The compact menu remains a grouped list and category rows still drill into the real
-            // shared catalogue without expanding or replacing the actual composer.
-            Assert.Equal("Add", scene.AddMenuPrefab.GetComponent<HavenText>("MenuTitle").Content);
-            Assert.Equal(HavenVisibility.Visible, scene.AddMenuPrefab.GetComponent<Container>("MainMenu")
+            // The five inline categories reuse the existing catalogue and original action IDs;
+            // expansion does not replace or resize the actual composer.
+            Assert.Equal("Attach to Chat", scene.AddMenuPrefab.GetComponent<HavenText>("MenuTitle").Content);
+            Assert.Equal(HavenVisibility.Visible, scene.AddMenuPrefab.GetComponent<Container>("AttachCategories")
+                .GetValue(HavenProperties.Visibility));
+            Assert.Equal(HavenVisibility.Collapsed, scene.AddMenuPrefab.GetComponent<Container>("MainMenu")
                 .GetValue(HavenProperties.Visibility));
             Assert.Equal(HavenVisibility.Collapsed, scene.CatalogSearch.GetValue(HavenProperties.Visibility));
             Assert.Same(popupHost, TopLevel.GetTopLevel(popupHost)?.FocusManager?.GetFocusedElement());
@@ -106,9 +108,12 @@ public sealed class ChatAddMenuNativePopupTests
             Assert.Equal(HavenVisibility.Visible, scene.CatalogPanel.GetValue(HavenProperties.Visibility));
             Assert.Equal(HavenVisibility.Collapsed, scene.AddMenuPrefab.GetComponent<Container>("MainMenu")
                 .GetValue(HavenProperties.Visibility));
-            Click(menuRouter, scene.AddMenuPrefab.GetComponent<HavenButton>("CatalogBack"));
+            Assert.Same(scene.AddMenuPrefab.GetComponent<Container>("AttachSpecialistsSection"), scene.CatalogPanel.Parent);
+            Assert.Equal(HavenVisibility.Visible, scene.CatalogSearch.GetValue(HavenProperties.Visibility));
+            Click(menuRouter, scene.AddMenuPrefab.GetComponent<HavenButton>("Agents"));
             await SettlePopupHostAsync(window, popupHost, requireNativePopup);
-            Assert.Equal(HavenVisibility.Visible, scene.AddMenuPrefab.GetComponent<Container>("MainMenu")
+            Assert.Equal(HavenVisibility.Collapsed, scene.CatalogPanel.GetValue(HavenProperties.Visibility));
+            Assert.Equal(HavenVisibility.Visible, scene.AddMenuPrefab.GetComponent<Container>("AttachCategories")
                 .GetValue(HavenProperties.Visibility));
 
             // The new Assistants category displays only canonical configured Assistant snapshots,
@@ -128,7 +133,7 @@ public sealed class ChatAddMenuNativePopupTests
             await SettlePopupHostAsync(window, popupHost, requireNativePopup);
             Click(new HavenInputRouter(popupHost.Root!), scene.AddMenuPrefab.GetComponent<HavenButton>("Assistants"));
             await SettlePopupHostAsync(window, popupHost, requireNativePopup);
-            var assistantRow = Assert.Single(scene.CatalogRows.Children.OfType<HavenButton>());
+            var assistantRow = Assert.Single(scene.CatalogRows.DescendantsAndSelf().OfType<HavenButton>());
             Assert.Equal("Configured Helper", assistantRow.Content);
             Assert.Contains("Open this Assistant", assistantRow.Accessibility.Description);
             Click(new HavenInputRouter(popupHost.Root!), assistantRow);
@@ -150,7 +155,7 @@ public sealed class ChatAddMenuNativePopupTests
             Click(new HavenInputRouter(popupHost.Root!), scene.AddMenuPrefab.GetComponent<HavenButton>("Assistants"));
             await SettlePopupHostAsync(window, popupHost, requireNativePopup);
             Assert.Contains("Open Assistants to load", scene.CatalogRows.Children.OfType<HavenText>().Single().Content);
-            var openAssistantsRow = Assert.Single(scene.CatalogRows.Children.OfType<HavenButton>());
+            var openAssistantsRow = Assert.Single(scene.CatalogRows.DescendantsAndSelf().OfType<HavenButton>());
             Click(new HavenInputRouter(popupHost.Root!), openAssistantsRow);
             window.UpdateLayout();
             var openAssistantsSelection = Assert.Single(selectedAssistants.Skip(1));
@@ -172,7 +177,7 @@ public sealed class ChatAddMenuNativePopupTests
             await SettlePopupHostAsync(window, popupHost, requireNativePopup);
             Assert.True(popup.IsOpen);
             Assert.Equal(HavenVisibility.Visible, scene.CatalogPanel.GetValue(HavenProperties.Visibility));
-            var fileRow = Assert.Single(scene.CatalogRows.Children.OfType<HavenButton>());
+            var fileRow = Assert.Single(scene.CatalogRows.DescendantsAndSelf().OfType<HavenButton>());
             Click(new HavenInputRouter(popupHost.Root!), fileRow);
             window.UpdateLayout();
 

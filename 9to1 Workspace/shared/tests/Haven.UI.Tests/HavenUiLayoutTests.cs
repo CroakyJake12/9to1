@@ -385,6 +385,133 @@ public sealed class HavenUiLayoutTests
         Assert.Equal(40, root.Children[2].Bounds.Y);
     }
 
+    [Theory]
+    [InlineData(HavenLayout.Vertical)]
+    [InlineData(HavenLayout.Overlay)]
+    public void Vertical_scroll_reaches_nested_auto_height_content_and_a_single_tall_reply(HavenLayout layout)
+    {
+        var root = SizedContainer(160, 100);
+        root.Layout = layout;
+        root.SetValue(HavenProperties.Overflow, HavenOverflow.Scroll);
+        var transcript = new Container();
+        transcript.SetValue(HavenProperties.Gap, HavenLength.Px(6));
+        var heading = new Text("Heading") { Name = "heading" };
+        var reply = new Text("A single reply taller than the viewport") { Name = "reply" };
+        transcript.Add(heading); transcript.Add(reply); root.Add(transcript);
+        var measure = new NamedMeasure(("heading", new HavenSize(120, 30)), ("reply", new HavenSize(500, 1200)));
+
+        Layout(root, measure);
+
+        Assert.Equal(new HavenSize(160, 100), root.ViewportSize);
+        Assert.Equal(new HavenSize(160, 1236), root.ExtentSize);
+        Assert.Equal(1200, reply.Bounds.Height);
+        Assert.Equal(160, reply.Bounds.Width); // Wrapping still has a finite viewport width.
+        Assert.Equal(1136, root.MaxScrollY);
+        Assert.Equal(0, root.MaxScrollX);
+        root.ScrollY = root.MaxScrollY;
+        Layout(root, measure);
+        Assert.Equal(root.Bounds.Bottom, reply.Bounds.Bottom, 6);
+        Assert.Equal(100, root.Bounds.Height);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Nested_scroll_viewport_keeps_its_explicit_height_or_maximum(bool fixedHeight)
+    {
+        var root = SizedContainer(160, 100);
+        root.SetValue(HavenProperties.Overflow, HavenOverflow.Scroll);
+        var nested = new Container { Layout = HavenLayout.Overlay };
+        nested.SetValue(HavenProperties.Overflow, HavenOverflow.Scroll);
+        nested.SetValue(fixedHeight ? HavenProperties.Height : HavenProperties.MaxHeight, HavenLength.Px(70));
+        var reply = new Text("Long nested reply") { Name = "reply" };
+        nested.Add(reply); root.Add(nested);
+        var measure = new NamedMeasure(("reply", new HavenSize(160, 1200)));
+
+        Layout(root, measure);
+
+        Assert.Equal(70, nested.Bounds.Height);
+        Assert.Equal(1200, reply.Bounds.Height);
+        Assert.Equal(1130, nested.MaxScrollY);
+        Assert.Equal(0, root.MaxScrollY);
+        nested.ScrollY = nested.MaxScrollY;
+        Layout(root, measure);
+        Assert.Equal(nested.Bounds.Bottom, reply.Bounds.Bottom, 6);
+        Assert.Equal(100, root.Bounds.Height);
+    }
+
+    [Fact]
+    public void Scroll_content_with_fraction_grid_rows_keeps_finite_intrinsic_extent()
+    {
+        var root = SizedContainer(160, 100);
+        root.Layout = HavenLayout.Overlay;
+        root.SetValue(HavenProperties.Overflow, HavenOverflow.Scroll);
+        var content = new Container { Layout = HavenLayout.Grid, Rows = "Auto 1fr Auto" };
+        var heading = Cell("heading", 0, 0);
+        var reply = Cell("reply", 1, 0);
+        var footer = Cell("footer", 2, 0);
+        content.Add(heading); content.Add(reply); content.Add(footer); root.Add(content);
+
+        Layout(root, new NamedMeasure(("heading", new HavenSize(160, 20)),
+            ("reply", new HavenSize(160, 1200)), ("footer", new HavenSize(160, 30))));
+
+        Assert.Equal(1250, root.ExtentSize.Height);
+        Assert.Equal(1150, root.MaxScrollY);
+        Assert.Equal(1200, reply.Bounds.Height);
+        Assert.Equal(1220, footer.Bounds.Y);
+        Assert.All(root.DescendantsAndSelf(), element =>
+        {
+            Assert.True(double.IsFinite(element.DesiredSize.Width));
+            Assert.True(double.IsFinite(element.DesiredSize.Height));
+            Assert.True(double.IsFinite(element.Bounds.X));
+            Assert.True(double.IsFinite(element.Bounds.Y));
+            Assert.True(double.IsFinite(element.Bounds.Width));
+            Assert.True(double.IsFinite(element.Bounds.Height));
+        });
+    }
+
+    [Fact]
+    public void Floating_overlay_in_scroll_viewport_keeps_finite_measure_and_does_not_join_extent()
+    {
+        var root = SizedContainer(160, 100);
+        root.Layout = HavenLayout.Overlay;
+        root.SetValue(HavenProperties.Overflow, HavenOverflow.Scroll);
+        var reply = new Text("Long reply") { Name = "reply" };
+        var floating = new Text("Floating control") { Name = "floating" };
+        floating.SetValue(HavenProperties.LayoutParticipation, HavenLayoutParticipation.Overlay);
+        root.Add(reply); root.Add(floating);
+        var measure = new NamedMeasure(("reply", new HavenSize(160, 1200)),
+            ("floating", new HavenSize(160, 2000)));
+
+        Layout(root, measure);
+        root.ScrollY = root.MaxScrollY;
+        Layout(root, measure);
+
+        Assert.Equal(1200, root.ExtentSize.Height);
+        Assert.Equal(100, floating.DesiredSize.Height);
+        Assert.Equal(root.Bounds, floating.Bounds);
+        Assert.Equal(root.Bounds.Bottom, reply.Bounds.Bottom, 6);
+    }
+
+    [Theory]
+    [InlineData(HavenLayout.Horizontal)]
+    [InlineData(HavenLayout.Canvas)]
+    [InlineData(HavenLayout.Wrap)]
+    public void Other_scroll_layouts_keep_their_existing_finite_child_height(HavenLayout layout)
+    {
+        var root = SizedContainer(160, 100);
+        root.Layout = layout;
+        root.SetValue(HavenProperties.Overflow, HavenOverflow.Scroll);
+        var child = new Text("Content") { Name = "content" };
+        root.Add(child);
+
+        Layout(root, new NamedMeasure(("content", new HavenSize(160, 1200))));
+
+        Assert.Equal(100, child.DesiredSize.Height);
+        Assert.Equal(100, root.ExtentSize.Height);
+        Assert.Equal(0, root.MaxScrollY);
+    }
+
     [Fact]
     public void Input_router_scrolls_the_nearest_scroll_container()
     {

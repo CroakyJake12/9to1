@@ -350,6 +350,7 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
             // Start the shared recovery surface's child close now (retire its command admission
             // and close the scene host); the parent joins this exact task during cleanup.
             Attempt(() => _scene.StartRecoveryClose());
+            Attempt(() => _scene.StartHeaderClose());
             Attempt(() => _scene.StopRequested -= OnStopRequested);
             Attempt(() => _composerInput.Invalidated -= OnComposerEditCompleted);
             Attempt(() => _scene.AttachmentRemoveRequested -= OnAttachmentRemoveRequested);
@@ -395,6 +396,8 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
         // Join the exact shared-recovery close that Stop started, before releasing its physical
         // native mapping. Close faults stay an independent cleanup failure.
         try { await _scene.JoinRecoveryCloseAndReleaseAsync(); }
+        catch (Exception cause) { CaptureOriginalGeneratedCauses(failures, null, cause); }
+        try { await _scene.JoinHeaderCloseAndReleaseAsync(); }
         catch (Exception cause) { CaptureOriginalGeneratedCauses(failures, null, cause); }
         var actualDispatcher = Dispatcher.UIThread.InvokeAsync(() => _originalWork.RunCloseCallback(() =>
         {

@@ -20,12 +20,14 @@ public sealed partial class BrowseNativeWorkspace
         ArgumentNullException.ThrowIfNull(originalSourceSettlement);
         if (!IsReady || _busy || !_originalActionAvailability("9to1.Browse.Navigate") ||
             !_snapshot.Tabs.Any(tab => tab.Id == intent.SourceTabId)) return false;
+        var briefSource = AdmitNavigationBrief(intent);
+        if (intent.Brief is not null && briefSource is null) return false;
         lock (_sourceGate) { CheckAdmission(_originalCommands); Retain(_originalOperations, originalSourceSettlement); }
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         _busy = true;
         var prior = LogicalDriver.Value;
         var invocation = new CommandInvocation(this, prior);
-        var driver = RunQueuedNavigationAsync(start.Task, intent, originalSourceSettlement, invocation);
+        var driver = RunQueuedNavigationAsync(start.Task, intent, originalSourceSettlement, invocation, briefSource);
         invocation.Self = driver;
         _originalCommand = driver;
         lock (_sourceGate) Retain(_originalCommands, driver);
@@ -43,7 +45,7 @@ public sealed partial class BrowseNativeWorkspace
     }
 
     private async Task RunQueuedNavigationAsync(Task start, BrowseNavigationIntent intent, Task originalSourceSettlement,
-        CommandInvocation invocation)
+        CommandInvocation invocation, IBrowseAppContentSession? briefSource)
     {
         var prior = LogicalDriver.Value; LogicalDriver.Value = invocation;
         var failures = new List<Exception>();
@@ -52,7 +54,10 @@ public sealed partial class BrowseNativeWorkspace
             await start;
             await originalSourceSettlement;
             if (!IsReady) throw new ObjectDisposedException(nameof(BrowseNativeWorkspace));
-            await Operation(() => _chrome.OpenContentAsync(intent.Address, intent.OpenInNewTab, intent.SourceTabId));
+            if (intent.Brief is not null && !IsNavigationBriefSourceCurrent(intent, briefSource))
+            { _status = "The original Explore brief changed before opening the app. Return to Explore and choose again."; return; }
+            var result = await Operation(() => _chrome.OpenContentAsync(intent.Address, intent.OpenInNewTab, intent.SourceTabId));
+            if (briefSource is not null) PublishNavigationBrief(intent, briefSource, result);
             if (IsOriginalPublicationCurrent) { ApplySnapshot(_chrome.State); _status = _snapshot.Status; }
         }
         catch (Exception failure)

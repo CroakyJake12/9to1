@@ -284,6 +284,11 @@ public sealed record GenerationOptions(double Temperature = 0.7, int ContextLimi
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
     public Guid? SpecialistId { get; init; }
 
+    /// <summary>Immutable history owned by the original ordinary Temporary Chat. This live
+    /// data is neither a preference nor a durable/wire request or an authority grant.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public TemporaryConversationContext? OriginalTemporaryContext { get; init; }
+
     /// <summary>Original current Home/Space policy guard; never serialized as authority.</summary>
     [System.Text.Json.Serialization.JsonIgnore]
     public IOriginalSpacePolicyDispatchGuard? OriginalSpacePolicy { get; init; }

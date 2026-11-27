@@ -12,12 +12,17 @@ internal sealed class HomeRailCuiBindings : ICuiWritableBindingContext, INotifyP
     private long _revision;
     private bool _showLabels;
 
-    public HomeRailCuiBindings(Func<string> section, bool settingsAvailable, bool libraryAvailable, bool assistantsAvailable)
+    public HomeRailCuiBindings(Func<string> section, bool settingsAvailable, bool libraryAvailable, bool assistantsAvailable,
+        bool exploreAvailable = false, bool specialistsAvailable = false)
     {
         _section = section ?? throw new ArgumentNullException(nameof(section));
         _values.Set("rail.settingsAvailable", settingsAvailable);
         _values.Set("rail.libraryAvailable", libraryAvailable);
         _values.Set("rail.assistantsAvailable", assistantsAvailable);
+        _values.Set("rail.exploreAvailable", exploreAvailable);
+        _values.Set("rail.specialistsAvailable", specialistsAvailable);
+        _values.Set("rail.exploreTooltip", exploreAvailable ? "Explore" : "Explore is unavailable in this host.");
+        _values.Set("rail.specialistsTooltip", specialistsAvailable ? "Specialists" : "The Specialists owner is unavailable in this host.");
         _values.PropertyChanged += (_, args) => PropertyChanged?.Invoke(this, args);
         SetViewportWidth(0);
         Refresh();
@@ -34,7 +39,7 @@ internal sealed class HomeRailCuiBindings : ICuiWritableBindingContext, INotifyP
 
     public void SetViewportWidth(double width)
     {
-        _showLabels = width >= 840;
+        _showLabels = width > 750;
         _values.Set("rail.showLabels", _showLabels);
         UpdateRailDimensions();
         _values.Set("newTab.contentPadding", _showLabels ? "34 26 34 24" : "12 16 12 16");
@@ -43,30 +48,36 @@ internal sealed class HomeRailCuiBindings : ICuiWritableBindingContext, INotifyP
 
     private void UpdateRailDimensions()
     {
-        _values.Set("rail.itemWidth", _showLabels ? 210d : 44d);
-        _values.Set("rail.brandWidth", _showLabels ? 122d : 44d);
-        _values.Set("rail.sidebarPadding", _showLabels ? "12 8 11 8" : "5 8 5 8");
+        _values.Set("rail.sidebarWidth", _showLabels ? 234d : 68d);
+        _values.Set("rail.itemWidth", _showLabels ? 210d : 52d);
+        _values.Set("rail.brandWidth", _showLabels ? 132d : 52d);
+        _values.Set("rail.sidebarPadding", _showLabels ? "12 10 12 12" : "8 10 8 12");
+        _values.Set("rail.itemPadding", _showLabels ? "14 9" : "16 9");
+        _values.Set("rail.brandPadding", _showLabels ? "10 5 14 5" : "11 5");
     }
 
     public bool TryGetValue(string path, out object? value)
     {
         var section = _section();
-        // Keep the original full idle hit surface. An outline belongs to the selected row only.
-        if (path.StartsWith("rail.", StringComparison.Ordinal) && path.EndsWith("BorderWidth", StringComparison.Ordinal))
+        var selectedSection = section is "hubs" or "hubs-customise" ? "apps" : section;
+        if (path.StartsWith("rail.", StringComparison.Ordinal) && path.EndsWith("FontWeight", StringComparison.Ordinal))
         {
-            value = path.AsSpan(5, path.Length - 5 - "BorderWidth".Length).SequenceEqual(section) ? "1.5" : "0";
+            value = path.AsSpan(5, path.Length - 5 - "FontWeight".Length).SequenceEqual(selectedSection) ? "750" : "550";
             return true;
         }
         value = path switch
         {
-            "rail.appsSelected" => section == "apps",
+            "rail.appsSelected" => selectedSection == "apps",
+            "rail.exploreSelected" => section == "explore",
+            "rail.specialistsSelected" => section == "specialists",
+            "rail.assistantsSelected" => section == "assistants",
             "rail.dashboardSelected" => section == "dashboard",
             "rail.modelsSelected" => section == "models",
             "rail.settingsSelected" => section == "settings",
             "rail.homeVisible" => section != "settings",
-            "rail.pageGap" => section is "settings" or "newtab" ? 0d : 8d,
-            "rail.roundedCanvas" => section is "dashboard" or "newtab",
-            "rail.pagePadding" => section is "settings" or "newtab" ? "0" : "16",
+            "rail.pageGap" => section is "settings" or "newtab" or "apps" or "hubs" or "hubs-customise" or "explore" or "specialists" ? 0d : 8d,
+            "rail.customCanvas" => section == "newtab",
+            "rail.pagePadding" => section is "settings" or "newtab" or "apps" or "hubs" or "hubs-customise" or "explore" or "specialists" ? "0" : "16",
             "rail.eventsSelected" => section == "events",
             "rail.librarySelected" => section == "library",
             "rail.newtabSelected" => section == "newtab",

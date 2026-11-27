@@ -21,7 +21,7 @@ public static class HomeRailPackagedIcons
 
     private const string IconPrefix = "icon:";
     private const string SvgExtension = ".svg";
-    private const string HomeBrandAsset = "avares://Haven/Assets/haven-32.png";
+    private const string HomeBrandAsset = "avares://HavenOS.Apps.Browse.NativeUI/Assets/9to1-logo.png";
     private static readonly HavenAvaloniaImageResolver BrandImages = new();
 
     /// <summary>

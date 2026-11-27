@@ -134,6 +134,8 @@ public sealed partial class NewDashboardPage
                 "OpenBriefingLibrary" => owner.OpenBriefingDestination(DashboardBriefingDestination.Library),
                 "OpenBriefingTasks" => owner.OpenBriefingDestination(DashboardBriefingDestination.Tasks),
                 "OpenBriefingStudy" => owner.OpenBriefingDestination(DashboardBriefingDestination.Study),
+                "ReviewDashboardAttention" when parameter is string requestKey => owner.ReviewDashboardAttentionAsync(requestKey, cancellationToken),
+                "RefreshDashboardAttention" => new(owner.RunHomeWorkAsync(owner.RefreshDashboardAttentionAsync, cancellationToken)),
                 _ => ValueTask.FromException(new InvalidOperationException("Unknown dashboard action."))
             };
         }

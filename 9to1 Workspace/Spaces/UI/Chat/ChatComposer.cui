@@ -1,7 +1,7 @@
 <Cui id="spaces.chat.composer" version="1">
   <Actions>
-    <Action name="composer.layout-expand"><Set Target="InputColumn" Value="0" /><Set Target="InputSpan" Value="3" /><Set Target="ControlsRow" Value="2" /></Action>
-    <Action name="composer.layout-compact"><Set Target="InputColumn" Value="1" /><Set Target="InputSpan" Value="1" /><Set Target="ControlsRow" Value="1" /></Action>
+    <Action name="composer.layout-expand"><Set Target="InputColumn" Value="0" /><Set Target="InputSpan" Value="3" /><Set Target="ControlsRow" Value="1" /></Action>
+    <Action name="composer.layout-compact"><Set Target="InputColumn" Value="1" /><Set Target="InputSpan" Value="1" /><Set Target="ControlsRow" Value="0" /></Action>
     <Action name="shelf.activate" command="shelf.activate" />
     <Action name="shelf.next" command="shelf.next" />
     <Action name="composer.submit" command="composer.submit" parameter="{Binding Event}" />
@@ -24,6 +24,7 @@
     <Action name="composer.set-response-mode.PreferText" command="composer.set-response-mode" parameter="PreferText" />
     <Action name="composer.set-response-mode.AlwaysText" command="composer.set-response-mode" parameter="AlwaysText" />
     <Action name="composer.toggle-formatting"><Toggle Target="FormattingOpen" /></Action>
+    <Action name="composer.toggle-options-policy"><Toggle Target="OptionsPolicyOpen" /></Action>
     <Action name="composer.emoji-prev" command="query.previous" />
     <Action name="composer.emoji-next" command="query.next" />
   </Actions>
@@ -33,15 +34,16 @@
   </Effects>
   <Variable Type="integer" ID="InputColumn">1</Variable>
   <Variable Type="integer" ID="InputSpan">1</Variable>
-  <Variable Type="integer" ID="ControlsRow">1</Variable>
+  <Variable Type="integer" ID="ControlsRow">0</Variable>
   <Variable Type="bool" ID="FormattingOpen">False</Variable>
   <Variable Type="bool" ID="SendModeOpen">False</Variable>
+  <Variable Type="bool" ID="OptionsPolicyOpen">False</Variable>
   <Variable Type="string" ID="EmojiIcon" Source="{Binding Composer.EmojiIconCandidates}" Selection="RandomOnce" />
   <Container id="composer-surface" Type="Overlay Float" padding="8"
         background="{Resource CuiPanelBrush}" CornerRadius="28" accessible-name="Message composer"
         compound-focus="true" owns-backdrop="true">
-    <Container id="composer-body" Type="Grid" ColumnSizes="Auto 1fr Auto" RowSizes="Auto Auto Auto Auto Auto" CellGap="8">
-    <Container id="chips-row" ColumnSpan="3" Type="Wrap" CellGap="6" MaxHeight="84" VerticalScrolling="True" HorizontalScrolling="False" IsVisible="{Binding Composer.HasChips}">
+    <Container id="composer-body" Type="Vertical Stack" CellGap="8">
+    <Container id="chips-row" Type="Wrap" CellGap="6" MaxHeight="84" VerticalScrolling="True" HorizontalScrolling="False" IsVisible="{Binding Composer.HasChips}">
       <Repeat Source="{Binding Composer.Chips}" As="chip" Key="{Binding chip.Id}">
         <Container Type="Horizontal Stack" CellGap="4" padding="4" background="{Resource CuiPanelBrush}" CornerRadius="12">
           <Button action="composer.invoke-chip.Id" content="{Binding chip.Label}" font-size="11" Interactive="{Binding chip.Invokable}" accessible-name="{Binding chip.Label}" />
@@ -50,16 +52,18 @@
       </Repeat>
     </Container>
 
-    <Container id="input-column" Row="1" Column="{Binding InputColumn}" ColumnSpan="{Binding InputSpan}" VerticalAlignment="Center" Type="Vertical Stack" CellGap="4" MaxHeight="170">
+    <Container id="composer-editor-grid" Type="Grid" ColumnSizes="Auto 1fr Auto" RowSizes="{Binding Composer.EditorRows}" CellGap="{Binding Composer.EditorGap}">
+    <Container id="input-column" Column="{Binding InputColumn}" ColumnSpan="{Binding InputSpan}" VerticalAlignment="Center" Type="Vertical Stack" CellGap="4" MaxHeight="170">
       <Input id="composer-input" Type="Text" AcceptsReturn="True" SubmitAction="composer.submit" Value="{Binding Composer.Draft}"
+             IsEnabled="{Binding Composer.CanEditDraft}"
              placeholdertext="{Binding Composer.Placeholder}" embedded-input="true" BorderWidth="0"
              background="Transparent" padding="4" text-wrapping="Wrap" MinHeight="44" accessible-name="Message" />
     </Container>
 
 
 
-      <Container id="left-controls" Row="{Binding ControlsRow}" Column="0" VerticalAlignment="Center" Type="Horizontal Stack" CellGap="6">
-        <Button id="add-button" action="composer.add" IsVisible="{Binding Composer.HasAdd}" Width="44" Height="44" Padding="6" CornerRadius="22"
+      <Container id="left-controls" Row="{Binding ControlsRow}" Column="0" VerticalAlignment="Center" Type="Horizontal Stack" CellGap="{Binding Composer.ControlGap}">
+        <Button id="add-button" action="composer.add" IsVisible="{Binding Composer.HasAdd}" IsEnabled="{Binding Composer.CanAdd}" Width="44" Height="44" Padding="6" CornerRadius="22"
                 background="Transparent" Chromeless="true"
                 accessible-name="Add files or actions" tooltip="Add files or actions">
           <Image Source="avares://Haven/Assets/plus.svg" Width="22" Height="22" />
@@ -73,22 +77,27 @@
                 background="Transparent" Width="44" Height="44" Padding="6"
                 CornerRadius="22" Selected="{Binding Composer.ShowEmoji}" Chromeless="true"
                 accessible-name="Insert emoji" tooltip="Insert emoji" />
-      </Container>
-      <Container id="right-controls" Row="{Binding ControlsRow}" Column="2" VerticalAlignment="Center" Type="Horizontal Stack" CellGap="6">
-        <Button id="send-mode-button" action="composer.toggle-send-mode" content="{Binding Composer.PreferredSendModeLabel}"
-                IsVisible="{Binding Composer.HasSendModePreference}" MinHeight="44" CornerRadius="22"
-                background="Transparent" Chromeless="true" accessible-name="Preferred Space send action"
-                tooltip="Enter uses this Space's saved action; Alt+Enter uses the opposite action once" />
         <Button id="settings-button" action="composer.settings" IsVisible="{Binding Composer.HasSettings}" Width="44" Height="44" Padding="6" CornerRadius="22"
                 background="Transparent" Chromeless="true" Selected="{Binding Composer.ShowSettings}"
                 accessible-name="Options" tooltip="Options for responses and allowed actions">
           <Image Source="avares://Haven/Assets/composer-settings.svg" Width="24" Height="24" />
         </Button>
+      </Container>
+      <Container id="right-controls" Row="{Binding ControlsRow}" Column="2" VerticalAlignment="Center" Type="Horizontal Stack" CellGap="{Binding Composer.ControlGap}">
+        <Button id="send-mode-button" action="composer.toggle-send-mode" content="{Binding Composer.PreferredSendModeLabel}"
+                IsVisible="{Binding Composer.HasSendModePreference}" MinHeight="44" CornerRadius="22"
+                background="Transparent" Chromeless="true" accessible-name="Preferred Space send action"
+                tooltip="Enter uses this Space's saved action; Alt+Enter uses the opposite action once" />
+        <Button id="permissions-button" action="composer.permissions" IsVisible="{Binding Composer.HasSettings}"
+                Width="44" Height="44" Padding="10" CornerRadius="22" Background="Transparent" Chromeless="True"
+                accessible-name="Conversation permissions: {Binding Composer.PermissionLabel}" tooltip="Conversation permissions: {Binding Composer.PermissionLabel}">
+          <Image Source="avares://Haven/Assets/composer-permissions.svg" Width="22" Height="22" />
+        </Button>
         <Button id="cancel-edit-button" action="composer.cancel-edit" content="Cancel" MinHeight="44" IsVisible="{Binding Composer.IsEditing}" accessible-name="Cancel editing" />
         <!-- Deliberate wrap-around browsing. Runtime owns identity/position; CUI owns geometry.
              56px front-left +14px rear extension. No rear or dots for one eligible command. -->
         <Container id="conversation-actions" Type="ActionShelf" Source="{Binding Composer.ActionShelf}"
-                   Width="70" Height="68" accessible-name="Conversation actions">
+                   Width="70" Height="68" IsVisible="{Binding Composer.HasActionShelf}" accessible-name="Conversation actions">
           <Layer ZIndex="0">
             <Button id="action-shelf-next" action="shelf.next" IsVisible="{Binding Shelf.HasNext}"
                     Width="56" Height="56" TranslateX="14" Padding="8" CornerRadius="28"
@@ -114,16 +123,15 @@
         </Container>
       </Container>
 
-    <Container Row="3" ColumnSpan="3" Type="Vertical Stack">
+    </Container>
     <If Condition="{Binding Composer.HasSendModePreference}">
       <Container id="send-mode-panel" Type="Horizontal Stack" CellGap="8" IsVisible="{Binding SendModeOpen}" accessible-name="Preferred Space send action choices">
         <Button action="composer.prefer-steer" content="Steer" MinHeight="44" accessible-name="Use Steer by default in this Space" />
         <Button action="composer.prefer-queue" content="Queue" MinHeight="44" accessible-name="Use Queue by default in this Space" />
       </Container>
     </If>
-    </Container>
 
-    <Container id="emoji-panel" ColumnSpan="3" Row="4" Type="Vertical Stack" CellGap="8" padding="8"
+    <Container id="emoji-panel" Type="Vertical Stack" CellGap="8" padding="8"
           background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding Composer.ShowEmoji}" accessible-name="Emoji panel">
       <!-- The QueryViewport is the canonical CUI runtime state/query scope: it owns the search query
            string and opaque cursor; the authored Repeat/input/pager bind to its bounded window and
@@ -162,9 +170,9 @@
     </Container>
 
     <Container id="options-popup-slot" Type="Vertical Stack" IsVisible="False">
-      <Container id="settings-panel" Type="Vertical Stack" Width="440" CellGap="12" Padding="16" CornerRadius="16"
-                 VerticalScrolling="True" HorizontalScrolling="False" Background="{Resource CuiPopupSurfaceBrush}"
-                 BorderColor="{Resource CuiLineBrush}" BorderWidth="1" accessible-name="Conversation options">
+      <Container id="settings-panel" Type="Grid" Width="400" RowSizes="Auto 1fr Auto" CellGap="12" Padding="16" CornerRadius="20"
+                 Background="{Resource CuiPopupSurfaceBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1"
+                 accessible-name="Conversation options">
         <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
           <Container Type="Vertical Stack" CellGap="2" VerticalAlignment="Center">
             <Text Text="Options" FontSize="20" FontWeight="750" />
@@ -173,29 +181,69 @@
           <Button id="options-close" Column="1" action="composer.cancel-options" Content="×" Width="44" Height="44"
                   accessible-name="Close options" Chromeless="True" />
         </Container>
-        <Text Text="Response style" FontSize="15" FontWeight="750" />
-        <Container Type="Wrap" CellGap="6">
-          <Button action="composer.set-response-mode.Auto" Content="Automatic" MinHeight="44" Selected="{Binding Composer.ResponseChoice.Auto}" />
-          <Button action="composer.set-response-mode.AlwaysVisual" Content="Always visual" MinHeight="44" Selected="{Binding Composer.ResponseChoice.AlwaysVisual}" />
-          <Button action="composer.set-response-mode.PreferVisual" Content="Prefer visual" MinHeight="44" Selected="{Binding Composer.ResponseChoice.PreferVisual}" />
-          <Button action="composer.set-response-mode.PreferText" Content="Prefer text" MinHeight="44" Selected="{Binding Composer.ResponseChoice.PreferText}" />
-          <Button action="composer.set-response-mode.AlwaysText" Content="Always text" MinHeight="44" Selected="{Binding Composer.ResponseChoice.AlwaysText}" />
+        <Container id="options-scroll-body" Row="1" Type="Vertical Stack" CellGap="12" MinHeight="0"
+                   VerticalScrolling="True" HorizontalScrolling="False">
+          <Text Text="Response" FontSize="15" FontWeight="750" />
+          <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="12">
+            <Text Text="Presentation" FontSize="14" FontWeight="600" VerticalAlignment="Center" />
+            <Container Type="Menu" Column="1" Background="Transparent">
+              <Button id="options-presentation" Type="Menu Item" Content="{Binding Composer.ResponseLabel}" MinWidth="160" MinHeight="44"
+                      Padding="12 8" FontSize="14" FontWeight="600" Background="{Resource CuiInputSurfaceBrush}"
+                      accessible-name="{Binding Composer.ResponseAccessibleLabel}">
+                <Button id="options-response-auto" Type="Menu Item" action="composer.set-response-mode.Auto" Content="Automatic" MinHeight="40" IconGlyph="{Binding Composer.ResponseIndicator.Auto}" />
+                <Button id="options-response-always-visual" Type="Menu Item" action="composer.set-response-mode.AlwaysVisual" Content="Always visual" MinHeight="40" IconGlyph="{Binding Composer.ResponseIndicator.AlwaysVisual}" />
+                <Button id="options-response-prefer-visual" Type="Menu Item" action="composer.set-response-mode.PreferVisual" Content="Prefer visual" MinHeight="40" IconGlyph="{Binding Composer.ResponseIndicator.PreferVisual}" />
+                <Button id="options-response-prefer-text" Type="Menu Item" action="composer.set-response-mode.PreferText" Content="Prefer text" MinHeight="40" IconGlyph="{Binding Composer.ResponseIndicator.PreferText}" />
+                <Button id="options-response-always-text" Type="Menu Item" action="composer.set-response-mode.AlwaysText" Content="Always text" MinHeight="40" IconGlyph="{Binding Composer.ResponseIndicator.AlwaysText}" />
+              </Button>
+            </Container>
+          </Container>
+          <Text Text="Applies to future responses in this chat." FontSize="12" FontWeight="600" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Container Type="Vertical Stack" CellGap="10" IsVisible="{Binding Composer.HasConversationOptions}">
+            <Container id="options-chat-divider" Height="1" Type="Vertical Stack" Background="{Resource CuiLineBrush}" />
+            <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
+              <Text Text="Chat" FontSize="15" FontWeight="750" VerticalAlignment="Center" />
+              <Button id="options-temporary" Column="1" action="composer.temporary" Content="{Binding Composer.TemporaryLabel}"
+                      Selected="{Binding Composer.IsTemporary}" IsEnabled="{Binding Composer.CanChangeTemporary}" MinHeight="44"
+                      accessible-name="Change Temporary Chat setting" />
+            </Container>
+            <Text Text="{Binding Composer.TemporaryStatus}" FontSize="12" FontWeight="600" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+            <Button id="options-policy" action="composer.toggle-options-policy" Content="Policy &amp; storage"
+                    Selected="{Binding OptionsPolicyOpen}" MinHeight="40" Chromeless="True" HorizontalContentAlignment="Left" />
+            <Text id="options-storage-status" Text="{Binding Composer.StorageStatus}" IsVisible="{Binding OptionsPolicyOpen}"
+                  FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+            <Container id="options-context-divider" Height="1" Type="Vertical Stack" Background="{Resource CuiLineBrush}" />
+            <Text Text="Context" FontSize="15" FontWeight="750" />
+            <Text Text="{Binding Composer.CompactionStatus}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+            <Button id="options-compact" action="composer.compact-context" Content="Compact context"
+                    IsEnabled="{Binding Composer.CanCompactContext}" MinHeight="44" accessible-name="Compact older context with the selected model" />
+          </Container>
+          <Container id="options-permissions-divider" Height="1" Type="Vertical Stack" Background="{Resource CuiLineBrush}" />
+          <Button id="options-permissions-toggle" action="composer.toggle-permissions" Content="{Binding Composer.PermissionsHeading}"
+                  Selected="{Binding Composer.PermissionsExpanded}" MinHeight="44" FontSize="15" FontWeight="750"
+                  HorizontalContentAlignment="Left" Chromeless="True" accessible-name="Expand or collapse conversation permissions" />
+          <Container id="options-permission-fields" Type="Vertical Stack" CellGap="10" IsVisible="{Binding Composer.PermissionsExpanded}">
+            <Text Text="Allowed actions" FontSize="15" FontWeight="750" />
+            <Container Type="Wrap" CellGap="6">
+              <Button action="composer.set-action-mode.JustChat" Content="Just chat" MinHeight="44" Selected="{Binding Composer.ActionChoice.JustChat}" />
+              <Button action="composer.set-action-mode.AllowBasicActions" Content="Basic actions" MinHeight="44" Selected="{Binding Composer.ActionChoice.AllowBasicActions}" />
+              <Button action="composer.set-action-mode.AllowAllActions" Content="All actions" MinHeight="44" Selected="{Binding Composer.ActionChoice.AllowAllActions}" />
+            </Container>
+            <Text Text="Save to change which actions this conversation can request." FontSize="12" FontWeight="600" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+            <Text Text="Account, Space, source and device restrictions still apply. Individual actions may require their own approval."
+                  FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          </Container>
+          <Button id="refresh-task-actions" action="composer.refresh-task-controls" content="Refresh task actions"
+                  IsVisible="{Binding Composer.CanRefreshTaskControls}" MinHeight="44"
+                  accessible-name="Refresh this original task's available actions" />
         </Container>
-        <Text Text="Applies to future responses in this chat." FontSize="12" FontWeight="600" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-        <Text Text="Allowed actions" FontSize="15" FontWeight="750" />
-        <Container Type="Wrap" CellGap="6">
-          <Button action="composer.set-action-mode.JustChat" Content="Just chat" MinHeight="44" Selected="{Binding Composer.ActionChoice.JustChat}" />
-          <Button action="composer.set-action-mode.AllowBasicActions" Content="Basic actions" MinHeight="44" Selected="{Binding Composer.ActionChoice.AllowBasicActions}" />
-          <Button action="composer.set-action-mode.AllowAllActions" Content="All actions" MinHeight="44" Selected="{Binding Composer.ActionChoice.AllowAllActions}" />
-        </Container>
-        <Text Text="Save to change which actions this conversation can request." FontSize="12" FontWeight="600" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-        <Button id="refresh-task-actions" action="composer.refresh-task-controls" content="Refresh task actions"
-                IsVisible="{Binding Composer.CanRefreshTaskControls}" MinHeight="44"
-                accessible-name="Refresh this original task's available actions" />
-        <Container Type="Wrap" HorizontalAlignment="Right" CellGap="8">
-          <Button id="options-cancel" action="composer.cancel-options" Content="Cancel" accessible-name="Cancel permissions" MinHeight="44" />
-          <Button id="options-save" action="composer.save-options" IsEnabled="{Binding Composer.HasPermissionChanges}" Content="Save permissions" MinHeight="44"
-                  Background="{Resource CuiAccentPrimaryBrush}" Foreground="{Resource CuiAccentPrimaryForegroundBrush}" />
+        <Container id="options-footer" Row="2" Type="Vertical Stack" CellGap="8">
+          <Text Text="Unsaved permissions are discarded on close." FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Container Type="Wrap" HorizontalAlignment="Right" CellGap="8">
+            <Button id="options-cancel" action="composer.cancel-options" Content="Cancel" accessible-name="Cancel permissions" MinHeight="44" />
+            <Button id="options-save" action="composer.save-options" IsEnabled="{Binding Composer.HasPermissionChanges}" Content="Save permissions" MinHeight="44"
+                    Background="{Resource CuiAccentPrimaryBrush}" Foreground="{Resource CuiAccentPrimaryForegroundBrush}" />
+          </Container>
         </Container>
       </Container>
     </Container>

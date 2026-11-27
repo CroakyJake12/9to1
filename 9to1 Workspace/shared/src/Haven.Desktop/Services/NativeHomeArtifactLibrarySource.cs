@@ -386,6 +386,12 @@ internal sealed class NativeHomeArtifactLibrarySource : IHomeOriginalLibrarySour
         ["OwnerApp"] = item.OwnerApp, ["ArtifactType"] = item.ArtifactType, ["ArtifactId"] = item.ArtifactId,
         ["Location"] = item.Location, ["Owner"] = item.Owner, ["SharedBy"] = item.SharedBy,
         ["LastModified"] = item.LastModified.ToLocalTime().ToString("g"), ["IsPinned"] = item.IsPinned,
+        ["IsRecent"] = item.IsRecent, ["IsShared"] = item.IsShared, ["IsGenerated"] = item.IsGenerated,
+        ["AppName"] = item.OwnerApp switch { "boards" => "Boards", "files" => "Files", "write" => "Write", _ => item.OwnerApp },
+        ["IconSource"] = "icon:file",
+        ["FavouriteGlyph"] = item.IsPinned ? "★" : "☆",
+        ["FavouriteLabel"] = (item.IsPinned ? "Remove " : "Add ") + item.DisplayName +
+            (item.IsPinned ? " from favourites" : " to favourites"),
         ["Target"] = item.OpenLink
     }).ToArray() ?? [];
 

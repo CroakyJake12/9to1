@@ -92,14 +92,24 @@ public sealed class HavenLayoutEngine
         var overlayChildren = children.Where(child => !ParticipatesInFlow(child)).ToArray();
         var gap = Resolve(container.GetValue(HavenProperties.Gap), inner.Width, 0);
 
+        // A vertical viewport constrains wrapping width, not the height of its
+        // flowing content. Measuring that content against the viewport height
+        // loses both nested transcript rows and a single reply taller than it.
+        // The container itself is still sized against its finite available slot;
+        // explicit child Height/MaxHeight and floating overlays keep their bounds.
+        var contentAvailable = container.GetValue(HavenProperties.Overflow) == HavenOverflow.Scroll
+            && container.Layout is HavenLayout.Vertical or HavenLayout.Overlay
+                ? new HavenSize(inner.Width, double.PositiveInfinity)
+                : inner;
+
         var content = container.Layout switch
         {
             HavenLayout.Horizontal => MeasureHorizontal(flowChildren, inner, gap),
             HavenLayout.Wrap => MeasureWrap(flowChildren, inner, gap),
             HavenLayout.Grid => MeasureGrid(container, flowChildren, inner, gap),
             HavenLayout.Canvas => MeasureCanvas(flowChildren, inner),
-            HavenLayout.Overlay => MeasureOverlay(flowChildren, inner),
-            _ => MeasureVertical(flowChildren, inner, gap)
+            HavenLayout.Overlay => MeasureOverlay(flowChildren, contentAvailable),
+            _ => MeasureVertical(flowChildren, contentAvailable, gap)
         };
         foreach (var child in overlayChildren) MeasureOuter(child, inner);
         container.MeasuredContentSize = content;
@@ -458,7 +468,9 @@ public sealed class HavenLayoutEngine
         }
 
         var gaps = gap * Math.Max(0, specs.Count - 1);
-        var remaining = Math.Max(0, available - gaps - result.Sum());
+        // Fraction tracks have no remainder to divide during intrinsic measure.
+        // Their measured content supplies the height until a finite arrange slot.
+        var remaining = double.IsFinite(available) ? Math.Max(0, available - gaps - result.Sum()) : 0;
         if (totalFraction > 0)
         {
             for (var index = 0; index < specs.Count; index++)

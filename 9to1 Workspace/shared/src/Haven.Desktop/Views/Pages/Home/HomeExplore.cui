@@ -1,0 +1,64 @@
+<Cui id="home.explore" version="1">
+  <Actions>
+    <Action name="ContinueChoice" command="ExploreContinue" parameter="{Binding choice.target}" />
+  </Actions>
+  <Theme Name="user_preference">
+    <Page id="home-explore-page" Role="main" AccessibleName="Explore" OwnsBackdrop="True" Background="{Resource CuiWorkspaceBrush}">
+      <Container id="home-explore-layout" Type="Grid" RowSizes="1fr Auto" Padding="{Binding explore.padding}" CellGap="12">
+        <Container id="home-explore-scroll" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False">
+          <Container id="home-explore-thread" Type="Vertical Stack" MaxWidth="820" HorizontalAlignment="Stretch" CellGap="22">
+            <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="12">
+              <Container Type="Vertical Stack" CellGap="6">
+                <Text Text="EXPLORE" IsVisible="{Binding explore.welcome}" FontSize="11" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
+                <Text id="home-explore-heading" Text="{Binding explore.heading}" FontSize="{Binding explore.titleSize}" FontWeight="800" TextWrapping="Wrap" />
+                <Text Text="Describe your idea and find the app for it." IsVisible="{Binding explore.welcome}" FontSize="14" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+              </Container>
+              <Button id="home-explore-new" Column="1" Action="ExploreNewBrief" Interactive="{Binding explore.canNew}" IsVisible="{Binding explore.hasConversation}" VerticalAlignment="Top" Padding="14 10" MinHeight="38" CornerRadius="{Resource CuiControlRadius}">New brief</Button>
+            </Container>
+            <Container id="home-explore-suggestions" Type="Wrap" CellGap="10" IsVisible="{Binding explore.welcome}">
+              <Button Action="ExploreGameSuggestion" Interactive="{Binding explore.canEdit}" Padding="18 12" CornerRadius="{Resource CuiCardRadius}">Make a game</Button>
+              <Button Action="ExploreWritingSuggestion" Interactive="{Binding explore.canEdit}" Padding="18 12" CornerRadius="{Resource CuiCardRadius}">Write something</Button>
+              <Button Action="ExplorePresentationSuggestion" Interactive="{Binding explore.canEdit}" Padding="18 12" CornerRadius="{Resource CuiCardRadius}">Make a presentation</Button>
+              <Button Action="ExploreCanvasSuggestion" Interactive="{Binding explore.canEdit}" Padding="18 12" CornerRadius="{Resource CuiCardRadius}">Start a canvas</Button>
+            </Container>
+            <Container id="home-explore-conversation" Type="Vertical Stack" CellGap="14">
+              <Repeat Source="{Binding explore.conversation}" As="turn" Key="{Binding turn.key}">
+                <Container Type="Vertical Stack" CellGap="8" Padding="18" Background="{Resource CuiPanelBrush}" CornerRadius="{Resource CuiCardRadius}">
+                  <Text Text="{Binding turn.role}" FontSize="12" FontWeight="750" Foreground="{Resource CuiTextSoftBrush}" />
+                  <Text Text="{Binding turn.text}" FontSize="15" TextWrapping="Wrap" />
+                </Container>
+              </Repeat>
+            </Container>
+            <Container id="home-explore-choices" Type="Vertical Stack" CellGap="12">
+              <Repeat Source="{Binding explore.choices}" As="choice" Key="{Binding choice.key}">
+                <Container Type="Vertical Stack" CellGap="9" Padding="20" Background="{Resource CuiPanel2Brush}" CornerRadius="{Resource CuiCardRadius}">
+                  <Text Text="{Binding choice.app}" FontSize="12" FontWeight="750" Foreground="{Resource CuiTextSoftBrush}" />
+                  <Text Text="{Binding choice.title}" FontSize="21" FontWeight="750" TextWrapping="Wrap" />
+                  <Text Text="{Binding choice.reason}" FontSize="14" TextWrapping="Wrap" />
+                  <Text Text="{Binding choice.availability}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                  <Button id="home-explore-continue" Action="ContinueChoice" Interactive="{Binding choice.available}" AccessibleName="{Binding choice.label}" HorizontalAlignment="Left" AccentRole="Primary" Padding="18 11" MinHeight="40" CornerRadius="{Resource CuiControlRadius}">Continue</Button>
+                </Container>
+              </Repeat>
+            </Container>
+          </Container>
+        </Container>
+        <Container id="home-explore-footer" Row="1" Type="Vertical Stack" MaxWidth="820" HorizontalAlignment="Stretch" CellGap="8">
+          <Container Type="Vertical Stack" CellGap="10" Padding="18 16 18 13" Background="{Resource CuiPanelBrush}" CornerRadius="{Resource CuiCardRadius}">
+            <Input id="home-explore-composer" Type="Text" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="56" MaxHeight="160" Background="{Resource CuiTransparentBrush}" BorderThickness="0" CornerRadius="0" Padding="2 0 2 10" Interactive="{Binding explore.canEdit}" PlaceholderText="Describe what you want to make…" AccessibleName="Your Explore brief" />
+            <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="12">
+              <Container Type="Vertical Stack" CellGap="3" VerticalAlignment="Center">
+                <Text Text="Enter to find an app · Shift + Enter for a new line" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                <Text Text="{Binding explore.draftCount}" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" />
+              </Container>
+              <Button id="home-explore-find" Column="1" Action="ExploreFind" Interactive="{Binding explore.canFind}" Text="{Binding explore.findLabel}" AccentRole="Primary" Padding="18 11" MinHeight="40" CornerRadius="{Resource CuiControlRadius}" />
+            </Container>
+          </Container>
+          <Container Type="Vertical Stack" MaxHeight="60" VerticalScrolling="True" HorizontalScrolling="False">
+            <Text IsVisible="{Binding explore.modelUnavailable}" Text="Model discovery is unavailable in this host. Your brief stays here." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            <Text id="home-explore-status" Role="status" IsVisible="{Binding explore.hasStatus}" Text="{Binding explore.status}" TextWrapping="Wrap" FontSize="13" />
+          </Container>
+        </Container>
+      </Container>
+    </Page>
+  </Theme>
+</Cui>

@@ -349,6 +349,20 @@ public sealed partial class App
     }
     private bool _dulcheUserCloseRequested;
 
+    /// <summary>The authored native caption is a real user exit, with the same App preflight
+    /// as the operating-system caption. It must not call Window.Close programmatically or
+    /// mark an exit accepted before all original document/session owners settle.</summary>
+    internal void RequestOriginalPrimaryUserClose(MainWindow actualWindow)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        if (!ReferenceEquals(actualWindow, _actualPrimaryWindow))
+            throw new InvalidOperationException("Only the actual primary window can request this user close.");
+        if (_actualWindowClosure is not null) return;
+        _dulcheUserCloseRequested = true;
+        WriteOriginalCloseDiagnostic("authored-caption user-close requested; preflight starts");
+        RequestOriginalDocumentClosePreflight();
+    }
+
     private void OnOriginalPrimaryWindowClosing(object? sender, Avalonia.Controls.WindowClosingEventArgs args)
     {
         if (_actualWindowClosure is not null) return; // Privately issued native-close original AFTER resource owners joined, never a clean-authority boolean.

@@ -273,6 +273,8 @@ public sealed class FloatingFormatToolbarTests
         var source = new Source
         {
             CanSend = true,
+            // The actual shelf exposes Send only for a real pending message.
+            Draft = "Retained message for toolbar placement",
             Chips = [new ChatComposerChip("c1", "Documents", false), new ChatComposerChip("c2", "Design", false)]
         };
         var view = new ChatComposerCuiView(source);
@@ -297,7 +299,10 @@ public sealed class FloatingFormatToolbarTests
             Assert.True(windowClient.Contains(toolbarWin), "toolbar must fit inside the window viewport");
             // The bar must never cover the editable input, the send control, or the wrapped chip row.
             Assert.False(toolbarWin.Intersects(WindowBounds(box, window)), "toolbar must not cover the editable input");
-            Assert.False(toolbarWin.Intersects(WindowBounds(FindButton(view, "send-button")!, window)), "toolbar must not cover send");
+            var send = FindButton(view, "send-button");
+            Assert.NotNull(send);
+            Assert.True(send.IsEffectivelyVisible, "the nonempty draft must expose its actual Send action");
+            Assert.False(toolbarWin.Intersects(WindowBounds(send, window)), "toolbar must not cover send");
             Assert.False(toolbarWin.Intersects(WindowBounds(FindContainer(view, "chips-row")!, window)), "toolbar must not cover chips");
         }
         catch (Exception error) { testFailure = error; throw; }
@@ -356,6 +361,8 @@ public sealed class FloatingFormatToolbarTests
         var source = new Source
         {
             CanSend = true,
+            // The actual shelf exposes Send only for a real pending message.
+            Draft = "Retained message for toolbar placement",
             Chips = Enumerable.Range(0, 10)
                 .Select(i => new ChatComposerChip($"c{i}", $"Chip {i} label", false)).ToArray()
         };
@@ -381,7 +388,10 @@ public sealed class FloatingFormatToolbarTests
             Assert.True(windowClient.Contains(toolbarWin), "toolbar must fit inside the narrowed viewport");
             // No protected body/input/action overlap.
             Assert.False(toolbarWin.Intersects(WindowBounds(box, window)), "toolbar must not cover input");
-            Assert.False(toolbarWin.Intersects(WindowBounds(FindButton(view, "send-button")!, window)), "toolbar must not cover send");
+            var send = FindButton(view, "send-button");
+            Assert.NotNull(send);
+            Assert.True(send.IsEffectivelyVisible, "the nonempty draft must expose its actual Send action");
+            Assert.False(toolbarWin.Intersects(WindowBounds(send, window)), "toolbar must not cover send");
             var chipsRow = FindContainer(view, "chips-row")!;
             Assert.True(chipsRow.Bounds.Height > 0, "chips row must be present and wrapping");
             Assert.False(toolbarWin.Intersects(WindowBounds(chipsRow, window)), "toolbar must not cover wrapped chips");
@@ -581,6 +591,8 @@ public sealed class FloatingFormatToolbarTests
         var source = new Source
         {
             CanSend = true,
+            // The actual shelf exposes Send only for a real pending message.
+            Draft = "Retained message for toolbar placement",
             Chips = [new ChatComposerChip("retarget-anchor", "Retained anchor context", false)]
         };
         var view = new ChatComposerCuiView(source);
@@ -623,7 +635,10 @@ public sealed class FloatingFormatToolbarTests
             Assert.NotEqual(before, after);
             Assert.True(windowClient.Contains(after));
             Assert.False(after.Intersects(WindowBounds(inputColumn, window)));
-            Assert.False(after.Intersects(WindowBounds(FindButton(view, "send-button")!, window)));
+            var send = FindButton(view, "send-button");
+            Assert.NotNull(send);
+            Assert.True(send.IsEffectivelyVisible, "the nonempty draft must expose its actual Send action");
+            Assert.False(after.Intersects(WindowBounds(send, window)));
 
             // Retarget back to the whole body re-anchors to the original placement.
             container.SetAuthoredTarget("composer-body");

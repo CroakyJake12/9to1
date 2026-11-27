@@ -39,7 +39,7 @@ public sealed partial class BrowseNativeUiTests
             var plus = Named<Button>("BrowseNewTabButton");
             var title = host.GetVisualDescendants().OfType<Button>().First(button => button.Name == "BrowseTabButton");
             Assert.Equal(1.25, CuiInterfaceScale.For(host));
-            Assert.Equal(16.25, address.FontSize);
+            Assert.Equal(15, address.FontSize);
             Assert.Equal(40, plus.Width);
             Assert.True(Visible("HavenHostMark"));
 
@@ -59,11 +59,11 @@ public sealed partial class BrowseNativeUiTests
             {
                 source.SetScale(scale);
                 Render();
-                Assert.Equal(13 * scale, address.FontSize);
+                Assert.Equal(12 * scale, address.FontSize);
                 Assert.Equal(32 * scale, plus.Width);
                 Assert.Equal(new Thickness(titlePadding.Left * scale, titlePadding.Top * scale,
                     titlePadding.Right * scale, titlePadding.Bottom * scale), title.Padding);
-                Assert.Equal(scale == 1, Visible("HavenHostMark"));
+                Assert.True(Visible("HavenHostMark"));
                 Assert.Same(address, Named<TextBox>("BrowseAddressBox"));
                 Assert.True(address.IsFocused);
                 Assert.Equal(draft, address.Text);

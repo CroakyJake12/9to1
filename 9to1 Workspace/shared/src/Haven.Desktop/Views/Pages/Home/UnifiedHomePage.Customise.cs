@@ -275,7 +275,7 @@ internal sealed partial class UnifiedHomePage
     private async Task ChangeNewTabLayoutAsync(Func<NewTabLayoutPreference, NewTabLayoutPreference> change,
         DesktopOriginalWorkLifetime.Original original, CancellationToken token)
     {
-        if (_newTabLayoutPreferences is not { CanEdit: true } owner || _newTabSavedLayout is not { } saved ||
+        if (!original.IsAcceptedPublicationCurrent || _newTabLayoutPreferences is not { CanEdit: true } owner || _newTabSavedLayout is not { } saved ||
             _newTabLayoutSaving || _section != "newtab" ||
             _retryNewTabLayout is { } pending && !ReferenceEquals(change, pending)) return;
         var candidate = change(saved.Layout).Validate();
@@ -287,12 +287,27 @@ internal sealed partial class UnifiedHomePage
         }
         var backgroundChanged = candidate.Background != saved.Layout.Background || candidate.BackgroundImageId != saved.Layout.BackgroundImageId ||
             candidate.ShowCustomBackground != saved.Layout.ShowCustomBackground || candidate.FillBackgroundImage != saved.Layout.FillBackgroundImage;
+        var priorPreview = _newTabLayoutPreview;
+        var priorStatus = _newTabEditorStatus;
+        var withdrewUnstartedPreview = false;
         _newTabLayoutSaving = true;
         _newTabLayoutPreview = candidate;
         _newTabEditorStatus = "Saving New Tab layout…";
         try
         {
             PublishNewTabLayout();
+            // Native/binding publication can synchronously select another Home generation.
+            // Refuse only before the real save is acquired; an acquired save remains joined below.
+            if (!original.IsAcceptedPublicationCurrent)
+            {
+                if (ReferenceEquals(_newTabLayoutPreview, candidate))
+                {
+                    _newTabLayoutPreview = priorPreview;
+                    if (_newTabEditorStatus == "Saving New Tab layout…") _newTabEditorStatus = priorStatus;
+                    withdrewUnstartedPreview = true;
+                }
+                return;
+            }
             var result = await original.AwaitAsync(owner.SaveAsync(saved, candidate, token));
             _newTabSavedLayout = result.Current;
             _retryNewTabLayout = result.Saved ? null : change;
@@ -310,7 +325,7 @@ internal sealed partial class UnifiedHomePage
         finally
         {
             _newTabLayoutSaving = false;
-            if (original.IsAcceptedPublicationCurrent) PublishNewTabLayout();
+            if (original.IsAcceptedPublicationCurrent || withdrewUnstartedPreview && IsAlive) PublishNewTabLayout();
         }
     }
 

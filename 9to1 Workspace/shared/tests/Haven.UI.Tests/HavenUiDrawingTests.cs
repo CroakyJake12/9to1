@@ -69,6 +69,27 @@ public sealed class HavenUiDrawingTests
         Assert.NotEmpty(fallback.Path.Figures);
         Assert.All(fallback.Path.Figures, figure => Assert.NotEmpty(figure.Segments));
 
+        // The canonical refresh is the existing packaged line artwork: both sides
+        // of the circular motion and its arrow must survive backend-neutral conversion.
+        var refresh = HavenIconCatalog.Resolve("refresh");
+        Assert.Equal(new HavenRect(0, 0, 24, 24), refresh.ViewBox);
+        Assert.Equal(3, refresh.Path.Figures.Count);
+        Assert.All(refresh.Path.Figures, figure => Assert.False(figure.Closed));
+        Assert.Equal(new HavenPoint(4, 12), refresh.Path.Figures[0].Start);
+        Assert.Equal(new HavenPoint(20, 12), refresh.Path.Figures[1].Start);
+        var arcs = refresh.Path.Figures.SelectMany(figure => figure.Segments).OfType<HavenArcSegment>().ToArray();
+        Assert.Equal(new[] { new HavenPoint(18.93, 8), new HavenPoint(5.07, 16) }, arcs.Select(arc => arc.End));
+        Assert.All(arcs, arc =>
+        {
+            Assert.Equal(new HavenSize(8, 8), arc.Radius);
+            Assert.Equal(HavenSweepDirection.Clockwise, arc.SweepDirection);
+            Assert.False(arc.IsLargeArc);
+        });
+        var arrow = refresh.Path.Figures[2];
+        Assert.Equal(new HavenPoint(17.65, 6.35), arrow.Start);
+        Assert.Equal(new[] { new HavenPoint(20.5, 4), new HavenPoint(20.5, 9.5), new HavenPoint(15, 9.5) },
+            arrow.Segments.Cast<HavenLineSegment>().Select(segment => segment.End));
+
         var metrics = new HavenRenderSurfaceMetrics(new HavenSize(640, 360), 1.5, HavenPlatform.Windows);
         Assert.Equal(new HavenSize(960, 540), metrics.PixelSize);
     }
@@ -142,6 +163,15 @@ public sealed class HavenUiDrawingTests
     [InlineData("file")]
     [InlineData("notes")]
     [InlineData("agents")]
+    [InlineData("agent-default")]
+    [InlineData("agent-auto")]
+    [InlineData("agent-research")]
+    [InlineData("messages-square")]
+    [InlineData("file-pen")]
+    [InlineData("shield-check")]
+    [InlineData("flask")]
+    [InlineData("puzzle")]
+    [InlineData("arrow-down")]
     [InlineData("bolt")]
     [InlineData("prompt")]
     [InlineData("rocket")]

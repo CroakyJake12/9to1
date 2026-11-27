@@ -18,8 +18,12 @@ namespace HavenOS.Apps.Browse.Tests;
 public sealed partial class BrowseNativeUiTests
 {
     [AvaloniaTheory]
-    [InlineData(360, 38, 42)]
+    [InlineData(360, 48, 52)]
+    [InlineData(420, 48, 52)]
+    [InlineData(650, 48, 52)]
     [InlineData(1180, 48, 52)]
+    [InlineData(1280, 48, 52)]
+    [InlineData(1440, 48, 52)]
     public async Task Embedded_tab_strip_keeps_new_tab_adjacent_until_overflow_and_uses_scoped_neutral_selection(
         int width, int tabStripHeight, int toolbarHeight)
     {
@@ -41,6 +45,18 @@ public sealed partial class BrowseNativeUiTests
             var tabEnd = tab.TranslatePoint(new Point(tab.Bounds.Width, 0), window)!.Value.X;
             var addOrigin = add.TranslatePoint(default, window)!.Value.X;
             Assert.InRange(addOrigin - tabEnd, -.5, 12);
+            Assert.Equal(width > 650, Find(window, "BrowseForwardButton").IsEffectivelyVisible);
+            Assert.Equal(width > 650, Find(window, "BrowseReloadButton").IsEffectivelyVisible);
+            Assert.Equal(width > 420, Find(window, "HavenNotificationsButton").IsEffectivelyVisible);
+            Assert.Equal(width > 420, Find(window, "HavenProfileButton").IsEffectivelyVisible);
+            var model = Find(window, "HavenModelButton");
+            Assert.InRange(model.Bounds.Height, 35.5, 36.5);
+            if (width <= 650) Assert.InRange(model.Bounds.Width, 34.5, 35.5);
+            // The responsive overflow keeps hidden account/notification controls reachable.
+            await Pointer(window, workspace, Find(window, "BrowseOverflowButton")); Layout(window);
+            Assert.True(IsTrue(workspace, "ProfileMenuOpen"));
+            Assert.True(Find(window, "BrowseOverflowNotificationsButton").IsEffectivelyVisible);
+            await Click(window, workspace, Find(window, "BrowseCloseProfileMenuButton")); Layout(window);
             Capture("sparse");
 
             var scopedChrome = Color.Parse("#FF29272D");
@@ -57,7 +73,7 @@ public sealed partial class BrowseNativeUiTests
             Layout(window);
             AssertSelection(tab, scopedChrome, 3, 7);
 
-            for (var index = 0; index < 9; index++)
+            for (var index = 0; index < 14; index++)
             {
                 await Pointer(window, workspace, add);
                 Layout(window);
@@ -86,8 +102,16 @@ public sealed partial class BrowseNativeUiTests
         {
             var fill = Assert.IsAssignableFrom<ISolidColorBrush>(tab.Background).Color;
             var ink = Assert.IsAssignableFrom<ISolidColorBrush>(Title(tab).Foreground).Color;
-            Assert.Equal(fill.R, fill.G);
-            Assert.Equal(fill.G, fill.B);
+            if (surfaceRatio < 3)
+            {
+                Assert.Equal(Color.Parse("#F2F3F5"), fill);
+                Assert.Equal(Color.Parse("#18202D"), ink);
+            }
+            else
+            {
+                Assert.Equal(fill.R, fill.G);
+                Assert.Equal(fill.G, fill.B);
+            }
             Assert.True(CuiContrast.Ratio(fill, chrome) >= surfaceRatio - .03);
             Assert.True(CuiContrast.Ratio(ink, fill) >= inkRatio - .03);
         }
@@ -128,7 +152,7 @@ public sealed partial class BrowseNativeUiTests
             Assert.Equal(16, icon.Bounds.Width);
             Assert.Equal(FontWeight.Bold, Title(home).FontWeight);
             Assert.True(Title(home).Padding.Left >= icon.Bounds.Width + 10);
-            Assert.Equal(new CornerRadius(8), home.CornerRadius);
+            Assert.Equal(new CornerRadius(9), home.CornerRadius);
 
             // The address text's actual presenter is vertically centred with the trailing arrow.
             var address = window.GetVisualDescendants().OfType<TextBox>().Single(box => box.Name == "BrowseAddressBox");

@@ -24,6 +24,70 @@ public sealed class UnifiedClosePreparationTests
     private static readonly TimeSpan Bound = TimeSpan.FromSeconds(10);
 
     [AvaloniaFact]
+    public async Task Authored_caption_user_close_keeps_a_vetoed_owner_editable_and_retries_the_same_preflight()
+    {
+        await using var rig = await Rig.CreateAsync();
+        var window = Assert.IsType<MainWindow>(rig.Desktop.MainWindow);
+        Set(rig.App, "_actualPrimaryWindow", window);
+        var caption = new App.UnifiedWorkspaceHost.UnifiedWindowControls(rig.Host);
+        rig.Owner.Allow = false;
+        caption.RequestClose();
+        var first = Field<Task>(rig.App, "_actualDocumentClosePreflightPublication");
+        await first.WaitAsync(Bound);
+        Assert.True(Field<bool>(rig.App, "_dulcheUserCloseRequested"));
+        Assert.Null(rig.Host.OriginalClose); Assert.Null(rig.App.OriginalShutdownDelivery);
+        Assert.True(rig.Owner.Edit()); Assert.Same(rig.Host, window.Content);
+        Assert.Equal(0, rig.Owner.Closes);
+        caption.RequestClose();
+        var retry = Field<Task>(rig.App, "_actualDocumentClosePreflightPublication");
+        Assert.NotSame(first, retry);
+        await retry.WaitAsync(Bound);
+        Assert.True(rig.Owner.Edit()); Assert.Same(rig.Host, window.Content);
+        Assert.Equal(2, rig.Owner.Prepares); Assert.Equal(0, rig.Owner.Closes);
+    }
+
+    [AvaloniaFact]
+    public async Task Authored_caption_changes_real_geometry_without_admitting_document_or_job_close()
+    {
+        await using var rig = await Rig.CreateAsync();
+        var window = Assert.IsType<MainWindow>(rig.Desktop.MainWindow);
+        Set(rig.App, "_actualPrimaryWindow", window);
+        var caption = new App.UnifiedWorkspaceHost.UnifiedWindowControls(rig.Host);
+        var decorations = window.WindowDecorations;
+        caption.SetCaptionReady(true);
+        try
+        {
+            Assert.Equal(WindowDecorations.BorderOnly, window.WindowDecorations);
+            caption.Minimize(); Assert.Equal(WindowState.Minimized, window.WindowState);
+            caption.ToggleMaximize(); Assert.Equal(WindowState.Maximized, window.WindowState);
+            Assert.True(caption.IsMaximized);
+            caption.ToggleMaximize(); Assert.Equal(WindowState.Normal, window.WindowState);
+            Assert.False(caption.IsMaximized);
+            Assert.Null(rig.App.OriginalDocumentClosePreflightAttempt);
+            Assert.Null(rig.Host.OriginalClose); Assert.True(rig.Owner.Edit());
+            Assert.Equal(0, rig.Owner.Prepares); Assert.Equal(0, rig.Owner.Closes);
+        }
+        finally { caption.SetCaptionReady(false); }
+        Assert.Equal(decorations, window.WindowDecorations);
+    }
+
+    [AvaloniaFact]
+    public async Task Authored_caption_refuses_a_different_window_before_recording_user_exit_intent()
+    {
+        await using var rig = await Rig.CreateAsync();
+        Set(rig.App, "_actualPrimaryWindow", rig.Desktop.MainWindow);
+        var other = new MainWindow();
+        try
+        {
+            Assert.Throws<InvalidOperationException>(() => rig.App.RequestOriginalPrimaryUserClose(other));
+            Assert.False(Field<bool>(rig.App, "_dulcheUserCloseRequested"));
+            Assert.Null(rig.App.OriginalDocumentClosePreflightAttempt);
+            Assert.Equal(0, rig.Owner.Prepares); Assert.True(rig.Owner.Edit());
+        }
+        finally { await other.CloseAndDrainAsync().WaitAsync(Bound); other.Close(); }
+    }
+
+    [AvaloniaFact]
     public async Task Actual_App_handoff_consumes_one_decision_after_same_origin_and_keeps_accepted_witness()
     {
         await using var rig = await Rig.CreateAsync();

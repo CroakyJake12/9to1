@@ -19,6 +19,7 @@ namespace Haven.Desktop.Views.Pages.Home;
 internal static class HomeAppsCuiDocument
 {
     public const string ResourceName = "Haven.Desktop.Home.UnifiedApps.cui";
+    public const string HubsResourceName = "Haven.Desktop.Home.UnifiedHubs.cui";
 
     public static CuiControlRegistry CreateControlRegistry(IHomeBrandObservationCoordinator? coordinator = null)
     {
@@ -39,13 +40,17 @@ internal static class HomeAppsCuiDocument
         return registry;
     }
 
-    public static CuiDocument Parse()
+    public static CuiDocument Parse() => Parse("apps");
+
+    public static CuiDocument Parse(string section)
     {
-        using var stream = typeof(HomeAppsCuiDocument).Assembly.GetManifestResourceStream(ResourceName)
-            ?? throw new InvalidDataException($"The Home apps document '{ResourceName}' is missing from the desktop assembly.");
+        var hubs = section is "hubs" or "hubs-customise";
+        var resource = hubs ? HubsResourceName : ResourceName;
+        using var stream = typeof(HomeAppsCuiDocument).Assembly.GetManifestResourceStream(resource)
+            ?? throw new InvalidDataException($"The Home apps document '{resource}' is missing from the desktop assembly.");
         using var reader = new StreamReader(stream);
         var parser = new CuiRichParser();
-        var document = parser.Parse(reader.ReadToEnd(), "UnifiedHomeApps.cui");
+        var document = parser.Parse(reader.ReadToEnd(), hubs ? "UnifiedHomeHubs.cui" : "UnifiedHomeApps.cui");
         if (parser.Diagnostics.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
             throw new InvalidDataException("The Home apps document is invalid: " + string.Join("; ",
                 parser.Diagnostics.Diagnostics.Where(item => item.Severity == CuiDiagnosticSeverity.Error)

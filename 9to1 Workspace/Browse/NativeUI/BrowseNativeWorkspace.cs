@@ -57,7 +57,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     private string _groupName = "Research";
     private string _address, _find = string.Empty, _historyQuery = string.Empty, _status;
     private bool _addressDraft, _busy, _ready, _disposed, _toolsOpen, _profileMenuOpen, _manageUsersOpen;
-    private bool _wideHostChrome;
+    private bool _wideHostChrome, _headerExtrasVisible;
     private (Color Text, Color SecondaryText, Color SelectedSurface, Color SelectedText)? _hostTabColours;
     private volatile bool _retiring;
     private Task? _originalCommand, _originalClose, _originalChromeClose, _pendingCloseAttempt;
@@ -82,9 +82,12 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
 
     public BrowseNativeWorkspace(BrowseChrome originalChrome, Func<string, bool> originalActionAvailability,
         IBrowserOriginalDownloadFilesService? originalDownloadFilesService, IHavenHostContext? sharedContext,
-        Func<AppContentAddress, string?>? tabIconSource)
+        Func<AppContentAddress, string?>? tabIconSource, IBrowseNativeWindowControls? windowControls = null,
+        Func<string>? tabSearchShortcut = null)
     {
         _tabIconSource = tabIconSource;
+        _windowControls = windowControls;
+        _tabSearchShortcut = tabSearchShortcut;
         _originalDownloadFilesService = originalDownloadFilesService;
         _hostContext = sharedContext;
         _chrome = originalChrome ?? throw new ArgumentNullException(nameof(originalChrome));
@@ -94,6 +97,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         ApplyOmniboxLocation(_snapshot.SelectedTab);
         IssueCurrentRows(); IssueGroupRows(); IssueSavedEntryRows(); IssuePendingDownloadRows(); _chrome.StateChanged += OnChromeStateChanged;
         _chrome.RetirementStarted += OnChromeRetirementStarted;
+        if (_windowControls is not null) _windowControls.StateChanged += OnWindowControlsChanged;
     }
     public static CuiDocument LoadDocument()
     {
@@ -108,12 +112,15 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         if (_retiring || _disposed) return;
         _ready = actualAvailability.State == CuiSceneAvailabilityState.Ready;
         if (!_ready) _status = actualAvailability.Message;
+        _windowControls?.SetCaptionReady(_ready);
         Changed();
     }
     public bool TryGetValue(string path, out object? value)
     {
         if (path.StartsWith("Can.", StringComparison.Ordinal))
         { value = IsActionAvailable("9to1.Browse." + path[4..]) == true; return true; }
+        if (TryGetCaptionSearchBinding(path, out value)) return true;
+        if (TryGetNavigationBriefBinding(path, out value)) return true;
         if (TryGetDownloadFilesBinding(path, out value)) return true;
         if (TryGetPendingDownloadBinding(path, out value)) return true;
         var profileData = _hostContext as IHavenProfileDataContext;
@@ -131,9 +138,18 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "PageCommandInBar" => _pageCommand is not null && _pageCommandFits,
             "PageCommandInOverflow" => _pageCommand is not null && !_pageCommandFits,
             "Tabs" => _tabRows,
-            "Browse.TabStripMinimumHeight" => _wideHostChrome ? 48d : 38d,
-            "Browse.TabControlHeight" => _wideHostChrome ? 36d : 32d,
-            "Browse.NavigationMinimumHeight" => _wideHostChrome ? 52d : 42d,
+            "Browse.TabStripMinimumHeight" => 48d,
+            "Browse.TabControlHeight" => 36d,
+            "Browse.NavigationMinimumHeight" => 52d,
+            "Browse.TabStripPadding" => _wideHostChrome ? "15 6 15 6" : "9 6 9 6",
+            "Browse.NavigationPadding" => _wideHostChrome ? "15 4 15 10" : "9 4 9 10",
+            "Browse.NavigationGap" => _wideHostChrome ? 9d : 6d,
+            "Browse.TabMargin" => _wideHostChrome ? "0 0 9 0" : "0 0 5 0",
+            "Browse.TabMinimumWidth" => _wideHostChrome ? 110d : 88d,
+            "Browse.HistoryControlsVisible" => _wideHostChrome,
+            "Browse.HeaderExtrasVisible" => _headerExtrasVisible,
+            "Browse.ModelPadding" => _wideHostChrome ? "12 0" : "8 0",
+            "Browse.ModelMaximumWidth" => _wideHostChrome ? 265d : 35d,
             "TabGroups" => _tabGroupRows,
             "GroupName" => _groupName,
             "CanManageTabGroups" => _chrome.CanManageTabGroups,
@@ -174,6 +190,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "EmptyDownloads" => _downloadRows.Length == 0,
             "Address" => _address, "AddressDisplay" => ResolveAddressDisplay(selected), "FindQuery" => _find, "Status" => _status,
             "SearchModeLabel" => "Search " + OmniboxModeLabel + " · choose 9to1, Files or Web",
+            "SearchModeShortLabel" => OmniboxModeLabel,
             "AddressHint" => "Search " + OmniboxModeLabel + " or enter a web address",
             "Security" => _snapshot.Security.Label + " · " + _snapshot.Security.Explanation,
             "Profile" => selected.Privacy == BrowserTabPrivacy.Private ? "Private tab · isolated temporary profile" : "Standard profile",
@@ -201,7 +218,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "Downloads" => _downloadRows,
             "Haven.Embedded" => IsEmbeddedHost,
             "Haven.ModelDetailsVisible" => _wideHostChrome,
-            "Haven.HostMarkVisible" => _wideHostChrome,
+            "Haven.HostMarkVisible" => IsEmbeddedHost,
             "Haven.ModelAvailable" => _hostContext?.ModelSupported == true,
             "Haven.NotificationsAvailable" => _hostContext?.NotificationsSupported == true,
             "Haven.ProfileAvailable" => _hostContext?.ProfileSupported == true,
@@ -268,6 +285,11 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             case "FindQuery":
                 if (value is not string findText || findText.Length > 8192) return false;
                 _find = findText;
+                break;
+            case "TabSearchQuery":
+                if (value is not string searchText || searchText.Length > 2048) return false;
+                _tabSearchQuery = searchText;
+                IssueTabSearchRows();
                 break;
             case "HistoryQuery":
                 if (value is not string historyText || historyText.Length > 2048) return false;
@@ -370,9 +392,12 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 "9to1.Browse.EnableHistory" or "9to1.Browse.DisableHistory" or
                 "9to1.Browse.EnableTabRestore" or "9to1.Browse.DisableTabRestore" => true,
             "9to1.Browse.DiscardAddress" => _addressDraft,
-            "9to1.Browse.ToggleTools" => true,
+            "9to1.Browse.ToggleTools" or "9to1.Browse.ToggleTabSearch" => true,
+            "9to1.Browse.CloseTabSearch" => _tabSearchOpen,
             "9to1.Browse.RunPageCommand" => CanRunPageCommand(_pageCommand),
             "9to1.Browse.CloseTools" => _toolsOpen,
+            "9to1.Browse.DismissExploreBrief" => CurrentNavigationBrief is not null,
+            "9to1.Browse.BackToExplore" => CurrentNavigationBrief is { } brief && CanReturnToBrief(brief),
             "9to1.Browse.ToggleProfileMenu" => true,
             "9to1.Browse.CloseProfileMenu" => HasOpenTransientMenu,
             "9to1.Browse.OpenManageUsers" => true,
@@ -387,6 +412,11 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         Dispatcher.UIThread.VerifyAccess(); token.ThrowIfCancellationRequested();
         if (IsActionAvailable(command) != true) return ValueTask.CompletedTask;
         if (command == "9to1.Browse.RunPageCommand" && !CanRunPageCommand(parameter)) return ValueTask.CompletedTask;
+        if ((command is "9to1.Browse.BackToExplore" or "9to1.Browse.DismissExploreBrief") &&
+            !ReferenceEquals(CurrentNavigationBrief, parameter))
+        { _status = "The displayed brief changed. Use its current controls."; Changed(); return ValueTask.CompletedTask; }
+        if (command == "9to1.Browse.ToggleTabSearch") { ToggleTabSearch(); return ValueTask.CompletedTask; }
+        if (command == "9to1.Browse.CloseTabSearch") { CloseTabSearch(restoreFocus: true); return ValueTask.CompletedTask; }
         if (command is "9to1.Browse.SearchHome" or "9to1.Browse.SearchFiles" or "9to1.Browse.SearchWeb")
         {
             _omniboxMode = command == "9to1.Browse.SearchHome" ? OmniboxMode.Home :
@@ -476,12 +506,15 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             await start; token.ThrowIfCancellationRequested();
             var tabId = _snapshot.SelectedTabId;
             BrowseChromeSnapshot? tabTransition = null;
+            string? presentationStatus = null;
             if (command is "9to1.Browse.OpenHistoryPage" or "9to1.Browse.OpenBookmarksPage" or
                 "9to1.Browse.OpenDownloadsPage" or "9to1.Browse.OpenSettingsPage" or
                 "9to1.Browse.SelectTab" or "9to1.Browse.NewTab" or "9to1.Browse.NewPrivateTab" or
                 "9to1.Browse.ReopenClosedTab") _toolsOpen = false;
             switch (command)
             {
+                case "9to1.Browse.DismissExploreBrief": DismissNavigationBrief(parameter); break;
+                case "9to1.Browse.BackToExplore": presentationStatus = await ReturnToNavigationBriefAsync(parameter, token); break;
                 case "9to1.Browse.OpenHistoryPage": await Operation(() => _chrome.OpenNativePageAsync(BrowserNativePage.History, token)); _addressDraft = false; break;
                 case "9to1.Browse.OpenBookmarksPage": await Operation(() => _chrome.OpenNativePageAsync(BrowserNativePage.Bookmarks, token)); _addressDraft = false; break;
                 case "9to1.Browse.OpenDownloadsPage":
@@ -493,8 +526,8 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 case "9to1.Browse.Forward": await Operation(() => _chrome.ForwardAsync(token)); break;
                 case "9to1.Browse.Reload": await Operation(() => _chrome.ReloadAsync(token)); break;
                 case "9to1.Browse.Stop": await Operation(() => _chrome.StopAsync(token)); break;
-                case "9to1.Browse.NewTab": await Operation(() => _chrome.NewTabAsync(false, token)); _addressDraft = false; break;
-                case "9to1.Browse.NewPrivateTab": await Operation(() => _chrome.NewTabAsync(true, token)); _addressDraft = false; break;
+                case "9to1.Browse.NewTab": await Operation(() => _chrome.NewTabAsync(false, token)); _addressDraft = false; CloseTabSearch(restoreFocus: false); break;
+                case "9to1.Browse.NewPrivateTab": await Operation(() => _chrome.NewTabAsync(true, token)); _addressDraft = false; CloseTabSearch(restoreFocus: false); break;
                 case "9to1.Browse.CloseTab":
                     tabTransition = await Operation(() => _chrome.CloseTabAsync(tabId, token));
                     _addressDraft = false; break;
@@ -571,7 +604,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 case "9to1.Browse.SelectTab":
                     if (!IsCurrentTabTarget(parameter)) { _status = "The tab row changed before selection; select its current row again."; break; }
                     var selectedTarget = (TabSelection)parameter!;
-                    await Operation(() => _chrome.SelectTabAsync(selectedTarget.TabId, token)); _addressDraft = false; break;
+                    await Operation(() => _chrome.SelectTabAsync(selectedTarget.TabId, token)); _addressDraft = false;
+                    if (_chrome.State.SelectedTabId == selectedTarget.TabId) CloseTabSearch(restoreFocus: false);
+                    break;
                 case "9to1.Browse.OpenBookmark":
                 case "9to1.Browse.OpenHistory":
                     var entryKind = command == "9to1.Browse.OpenBookmark" ? SavedEntryKind.Bookmark : SavedEntryKind.History;
@@ -629,17 +664,19 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 case "9to1.Browse.ToggleTools": _toolsOpen = !_toolsOpen; break;
                 case "9to1.Browse.CloseTools": _toolsOpen = false; break;
                 case "9to1.Browse.ToggleProfileMenu":
-                    var wasOpen = HasOpenTransientMenu;
+                    var wasOpen = _profileMenuOpen || _manageUsersOpen;
+                    CloseTabSearch(restoreFocus: false); _windowMenuOpen = false;
                     _manageUsersOpen = false; _profileMenuOpen = !wasOpen; break;
                 case "9to1.Browse.CloseProfileMenu": DismissTransientMenus(); break;
-                case "9to1.Browse.OpenManageUsers": _manageUsersOpen = true; _profileMenuOpen = false; break;
+                case "9to1.Browse.OpenManageUsers": CloseTabSearch(restoreFocus: false); _windowMenuOpen = false;
+                    _manageUsersOpen = true; _profileMenuOpen = false; break;
                 case "9to1.Browse.CloseManageUsers": DismissTransientMenus(returnFromSubmenu: true); break;
                 case "9to1.Browse.SignOut":
                     _status = "Sign out is managed from Account & user settings.";
                     break;
                 default: throw new ArgumentOutOfRangeException(nameof(command));
             }
-            if (IsOriginalPublicationCurrent) { ApplySnapshot(_chrome.State); _status = _snapshot.Status; }
+            if (IsOriginalPublicationCurrent) { ApplySnapshot(_chrome.State); _status = presentationStatus ?? _snapshot.Status; }
             if (restoreTabFocus is not null && tabTransition is { } transition &&
                 (closingTab is { } closedId ? transition.Tabs.All(tab => tab.Id != closedId) : transition.SelectedTabId != tabId))
                 tabFocusTarget = transition.SelectedTabId;
@@ -684,7 +721,12 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         _retiring = true;
         _originalClose ??= _pendingCloseAttempt;
         _originalChromeClose = _chrome.OriginalClose;
-        var original = Dispatcher.UIThread.InvokeAsync(() => { ObservePageCommand(); Changed(); }).GetTask();
+        var original = Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            _windowControls?.SetCaptionReady(false);
+            _navigationBriefs.Clear();
+            ObservePageCommand(); Changed();
+        }).GetTask();
         lock (_sourceGate) Retain(_originalUiOperations, original);
     }
     private void OnChromeStateChanged(object? sender, BrowseChromeSnapshot snapshot)
@@ -716,7 +758,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             _snapshot.SelectedTab.Address != snapshot.SelectedTab.Address ||
             _snapshot.SelectedTab.NativePage != snapshot.SelectedTab.NativePage)
         { _profileMenuOpen = false; _manageUsersOpen = false; }
-        _snapshot = snapshot; ObservePageCommand(); IssueCurrentRows(); IssueGroupRows(); IssueSavedEntryRows(); IssuePendingDownloadRows();
+        _snapshot = snapshot; RefreshNavigationBriefs(); ObservePageCommand(); IssueCurrentRows(); IssueGroupRows(); IssueSavedEntryRows(); IssuePendingDownloadRows();
         if (!_addressDraft) ApplyOmniboxLocation(snapshot.SelectedTab);
         _status = snapshot.Status; Changed();
     }
@@ -758,7 +800,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         return original;
     }
 
-    internal bool HasOpenTransientMenu => _profileMenuOpen || _manageUsersOpen;
+    internal bool HasOpenTransientMenu => _profileMenuOpen || _manageUsersOpen || _tabSearchOpen || _windowMenuOpen;
 
     // Presentation-only dismissal is also available while an original command is busy.
     // It neither cancels that command nor acquires/discards document or account authority.
@@ -767,7 +809,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         Dispatcher.UIThread.VerifyAccess();
         if (!HasOpenTransientMenu) return;
         var backToProfile = returnFromSubmenu && _manageUsersOpen;
-        _manageUsersOpen = false; _profileMenuOpen = backToProfile;
+        _manageUsersOpen = false; _profileMenuOpen = backToProfile; _windowMenuOpen = false;
+        RestoreFocusAfterTabSearch = returnFromSubmenu && _tabSearchOpen;
+        _tabSearchOpen = false;
         Changed();
     }
 
@@ -881,7 +925,13 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         }
         if (failures.Count != 0) throw new AggregateException("Browse retained its same source or engine retirement failure.", failures);
         _chrome.StateChanged -= OnChromeStateChanged;
-        _chrome.RetirementStarted -= OnChromeRetirementStarted; _disposed = true;
+        _chrome.RetirementStarted -= OnChromeRetirementStarted;
+        if (_windowControls is not null)
+        {
+            _windowControls.StateChanged -= OnWindowControlsChanged;
+            _windowControls.SetCaptionReady(false);
+        }
+        _disposed = true;
     }
     private sealed record TabSelection(BrowseNativeWorkspace Owner, Guid TabId, long Epoch, bool IsPinned, string PlacementStamp);
     private sealed record TabReorderSelection(BrowseNativeWorkspace Owner, TabSelection Source, TabSelection Target, bool BeforeTarget);
@@ -890,8 +940,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     public sealed record TabGroupRow(object Target, string Key, string Name, string Summary, bool IsCollapsed, bool CanJoinSelected);
     private void IssueCurrentRows()
     {
-        var actualRows = _snapshot.Tabs.Where(tab => !tab.IsGroupCollapsed || tab.Id == _snapshot.SelectedTabId)
-            .Select(tab =>
+        var actualRows = _snapshot.Tabs.Select(tab =>
             {
                 var selected = tab.Id == _snapshot.SelectedTabId;
                 var appearance = TabAppearance(selected);
@@ -906,24 +955,34 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                         ? (tab.Engine == BrowseEngineKind.Chromium ? "Chromium" : "Firefox")
                         : tab.IsHome ? "Home" : tab.Address.Authority) + (selected ? " · Selected tab" : string.Empty),
                     IconSource: _tabIconSource?.Invoke(tab.Address),
+                    SearchDestination: ResolveAddressDisplay(tab),
+                    SearchDetail: "This window" + (membership.Count > 0 ? " · " + string.Join(" · ", membership) : string.Empty) +
+                        (tab.IsGroupCollapsed ? " · Collapsed group" : string.Empty) +
+                        (tab.IsLoading ? " · Loading" : tab.EngineState == BrowseEngineState.Crashed ? " · Renderer stopped" : string.Empty),
+                    Visible: !tab.IsGroupCollapsed || selected,
                     Address: tab.Address.ToString(), Selected: selected, CanClose: tab.IsCloseable && !tab.IsPinned, Pinned: tab.IsPinned,
                     Background: appearance.Background, Foreground: appearance.Foreground,
                     CloseForeground: appearance.CloseForeground);
             }).ToArray();
-        if (_tabRows.Length == actualRows.Length && _tabRows.Zip(actualRows).All(pair =>
+        if (_allTabRows.Length == actualRows.Length && _allTabRows.Zip(actualRows).All(pair =>
             pair.First.Key == pair.Second.Key && pair.First.Label == pair.Second.Label &&
             pair.First.Description == pair.Second.Description && pair.First.Address == pair.Second.Address && pair.First.Selected == pair.Second.Selected &&
-            pair.First.CanClose == pair.Second.CanClose && pair.First.IconSource == pair.Second.IconSource && pair.First.BackgroundColor == pair.Second.Background &&
+            pair.First.CanClose == pair.Second.CanClose && pair.First.IconSource == pair.Second.IconSource &&
+            pair.First.SearchDestination == pair.Second.SearchDestination && pair.First.SearchDetail == pair.Second.SearchDetail &&
+            pair.First.VisibleInStrip == pair.Second.Visible && pair.First.BackgroundColor == pair.Second.Background &&
             pair.First.ForegroundColor == pair.Second.Foreground && pair.First.CloseForegroundColor == pair.Second.CloseForeground)) return;
         var epoch = checked(++_rowEpoch);
         var placementStamp = TabPlacementStamp(_snapshot);
-        _tabRows = actualRows.Select(row => new TabRow(
+        _allTabRows = actualRows.Select(row => new TabRow(
             new TabSelection(this, row.Id, epoch, row.Pinned, placementStamp), row.Key, row.Label, row.Selected)
         {
             Description = row.Description, Address = row.Address, CanClose = row.CanClose, IconSource = row.IconSource,
+            SearchDestination = row.SearchDestination, SearchDetail = row.SearchDetail, VisibleInStrip = row.Visible,
             BackgroundColor = row.Background, ForegroundColor = row.Foreground,
             CloseForegroundColor = row.CloseForeground
         }).ToArray();
+        _tabRows = _allTabRows.Where(row => row.VisibleInStrip).ToArray();
+        IssueTabSearchRows();
     }
     private void IssueGroupRows()
     {
@@ -937,7 +996,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     }
     private bool IsCurrentTabTarget(object? parameter) => parameter is TabSelection target &&
         ReferenceEquals(target.Owner, this) && target.Epoch == _rowEpoch &&
-        _tabRows.Any(row => ReferenceEquals(row.Target, target)) && _chrome.State.Tabs.Any(tab => tab.Id == target.TabId);
+        _allTabRows.Any(row => ReferenceEquals(row.Target, target)) && _chrome.State.Tabs.Any(tab => tab.Id == target.TabId);
     private bool IsCurrentGroupTarget(object? parameter) => parameter is TabGroupSelection target &&
         ReferenceEquals(target.Owner, this) && target.Epoch == _groupRowEpoch &&
         _tabGroupRows.Any(row => ReferenceEquals(row.Target, target)) && _chrome.State.Groups.Any(group => group.Id == target.GroupId);
@@ -1022,11 +1081,12 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             value = path switch { "Key" => group.Key, "Name" => group.Name, "Summary" => group.Summary,
                 "Target" => group.Target, "IsCollapsed" => group.IsCollapsed, "CanJoinSelected" => group.CanJoinSelected,
                 "CollapseLabel" => group.IsCollapsed ? "Expand " + group.Name : "Collapse " + group.Name, _ => null };
-        else if (item is TabRow row && _tabRows.Any(current => ReferenceEquals(current, row)))
+        else if (item is TabRow row && _allTabRows.Any(current => ReferenceEquals(current, row)))
             value = path switch { "Key" => row.Key, "Label" => row.Label, "Target" => row.Target, "Selected" => row.Selected,
                 "IconSource" => row.IconSource, "HasIcon" => row.IconSource is not null,
                 "TitlePadding" => row.IconSource is null ? "12 4 8 4" : "32 4 8 4",
-                "Description" => row.Description, "CanClose" => row.CanClose, "CloseLabel" => "Close " + row.Label,
+                "Description" => row.Description, "SearchDestination" => row.SearchDestination, "SearchDetail" => row.SearchDetail,
+                "CanClose" => row.CanClose, "CloseLabel" => "Close " + row.Label,
                 "Background" => row.Background, "Foreground" => row.Foreground,
                 "CloseForeground" => row.CloseForeground, "DropSwapBefore" => row.DropSwapBefore,
                 "DropSwapAfter" => row.DropSwapAfter, "DropInvalid" => row.DropInvalid,
@@ -1084,11 +1144,13 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
 
     internal void SetHostChromeWidth(double width)
     {
-        var wide = IsEmbeddedHost && width >= 640;
+        var wide = width > 650;
+        var extras = width > 420;
         var mounted = width > 0;
         var pageCommandFits = width >= 800;
-        if (_wideHostChrome == wide && _toolbarMounted == mounted && _pageCommandFits == pageCommandFits) return;
+        if (_wideHostChrome == wide && _headerExtrasVisible == extras && _toolbarMounted == mounted && _pageCommandFits == pageCommandFits) return;
         _wideHostChrome = wide;
+        _headerExtrasVisible = extras;
         _toolbarMounted = mounted;
         _pageCommandFits = pageCommandFits;
         ObservePageCommand();
@@ -1099,8 +1161,10 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     {
         var channel = (byte)Math.Max(230, (text.R + text.G + text.B) / 3);
         var neutral = Color.FromRgb(channel, channel, channel);
-        var surface = CuiContrast.EnsureForegroundContrast(neutral, chrome, highContrast ? 3 : 1.35);
-        var ink = CuiContrast.Ratio(Colors.Black, surface) >= (highContrast ? 7 : 4.5) ? Colors.Black : Colors.White;
+        var surface = highContrast ? CuiContrast.EnsureForegroundContrast(neutral, chrome, 3) : Color.Parse("#F2F3F5");
+        var ink = highContrast
+            ? (CuiContrast.Ratio(Colors.Black, surface) >= 7 ? Colors.Black : Colors.White)
+            : Color.Parse("#18202D");
         if (highContrast) surface = CuiContrast.EnsureForegroundContrast(surface, ink, 7);
         var colours = (text, secondary, surface, ink);
         if (_hostTabColours == colours) return;
@@ -1187,6 +1251,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         public string? IconSource { get; init; }
         public string Description { get; init; } = Label;
         public string Address { get; init; } = string.Empty;
+        public string SearchDestination { get; init; } = string.Empty;
+        public string SearchDetail { get; init; } = string.Empty;
+        internal bool VisibleInStrip { get; init; } = true;
         public bool CanClose { get; init; }
         public Color BackgroundColor { get; init; } = Colors.Transparent;
         public Color ForegroundColor { get; init; } = Colors.White;

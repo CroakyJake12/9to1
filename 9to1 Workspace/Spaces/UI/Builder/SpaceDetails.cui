@@ -1,6 +1,6 @@
 <Cui id="spaces.details" version="1">
   <Theme Name="user_preference">
-    <Page id="space-details-editor" role="main" accessible-name="Space details">
+    <Page OwnsBackdrop="True" Background="{Resource CuiWorkspaceBrush}" id="space-details-editor" role="main" accessible-name="Space details">
       <Container Type="Vertical Stack" Padding="24" CellGap="12" VerticalScrolling="True" HorizontalScrolling="False">
         <Text text="Space details" font-size="24" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
         <Text text="Give your Space a name, an icon and instructions." foreground="{Resource CuiTextSoftBrush}" />

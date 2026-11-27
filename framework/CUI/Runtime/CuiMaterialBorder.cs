@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Rendering.SceneGraph;
 using Avalonia.Skia;
+using Avalonia.VisualTree;
 using CakeOS.Cui.Themes;
 using SkiaSharp;
 
@@ -47,7 +48,7 @@ public class CuiMaterialBorder : Border
         if (change.Property == CornerRadiusProperty && _hoverLayer is not null)
             _hoverLayer.CornerRadius = CornerRadius;
         if (change.Property != BackgroundProperty && change.Property != CornerRadiusProperty && change.Property != BorderThicknessProperty) return;
-        if (Background is CuiMaterialBrush or CuiCustomMaterialBrush)
+        if (Background is CuiMaterialBrush or CuiCustomMaterialBrush or CuiGlowFieldBrush)
         {
             if (_materialLayer is null)
             {
@@ -78,15 +79,87 @@ public class CuiMaterialBorder : Border
         return size;
     }
 
-    private sealed class MaterialLayer : Control
+    internal sealed class MaterialLayer : Control
     {
-        public IBrush? Material;
+        private IBrush? _material;
+        private Visual[] _ambientAncestors = [];
+        public IBrush? Material
+        {
+            get => _material;
+            set { _material = value; ObserveAmbientAncestors(); }
+        }
         public CornerRadius Radius;
+        private CuiGlowFieldBrush? _glow;
+        private Size _glowSize;
+        private DrawingBrush? _glowBrush;
+
+        public MaterialLayer()
+        {
+            AttachedToVisualTree += (_, _) => ObserveAmbientAncestors();
+            DetachedFromVisualTree += (_, _) => ClearAmbientAncestors();
+        }
+
+        private void ClearAmbientAncestors()
+        {
+            foreach (var ancestor in _ambientAncestors) ancestor.PropertyChanged -= AmbientAncestorChanged;
+            _ambientAncestors = [];
+        }
+
+        private void ObserveAmbientAncestors()
+        {
+            ClearAmbientAncestors();
+            if (Material is not CuiGlowFieldBrush || !this.IsAttachedToVisualTree()) return;
+            _ambientAncestors = this.GetVisualAncestors().ToArray();
+            foreach (var ancestor in _ambientAncestors) ancestor.PropertyChanged += AmbientAncestorChanged;
+        }
+
+        private void AmbientAncestorChanged(object? sender, AvaloniaPropertyChangedEventArgs change)
+        {
+            if (change.Property == Visual.BoundsProperty || change.Property == BackgroundProperty ||
+                change.Property == BorderThicknessProperty || change.Property == Visual.RenderTransformProperty)
+                InvalidateVisual();
+        }
+
+        private Rect GlowFieldBounds(CuiGlowFieldBrush glow)
+        {
+            var field = new Rect(Bounds.Size);
+            // Nested roots/cards using the same ambient material share its
+            // coordinates. A deliberately different theme/accent starts a scope.
+            foreach (var ancestor in this.GetVisualAncestors())
+            {
+                var brush = ancestor switch
+                {
+                    CuiMaterialBorder surface => surface.Background,
+                    CuiMaterialPanel page => page.Background,
+                    _ => null
+                };
+                if (brush is not CuiGlowFieldBrush ambient) continue;
+                if (!ambient.Equals(glow)) break;
+                var border = ancestor is CuiMaterialBorder bordered ? bordered.BorderThickness : default;
+                var size = new Size(Math.Max(0, ancestor.Bounds.Width - border.Left - border.Right),
+                    Math.Max(0, ancestor.Bounds.Height - border.Top - border.Bottom));
+                if (size.Width > 0 && size.Height > 0 &&
+                    ancestor.TranslatePoint(new Point(border.Left, border.Top), this) is { } origin)
+                    field = new Rect(origin, size);
+            }
+            return field;
+        }
+
         public override void Render(DrawingContext context)
         {
             if (Bounds.Width <= 0 || Bounds.Height <= 0) return;
             if (Material is CuiMaterialBrush material) context.Custom(new MaterialOperation(new Rect(Bounds.Size), Radius, material));
             else if (Material is CuiCustomMaterialBrush custom) context.Custom(new CuiCustomMaterialOperation(new Rect(Bounds.Size), Radius, custom));
+            else if (Material is CuiGlowFieldBrush glow)
+            {
+                var field = GlowFieldBounds(glow);
+                if (!glow.Equals(_glow) || _glowSize != field.Size)
+                {
+                    _glow = glow; _glowSize = field.Size; _glowBrush = glow.CreateBrush(_glowSize);
+                }
+                using (context.PushClip(new RoundedRect(new Rect(Bounds.Size), Radius)))
+                    context.DrawRectangle(_glowBrush, null, field);
+            }
         }
     }
 

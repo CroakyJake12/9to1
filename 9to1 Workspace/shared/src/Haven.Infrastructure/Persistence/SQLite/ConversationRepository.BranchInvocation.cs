@@ -15,7 +15,7 @@ public sealed partial class ConversationRepository
         return new BranchInvocation(this, conversationId, branchId);
     }
 
-    private sealed class BranchInvocation(ConversationRepository owner, Guid conversationId, Guid branchId) : IConversationBranchInvocation
+    private sealed class BranchInvocation(ConversationRepository owner, Guid conversationId, Guid branchId) : IConversationBranchInvocation, IConversationBranchPromptContextSource
     {
         private readonly SemaphoreSlim _operations = new(1, 1);
         private int _closed;
@@ -84,6 +84,18 @@ public sealed partial class ConversationRepository
                 ObjectDisposedException.ThrowIf(Volatile.Read(ref _closed) != 0, this);
                 if (!_admitted) throw new InvalidOperationException("The original branch invocation has not admitted user input.");
                 return await owner.ReadMessagesAsync(ConversationId, includeCompacted: false, cancellationToken, BranchId).ConfigureAwait(false);
+            }
+            finally { _operations.Release(); }
+        }
+
+        public async Task<ConversationPromptContext> GetPromptContextAsync(CancellationToken cancellationToken)
+        {
+            await _operations.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                ObjectDisposedException.ThrowIf(Volatile.Read(ref _closed) != 0, this);
+                if (!_admitted) throw new InvalidOperationException("The original branch invocation has not admitted user input.");
+                return await owner.ReadPromptContextAsync(ConversationId, BranchId, cancellationToken).ConfigureAwait(false);
             }
             finally { _operations.Release(); }
         }

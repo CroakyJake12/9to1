@@ -48,6 +48,18 @@ public static class BrowseNativeSurface
         var registry = new CuiControlRegistry { ScaleAuthoredInterfaceMetrics = workspace.IsEmbeddedHost };
         registry.RegisterObjectRenderer("browse.engine", _ => new BrowseEngineViewport(workspace));
         registry.BindAuthoredControl("HavenHostMark", _ => new Image { Source = HostMark.Value });
+        foreach (var (id, action) in new[]
+        {
+            ("BrowseWindowMinimizeButton", "minimize"), ("BrowseWindowMaximizeButton", "maximize"),
+            ("BrowseWindowCloseButton", "close"), ("BrowseWindowMenuMinimize", "minimize"),
+            ("BrowseWindowMenuMaximize", "maximize"), ("BrowseWindowMenuClose", "close")
+        })
+            registry.BindAuthoredControl(id, _ =>
+            {
+                var button = new Button();
+                button.Click += (_, _) => workspace.RunNativeWindowControl(action);
+                return button;
+            });
         return new("browse", "Browse", "Browse", BrowseNativeWorkspace.LoadDocument(), workspace, workspace, originalReadiness)
             { ControlRegistry = registry, Appearance = appearance, ThemePreference = themePreference, IsPublicationCurrent = () => workspace.IsOriginalPublicationCurrent };
     }
@@ -193,7 +205,7 @@ public sealed class BrowseNativeWindow : Window
     }
 }
 
-internal sealed class BrowseEngineViewport : ContentControl
+internal sealed partial class BrowseEngineViewport : ContentControl
 {
     private readonly BrowseNativeWorkspace _workspace;
     private CuiSceneHost? _findKeyScope;
@@ -244,6 +256,8 @@ internal sealed class BrowseEngineViewport : ContentControl
             _workspace.CaptureTabTransitionFocus = CaptureTabTransitionFocus;
             _findKeyScope.AddHandler(KeyDownEvent, OnTabStripKeyDown, RoutingStrategies.Tunnel);
             _findKeyScope.AddHandler(KeyDownEvent, OnAddressShortcut, RoutingStrategies.Bubble);
+            _findKeyScope.AddHandler(KeyDownEvent, OnTabSearchKeyDown, RoutingStrategies.Bubble);
+            _findKeyScope.AddHandler(InputElement.PointerPressedEvent, OnCaptionPointerPressed, RoutingStrategies.Bubble);
             _findKeyScope.AddHandler(GotFocusEvent, OnTabStripGotFocus, RoutingStrategies.Bubble, handledEventsToo: true);
             UpdateTabStops(CurrentSceneFocus());
         }
@@ -275,6 +289,8 @@ internal sealed class BrowseEngineViewport : ContentControl
         _findKeyScope?.RemoveHandler(KeyDownEvent, OnFindKeyDown);
         _findKeyScope?.RemoveHandler(KeyDownEvent, OnTabStripKeyDown);
         _findKeyScope?.RemoveHandler(KeyDownEvent, OnAddressShortcut);
+        _findKeyScope?.RemoveHandler(KeyDownEvent, OnTabSearchKeyDown);
+        _findKeyScope?.RemoveHandler(InputElement.PointerPressedEvent, OnCaptionPointerPressed);
         _findKeyScope?.RemoveHandler(GotFocusEvent, OnTabStripGotFocus);
         _findKeyScope?.RemoveHandler(InputElement.PointerPressedEvent, OnTabPointerPressed);
         _findKeyScope?.RemoveHandler(InputElement.PointerMovedEvent, OnTabPointerMoved);
@@ -295,6 +311,9 @@ internal sealed class BrowseEngineViewport : ContentControl
     {
         var scale = _workspace.IsEmbeddedHost && _findKeyScope is { } scope ? CuiInterfaceScale.For(scope) : 1;
         _workspace.SetHostChromeWidth(CuiInterfaceScale.LogicalWidth(width, scale));
+        if (_findKeyScope is { } actualScope)
+            _workspace.SetSearchViewport(CuiInterfaceScale.LogicalWidth(width, scale),
+                CuiInterfaceScale.LogicalWidth(actualScope.Bounds.Height, scale));
     }
 
     private async void OnAddressShortcut(object? sender, KeyEventArgs args)
@@ -431,7 +450,8 @@ internal sealed class BrowseEngineViewport : ContentControl
         // the visual tree. Check both; never treat an inside submenu press as outside.
         var controls = source is null ? Enumerable.Empty<Control>() :
             source.GetVisualAncestors().OfType<Control>().Concat(source.GetLogicalAncestors().OfType<Control>()).Prepend(source);
-        if (controls.Any(control => control.Name is "BrowseProfileOverlay" or "BrowseManageUsersOverlay" or "HavenProfileButton")) return;
+        if (controls.Any(control => control.Name is "BrowseProfileOverlay" or "BrowseManageUsersOverlay" or "HavenProfileButton" or "BrowseOverflowButton"
+            or "BrowseTabSearchOverlay" or "BrowseTabSearchButton" or "BrowseWindowMenu" or "BrowseCaptionDragRegion")) return;
         _workspace.DismissTransientMenus();
         // Preserve the original pointer target/default action and its focus/caret.
     }
@@ -607,6 +627,9 @@ internal sealed class BrowseEngineViewport : ContentControl
         if (args.Handled || !_workspace.IsReady || _findKeyScope is not { } scope) return;
         if (args.Key == Key.Escape && args.KeyModifiers == KeyModifiers.None && _workspace.HasOpenTransientMenu)
         {
+            // Search Escape is handled after the focused child; an editor or menu's own
+            // cancellation keeps its normal priority over the host search surface.
+            if (_workspace.TabSearchOpen) return;
             _workspace.DismissTransientMenus(returnFromSubmenu: true);
             args.Handled = true;
             return;
@@ -656,6 +679,7 @@ internal sealed class BrowseEngineViewport : ContentControl
         if (_tabDragSource is not null && !IsTabDragContextCurrent()) ClearTabDrag();
         RefreshOriginalViews();
         UpdateTabStops(CurrentSceneFocus());
+        ObserveTabSearchFocus();
     }
     private bool IsTabDragContextCurrent()
     {

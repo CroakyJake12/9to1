@@ -20,7 +20,7 @@ internal sealed record NativeAppContentRegistration(Guid AppId, string AppKey,
 /// IModeRegistry and HavenAppRoutePolicy remain authoritative. Unknown routes have
 /// no generic Chat/ModeWorkspace fallback and cannot instantiate a web edition.
 /// </summary>
-internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
+internal sealed partial class NativeAppContentRegistry : IBrowseAppContentFactory
 {
     private readonly IModeRegistry _apps;
     private readonly Func<bool> _hostIsCurrent;
@@ -53,6 +53,7 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
     {
         IBrowseAppContentSession OriginalSession { get; }
         void Apply(HavenModelProjectionSnapshot? snapshot, AuthenticatedResourceActor actor);
+        HavenOS.Home.Core.IHomeModelPickerConversationSource CreateConversationPickerSource(AuthenticatedResourceActor actor);
     }
 
     internal static IOriginalChatModelTarget? CaptureOriginalChatModelTarget(
@@ -108,7 +109,7 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
         && string.Equals(app.Key, binding.AppKey, StringComparison.OrdinalIgnoreCase)
         && HavenAppRoutePolicy.Resolve(app).Kind == binding.RouteKind;
 
-    private sealed class RegisteredSession : IBrowseNativeAppContentSession, IBrowseAppContentClosePreparationParticipant
+    private sealed partial class RegisteredSession : IBrowseNativeAppContentSession, IBrowseAppContentClosePreparationParticipant
     {
         private readonly NativeAppContentRegistry _registry;
         private readonly BrowseAppContentRequest _request;
@@ -185,6 +186,12 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
             : IOriginalChatModelTarget
         {
             public IBrowseAppContentSession OriginalSession => owner;
+
+            public HavenOS.Home.Core.IHomeModelPickerConversationSource CreateConversationPickerSource(AuthenticatedResourceActor actor)
+            {
+                ArgumentNullException.ThrowIfNull(actor);
+                return new RegisteredConversationPickerSource(owner, spaces, address, target, tabId, profileId, actor);
+            }
 
             public void Apply(HavenModelProjectionSnapshot? snapshot, AuthenticatedResourceActor actor)
             {

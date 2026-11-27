@@ -28,6 +28,7 @@ internal sealed partial class SpacesBrowseAppContentSession
         internal readonly SpaceDetailsPage[] Pages = pages;
         internal readonly SpaceBuilderPage[] Builders = builders;
         internal readonly SpaceTaskWidgetPage[] TaskViews = owner._ownedTaskViews.Where(page => page.OriginalClose is null).ToArray();
+        internal readonly SpacesOrganisationPage[] Organisations = owner._ownedOrganisations.Where(page => page.OriginalClose is null).ToArray();
         internal readonly List<(SpaceTaskWidgetPage Page, SpaceTaskWidgetPage.TaskViewClosePreparation Lease)> TaskLeases = [];
         internal SpacesHomeViewState? HomeState = homeState;
         internal SpacesHomePage.HomeClosePreparation? HomeLease;
@@ -85,6 +86,12 @@ internal sealed partial class SpacesBrowseAppContentSession
                 try { await original.ConfigureAwait(false); }
                 catch (Exception cause) { AddActualCauses(failures, original, cause); }
             ThrowActualCauses(failures, "An earlier original Spaces command failed.");
+            foreach (var page in candidate.Organisations)
+            {
+                var original = page.TryPrepareToCloseAsync(linked.Token);
+                lock (_gate) RetainPreparation(original);
+                if (!await original.ConfigureAwait(false)) return false;
+            }
             if (_spacesPage is { } home)
             {
                 var original = home.PrepareHomeCloseAsync(linked.Token);
@@ -324,6 +331,7 @@ internal sealed partial class SpacesBrowseAppContentSession
         _ownedDetails.Where(page => page.OriginalClose is null).SequenceEqual(preparation.Pages) &&
         _ownedBuilders.Where(page => page.OriginalClose is null).SequenceEqual(preparation.Builders) &&
         _ownedTaskViews.Where(page => page.OriginalClose is null).SequenceEqual(preparation.TaskViews) &&
+        _ownedOrganisations.Where(page => page.OriginalClose is null).SequenceEqual(preparation.Organisations) &&
         preparation.TaskLeases.Count == preparation.TaskViews.Length && preparation.TaskLeases.All(item => item.Lease.IsCurrent) &&
         preparation.Leases.Count == preparation.Pages.Length &&
         preparation.BuilderLeases.Count == preparation.Builders.Length &&

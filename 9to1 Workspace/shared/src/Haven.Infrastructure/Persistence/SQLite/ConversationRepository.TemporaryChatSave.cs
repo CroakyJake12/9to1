@@ -28,6 +28,7 @@ public sealed partial class ConversationRepository
             history.Any(message => message is null || message.Id == Guid.Empty || message.ConversationId != id) ||
             history.Select(message => message.Id).Distinct().Count() != history.Length)
             throw new ArgumentException("The started chat must supply its original, uniquely identified history.", nameof(request));
+        var compactions = SnapshotTemporaryCompactions(id, history, request.Compactions);
         if (attachments.Any(attachment => attachment == Guid.Empty) || attachments.Distinct().Count() != attachments.Length)
             throw new ArgumentException("Pending attachments must supply their original, unique identities.", nameof(request));
         if (request.ExpectedPlaceholder is { } expected &&
@@ -74,6 +75,16 @@ public sealed partial class ConversationRepository
             // Bound writes use strict INSERT. A colliding message ID must never replace another chat's content.
             await AddMessageWithinTransactionAsync(connection, transaction, message, savedBranchId, true, cancellationToken).ConfigureAwait(false);
 
+        var savedVersions = await ReadEffectiveSourceVersionsAsync(connection, transaction, savedBranchId, history, cancellationToken).ConfigureAwait(false);
+        foreach (var compaction in compactions)
+        {
+            await InsertCompactionSummaryAsync(connection, transaction, compaction.Summary, cancellationToken).ConfigureAwait(false);
+            var sourceIds = compaction.OriginalMessages.Select(message => message.Id).ToHashSet();
+            var persisted = compaction with { SourceBranchId = savedBranchId,
+                SourceVersions = savedVersions.Where(version => sourceIds.Contains(version.MessageId)).ToArray() };
+            await InsertCompactionCoverageAsync(connection, transaction, persisted, cancellationToken).ConfigureAwait(false);
+        }
+
         if (request.ExpectedDraft is not null)
         {
             await using var removal = connection.CreateCommand();
@@ -93,7 +104,10 @@ public sealed partial class ConversationRepository
         // Cancellation is honored before commit; after crossing that boundary, acknowledge the actual result.
         cancellationToken.ThrowIfCancellationRequested();
         await transaction.CommitAsync(CancellationToken.None).ConfigureAwait(false);
-        return new TemporaryChatSaveReceipt(saved, savedBranchId);
+        return new TemporaryChatSaveReceipt(saved, savedBranchId)
+        {
+            CompactionSummaryIds = Array.AsReadOnly(compactions.Select(compaction => compaction.Summary.Id).ToArray())
+        };
     }
 
     private static async Task<Conversation?> ReadTemporarySavePlaceholderAsync(SqliteConnection connection,

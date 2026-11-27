@@ -122,11 +122,38 @@
                   </Container>
                 </If>
                 <If Condition="{Binding IsLibrary}">
-                  <Container id="library-page" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="12">
+                  <Container id="library-page" Type="Vertical Stack" VerticalScrolling="{Binding LibraryScroll, fallback=true}" HorizontalScrolling="False" CellGap="{Binding LibrarySectionGap, fallback=16}">
                     <If Condition="{Binding IsLibraryBrowseMode}">
-                      <Container Type="Vertical Stack" CellGap="4">
-                        <Text Text="Library" FontSize="28" FontWeight="Bold" />
-                        <Text Text="Authorised references to your artifacts. Items open in their owning app." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                      <Container Type="Vertical Stack" CellGap="5">
+                        <Text Text="Library" FontSize="34" FontWeight="800" />
+                        <Text Text="Your documents and files, in one place." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                      </Container>
+                    </If>
+                    <If Condition="{Binding IsLibraryBrowseMode}">
+                      <Container id="library-browse-controls" Type="Vertical Stack" CellGap="12">
+                        <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="12">
+                          <Container Type="Wrap" CellGap="6">
+                            <Button id="library-view-recent" Action="ShowRecentLibrary" Content="Recent" Selected="{Binding IsRecentLibrary, fallback=false}" IsEnabled="{Binding CanSelectLibraryView, fallback=false}" Padding="15 9" CornerRadius="18" />
+                            <Button id="library-view-favourites" Action="ShowFavouriteLibrary" Content="Favourites" Selected="{Binding IsFavouriteLibrary, fallback=false}" IsEnabled="{Binding CanSelectLibraryView, fallback=false}" Padding="15 9" CornerRadius="18" />
+                            <Button id="library-view-shared" Action="ShowSharedLibrary" Content="Shared" Selected="{Binding IsSharedLibrary, fallback=false}" IsEnabled="{Binding CanSelectLibraryView, fallback=false}" Padding="15 9" CornerRadius="18" />
+                          </Container>
+                          <Text id="library-count" Column="1" Text="{Binding LibraryCount}" Foreground="{Resource CuiTextSoftBrush}" FontSize="12" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="135" />
+                        </Container>
+                        <Container Type="Wrap" CellGap="8">
+                          <Input id="library-search" PlaceholderText="Search Library" AccessibleName="Search Library" Width="260" MaxWidth="300" Type="Text" />
+                          <Input id="library-owner-filter" AccessibleName="Filter Library by app" Width="170" Type="Select" IsEnabled="{Binding CanSelectLibraryView, fallback=false}" />
+                          <Button id="library-search-submit" Action="SearchLibrary" Content="Search" IsEnabled="{Binding CanSearchLibrary, fallback=false}" Padding="14 9" />
+                          <Button id="library-refresh" Action="RefreshLibrary" Content="Refresh" IsEnabled="{Binding CanSearchLibrary, fallback=false}" Padding="14 9" />
+                          <Button id="library-more-filters" Action="ToggleLibraryFilters" Content="{Binding LibraryFilterLabel, fallback=More filters}" IsEnabled="{Binding CanSelectLibraryView, fallback=false}" Chromeless="True" />
+                        </Container>
+                        <Text Text="Recent shows the most recently modified items. Access is checked again when you open an item." FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                        <Container id="library-advanced-filters" Type="Wrap" CellGap="8" IsVisible="{Binding ShowLibraryFilters, fallback=false}">
+                          <Input id="library-type-filter" PlaceholderText="Artifact type" AccessibleName="Filter Library by artifact type" Width="160" Type="Text" />
+                          <Input id="library-sort" Type="Select" AccessibleName="Sort authorised artifacts" Width="170" />
+                          <Input id="library-pinned-filter" Type="Select" AccessibleName="Filter favourite membership" Width="145" />
+                          <Input id="library-shared-filter" Type="Select" AccessibleName="Filter shared artifacts" Width="140" />
+                          <Input id="library-generated-filter" Type="Select" AccessibleName="Filter generated artifacts" Width="140" />
+                        </Container>
                       </Container>
                     </If>
                     <If Condition="{Binding IsBoardFolderSelection}">
@@ -137,7 +164,7 @@
                           <Text Text="New Board file name (.9to1board)" FontWeight="SemiBold" />
                           <Input id="library-board-create-name" Type="Text" Value="New board" AccessibleName="New Board file name" Width="320" />
                         </Container>
-                        <Container Type="Horizontal Stack" CellGap="8">
+                        <Container Type="Wrap" CellGap="8">
                           <Button id="library-confirm-board-folder" Action="ConfirmBoardFolder" Content="Create" AccessibleName="Create Board in selected folder" IsEnabled="{Binding CanConfirmBoardFolder, fallback=false}" />
                           <Button id="library-cancel-board-folder" Action="CancelBoardFolder" Content="Cancel" AccessibleName="Cancel Board creation" IsEnabled="{Binding CanCancelBoardFolder, fallback=false}" />
                           <If Condition="{Binding CanOpenBoardFilesSetup, fallback=false}">
@@ -147,20 +174,7 @@
                         </Container>
                       </Container>
                     </If>
-                    <If Condition="{Binding IsLibraryBrowseMode}">
-                      <Container Type="Wrap" CellGap="8">
-                        <Input id="library-search" placeholder-text="Search artifacts" accessible-name="Search Library" width="280" Type="Text" />
-                        <Input id="library-owner-filter" placeholder-text="Owner app ID" accessible-name="Filter Library by owner app ID" width="150" Type="Text" />
-                        <Input id="library-type-filter" placeholder-text="Artifact type" accessible-name="Filter Library by artifact type" width="160" Type="Text" />
-                        <Input id="library-sort" Type="Select" AccessibleName="Sort authorised artifacts" Width="170" />
-                        <Input id="library-pinned-filter" Type="Select" AccessibleName="Filter pinned artifacts" Width="120" />
-                        <Input id="library-shared-filter" Type="Select" AccessibleName="Filter shared artifacts" Width="120" />
-                        <Input id="library-generated-filter" Type="Select" AccessibleName="Filter generated artifacts" Width="140" />
-                        <Button id="library-search-submit" action="SearchLibrary" Content="Search" IsEnabled="{Binding CanSearchLibrary, fallback=false}" />
-                        <Button id="library-refresh" action="RefreshLibrary" Content="Refresh" IsEnabled="{Binding CanSearchLibrary, fallback=false}" />
-                      </Container>
-                    </If>
-                    <Text id="library-status" Text="{Binding LibrarySummary}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                    <Text id="library-status" Text="{Binding LibrarySummary}" IsVisible="{Binding HasLibrarySummary, fallback=true}" Margin="{Binding LibrarySummaryMargin, fallback=0}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" FontSize="12" />
                     <Container Type="Wrap" CellGap="8">
                       <If Condition="{Binding CanCreateHomeLibraryBoard}">
                         <Button id="library-create-board" action="CreateHomeLibraryBoard" Content="New Board" AccessibleName="Create a new Board using Home and Files" />
@@ -178,39 +192,79 @@
                         <Button id="library-retry-open-board" action="RetryOpenHomeLibraryBoard" Content="Retry opening Board" AccessibleName="Retry opening the same created Board" />
                       </If>
                     </Container>
-                    <Container id="library-results" Type="Vertical Stack" CellGap="8" role="list" accessible-name="Authorised artifacts">
-                      <Repeat id="home-library-rows" Panel="Vertical Stack" Source="{Binding LibraryRows}" As="artifact" Key="{Binding artifact.Key}">
-                        <Container Type="Horizontal Stack" CellGap="8">
-                          <Button id="home-library-item" action="OpenHomeLibraryArtifact" IsEnabled="{Binding CanOpenHomeLibraryArtifact, fallback=false}" HorizontalAlignment="Stretch" Padding="12" accessible-name="{Binding artifact.DisplayName}">
-                            <Container Type="Vertical Stack" CellGap="5" HorizontalAlignment="Stretch">
-                              <Text Text="{Binding artifact.DisplayName}" FontWeight="SemiBold" TextWrapping="Wrap" />
-                              <Container Type="Wrap" CellGap="10">
-                                <Text Text="{Binding artifact.OwnerApp}" />
-                                <Text Text="{Binding artifact.ArtifactType}" />
-                                <Text Text="{Binding artifact.LastModified}" Foreground="{Resource CuiTextSoftBrush}" />
-                              </Container>
-                              <Text Text="{Binding artifact.Location}" Foreground="{Resource CuiTextSoftBrush}" />
-                              <Text Text="{Binding artifact.Owner}" Foreground="{Resource CuiTextSoftBrush}" />
-                              <If Condition="{Binding artifact.IsRecent}"><Text id="home-library-recent" Text="Recent" Foreground="{Resource CuiTextSoftBrush}" /></If>
-                              <If Condition="{Binding artifact.IsPinned}"><Text id="home-library-pinned" Text="Pinned" Foreground="{Resource CuiTextSoftBrush}" /></If>
-                              <If Condition="{Binding artifact.IsShared}">
-                                <Container Type="Horizontal Stack" CellGap="4">
-                                  <Text id="home-library-shared" Text="Shared by" Foreground="{Resource CuiTextSoftBrush}" />
-                                  <Text id="home-library-shared-by" Text="{Binding artifact.SharedBy}" Foreground="{Resource CuiTextSoftBrush}" />
+                    <If Condition="{Binding IsLibraryTable, fallback=true}">
+                      <Container id="library-table" Type="Vertical Stack" CellGap="12">
+                        <Container id="library-table-heading" Type="Grid" ColumnSizes="1fr 36" CellGap="12" Padding="16 6" IsVisible="{Binding LibraryWide, fallback=false}">
+                          <Container Type="Grid" ColumnSizes="{Binding LibraryCellColumns, fallback=1fr 1fr}" CellGap="14">
+                            <Text id="library-heading-name" Text="Name" FontSize="12" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
+                            <Text id="library-heading-app" Column="1" Text="App" FontSize="12" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
+                            <Text id="library-heading-location" Column="2" Text="Location" FontSize="12" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
+                            <Text id="library-heading-availability" Column="3" Text="Availability" FontSize="12" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
+                            <Text id="library-heading-modified" Column="4" Text="Modified" FontSize="12" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
+                          </Container>
+                        </Container>
+                        <Container id="library-results" Type="Vertical Stack" CellGap="4" Role="list" AccessibleName="Authorised artifacts">
+                          <Repeat id="home-library-rows" Panel="Vertical Stack" Source="{Binding LibraryRows}" As="artifact" Key="{Binding artifact.Key}">
+                            <Container id="home-library-row" Type="Grid" ColumnSizes="1fr 36" CellGap="12" Padding="16 12" CornerRadius="12" Background="{Resource CuiPanelBrush}" Margin="0 0 0 4">
+                              <Button id="home-library-item" Background="{Resource CuiTransparentBrush}" Action="OpenHomeLibraryArtifact" IsEnabled="{Binding CanOpenHomeLibraryArtifact, fallback=false}" AccessibleName="{Binding artifact.DisplayName}" HorizontalContentAlignment="Stretch" HorizontalAlignment="Stretch" Padding="0" BorderWidth="0" Chromeless="True">
+                                <Container Type="Grid" ColumnSizes="{Binding LibraryCellColumns, fallback=1fr 1fr}" RowSizes="{Binding LibraryCellRows, fallback=Auto Auto Auto}" CellGap="14" HorizontalAlignment="Stretch">
+                                  <Container id="home-library-name-cell" ColumnSpan="{Binding LibraryNameSpan, fallback=2}" Type="Grid" ColumnSizes="32 1fr" CellGap="10" VerticalAlignment="Center">
+                                    <Image Source="{Binding artifact.IconSource, fallback=icon:file}" Width="28" Height="28" VerticalAlignment="Center" />
+                                    <Container Column="1" Type="Vertical Stack" CellGap="4" VerticalAlignment="Center">
+                                      <Text Text="{Binding artifact.DisplayName}" FontSize="14" FontWeight="700" TextWrapping="Wrap" />
+                                      <Container Type="Wrap" CellGap="7">
+                                        <If Condition="{Binding artifact.IsRecent}"><Text id="home-library-recent" Text="Recent" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" /></If>
+                                        <If Condition="{Binding artifact.IsPinned}"><Text id="home-library-pinned" Text="Favourite" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" /></If>
+                                        <If Condition="{Binding artifact.IsGenerated}"><Text id="home-library-generated" Text="Generated" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" /></If>
+                                      </Container>
+                                    </Container>
+                                  </Container>
+                                  <Text id="home-library-app-cell" Column="{Binding LibraryAppColumn, fallback=0}" Row="{Binding LibraryAppRow, fallback=1}" Text="{Binding artifact.AppName}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                  <Container id="home-library-location-cell" Column="{Binding LibraryLocationColumn, fallback=1}" Row="{Binding LibraryLocationRow, fallback=1}" Type="Vertical Stack" CellGap="4" VerticalAlignment="Center">
+                                    <Text Text="{Binding artifact.Location}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                                    <If Condition="{Binding artifact.IsShared}">
+                                      <Container Type="Wrap" CellGap="4">
+                                        <Text id="home-library-shared" Text="Shared by" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" />
+                                        <Text id="home-library-shared-by" Text="{Binding artifact.SharedBy}" FontSize="11" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                                      </Container>
+                                    </If>
+                                  </Container>
+                                  <Text id="home-library-availability-cell" Column="{Binding LibraryAvailabilityColumn, fallback=0}" Row="{Binding LibraryAvailabilityRow, fallback=2}" Text="Checked on open" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                  <Text id="home-library-modified-cell" Column="{Binding LibraryDateColumn, fallback=1}" Row="{Binding LibraryDateRow, fallback=2}" Text="{Binding artifact.LastModified}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
                                 </Container>
-                              </If>
-                              <If Condition="{Binding artifact.IsGenerated}"><Text id="home-library-generated" Text="Generated" Foreground="{Resource CuiTextSoftBrush}" /></If>
+                              </Button>
+                              <Button id="home-library-toggle-pin" Column="1" Action="ToggleHomeLibraryPin" Content="{Binding artifact.FavouriteGlyph}" Selected="{Binding artifact.IsPinned}" IsEnabled="{Binding CanToggleHomeLibraryPin, fallback=false}" AccessibleName="{Binding artifact.FavouriteLabel}" Tooltip="{Binding artifact.FavouriteLabel}" FontSize="22" Width="34" Height="34" Padding="0" VerticalAlignment="Center" Chromeless="True" />
+                            </Container>
+                          </Repeat>
+                        </Container>
+                      </Container>
+                    </If>
+                    <If Condition="{Binding IsDashboardLibrary, fallback=false}">
+                      <Container id="dashboard-library-cards" Type="Grid" ColumnSizes="{Binding LibraryCardColumns}" RowSizes="{Binding LibraryCardRows}" CellGap="12">
+                        <Repeat id="dashboard-library-card-rows" Source="{Binding LibraryRows}" As="artifact" Key="{Binding artifact.Key}" ItemRow="{Binding artifact.CardRow}" ItemColumn="{Binding artifact.CardColumn}">
+                          <Button id="dashboard-library-item" Action="OpenHomeLibraryArtifact" AccessibleName="{Binding artifact.DisplayName}" IsEnabled="{Binding CanOpenHomeLibraryArtifact, fallback=false}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Top" Padding="18" MinHeight="168" CornerRadius="16" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
+                            <Container Type="Vertical Stack" CellGap="10" HorizontalAlignment="Stretch">
+                              <Container Type="Horizontal Stack" CellGap="10" VerticalAlignment="Center">
+                                <Image Source="{Binding artifact.IconSource, fallback=icon:file}" Width="28" Height="28" />
+                                <Text Text="{Binding artifact.AppName}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" />
+                              </Container>
+                              <Text Text="{Binding artifact.DisplayName}" FontSize="16" FontWeight="750" TextWrapping="Wrap" />
+                              <Text id="dashboard-library-location" Text="{Binding artifact.Location}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                              <Container Type="Wrap" CellGap="5">
+                                <Text Text="Modified" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" />
+                                <Text Text="{Binding artifact.LastModified}" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                              </Container>
                             </Container>
                           </Button>
-                          <Button id="home-library-toggle-pin" action="ToggleHomeLibraryPin" Content="Pin / unpin" IsEnabled="{Binding CanToggleHomeLibraryPin, fallback=false}" AccessibleName="Pin or unpin this artifact" />
-                        </Container>
-                      </Repeat>
-                    </Container>
+                        </Repeat>
+                      </Container>
+                    </If>
+                    <Text id="library-empty" Text="No matching documents or files are available from your connected sources." IsVisible="{Binding HasLibraryEmpty}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
                     <If Condition="{Binding IsLibraryBrowseMode}">
                       <Container Type="Wrap" CellGap="8">
-                        <Button id="library-previous" action="PreviousLibraryPage" Content="Previous" IsEnabled="{Binding CanPreviousLibraryPage, fallback=false}" />
-                        <Text Text="{Binding LibraryPageSummary}" />
-                        <Button id="library-next" action="NextLibraryPage" Content="Next" IsEnabled="{Binding CanNextLibraryPage, fallback=false}" />
+                        <Button id="library-previous" Action="PreviousLibraryPage" Content="Previous" IsEnabled="{Binding CanPreviousLibraryPage, fallback=false}" />
+                        <Text Text="{Binding LibraryPageSummary}" VerticalAlignment="Center" />
+                        <Button id="library-next" Action="NextLibraryPage" Content="Next" IsEnabled="{Binding CanNextLibraryPage, fallback=false}" />
                       </Container>
                     </If>
                   </Container>

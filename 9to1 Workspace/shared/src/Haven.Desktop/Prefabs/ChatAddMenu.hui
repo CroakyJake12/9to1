@@ -3,6 +3,33 @@
     <Text Name="MenuTitle" Content="Add" FontSize="11" FontWeight="700" Foreground="TextSecondary" VerticalAlignment="Center" />
     <Button Name="Dismiss" Variant="Text" Content="×" Width="24px" Height="24px" MinHeight="24px" Padding="0px" Radius="6px" FontSize="15" />
   </Container>
+  <Container Name="AttachCategories" Layout="Vertical" Width="100%" MaxHeight="400px" Overflow="Scroll" Gap="0px" Visibility="Collapsed">
+    <Container Name="AttachFilesSection" Layout="Vertical" Width="100%" Gap="0px">
+      <Container Name="AttachFilesHeader" Layout="Grid" Columns="1fr 24px" Width="100%">
+        <Icon Name="AttachFilesDisclosure" Key="chevron-right" Column="1" Width="14px" Height="14px" Margin="0px 0px 7px 0px" VerticalAlignment="Center" Foreground="TextSecondary" PointerEvents="None" />
+      </Container>
+    </Container>
+    <Container Name="AttachSkillsSection" Layout="Vertical" Width="100%" Gap="0px">
+      <Container Name="AttachSkillsHeader" Layout="Grid" Columns="1fr 24px" Width="100%">
+        <Icon Name="AttachSkillsDisclosure" Key="chevron-right" Column="1" Width="14px" Height="14px" Margin="0px 0px 7px 0px" VerticalAlignment="Center" Foreground="TextSecondary" PointerEvents="None" />
+      </Container>
+    </Container>
+    <Container Name="AttachAppsSection" Layout="Vertical" Width="100%" Gap="0px">
+      <Container Name="AttachAppsHeader" Layout="Grid" Columns="1fr 24px" Width="100%">
+        <Icon Name="AttachAppsDisclosure" Key="chevron-right" Column="1" Width="14px" Height="14px" Margin="0px 0px 7px 0px" VerticalAlignment="Center" Foreground="TextSecondary" PointerEvents="None" />
+      </Container>
+    </Container>
+    <Container Name="AttachSpecialistsSection" Layout="Vertical" Width="100%" Gap="0px">
+      <Container Name="AttachSpecialistsHeader" Layout="Grid" Columns="1fr 24px" Width="100%">
+        <Icon Name="AttachSpecialistsDisclosure" Key="chevron-right" Column="1" Width="14px" Height="14px" Margin="0px 0px 7px 0px" VerticalAlignment="Center" Foreground="TextSecondary" PointerEvents="None" />
+      </Container>
+    </Container>
+    <Container Name="AttachAssistantsSection" Layout="Vertical" Width="100%" Gap="0px">
+      <Container Name="AttachAssistantsHeader" Layout="Grid" Columns="1fr 24px" Width="100%">
+        <Icon Name="AttachAssistantsDisclosure" Key="chevron-right" Column="1" Width="14px" Height="14px" Margin="0px 0px 7px 0px" VerticalAlignment="Center" Foreground="TextSecondary" PointerEvents="None" />
+      </Container>
+    </Container>
+  </Container>
   <Container Name="MainMenu" Layout="Vertical" Width="100%" Gap="2px">
     <Button Name="AttachFiles" Variant="Ghost" IconKey="file" Content="Files" Width="100%" MinHeight="36px" Padding="7px 9px" Radius="8px" FontSize="12" HorizontalAlignment="Stretch" />
     <Container Name="ToolsHeading" Layout="Horizontal" Width="100%" Height="20px" Padding="5px 9px 0px 9px">

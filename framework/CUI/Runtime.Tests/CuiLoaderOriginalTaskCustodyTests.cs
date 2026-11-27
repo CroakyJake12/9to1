@@ -280,7 +280,7 @@ public sealed class CuiLoaderOriginalTaskCustodyTests
             var (root, diagnostics) = Loader.LoadMarkup("<Cui><Actions><Action name=\"Run\" command=\"test.run\" /></Actions><Page><Button action=\"Run\">Run</Button></Page></Cui>");
             Assert.Empty(diagnostics);
             Loader.WireBindings(root!);
-            return Assert.IsType<Button>(Assert.Single(Assert.IsType<Panel>(root).Children));
+            return Assert.IsType<Button>(Assert.Single(Assert.IsAssignableFrom<Panel>(root).Children));
         }
     }
 

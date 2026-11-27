@@ -29,6 +29,8 @@ public enum HomeModelPickerAction
     SelectCompactRole,
     ToggleCompactSection,
     ChooseCompactModel,
+    RefreshConversation,
+    ChooseCompactSpecialist,
 }
 
 public sealed record HomeModelPickerActionRequest(
@@ -45,10 +47,11 @@ public sealed record HomeModelPickerActionRequest(
     string? AgentId = null,
     string? ReasoningLevelId = null,
     JsonElement? Context = null,
-    string? FamilyKey = null);
+    string? FamilyKey = null,
+    HomeModelPickerSpecialistSelection? SpecialistSelection = null);
 
 /// <summary>Owns the authored Home model-picker CUI document and the typed action queue for its host.</summary>
-public sealed class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPropertyChanged
+public sealed partial class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPropertyChanged
 {
     private readonly Queue<HomeModelPickerActionRequest> _actions = new();
     private readonly HashSet<string> _expandedFamilies = new(StringComparer.Ordinal);
@@ -103,6 +106,7 @@ public sealed class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPrope
 
     public bool TryGetValue(string path, out object? value)
     {
+        if (TryGetConversationValue(path, out value)) return true;
         switch (path)
         {
             case "IsSettingsOpen": value = IsSettingsOpen; return true;
@@ -378,12 +382,14 @@ public sealed class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPrope
 }
 
 /// <summary>Routes CUI picker actions through Home's shared model-provider contract.</summary>
-public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor editor, HomeModelPickerCuiSurface? surface = null,
-    HomeModelSelectionSource? source = null, AuthenticatedResourceActor? actor = null)
+public sealed partial class HomeModelPickerCuiController(HomeModelPickerRouteEditor editor, HomeModelPickerCuiSurface? surface = null,
+    HomeModelSelectionSource? source = null, AuthenticatedResourceActor? actor = null,
+    IHomeModelPickerConversationSource? conversationSource = null)
 {
     private readonly HomeModelPickerRouteEditor _editor = editor ?? throw new ArgumentNullException(nameof(editor));
     private readonly HomeModelSelectionSource? _source = source;
     private readonly AuthenticatedResourceActor? _actor = actor;
+    private readonly IHomeModelPickerConversationSource? _conversationSource = conversationSource;
     private readonly SemaphoreSlim _actionGate = new(1, 1);
     private long _generation;
 
@@ -407,6 +413,8 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
             Surface.ApplyState(_editor.Current);
             await ApplyEffectiveReasoningAsync(cancellationToken).ConfigureAwait(false);
             if (result.Succeeded && CanPublish()) await LoadCatalogueAsync(cancellationToken).ConfigureAwait(false);
+            if (result.Succeeded && CanPublish() && _conversationSource is not null)
+                await RefreshConversationAsync(cancellationToken).ConfigureAwait(false);
         }
         return result;
     }
@@ -447,6 +455,8 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
             {
                 result = action.Action switch
                 {
+                    HomeModelPickerAction.RefreshConversation => await RefreshConversationAsync(cancellationToken).ConfigureAwait(false),
+                    HomeModelPickerAction.ChooseCompactSpecialist => await ChooseSpecialistAsync(action.SpecialistSelection, cancellationToken).ConfigureAwait(false),
                     HomeModelPickerAction.RefreshCatalogue => Box(await LoadCatalogueAsync(cancellationToken).ConfigureAwait(false)),
                     HomeModelPickerAction.SelectCompactRole => await SelectCompactRoleAsync(action.Category, cancellationToken).ConfigureAwait(false),
                     HomeModelPickerAction.ToggleCompactSection => CanPublish() && Surface.ToggleCompactSection(action.FamilyKey)
@@ -499,6 +509,10 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
             if (!Surface.IsSettingsOpen)
                 Surface.SetCompactStatus(result.Succeeded || action.Action == HomeModelPickerAction.RefreshCatalogue ? null : result.Message);
             await ApplyEffectiveReasoningAsync(cancellationToken).ConfigureAwait(false);
+            if (result.Succeeded && _conversationSource is not null && CanPublish() && action.Action is
+                (HomeModelPickerAction.ChooseCompactModel or HomeModelPickerAction.SaveRoute or
+                 HomeModelPickerAction.CommitReasoningLevel or HomeModelPickerAction.Refresh or HomeModelPickerAction.RefreshCatalogue))
+                await RefreshConversationAsync(cancellationToken).ConfigureAwait(false);
         }
         return result;
     }

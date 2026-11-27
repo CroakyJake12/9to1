@@ -20,13 +20,34 @@ namespace CakeOS.Cui.Runtime.Tests;
 /// </summary>
 public sealed class CuiThemeTests
 {
+    [Theory]
+    [InlineData("Home", "app.home", "#405BD2")]
+    [InlineData("Spaces", "app.spaces", "#7650C7")]
+    [InlineData("Dev", "app.dev", "#B55224")]
+    [InlineData("Build", "app.dev", "#B55224")]
+    [InlineData("Browse", "app.browse", "#2566B6")]
+    public void Native_glow_scope_uses_the_atlas_app_anchor_and_preserves_professional_defaults(string surface, string appId, string colour)
+    {
+        Assert.Equal(appId, CuiAppAccentCatalog.IdentityFor(surface));
+        Assert.Equal(colour, CuiGlowAppAccentCatalog.Find(appId)?.Colour);
+        var glow = CuiSurfacePaletteCatalog.For(surface, CuiAppearance.Dark, CuiTheme.Glow, null, appId);
+        // Dark palette assembly keeps the source anchor in AccentSecondary and uses its
+        // existing 22% white tint for Accent. The raw source is not the action ramp midpoint.
+        Assert.Equal(Color.Parse(colour), glow.AccentSecondary);
+        Assert.Equal(Color.Parse(colour), CuiSurfacePaletteCatalog.For(surface, CuiAppearance.Bright, CuiTheme.Glow, null, appId).Accent);
+        var explicitGlow = CuiSurfacePaletteCatalog.For(surface, CuiAppearance.Dark, CuiTheme.Glow, "#E78D32", appId);
+        Assert.Equal(Color.Parse("#E78D32"), explicitGlow.AccentSecondary);
+        var professional = CuiSurfacePaletteCatalog.For(surface, CuiAppearance.Dark, CuiTheme.Professional, null, appId);
+        Assert.Equal(Color.Parse("#5585EF"), professional.Accent); // Existing #2563EB dark tint, unchanged.
+    }
+
     // === Original PersonalisationTests ported ===
 
     [Theory]
     [InlineData("#405BD2")]
     [InlineData("#E78D32")]
     [InlineData("#999999")]
-    public void Glow_dark_fields_follow_the_scoped_accent_and_retain_readable_text(string accent)
+    public void Glow_dark_fields_follow_the_scoped_hue_without_becoming_accent_fills(string accent)
     {
         var palette = CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Dark, CuiTheme.Glow, accent);
         Assert.Equal(Color.Parse(accent), palette.AccentSecondary);
@@ -37,12 +58,83 @@ public sealed class CuiThemeTests
         else
         {
             Assert.InRange(Math.Abs(source.H - field.H), 0, 2);
-            Assert.InRange(field.S, .85, 1);
+            Assert.InRange(field.S, .20, .44);
         }
         foreach (var surface in new[] { palette.TideBase, palette.TideColour, palette.Panel, palette.Panel2, palette.ButtonHover })
             Assert.True(CuiContrast.Ratio(palette.Muted, surface) >= 4.5);
         var bright = CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Bright, CuiTheme.Glow, accent);
         Assert.Equal(Colors.White, bright.TideBase);
+    }
+
+    [Theory]
+    [InlineData("#405BD2", "#11131D", "#181C2A", "#1E2234")]
+    [InlineData("#E78D32", "#1F170F", "#2C2116", "#37291B")]
+    [InlineData("#999999", "#171717", "#212121", "#292929")]
+    public void Glow_dark_material_uses_the_v5_reference_samples(string accent, string background, string panel, string raised)
+    {
+        var palette = CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Dark, CuiTheme.Glow, accent);
+        // Samples are from Atlas v5 buildGlowMaterial at brightness/contrast 50.
+        // A one-channel rounding tolerance permits the native colour conversion.
+        Match(background, palette.TideBase);
+        Match(panel, palette.Panel);
+        Match(raised, palette.Panel2);
+        Assert.Equal(Colors.White, palette.Text);
+        Assert.Equal(Color.Parse("#DED5CF"), palette.TextSoft);
+        Assert.Equal(Color.Parse("#C7BDB6"), palette.Muted);
+
+        static void Match(string expected, Color actual)
+        {
+            var value = Color.Parse(expected);
+            Assert.InRange(Math.Abs(actual.R - value.R), 0, 1);
+            Assert.InRange(Math.Abs(actual.G - value.G), 0, 1);
+            Assert.InRange(Math.Abs(actual.B - value.B), 0, 1);
+        }
+    }
+
+    [Fact]
+    public void Glow_workspace_field_keeps_chrome_transparent_and_panels_quiet()
+    {
+        var palette = CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Dark, CuiTheme.Glow, "#405BD2");
+        var resources = new Avalonia.Controls.ResourceDictionary();
+        CuiThemeResourceApplier.ApplyToResources(resources, palette);
+        var field = Assert.IsType<CuiGlowFieldBrush>(resources["CuiWorkspaceBrush"]);
+        Assert.Same(field, resources["CuiShellMaterial"]);
+        Assert.Same(field, resources["CuiWorkspaceMaterial"]);
+        Assert.Equal(0, Assert.IsAssignableFrom<ISolidColorBrush>(resources["CuiChromeMaterial"]).Color.A);
+        Assert.All(new[] { field.FieldTop, field.FieldBottom, field.Light }, colour => Assert.InRange(colour.ToHsl().S, .20, .44));
+        Assert.All(new[] { field.FieldTop, field.FieldBottom, field.Light }, colour => Assert.True(CuiContrast.Ratio(palette.Muted, colour) >= 4.5));
+        Assert.Equal(palette.Panel, Assert.IsType<SolidColorBrush>(resources["CuiFloatingSurfaceMaterial"]).Color);
+        Assert.Equal(palette.Panel, Assert.IsType<SolidColorBrush>(resources["CuiPopupSurfaceBrush"]).Color);
+        Assert.Equal(palette.Panel, Assert.IsType<SolidColorBrush>(resources["CuiPopupOpaqueFallbackBrush"]).Color);
+        Assert.Equal(0xE0, Assert.IsType<SolidColorBrush>(resources["CuiSurfaceMaterial"]).Color.A);
+        CuiThemeResourceApplier.ApplyToResources(resources, palette, new() { HighContrast = true });
+        Assert.IsAssignableFrom<ISolidColorBrush>(resources["CuiWorkspaceBrush"]);
+        Assert.IsNotType<CuiGlowFieldBrush>(resources["CuiWorkspaceBrush"]);
+        Assert.NotEqual(0, Assert.IsAssignableFrom<ISolidColorBrush>(resources["CuiChromeMaterial"]).Color.A);
+    }
+
+    [Theory]
+    [InlineData(1440, 900)]
+    [InlineData(1280, 720)]
+    [InlineData(390, 844)]
+    public void Glow_field_retains_the_atlas_angle_and_radial_origin_when_resized(double width, double height)
+    {
+        var field = new CuiGlowFieldBrush(Color.Parse("#11131D"), Color.Parse("#24293D"), Color.Parse("#24293D"));
+        var drawing = Assert.IsType<DrawingGroup>(field.CreateBrush(new(width, height)).Drawing);
+        Assert.Equal(2, drawing.Children.Count);
+        var linear = Assert.IsType<LinearGradientBrush>(Assert.IsType<GeometryDrawing>(drawing.Children[0]).Brush);
+        var start = linear.StartPoint.Point;
+        var end = linear.EndPoint.Point;
+        var angle = Math.Atan2(end.X - start.X, start.Y - end.Y) * 180 / Math.PI;
+        Assert.InRange(angle, 159.999, 160.001);
+        Assert.Equal(width, start.X + end.X, 8);
+        Assert.Equal(height, start.Y + end.Y, 8);
+        var haze = Assert.IsType<RadialGradientBrush>(Assert.IsType<GeometryDrawing>(drawing.Children[1]).Brush);
+        Assert.Equal(new Avalonia.RelativePoint(.17, .10, Avalonia.RelativeUnit.Relative), haze.Center);
+        Assert.Equal(haze.Center, haze.GradientOrigin);
+        Assert.Equal(77, haze.GradientStops[0].Color.A);
+        Assert.Equal(0, haze.GradientStops[1].Color.A);
+        Assert.Equal(.64, haze.GradientStops[1].Offset);
     }
 
     [Theory]
@@ -299,7 +391,7 @@ public sealed class CuiThemeTests
             Assert.Equal(CuiTheme.Bubble, loader.CurrentTheme);
             Assert.True(root.Resources.TryGetResource("CuiTheme", null, out var rootTheme));
             Assert.Equal(CuiTheme.Bubble, rootTheme);
-            var page = Assert.IsType<Avalonia.Controls.Panel>(root);
+            var page = Assert.IsAssignableFrom<Avalonia.Controls.Panel>(root);
             var retro = Assert.IsType<CuiContainerControl>(Assert.Single(page.Children));
             Assert.True(retro.Resources.TryGetResource("CuiTheme", null, out var nestedTheme));
             Assert.Equal(CuiTheme.Retro, nestedTheme);
@@ -465,7 +557,7 @@ public sealed class CuiThemeTests
             """);
 
         Assert.Empty(diagnostics);
-        var page = Assert.IsType<Avalonia.Controls.Panel>(root);
+        var page = Assert.IsAssignableFrom<Avalonia.Controls.Panel>(root);
         Assert.Same(upper, page.Children[0]);
         Assert.Same(lower, page.Children[1]);
         Assert.Equal(.25d, upper.Opacity);

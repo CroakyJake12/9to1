@@ -83,6 +83,25 @@ public sealed partial class UnifiedHomeContentTests
             await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), token);
             Assert.Equal(new[] { "pinned-note", "up-next", "focus-timer" },
                 (await preferences.ReadAsync(token)).Layout.Widgets.Select(item => item.Id));
+            SettleFixtureLayout(window);
+            Assert.True(DragHandle("Up next").IsFocused);
+
+            async Task MoveWidget(PhysicalKey key, params string[] expected)
+            {
+                Assert.True(DragHandle("Up next").Focus());
+                window.KeyPressQwerty(key, RawInputModifiers.Alt);
+                window.KeyReleaseQwerty(key, RawInputModifiers.Alt);
+                await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), token);
+                SettleFixtureLayout(window);
+                Assert.Equal(expected, (await preferences.ReadAsync(token)).Layout.Widgets.Select(item => item.Id));
+                Assert.True(DragHandle("Up next").IsFocused);
+            }
+
+            await MoveWidget(PhysicalKey.ArrowLeft, "up-next", "pinned-note", "focus-timer");
+            await MoveWidget(PhysicalKey.ArrowUp, "up-next", "pinned-note", "focus-timer");
+            await MoveWidget(PhysicalKey.ArrowRight, "pinned-note", "up-next", "focus-timer");
+            await MoveWidget(PhysicalKey.ArrowDown, "pinned-note", "focus-timer", "up-next");
+            await MoveWidget(PhysicalKey.ArrowRight, "pinned-note", "focus-timer", "up-next");
 
             Assert.Contains(page.GetVisualDescendants().OfType<TextBlock>(), control => control.Text == "25:00");
             await ClickWidget("newtab-widget-timer-toggle");
@@ -99,6 +118,133 @@ public sealed partial class UnifiedHomeContentTests
             await page.CloseAndDrainAsync();
             window?.Close();
             Directory.Delete(paths.DataDirectory, recursive: true);
+        }
+    }
+
+    [AvaloniaTheory]
+    [InlineData("widget-availability")]
+    [InlineData("candidate-preview")]
+    public async Task New_Tab_widget_reentrant_publication_refuses_the_superseded_move_before_any_save(string boundary)
+    {
+        var token = TestContext.Current.CancellationToken;
+        var paths = new LayoutPaths();
+        var actual = new VersionedAtomicSettingsStore(paths);
+        var settings = new WidgetPublicationSettings(actual);
+        var preferences = new NewTabLayoutPreferences(settings, "original-home-profile", _ => Task.CompletedTask);
+        var page = CreateWidgetPublicationPage(preferences);
+        Window? window = null; CuiViewModel? bindings = null; Task? reentry = null;
+        var reentered = false;
+        var originalOrder = new[] { "up-next", "pinned-note" };
+        var attemptedOrder = new[] { "pinned-note", "up-next" };
+        void Reenter(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+        {
+            if (reentered || bindings is null) return;
+            var atBoundary = boundary == "widget-availability"
+                ? args.PropertyName == "WidgetCanOpenEditor" && bindings.Get("WidgetCanOpenEditor") is false
+                : args.PropertyName == "WidgetCards" && PublishedWidgetOrder(bindings).SequenceEqual(attemptedOrder);
+            if (!atBoundary) return;
+            reentered = true;
+            // A real publication callback changes the selection through the normal owner. No
+            // private handler, field mutation, synthetic generation or replacement source is used.
+            reentry = page.DispatchAsync("home.newtab", null, token).AsTask();
+        }
+        try
+        {
+            await page.InitializeAsync(token);
+            window = Show(page); SettleFixtureLayout(window);
+            var picker = SettingsControl<Button>(page, "newtab-widget-picker-open");
+            bindings = Assert.IsType<CuiViewModel>(picker.DataContext);
+            Assert.Equal(originalOrder, PublishedWidgetOrder(bindings));
+            bindings.PropertyChanged += Reenter;
+            var handle = Assert.Single(page.GetVisualDescendants().OfType<Button>(), button =>
+                button.Name == "newtab-widget-drag" && AutomationProperties.GetName(button) == "Reorder Up next");
+            Assert.True(handle.Focus());
+            window.KeyPressQwerty(PhysicalKey.ArrowDown, RawInputModifiers.Alt);
+            window.KeyReleaseQwerty(PhysicalKey.ArrowDown, RawInputModifiers.Alt);
+            Assert.True(reentered, "The intended actual binding publication was reached synchronously.");
+            Assert.NotNull(reentry);
+            await reentry.WaitAsync(TimeSpan.FromSeconds(20), token);
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), token);
+            SettleFixtureLayout(window);
+            Assert.Equal(0, settings.CommitCalls);
+            Assert.Equal(originalOrder, (await preferences.ReadAsync(token)).Layout.Widgets.Select(widget => widget.Id));
+            Assert.Equal(originalOrder, PublishedWidgetOrder(bindings)); // The unstarted preview was withdrawn too.
+            Assert.True(page.IsAlive);
+            Assert.True(SettingsControl<Button>(page, "newtab-widget-picker-open").IsEffectivelyEnabled);
+            Assert.Empty((await actual.ExportAsync(token)).Settings);
+            await page.CloseAndDrainAsync(); // A settled pre-effect refusal does not become a close failure.
+        }
+        finally
+        {
+            if (bindings is not null) bindings.PropertyChanged -= Reenter;
+            if (reentry is not null) await reentry;
+            await page.CloseAndDrainAsync(); window?.Close();
+            Directory.Delete(paths.DataDirectory, recursive: true);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task New_Tab_widget_close_still_joins_an_acquired_save_and_retains_its_late_failure()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var paths = new LayoutPaths();
+        var actual = new VersionedAtomicSettingsStore(paths);
+        var failure = new IOException("The original widget preference commit failed after close began.");
+        var settings = new WidgetPublicationSettings(actual) { HoldCommit = true, CommitFailure = failure };
+        var preferences = new NewTabLayoutPreferences(settings, "original-home-profile", _ => Task.CompletedTask);
+        var page = CreateWidgetPublicationPage(preferences);
+        Window? window = null; Task? close = null; Task? actions = null;
+        var closeRequested = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var closePublished = new TaskCompletionSource<Task>(TaskCreationOptions.RunContinuationsAsynchronously);
+        // Establish the external owner on the UI context before headless input enters the
+        // page action. The source's CommitEntered signal is not an external-close context.
+        var externalCloseOwner = JoinExternalCloseAsync();
+        async Task JoinExternalCloseAsync()
+        {
+            await closeRequested.Task;
+            try
+            {
+                var original = page.CloseAndDrainAsync();
+                closePublished.TrySetResult(original);
+                await original;
+            }
+            catch (Exception error) { closePublished.TrySetException(error); throw; }
+        }
+        try
+        {
+            await page.InitializeAsync(token);
+            window = Show(page); SettleFixtureLayout(window);
+            var handle = Assert.Single(page.GetVisualDescendants().OfType<Button>(), button =>
+                button.Name == "newtab-widget-drag" && AutomationProperties.GetName(button) == "Reorder Up next");
+            Assert.True(handle.Focus());
+            window.KeyPressQwerty(PhysicalKey.ArrowDown, RawInputModifiers.Alt);
+            window.KeyReleaseQwerty(PhysicalKey.ArrowDown, RawInputModifiers.Alt);
+            await settings.CommitEntered.Task.WaitAsync(TimeSpan.FromSeconds(20), token);
+            actions = page.WhenActionsIdleAsync();
+            closeRequested.TrySetResult();
+            close = await closePublished.Task.WaitAsync(TimeSpan.FromSeconds(20), token);
+            Assert.False(actions.IsCompleted); Assert.False(close.IsCompleted);
+            Assert.Equal(1, settings.CommitCalls);
+            settings.CommitRelease.TrySetResult();
+            await Record.ExceptionAsync(() => actions);
+            var error = await Record.ExceptionAsync(() => close);
+            Assert.NotNull(error);
+            Assert.Contains(WidgetPublicationCauses(error), cause => ReferenceEquals(cause, failure));
+            var externalError = await Record.ExceptionAsync(() => externalCloseOwner);
+            Assert.NotNull(externalError);
+            Assert.Contains(WidgetPublicationCauses(externalError), cause => ReferenceEquals(cause, failure));
+            Assert.Equal(1, settings.CommitCalls); // No retry or replacement of the acquired write.
+            Assert.Empty((await actual.ExportAsync(token)).Settings);
+        }
+        finally
+        {
+            settings.CommitRelease.TrySetResult();
+            if (actions is not null) await Record.ExceptionAsync(() => actions);
+            closeRequested.TrySetResult();
+            close ??= await closePublished.Task;
+            await Record.ExceptionAsync(() => close);
+            await Record.ExceptionAsync(() => externalCloseOwner);
+            window?.Close(); Directory.Delete(paths.DataDirectory, recursive: true);
         }
     }
 
@@ -217,5 +363,60 @@ public sealed partial class UnifiedHomeContentTests
             Assert.Empty((await sources.ReadAsync(tasks, token)).Items);
         }
         finally { Directory.Delete(paths.DataDirectory, recursive: true); }
+    }
+    private static UnifiedHomePage CreateWidgetPublicationPage(NewTabLayoutPreferences preferences) => new(
+        Request("browse://newtab"), new Registry(),
+        () => throw new InvalidOperationException("Widget ordering must not create Dashboard."),
+        () => throw new InvalidOperationException("Widget ordering must not create Discover."),
+        (_, _) => throw new InvalidOperationException("Widget ordering must not navigate to another workspace."),
+        (_, _) => throw new InvalidOperationException("Widget ordering must not prepare an AI draft."),
+        newTabLayout: preferences,
+        newTabWidgets: new NewTabWidgetSources(null, null, null, null, _ => Task.CompletedTask));
+
+    private static string[] PublishedWidgetOrder(CuiViewModel bindings)
+    {
+        Assert.True(bindings.TryGetValue("WidgetCards", out var value));
+        // The actual CUI projection is a private record type with public Id members. Observe that
+        // emitted projection without replacing the binding context or injecting widget authority.
+        return Assert.IsAssignableFrom<IEnumerable<object>>(value).Select(item =>
+        {
+            var property = item.GetType().GetProperty("Id"); Assert.NotNull(property);
+            return Assert.IsType<string>(property.GetValue(item));
+        }).ToArray();
+    }
+
+    private static IEnumerable<Exception> WidgetPublicationCauses(Exception error)
+    {
+        yield return error;
+        if (error is AggregateException group)
+            foreach (var child in group.InnerExceptions) foreach (var cause in WidgetPublicationCauses(child)) yield return cause;
+        else if (error.InnerException is { } child)
+            foreach (var cause in WidgetPublicationCauses(child)) yield return cause;
+    }
+
+    private sealed class WidgetPublicationSettings(VersionedAtomicSettingsStore actual) : IVersionedSettingsStore, IVersionedSettingsGuardedCompareExchange
+    {
+        internal int CommitCalls;
+        internal bool HoldCommit;
+        internal IOException? CommitFailure;
+        internal TaskCompletionSource CommitEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal TaskCompletionSource CommitRelease { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public Task<T?> GetAsync<T>(string key, CancellationToken token) where T : class => actual.GetAsync<T>(key, token);
+        public Task SetAsync<T>(string key, T value, CancellationToken token) where T : class => actual.SetAsync(key, value, token);
+        public Task RemoveAsync(string key, CancellationToken token) => actual.RemoveAsync(key, token);
+        public Task<SettingsExportManifest> ExportAsync(CancellationToken token) => actual.ExportAsync(token);
+        public Task<SettingsImportResult> ImportAsync(SettingsExportManifest value, CancellationToken token) => actual.ImportAsync(value, token);
+        public Task<SettingsCompareExchangeResult> CompareExchangeAsync(string key, string? expected, string? replacement, CancellationToken token) =>
+            actual.CompareExchangeAsync(key, expected, replacement, token);
+        public Task<SettingsGuardedCompareExchangeResult> CompareExchangeGuardedAsync(string key, string? expected, string? replacement,
+            IReadOnlyDictionary<string, string?> guards, CancellationToken token) => actual.CompareExchangeGuardedAsync(key, expected, replacement, guards, token);
+        public async Task<SettingsGuardedCompareExchangeResult> CompareExchangeGuardedAsync(string key, string? expected, string? replacement,
+            IReadOnlyDictionary<string, string?> guards, ISettingsCommitAdmission admission, CancellationToken token)
+        {
+            CommitCalls++; CommitEntered.TrySetResult();
+            if (HoldCommit) await CommitRelease.Task; // Deliberately retain an actual write that ignores cancellation.
+            if (CommitFailure is { } failure) throw failure;
+            return await actual.CompareExchangeGuardedAsync(key, expected, replacement, guards, admission, token);
+        }
     }
 }

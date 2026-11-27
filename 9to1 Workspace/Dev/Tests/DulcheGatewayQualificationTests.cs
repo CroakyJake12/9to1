@@ -27,19 +27,37 @@ public sealed class DulcheGatewayQualificationTests
 
     [Theory]
     [InlineData("{}")]
-    [InlineData("{\"id\":\"other\",\"state\":\"stopped\"}")]
-    [InlineData("{\"id\":\"owned\",\"state\":\"running\"}")]
+    [InlineData("{\"id\":\"other\",\"state\":\"stopped\",\"settled\":true}")]
+    [InlineData("{\"id\":\"owned\",\"state\":\"running\",\"settled\":true}")]
+    [InlineData("{\"id\":\"owned\",\"state\":\"stopped\"}")]
+    [InlineData("{\"id\":\"owned\",\"state\":\"stopped\",\"settled\":false}")]
+    [InlineData("{\"id\":\"owned\",\"state\":\"stopped\",\"settled\":\"true\"}")]
+    [InlineData("{\"id\":\"owned\",\"state\":\"stopped\",\"settled\":null}")]
+    [InlineData("{\"id\":\"owned\",\"state\":\"stopped\",\"settled\":1}")]
     public async Task Http_success_is_not_stop_confirmation(string body)
     {
-        using var gateway = new DulcheUnixSocketGateway(new ReplyHandler(body));
+        using var handler = new ReplyHandler(body);
+        using var gateway = new DulcheUnixSocketGateway(handler);
         await Assert.ThrowsAsync<IOException>(() => gateway.StopRunAsync("owned"));
+        Assert.Equal(1, handler.RequestCount);
+        Assert.Equal("/v1/agents/owned/stop", handler.LastPath);
+        Assert.Equal(HttpMethod.Post, handler.LastMethod);
     }
 
-    [Fact]
-    public async Task Exact_terminal_run_acknowledges_stop()
+    [Theory]
+    [InlineData("stopped")]
+    [InlineData("completed")]
+    [InlineData("failed")]
+    [InlineData("cancelled")]
+    [InlineData("review")]
+    public async Task Exact_settled_terminal_run_acknowledges_stop(string terminal)
     {
-        using var gateway = new DulcheUnixSocketGateway(new ReplyHandler("{\"id\":\"owned\",\"state\":\"stopped\"}"));
+        using var handler = new ReplyHandler($"{{\"id\":\"owned\",\"state\":\"{terminal}\",\"settled\":true}}");
+        using var gateway = new DulcheUnixSocketGateway(handler);
         await gateway.StopRunAsync("owned");
+        Assert.Equal(1, handler.RequestCount);
+        Assert.Equal("/v1/agents/owned/stop", handler.LastPath);
+        Assert.Equal(HttpMethod.Post, handler.LastMethod);
     }
 
     [Theory]
@@ -53,7 +71,15 @@ public sealed class DulcheGatewayQualificationTests
 
     private sealed class ReplyHandler(string body) : HttpMessageHandler
     {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
-            Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(body, Encoding.UTF8, "application/json") });
+        internal int RequestCount { get; private set; }
+        internal string? LastPath { get; private set; }
+        internal HttpMethod? LastMethod { get; private set; }
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            RequestCount++;
+            LastPath = request.RequestUri!.AbsolutePath;
+            LastMethod = request.Method;
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(body, Encoding.UTF8, "application/json") });
+        }
     }
 }

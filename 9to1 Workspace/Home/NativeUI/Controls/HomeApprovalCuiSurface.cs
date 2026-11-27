@@ -290,21 +290,35 @@ public class HomeApprovalCuiSurface(HomeCoreRuntime runtime, HomeLocalProfileIde
     public Task<bool> FocusRequestAsync(string requestId, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(requestId);
-        return RunOriginal(token => FocusRequestOriginalCoreAsync(requestId, token),
+        return RunOriginal(token => FocusRequestOriginalCoreAsync(requestId, null, token),
             static original => ((Task<bool>)original).GetAwaiter().GetResult(), cancellationToken);
     }
 
-    private async Task<bool> FocusRequestOriginalCoreAsync(string requestId, CancellationToken cancellationToken)
+    /// <summary>Navigation from an actor-bound observation must not bind to a different
+    /// profile during delayed initialization. This remains navigation, never approval.</summary>
+    public Task<bool> FocusRequestAsync(string requestId, AuthenticatedResourceActor expectedActor,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(requestId);
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        return RunOriginal(token => FocusRequestOriginalCoreAsync(requestId, expectedActor, token),
+            static original => ((Task<bool>)original).GetAwaiter().GetResult(), cancellationToken);
+    }
+
+    private async Task<bool> FocusRequestOriginalCoreAsync(string requestId,
+        AuthenticatedResourceActor? expectedActor, CancellationToken cancellationToken)
     {
         RequireOriginalCurrent(cancellationToken);
-        if (_actor is null) return false;
+        if (_actor is null || expectedActor is not null && _actor != expectedActor) return false;
         await RefreshAsync(cancellationToken).ConfigureAwait(false);
         return await Dispatcher.UIThread.InvokeAsync(() =>
         {
             RequireOriginalCurrent(cancellationToken);
-            if (_snapshot is null) return false;
+            if (_snapshot is null || expectedActor is not null && _actor != expectedActor) return false;
             var index = Array.FindIndex(_snapshot.PendingRequests.ToArray(), item => item.RequestId == requestId);
             if (index < 0) return false;
+            if (expectedActor is not null && _snapshot.PendingRequests[index].Impact.ResourceBinding?.OriginalActor != expectedActor)
+                return false;
             _requestIndex = index;
             Update();
             return true;

@@ -224,9 +224,12 @@ public sealed class DulcheUnixSocketGateway : IDeveloperModelGateway, IDisposabl
         var state = JsonNode.Parse(await response.Content.ReadAsStringAsync(bounded.Token).ConfigureAwait(false)) as JsonObject;
         var returnedId = state?["id"]?.ToString();
         var terminal = state?["state"]?.ToString();
-        if (!StringComparer.Ordinal.Equals(returnedId, dulcheRunId)
+        // The daemon records the terminal label before the captured execution has
+        // necessarily retired. Only its exact per-run settlement receipt releases custody.
+        var settled = state?["settled"] is JsonValue proof && proof.TryGetValue<bool>(out var acknowledged) && acknowledged;
+        if (!StringComparer.Ordinal.Equals(returnedId, dulcheRunId) || !settled
             || terminal is not ("stopped" or "completed" or "failed" or "cancelled" or "review"))
-            throw new IOException("Dulche did not acknowledge a terminal state for the owned run; cancellation remains unconfirmed.");
+            throw new IOException("Dulche did not acknowledge a settled terminal state for the owned run; cancellation remains unconfirmed.");
     }
 
     public static JsonObject BuildCompletionPayload(DeveloperCompletionRequest request)

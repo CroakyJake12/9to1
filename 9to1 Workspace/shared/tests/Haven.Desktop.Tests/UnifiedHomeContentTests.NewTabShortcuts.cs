@@ -19,10 +19,24 @@ namespace Haven.Desktop.Tests;
 
 public sealed partial class UnifiedHomeContentTests
 {
+    [Theory]
+    [InlineData(0, 1)]
+    [InlineData(311, 1)]
+    [InlineData(312, 2)]
+    [InlineData(659, 2)]
+    [InlineData(660, 3)]
+    [InlineData(779, 3)]
+    [InlineData(780, 4)]
+    [InlineData(1050, 4)]
+    public void New_Tab_shortcut_columns_are_determined_by_available_width(double width, int expected)
+    {
+        Assert.Equal(expected, UnifiedHomePage.NewTabShortcutColumnCount(width));
+    }
+
     [AvaloniaTheory]
-    [InlineData(1440, 900)]
-    [InlineData(720, 520)]
-    public async Task New_Tab_shortcuts_add_validate_open_rename_reorder_and_remove_with_the_native_controls(int width, int height)
+    [InlineData(1440, 900, PhysicalKey.ArrowLeft)]
+    [InlineData(720, 520, PhysicalKey.ArrowUp)]
+    public async Task New_Tab_shortcuts_add_validate_open_rename_reorder_and_remove_with_the_native_controls(int width, int height, PhysicalKey moveKey)
     {
         var paths = new LayoutPaths();
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(35));
@@ -64,6 +78,15 @@ public sealed partial class UnifiedHomeContentTests
             var stored = (await preferences.ReadAsync(token)).Layout;
             var added = Assert.Single(stored.Shortcuts, shortcut => shortcut.Label == "Docs");
             Assert.Equal(1, stored.Revision);
+            // The fourth saved shortcut shares the first row at desktop widths;
+            // the Add affordance follows it instead of changing tile geometry.
+            var grid = SettingsControl<CuiContainerControl>(page, "home-newtab-shortcuts");
+            var positions = Tiles().Select(tile => tile.TranslatePoint(default, grid)!.Value).ToArray();
+            Assert.Equal(4, positions.Length);
+            Assert.Equal(width >= 1440 ? 4 : 2,
+                positions.GroupBy(point => Math.Round(point.Y)).Max(row => row.Count()));
+            var add = SettingsControl<Button>(page, "home-newtab-shortcut-add");
+            Assert.True(add.TranslatePoint(default, grid)!.Value.Y > positions[0].Y);
             await Activate("home-newtab-shortcut", "Docs");
             Assert.Equal(new BrowseNavigationIntent(request.TabId, AppContentAddress.Parse(added.Target), false), Assert.Single(receipts));
 
@@ -79,8 +102,8 @@ public sealed partial class UnifiedHomeContentTests
             await Activate("home-newtab-shortcut-cancel");
             var moved = Tile("Reference");
             Assert.True(moved.Focus(NavigationMethod.Tab));
-            window.KeyPressQwerty(PhysicalKey.ArrowUp, RawInputModifiers.Alt);
-            window.KeyReleaseQwerty(PhysicalKey.ArrowUp, RawInputModifiers.Alt);
+            window.KeyPressQwerty(moveKey, RawInputModifiers.Alt);
+            window.KeyReleaseQwerty(moveKey, RawInputModifiers.Alt);
             await page.WhenActionsIdleAsync().WaitAsync(token);
             SettleFixtureLayout(window);
             Assert.True(Tile("Reference").IsFocused);
@@ -88,6 +111,18 @@ public sealed partial class UnifiedHomeContentTests
             Assert.Equal(new[] { "Apps", "Reference", "Library", "Dashboard" }, revised.Shortcuts.Select(shortcut => shortcut.Label));
             Assert.Equal(added with { Label = "Reference" }, revised.Shortcuts[1]);
             Assert.Equal(4, revised.Revision);
+
+            // A boundary key must not create a saved revision or move focus.
+            var first = Tile("Apps");
+            Assert.True(first.Focus(NavigationMethod.Tab));
+            window.KeyPressQwerty(PhysicalKey.ArrowLeft, RawInputModifiers.Alt);
+            window.KeyReleaseQwerty(PhysicalKey.ArrowLeft, RawInputModifiers.Alt);
+            await page.WhenActionsIdleAsync().WaitAsync(token);
+            SettleFixtureLayout(window);
+            Assert.True(Tile("Apps").IsFocused);
+            var boundary = (await preferences.ReadAsync(token)).Layout;
+            Assert.Equal(revised.Revision, boundary.Revision);
+            Assert.Equal(revised.Shortcuts.AsEnumerable(), boundary.Shortcuts.AsEnumerable());
 
             await page.CloseAndDrainAsync();
             var reopened = new NewTabLayoutPreferences(new VersionedAtomicSettingsStore(paths), request.ProfileId, _ => Task.CompletedTask);
@@ -185,10 +220,10 @@ public sealed partial class UnifiedHomeContentTests
             search.Text = "mOdElS";
             SettleFixtureLayout(window);
             var model = Assert.Single(Candidates());
-            Assert.Equal("Add Models / Discover", AutomationProperties.GetName(model));
+            Assert.Equal("Add Models", AutomationProperties.GetName(model));
             await Activate(model, pointer: true);
             Assert.True(search.IsFocused);
-            Assert.False(Candidate("Models / Discover, already added").IsEnabled);
+            Assert.False(Candidate("Models, already added").IsEnabled);
             var layout = (await preferences.ReadAsync(token)).Layout;
             Assert.Equal(1, layout.Revision);
             Assert.Single(layout.Shortcuts, placement => placement.Target == NewTabShortcutPlacement.Models);

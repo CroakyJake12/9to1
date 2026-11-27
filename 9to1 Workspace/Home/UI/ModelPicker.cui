@@ -9,6 +9,9 @@
     <Action name="ToggleCompactModel" command="ToggleCompactSection" parameter="model" />
     <Action name="ToggleCompactParticipant" command="ToggleCompactSection" parameter="participant" />
     <Action name="ChooseCompactModel" command="ChooseCompactModel" parameter="{Binding model.Selection}" />
+    <Action name="RefreshPickerConversation" command="RefreshPickerConversation" />
+    <Action name="ChooseCompactSpecialist" command="ChooseCompactSpecialist" parameter="{Binding specialist.Selection}" />
+    <Action name="ChooseNoCompactSpecialist" command="ChooseCompactSpecialist" parameter="{Binding CompactSpecialistNoneSelection}" />
     <Action name="FinishAudit" command="FinishAudit" />
     <Action name="AddCatalogueCandidate" command="AddCatalogueCandidate" parameter="{Binding model.Selection}" />
     <Action name="ToggleFamily" command="ToggleFamily" parameter="{Binding family.ToggleSelection}" />
@@ -70,7 +73,8 @@
             <If condition="{Binding CompactContextOpen}">
               <Container Type="Vertical Stack" Padding="8 4" CellGap="4">
                 <Text Text="{Binding CompactContextDetails}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-                <Text Text="Conversation usage and context changes are unavailable here." Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                <Text id="compact-model-configured-context" Text="{Binding CompactConversationContext}" TextWrapping="Wrap" />
+                <Text id="compact-model-context-availability" Text="{Binding CompactContextChangeMessage}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
               </Container>
             </If>
             <Button id="compact-model-collection" Action="ToggleCompactModel" AccessibleName="{Binding CompactModelDisclosureName}"
@@ -111,19 +115,42 @@
               <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="6">
                 <Container Type="Vertical Stack" CellGap="2">
                   <Text Text="Assistant / Specialist" FontWeight="700" TextWrapping="Wrap" />
-                  <Text Text="Unavailable" Foreground="{Resource CuiTextSoftBrush}" />
+                  <Text id="compact-model-participant-selection" Text="{Binding CompactParticipantName}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
                 </Container>
                 <Text Column="1" Text="{Binding CompactParticipantChevron}" Foreground="{Resource CuiTextSoftBrush}" />
               </Container>
             </Button>
             <If condition="{Binding CompactParticipantOpen}">
-              <Text Text="This picker has no conversation participant connection." Margin="8 4"
-                    Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+              <Container Type="Vertical Stack" Padding="8 4" CellGap="6">
+                <Text id="compact-model-participant-status" Text="{Binding CompactParticipantMessage}"
+                      Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                <Button id="compact-model-participant-refresh" Action="RefreshPickerConversation" Content="Refresh Chat selection"
+                        HorizontalAlignment="Left" />
+                <If condition="{Binding HasCompactConversation}">
+                  <Input id="compact-model-specialist-search" Type="Text" Value="{Binding CompactSpecialistQuery, Mode=TwoWay}"
+                         PlaceholderText="Find a Specialist" AccessibleName="Find a Specialist" />
+                  <Button id="compact-model-specialist-none" Action="ChooseNoCompactSpecialist" Content="None"
+                          AccentRole="{Binding CompactSpecialistNoneAccent}" IsEnabled="{Binding CanChooseCompactSpecialist, fallback=false}"
+                          HorizontalAlignment="Left" AccessibleName="Remove the Specialist from this Chat" />
+                  <Text IsVisible="{Binding CompactSpecialistsEmpty, fallback=false}" Text="{Binding CompactSpecialistEmptyMessage}"
+                        Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                  <Repeat Source="{Binding CompactSpecialists}" As="specialist" Key="{Binding specialist.Identity}">
+                    <Button Action="ChooseCompactSpecialist" AccessibleName="{Binding specialist.Name}"
+                            IsEnabled="{Binding CanChooseCompactSpecialist, fallback=false}" AccentRole="{Binding specialist.Accent}"
+                            HorizontalContentAlignment="Stretch" Padding="9 6">
+                      <Container Type="Vertical Stack" CellGap="3">
+                        <Text Text="{Binding specialist.Name}" FontWeight="600" TextWrapping="Wrap" />
+                        <Text Text="{Binding specialist.Description}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                      </Container>
+                    </Button>
+                  </Repeat>
+                </If>
+              </Container>
             </If>
           </Container>
           <If condition="{Binding RouteRefreshRequired}">
             <Container Type="Vertical Stack" CellGap="4">
-              <Text Text="Reasoning level saved. Refresh the route to continue editing." Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+              <Text id="compact-model-reasoning-refresh-status" Text="Reasoning level saved. Refresh the route to continue editing." Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
               <Button id="compact-model-refresh-route" Action="Refresh" Content="Refresh route" HorizontalAlignment="Left" />
             </Container>
           </If>

@@ -152,9 +152,35 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
             "dev.mission-refresh-models", "dev.mission-load-programme", "dev.mission-start", "dev.mission-step",
             "dev.mission-pause", "dev.mission-resume", "dev.mission-stop", "dev.mission-checkpoint",
             "dev.mission-compact", "dev.mission-select-task", "dev.mission-open-changed-file", "dev.mission-delegate",
-            "dev.mission-approve-integration", "dev.mission-reject-integration"];
+            "dev.mission-approve-integration", "dev.mission-reject-integration",
+            "dev.layout.code", "dev.layout.files", "dev.layout.preview", "dev.layout.mission", "dev.layout.project",
+            "dev.layout.explorer-files", "dev.layout.explorer-search", "dev.layout.explorer-create",
+            "dev.layout.find", "dev.layout.line-endings", "dev.layout.review", "dev.layout.output", "dev.layout.problems",
+            "dev.layout.terminal", "dev.layout.tests", "dev.layout.tasks", "dev.layout.hide-output"];
         Assert.Equal(expected.OrderBy(value => value), commands.OrderBy(value => value));
         Assert.Equal(nodes.Length, nodes.Select(value => value.StableId).Distinct().Count());
+    }
+
+    [Fact]
+    public void Workbench_uses_spatial_panes_and_bounded_output_without_hiding_the_original_stop_controls_in_configuration()
+    {
+        var nodes = Descendants(DeveloperWorkbenchCuiDocument.Load().Components).ToArray();
+        foreach (var (id, binding) in new[]
+        {
+            ("dev-workbench-main", "LayoutMainColumns"), ("dev-explorer-section", "LayoutExplorerVisible"),
+            ("dev-editor-section", "LayoutEditorVisible"), ("dev-cui-designer-section", "LayoutPreviewVisible"),
+            ("dev-autonomous-mission-card", "LayoutMissionVisible"), ("dev-output-content", "LayoutOutputHeight"),
+            ("dev-code-editor", "LayoutEditorHeight")
+        })
+            Assert.Contains(Assert.Single(nodes, node => node.Name == id).Properties.Values,
+                value => value is CuiBindingValue actual && actual.Path == binding);
+        var header = Assert.Single(nodes, node => node.Name == "dev-workbench-header");
+        Assert.Contains(Descendants(header.Children), node => node.Name == "dev-mission-stop");
+        Assert.Contains(Descendants(header.Children), node => node.Name == "dev-run-selected-target");
+        var output = Assert.Single(nodes, node => node.Name == "dev-runtime-section");
+        Assert.Contains(Descendants(output.Children), node => node.Name == "dev-stop-manual-run");
+        Assert.DoesNotContain(Descendants(Assert.Single(nodes, node => node.Name == "dev-output-content").Children),
+            node => node.Name == "dev-stop-manual-run");
     }
     [Fact]
     public void Exact_pass_and_process_output_use_trusted_readonly_objects_while_the_editor_remains_writable()

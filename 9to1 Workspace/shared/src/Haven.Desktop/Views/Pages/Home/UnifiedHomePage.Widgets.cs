@@ -47,7 +47,8 @@ internal sealed partial class UnifiedHomePage
 
     private sealed record WidgetDrag(IPointer Pointer, string SourceId, Control Source, Button Handle, Point Start,
         bool IsDragging = false, Control? Target = null);
-    private sealed record WidgetReorder(string SourceId, string TargetId);
+    private sealed record WidgetReorder(string SourceId, string TargetId, long Selection,
+        ImmutableArray<NewTabWidgetPlacement> Order);
 
     private const string WidgetDragPresentation = "New Tab widget drag";
 
@@ -195,7 +196,26 @@ internal sealed partial class UnifiedHomePage
 
     private void OnWidgetKeyDown(object? sender, KeyEventArgs args)
     {
-        if (_section != "newtab" || args.Key != Key.Escape || args.KeyModifiers != KeyModifiers.None) return;
+        if (_section != "newtab" || args.Handled) return;
+        if (args.KeyModifiers == KeyModifiers.Alt && args.Key is (Key.Up or Key.Down or Key.Left or Key.Right) &&
+            !_widgetBusy && _widgetDrag is null && CanOpenNewTabWidgetEditor &&
+            args.Source is Button { Name: "newtab-widget-drag", IsEffectivelyEnabled: true } handle &&
+            _newTabWidgetMount is { } mount && mount.IsVisualAncestorOf(handle) &&
+            handle.GetVisualAncestors().OfType<Control>().FirstOrDefault(control => control.Name == "newtab-widget-card") is { } card &&
+            GetWidgetId(card) is { } id)
+        {
+            var order = _widgetLayout.Widgets;
+            var index = FindWidgetIndex(order, id);
+            if (index < 0 || order[index] is not { IsVisible: true, IsLocked: false }) return;
+            args.Handled = true;
+            var direction = args.Key is Key.Up or Key.Left ? -1 : 1;
+            var neighbor = FindNeighbor(order, index, direction);
+            if (neighbor >= 0)
+                _widgetDragCommit = DispatchAsync(widgetActionPrefix + "drag-reorder",
+                    new WidgetReorder(id, order[neighbor].Id, _selection, order)).AsTask();
+            return;
+        }
+        if (args.Key != Key.Escape || args.KeyModifiers != KeyModifiers.None) return;
         if (_widgetDrag is not null)
         {
             EndWidgetDrag();
@@ -252,12 +272,15 @@ internal sealed partial class UnifiedHomePage
     private void OnWidgetPointerReleased(object? sender, PointerReleasedEventArgs args)
     {
         if (_widgetDrag is not { } drag || drag.Pointer != args.Pointer) return;
+        var selection = _selection;
+        var order = _widgetLayout.Widgets;
         var target = drag.IsDragging ? FindWidgetDropTarget(drag, args.GetPosition(this)) : null;
         EndWidgetDrag();
         if (!drag.IsDragging) return;
         args.Handled = true;
         if (IsAlive && _section == "newtab" && CanEditWidgetLayout && target is not null && GetWidgetId(target) is { } targetId)
-            _widgetDragCommit = DispatchAsync(widgetActionPrefix + "drag-reorder", new WidgetReorder(drag.SourceId, targetId)).AsTask();
+            _widgetDragCommit = DispatchAsync(widgetActionPrefix + "drag-reorder",
+                new WidgetReorder(drag.SourceId, targetId, selection, order)).AsTask();
     }
 
     private void OnWidgetPointerCaptureLost(object? sender, PointerCaptureLostEventArgs args)
@@ -312,7 +335,7 @@ internal sealed partial class UnifiedHomePage
 
     private static ImmutableArray<NewTabWidgetPlacement> ReorderWidget(ImmutableArray<NewTabWidgetPlacement> placements, WidgetReorder drag)
     {
-        if (!CanReorderWidget(placements, drag.SourceId, drag.TargetId)) return placements;
+        if (!placements.SequenceEqual(drag.Order) || !CanReorderWidget(placements, drag.SourceId, drag.TargetId)) return placements;
         var origin = FindWidgetIndex(placements, drag.SourceId);
         var target = FindWidgetIndex(placements, drag.TargetId);
         return placements.RemoveAt(origin).Insert(target, placements[origin]);
@@ -370,8 +393,11 @@ internal sealed partial class UnifiedHomePage
         var action = command[widgetActionPrefix.Length..];
         var key = parameter as string;
         // Do not let a stale rendered control issue writes in a different view generation.
-        var generation = _selection;
+        var generation = parameter is WidgetReorder reorder ? reorder.Selection : _selection;
         original.BindPublicationGuard(() => IsAlive && _section == "newtab" && _selection == generation);
+        if (parameter is WidgetReorder pending && (!original.IsAcceptedPublicationCurrent ||
+            !CanOpenNewTabWidgetEditor || _widgetDrag is not null || !_widgetLayout.Widgets.SequenceEqual(pending.Order)))
+            return;
         // Adding makes the focused card temporarily unavailable, then permanently checked.
         // Keep the modal's keyboard focus on its search field before disabling the action rows.
         if (action == "pick" && _widgetPickerOpen) FocusWidgetControlNow("newtab-widget-search");
@@ -379,6 +405,7 @@ internal sealed partial class UnifiedHomePage
         PublishNewTabWidgets();
         try
         {
+            if (parameter is WidgetReorder && !original.IsAcceptedPublicationCurrent) return;
             switch (action)
             {
                 case "picker" when CanOpenNewTabWidgetEditor:
@@ -429,7 +456,8 @@ internal sealed partial class UnifiedHomePage
                     if (original.IsAcceptedPublicationCurrent)
                     {
                         var title = NewTabWidgetSources.Catalogue.FirstOrDefault(item => item.Id == drag.SourceId)?.Title ?? "Unavailable widget";
-                        FocusWidgetControl("newtab-widget-drag", "Reorder " + title);
+                        if (_retryNewTabLayout is null)
+                            FocusAfterSelection(() => FocusWidgetControlNow("newtab-widget-drag", "Reorder " + title));
                     }
                     return;
                 case "retry" when FindWidget(key) is { IsVisible: true } retry:
@@ -504,7 +532,8 @@ internal sealed partial class UnifiedHomePage
         if ((action is "move-up" or "move-down") && !placement.IsLocked)
         {
             var neighbor = FindNeighbor(placements, index, action == "move-up" ? -1 : 1);
-            if (neighbor >= 0) return placements.SetItem(index, placements[neighbor]).SetItem(neighbor, placement);
+            if (neighbor >= 0) return ReorderWidget(placements,
+                new WidgetReorder(id, placements[neighbor].Id, 0, placements));
         }
         return placements.SetItem(index, updated);
     }

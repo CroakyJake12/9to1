@@ -1,6 +1,8 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
 using Haven.UI;
 using System.Runtime.CompilerServices;
@@ -13,6 +15,7 @@ internal static class BrowserCanonicalIcons
 {
     private static readonly ConditionalWeakTable<CuiControlRegistry, object> Registrations = new();
     private static readonly object RegistrationLock = new();
+    private static readonly ConditionalWeakTable<Control, CanonicalIconInk> Inks = new();
     internal static void Register(CuiControlRegistry registry, Func<string, Control, IImage?>? additionalSource = null)
     {
         lock (RegistrationLock)
@@ -70,15 +73,45 @@ internal static class BrowserCanonicalIcons
                 writer.EndFigure(figure.Closed);
             }
         }
+        var pen = new Pen(brush, 1.8, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round);
         var image = new DrawingImage(new GeometryDrawing
         {
             Geometry = geometry,
-            Pen = new Pen(brush, 1.8, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round)
+            Pen = pen
         });
+        Inks.GetValue(target, static control => new CanonicalIconInk(control)).Set(pen, brush);
         if (sourceGeometry.ViewBox is { } viewBox)
             image.Viewbox = new Rect(viewBox.X, viewBox.Y, viewBox.Width, viewBox.Height);
         return image;
     }
 
     private static Point Point(HavenPoint point) => new(point.X, point.Y);
+
+    /// <summary>Monochrome action glyphs share their actual button's ink. The observer
+    /// is attached only to the target itself; it never retains a parent button or a page.
+    /// Branded app images do not enter this path and keep their own artwork.</summary>
+    private sealed class CanonicalIconInk
+    {
+        private readonly Control _target;
+        private Pen? _pen;
+        private IBrush? _fallback;
+        internal CanonicalIconInk(Control target)
+        {
+            _target = target;
+            target.PropertyChanged += Changed;
+            target.AttachedToVisualTree += (_, _) => Apply();
+            target.DetachedFromVisualTree += (_, _) => Apply();
+        }
+        internal void Set(Pen pen, IBrush fallback) { _pen = pen; _fallback = fallback; Apply(); }
+        private void Changed(object? sender, AvaloniaPropertyChangedEventArgs args)
+        {
+            if (args.Property == TextElement.ForegroundProperty) Apply();
+        }
+        private void Apply()
+        {
+            if (_pen is null) return;
+            var button = _target as Button ?? _target.GetVisualAncestors().OfType<Button>().FirstOrDefault();
+            _pen.Brush = button?.Foreground ?? (_target as MenuItem)?.Foreground ?? _fallback;
+        }
+    }
 }

@@ -22,7 +22,7 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
         "spaces.confirm-rename", "spaces.cancel-rename", "spaces.set-query",
         "spaces.select-move-parent",
         "spaces.edit-extensions", "spaces.edit-graph", "spaces.edit-details",
-        "spaces.new-chat", "spaces.open-conversation", "spaces.open-sidebar-item",
+        "spaces.new-chat", "spaces.open-conversation", "spaces.open-sidebar-item", "spaces.open-groups", "spaces.open-specialists",
         "spaces.toggle-sidebar", "spaces.toggle-space-switcher", "spaces.toggle-space-overflow",
         "spaces.manage", "spaces.set-conversation-query", "spaces.search-conversations", "spaces.clear-conversation-search"
     };
@@ -98,6 +98,8 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
             // inventing rows; the owning native surface serves the real projection.
             "spaces.sidebarItems" => Array.Empty<SpacesHomeSidebarRow>(),
             "spaces.hasSidebarItems" => false,
+            "spaces.hasOrganisationDestinations" => false,
+            "spaces.groupsSelected" or "spaces.specialistsSelected" => false,
             // The contextual sidebar's collapse/switcher/overflow state is canonical view state on the
             // controller, so the authored surface reads it here rather than keeping hidden state.
             "spaces.sidebarCollapsed" => snapshot.SidebarCollapsed,

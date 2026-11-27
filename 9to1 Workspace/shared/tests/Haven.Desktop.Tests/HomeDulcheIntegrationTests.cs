@@ -20,7 +20,7 @@ using Xunit;
 
 namespace Haven.Desktop.Tests;
 
-public sealed class HomeDulcheIntegrationTests
+public sealed partial class HomeDulcheIntegrationTests
 {
     [AvaloniaFact]
     public async Task UnloadedModelStartsOnSendAndPreservesANewerComposerDraft()
@@ -35,6 +35,7 @@ public sealed class HomeDulcheIntegrationTests
         {
             window.Show();
             await page.ActivateAsync(timeout.Token);
+            await OpenFirstModelAsync(page, timeout.Token);
             T Named<T>(string name) where T : Control => page.GetVisualDescendants().OfType<T>().Single(c => AutomationProperties.GetName(c) == name);
             Button ByText(string label) => page.GetVisualDescendants().OfType<Button>().Single(b => b.Content?.ToString() == label);
             while (!ByText("Send").IsEnabled) await Task.Delay(10, timeout.Token);
@@ -76,6 +77,7 @@ public sealed class HomeDulcheIntegrationTests
         {
             window.Show();
             await page.ActivateAsync(timeout.Token);
+            await OpenFirstModelAsync(page, timeout.Token);
             T Named<T>(string name) where T : Control => page.GetVisualDescendants().OfType<T>().Single(c => AutomationProperties.GetName(c) == name);
             Button ByText(string label) => page.GetVisualDescendants().OfType<Button>().Single(b => b.Content?.ToString() == label);
             while (!ByText("Send").IsEnabled) await Task.Delay(10, timeout.Token);
@@ -115,11 +117,12 @@ public sealed class HomeDulcheIntegrationTests
         {
             window.Show();
             await page.ActivateAsync(timeout.Token);
+            await OpenFirstModelAsync(page, timeout.Token);
             T Named<T>(string name) where T : Control => page.GetVisualDescendants().OfType<T>().Single(c => AutomationProperties.GetName(c) == name);
             Button ByText(string label) => page.GetVisualDescendants().OfType<Button>().Single(b => b.Content?.ToString() == label);
             void Click(string label) => ByText(label).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             while (!ByText("Send").IsEnabled) await Task.Delay(10, timeout.Token);
-            Click("Advanced");
+            Click("Performance");
             var profiles = await WaitForNamedAsync<ComboBox>(page, "Inference profiles", timeout.Token);
             while (profiles.ItemCount != 1) await Task.Delay(10, timeout.Token);
             (await WaitForNamedAsync<TextBox>(page, "Profile context length", timeout.Token)).Text = "16384";
@@ -183,6 +186,7 @@ public sealed class HomeDulcheIntegrationTests
         {
             window.Show();
             await page.ActivateAsync(timeout.Token);
+            await OpenFirstModelAsync(page, timeout.Token);
             Button FindButton(string label) => page.GetVisualDescendants().OfType<Button>().Single(b => b.Content?.ToString() == label);
             void Click(string label) => FindButton(label).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             while (!FindButton("Send").IsEnabled) await Task.Delay(10, timeout.Token);
@@ -229,6 +233,7 @@ public sealed class HomeDulcheIntegrationTests
         {
             window.Show();
             await page.ActivateAsync(timeout.Token);
+            await OpenFirstModelAsync(page, timeout.Token);
             Button FindButton(string label) => page.GetVisualDescendants().OfType<Button>().Single(b => b.Content?.ToString() == label);
             FindButton("Performance").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             var restoreButton = await WaitForButtonAsync(page, "Restore previous settings", timeout.Token);
@@ -239,7 +244,10 @@ public sealed class HomeDulcheIntegrationTests
             Assert.Equal("/v1/models/one/optimise", restored.Path);
             Assert.Equal("restore", restored.Body["action"]!.ToString());
             Assert.Equal("saved-operation", restored.Body["operation_id"]!.ToString());
-            while (!FindButton("Optimise inference").IsEnabled) await Task.Delay(10, timeout.Token);
+            // The command channel reports request admission before the original
+            // response and its final capability refresh have settled.
+            Assert.True(await page.TryPrepareToCloseAsync(timeout.Token));
+            Assert.True(FindButton("Optimise inference").IsEnabled);
             Assert.False(FindButton("Restore previous settings").IsEnabled);
         }
         finally { await page.CloseAndDrainAsync(); window.Close(); root.Delete(true); }
@@ -258,6 +266,7 @@ public sealed class HomeDulcheIntegrationTests
         {
             window.Show();
             await page.ActivateAsync(timeout.Token);
+            await OpenFirstModelAsync(page, timeout.Token);
             Button FindButton(string label) => page.GetVisualDescendants().OfType<Button>().Single(b => b.Content?.ToString() == label);
             FindButton("Performance").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             var optimiseButton = await WaitForButtonAsync(page, "Optimise inference", timeout.Token);
@@ -281,6 +290,7 @@ public sealed class HomeDulcheIntegrationTests
         {
             window.Show();
             await page.ActivateAsync(timeout.Token);
+            await OpenFirstModelAsync(page, timeout.Token);
             T Named<T>(string name) where T : Control => page.GetVisualDescendants().OfType<T>().Single(c => AutomationProperties.GetName(c) == name);
             Button FindButton(string label) => page.GetVisualDescendants().OfType<Button>().Single(b => b.Content?.ToString() == label);
             while (!FindButton("Send").IsEnabled) await Task.Delay(10, timeout.Token);
@@ -336,6 +346,7 @@ public sealed class HomeDulcheIntegrationTests
         {
             window.Show();
             await page.ActivateAsync(timeout.Token);
+            await OpenFirstModelAsync(page, timeout.Token);
             T Named<T>(string name) where T : Control => page.GetVisualDescendants().OfType<T>().Single(c => AutomationProperties.GetName(c) == name);
             var send = page.GetVisualDescendants().OfType<Button>().Single(b => b.Content?.ToString() == "Send");
             while (!send.IsEnabled) await Task.Delay(10, timeout.Token);
@@ -364,7 +375,9 @@ public sealed class HomeDulcheIntegrationTests
         public bool ManagementSupported { get; init; } = true;
         public bool DiscoverSavedOperation { get; init; }
         public bool SavedRollbackApplicable { get; init; } = true;
+        public bool ReplaceModelOnPoll { get; set; }
         public string ModelName { get; init; } = "Model One";
+        public int StatusReads { get; private set; }
         public int CompletionAttempts { get; private set; }
         public TaskCompletionSource<JsonNode> Completion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource ReleaseCompletion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -386,16 +399,19 @@ public sealed class HomeDulcheIntegrationTests
             }
             string data;
             if (path == "/v1/status")
+            {
+                StatusReads++;
                 data = JsonSerializer.Serialize(new { phase = "ready", stop_all = false,
-                    models = new[] { new { id = "one", name = ModelName, state = "unloaded", can_start = true, context = 524288 } },
+                    models = new[] { new { id = ReplaceModelOnPoll ? "two" : "one", name = ReplaceModelOnPoll ? "Different model" : ModelName, state = "unloaded", can_start = true, context = 524288 } },
                     agents = Array.Empty<object>(), resources = new { } });
+            }
             else if (path == "/v1/inference/capabilities")
             {
                 var caps = JsonSerializer.SerializeToNode(new { optimise = new { supported = ManagementSupported }, adapters = new { supported = ManagementSupported } })!;
                 if (DiscoverSavedOperation)
                 {
                     var saved = JsonNode.Parse("""{"id":"saved-operation","model":"one","state":"completed","rollback_available":true,"context_tokens":524288}""")!;
-                    caps["models"] = new JsonArray(new JsonObject { ["id"] = "one", ["latest_operation"] = saved,
+                    caps["models"] = new JsonArray(new JsonObject { ["id"] = "one", ["optimise"] = caps["optimise"]!.DeepClone(), ["adapters"] = caps["adapters"]!.DeepClone(), ["latest_operation"] = saved,
                         ["rollback_operation"] = SavedRollbackApplicable && !_restored ? saved.DeepClone() : null });
                     caps["active_operation"] = null;
                 }
@@ -511,6 +527,7 @@ public sealed class HomeDulcheIntegrationTests
             window = new Window { Width = 1000, Height = 850, Content = page };
             window.Show();
             await page.ActivateAsync(timeout.Token);
+            await OpenFirstModelAsync(page, timeout.Token);
             await connected.Task.WaitAsync(timeout.Token);
             T Named<T>(string accessible) where T : Control => page.GetVisualDescendants().OfType<T>().Single(c => AutomationProperties.GetName(c) == accessible);
             var pick = Named<ComboBox>("Installed inference model");
@@ -561,6 +578,7 @@ public sealed class HomeDulcheIntegrationTests
         {
             window.Show();
             await page.ActivateAsync(timeout.Token);
+            await OpenFirstModelAsync(page, timeout.Token);
             Button ButtonByLabel(string name) => page.GetVisualDescendants().OfType<Button>().Single(b => b.Content?.ToString() == name);
             T InputByLabel<T>(string name) where T : Control => page.GetVisualDescendants().OfType<T>().Single(c => AutomationProperties.GetName(c) == name);
             void Click(string name) => ButtonByLabel(name).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
@@ -872,6 +890,8 @@ public sealed class HomeDulcheIntegrationTests
     private sealed class DirectChatHandler : HttpMessageHandler
     {
         public bool WithholdHeaders { get; init; }
+        public string? SavedRunModel { get; init; }
+        public int SavedRunReads { get; private set; }
         public bool HoldStopSettlement { get; init; }
         public bool StopSettled { get; init; } = true;
         public ChannelBytesStream Stream { get; } = new();
@@ -896,6 +916,13 @@ public sealed class HomeDulcheIntegrationTests
             }
             else if (path == "/v1/status")
                 json = """{"phase":"ready","models":[{"id":"one","name":"Model One","state":"loaded","context":524288}],"agents":[{"id":"unrelated-agent","state":"running"}],"resources":{}}""";
+            else if (request.Method == HttpMethod.Get && path == "/v1/agents/unrelated-agent")
+            {
+                SavedRunReads++;
+                json = JsonSerializer.Serialize(new { id = "unrelated-agent", model = SavedRunModel ?? "one", state = "completed",
+                    completed_steps = new[] { new { choices = new[] { new { message = new { content = "Saved model answer" } } } } },
+                    request = new { steps = Array.Empty<object>() } });
+            }
             return new(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") };
         }
     }

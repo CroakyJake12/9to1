@@ -202,6 +202,19 @@ public sealed class BuildBrowseAppContentIntegrationTests
         }
     }
 
+    [Theory]
+    [InlineData("browse://home", "Home", "app.home")]
+    [InlineData("browse://newtab", "Home", "app.home")]
+    [InlineData("9to1://spaces", "Spaces", "app.spaces")]
+    [InlineData("9to1://dev", "Build", "app.dev")]
+    [InlineData("https://example.com/", "Browse", "app.browse")]
+    public void Shared_host_theme_scope_follows_the_registered_selected_app(string address, string surface, string appId)
+    {
+        var presentation = App.UnifiedWorkspaceHost.PresentationForAddress(AppContentAddress.Parse(address));
+        Assert.Equal(surface, presentation.Surface);
+        Assert.Equal(appId, presentation.AppId);
+    }
+
     [AvaloniaFact]
     public async Task Build_address_refuses_unregistered_foreign_authority()
     {

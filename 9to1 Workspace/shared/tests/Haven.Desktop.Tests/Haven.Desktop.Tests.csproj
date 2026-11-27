@@ -54,11 +54,12 @@
     <Compile Include="../../../Dev/Tests/DeveloperSourceReviewSessionTests.cs" Link="Dev/DeveloperSourceReviewSessionTests.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
-    <Compile Include="AssemblyInfo.cs;TestAppBuilder.cs" />
+    <Compile Include="AssemblyInfo.cs;TestAppBuilder.cs;AuthoredCuiControls.cs" />
     <Compile Include="OriginalNativeDevelopmentCompositionTests.cs;SpaceLayoutEditorAdapterTests.cs" />
     <Compile Include="SpaceTasksDashboardOriginalWorkTests.cs;SpaceTasksDashboardCuiTests.cs" />
     <Compile Include="SpaceGraphContextPickerTests.cs;SpaceGraphTextNormalizationTests.cs;BoardsSectionIconSuggestionServiceTests.cs" />
     <Compile Include="FilesNativeBoardDocumentCreateTests.cs" />
+    <Compile Include="FilesNativeBrowserMutationTests.cs;FilesNativeBoardOpenTests.cs" />
     <Compile Include="BoardsCreateDestinationRoutingTests.cs" />
     <Compile Include="NativeHomeFilesBoardCreationIntegrationTests.cs" />
     <Compile Include="TaskObservationAuthorizationTests.cs" />
@@ -70,6 +71,8 @@
     <Compile Include="NativeInterfaceScalePreferenceTests.cs" />
     <Compile Include="NativeThemeToolbarTests.cs" />
     <Compile Include="DeveloperSavedProjectsNavigationTests.cs;TaskRunEndPassTests.cs" />
+    <Compile Include="BuildProjectStartPreferencesTests.cs;DeveloperSavedSetupDraftTests.cs;BuildStartSessionPreferencesTests.cs" />
+    <Compile Include="ChatActivityDisclosureTests.cs;ChatProgressTextTests.cs" />
     <Compile Include="DeveloperManualRecoveryConflictTests.cs" />
     <Compile Include="OriginalAutomationLibraryGraphEditingTests.cs" />
     <Compile Include="DataSharedInkTests.cs" />
@@ -84,7 +87,10 @@
     <Compile Include="WorkspaceWindowPersistenceTests.cs" />
     <Compile Include="SharedControlStateParityContractTests.cs" />
     <Compile Include="LinuxWorkspaceBoundaryAbiTests.cs" />
-    <Compile Include="UnifiedHomeContentTests.cs;HomeDulcheIntegrationTests.cs;DulcheSocketModelProviderTests.cs;DulcheMigrationProviderTests.cs;UnifiedHomeContentTests.Accent.cs;UnifiedHomeContentTests.ThemeOptions.cs;DesktopOriginalShutdownSequenceTests.cs" />
+    <Compile Include="UnifiedHomeContentTests.cs;UnifiedHomeContentTests.AtlasApps.cs;UnifiedHomeContentTests.ExploreRoutes.cs;HomeDulcheIntegrationTests.cs;DulcheSocketModelProviderTests.cs;DulcheMigrationProviderTests.cs;UnifiedHomeContentTests.Accent.cs;UnifiedHomeContentTests.ThemeOptions.cs;DesktopOriginalShutdownSequenceTests.cs" />
+    <Compile Include="HomeDulchePresentationTests.cs" />
+    <Compile Include="HomeDulcheCommandCustodyTests.cs;HomeDulcheDraftTests.cs" />
+    <Compile Include="HomeDulcheIntegrationTests.ModelTransitions.cs;HomeDulcheIntegrationTests.ManualFailure.cs" />
     <Compile Include="NewTabBackgroundAssetsTests.cs" />
     <Compile Include="UnifiedHomeContentTests.SettingsCatalog.cs;UnifiedHomeContentTests.NewTabCustomisation.cs;UnifiedHomeContentTests.NewTabShortcuts.cs;UnifiedHomeContentTests.NewTabShortcutDrag.cs;UnifiedHomeContentTests.NewTabWidgets.cs" />
     <Compile Include="UnifiedHomeContentTests.SettingsKeyboard.cs" />
@@ -106,14 +112,22 @@
     <Compile Include="NativeAppContentRegistryTests.cs" />
     <Compile Include="BoardsOriginalStoreSetupTests.cs;SpacesOriginalStoreSetupTests.cs" />
     <Compile Include="HomeDashboardCuiRenderTests.cs;HomeDiscoverCuiRenderTests.cs;DashboardWidgetCanvasTests.cs;DashboardEditPlannerTests.cs" />
+    <Compile Include="HomeDashboardAttentionTests.cs;HomeNativeApprovalWindowOwnerTests.cs" />
+    <Compile Include="HomeModelBookmarkTests.cs" />
+    <Compile Include="HomeModelPickerConversationTests.cs;NewChatModelPickerCustodyTests.cs" />
     <Compile Include="ChatSpacePageAcceptanceTests.cs" />
     <Compile Include="ChatAddMenuNativePopupTests.cs;ChatThemeAdaptationTests.cs;GoPageResponsiveTests.cs" />
+    <Compile Include="ChatAddMenuAtlasTests.cs;ChatAddMenuSearchTests.cs" />
+    <Compile Include="ChatConversationPresentationTests.cs;ChatHavenSceneTests.cs;ChatTranscriptScrollPolicyTests.cs" />
     <Compile Include="HuggingFace/*.cs" />
     <!-- Actual Spaces native composer + initial task observation tests share the existing
          canonical permission-caller fixture and its real nested Rig; keep the complete partial. -->
     <Compile Include="ChatCloudPermissionCallerTests.cs;ChatInitialTaskObservationTests.cs;NewChatInitialTaskObservationTests.cs;NewChatTemporarySaveTests.cs" />
     <Compile Include="NewChatOrdinaryStopRecoveryTests.cs" />
     <Compile Include="NewChatRegenerationTests.cs" />
+    <Compile Include="NewChatCompactionCustodyTests.cs" />
+    <Compile Include="NewChatOptionsTests.cs;ChatComposerOptionsAtlasTests.cs" />
+    <Compile Include="../Haven.Infrastructure.Tests/ConversationCompactionRepositoryTests.cs" Link="ConversationCompactionRepositoryTests.cs" />
     <Compile Include="SpaceTaskWidgetPermissionReviewTests.cs" />
     <Compile Include="CanonicalHostedResumeObservationTests.cs" />
     <!-- Canonical workspace-session projection and persistence coverage (same production types). -->

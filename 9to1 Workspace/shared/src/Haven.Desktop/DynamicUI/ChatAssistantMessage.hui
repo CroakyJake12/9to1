@@ -1,12 +1,20 @@
 <DynamicUI Name="ChatAssistantMessage">
-  <Container Name="MessageRoot" Layout="Horizontal" Width="100%" Gap="10px" Padding="8px 4px">
-    <Image Name="Avatar" Source="{{AVATAR}}" Width="28px" Height="28px" Radius="14px" Visibility="{{AVATARVISIBILITY}}" />
-    <Container Name="MessageBody" Layout="Vertical" Width="100%" Gap="6px">
-      <Text Name="Role" Content="{{AGENT}}" FontSize="11" FontWeight="700" Foreground="TextSecondary" />
+  <Container Name="MessageRoot" Layout="Vertical" Width="100%" Gap="8px" Padding="0px 0px 16px 0px">
+    <Container Name="AssistantIdentity" Layout="Wrap" Gap="8px">
+      <Image Name="Avatar" Source="{{AVATAR}}" Width="24px" Height="24px" Radius="12px" Visibility="{{AVATARVISIBILITY}}" />
+      <Text Name="Role" Content="{{AGENT}}" FontSize="12" FontWeight="700" Foreground="TextPrimary" VerticalAlignment="Center" />
+      <Text Name="Model" Content="{{MODEL}}" FontSize="11" Foreground="TextSecondary" VerticalAlignment="Center" Visibility="{{MODELVISIBILITY}}" />
+    </Container>
+    <Container Name="MessageBody" Layout="Vertical" Width="100%" Gap="10px">
       <Text Name="Thinking" Content="{{THINKING}}" FontSize="12" FontWeight="500" Foreground="TextSecondary" Visibility="{{THINKINGVISIBILITY}}" />
       <Markdown Name="Body" Content="{{CONTENT}}" />
       <Container Name="GeneratedContent" Layout="Vertical" Gap="10px" />
-      <Button Name="MessageMenu" Variant="Icon" IconKey="more" Content="" Width="32px" Height="32px" MinHeight="32px" HorizontalAlignment="End" />
+      <Container Name="ActivitySummary" Layout="Wrap" Gap="8px" Visibility="Collapsed">
+        <Button Name="ActivityToggle" Variant="Ghost" IconKey="chevron-down" Content="Activity"
+                MinHeight="36px" Padding="8px 10px" Radius="10px" FontSize="12" FontWeight="600" HorizontalAlignment="Start" />
+        <Text Name="ActivityOutcome" Content="" FontSize="12" Foreground="TextSecondary" VerticalAlignment="Center" />
+      </Container>
+      <Button Name="MessageMenu" Variant="Icon" IconKey="more" Content="" Width="32px" Height="32px" MinHeight="32px" HorizontalAlignment="Start" />
     </Container>
   </Container>
 </DynamicUI>

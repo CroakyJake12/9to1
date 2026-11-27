@@ -193,6 +193,10 @@ public static class CuiPropertyPresentation
                 }
             }
             Watch("CuiTextBrush", "Foreground");
+            if (control is TextBlock text)
+                _subscriptions.Add(new CuiButtonContentForeground(text,
+                    brush => Set("Foreground", brush, CuiPropertyLevel.Theme, "CUI button content foreground", 1),
+                    () => Store.Remove("Foreground", CuiPropertyLevel.Theme, "CUI button content foreground")));
             if (control is Button or MenuItem)
                 Watch("CuiButtonVerticalContentAlignment", "VerticalContentAlignment");
             if (control is Button and not (CheckBox or RadioButton or ToggleSwitch))
@@ -495,7 +499,12 @@ public static class CuiPropertyPresentation
                 // Its border indicator and derived hover wash remain visible without replacing an
                 // authored/app background or foreground. Other selected controls keep their
                 // existing selection surface contract.
-                if (_control is not MenuItem)
+                if (_control is Button && _accentRole == CuiAccentRole.Primary)
+                {
+                    State("Background", AccentStateBackground(string.Empty));
+                    State("Foreground", AccentStateForeground(string.Empty));
+                }
+                else if (_control is not MenuItem)
                     State("Background", _control is ListBoxItem ? "CuiMenuSelectionBrush" : "CuiSelectionBrush");
                 if (!_compoundFocus) State("BorderColor", "CuiSelectionIndicatorBrush");
             }

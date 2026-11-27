@@ -380,19 +380,23 @@ public sealed partial class App
             if (IsAcceptedStartupRetirement(currentToken)) return;
             currentToken.ThrowIfCancellationRequested(); DemandCurrent();
             var coordinator = _services.GetRequiredService<WorkspaceSessionCoordinator>();
+            await Track(_services.GetRequiredService<KeybindingService>().LoadAsync(currentToken));
+            if (IsAcceptedStartupRetirement(currentToken)) return;
+            currentToken.ThrowIfCancellationRequested(); DemandCurrent();
             var restored = await Track(coordinator.LoadAsync(currentToken));
             if (IsAcceptedStartupRetirement(currentToken)) return;
             currentToken.ThrowIfCancellationRequested(); DemandCurrent();
             _session = new UnifiedWorkspaceSession(coordinator, restored);
             var persistence = _session.OpenWindow(_session.MainWindowId, _actor.ProfileId);
-            var files = FilesBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime);
-            var spaces = SpacesBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime,
-                (intent, settlement) => OriginalClose is null && _workspace is { } workspace && workspace.QueueNavigation(intent, settlement),
-                actualApp: _app, actualWindow: _actualWindow);
-            var build = BuildBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime,
-                (intent, settlement) => OriginalClose is null && _workspace is { } workspace && workspace.QueueNavigation(intent, settlement));
             var actualTheme = _homeTheme
                 ?? throw new InvalidOperationException("The original Home theme owner is unavailable.");
+            var files = FilesBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime,
+                actualTheme.Context, CreateFilesBoardOpenHost);
+            var spaces = SpacesBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime,
+                (intent, settlement) => OriginalClose is null && _workspace is { } workspace && workspace.QueueNavigation(intent, settlement),
+                actualApp: _app, actualWindow: _actualWindow, interfaceTheme: actualTheme.Context);
+            var build = BuildBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime,
+                (intent, settlement) => OriginalClose is null && _workspace is { } workspace && workspace.QueueNavigation(intent, settlement), interfaceTheme: actualTheme.Context);
             var boards = BoardsBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime,
                 () => actualTheme.Current.Accessibility.ReduceMotion, actualTheme.Context,
                 (token, store, folder, file, revision) => (_boardReadSource ?? throw new UnauthorizedAccessException(
@@ -432,7 +436,8 @@ public sealed partial class App
                 () => new Haven.Desktop.Views.Pages.Home.HomeDiscoverPage(new HomeDiscoverCatalog(catalogue.Providers.Select(provider =>
                     new HomeRegisteredModelCatalogueSource(catalogue, provider.Id, () => !privacy.Current.LocalOnlyMode, new HomeDulchePackagedModelEvidenceSource()))),
                     _services.GetRequiredService<IHuggingFaceModelService>(), _home.Profiles, _services.GetRequiredService<DulcheLocalClient>(),
-                    _services.GetRequiredService<ICatalogRepository>()),
+                    _services.GetRequiredService<ICatalogRepository>(), actualTheme.Context,
+                    async token => (await OpenModelPickerPanelAsync(token)).Opened, UseDiscoveredModelAsync),
                 (intent, settlement) => OriginalClose is null && _workspace is { } workspace && workspace.QueueNavigation(intent, settlement),
                 PrepareNewTabChatDraftAsync, AdmitHomeAsync, () => IsCurrent, _windowLifetime,
                 aiAvailable: _services.GetRequiredService<IConversationProductionRepository>().SupportsUnsentChatDraft,
@@ -481,7 +486,24 @@ public sealed partial class App
                     _services.GetService<IContainerRepository>(), _services.GetService<IBoardsWorkspaceService>(),
                     token => AdmitHomeAsync(request, token), libraryAvailable: true),
                 assistantsAvailable: true, shortcutAppAvailable: apps.HasImplementation,
-                interfaceTheme: actualTheme.Context);
+                interfaceTheme: actualTheme.Context,
+                appPins: _services.GetRequiredService<IPinRepository>(),
+                appHubs: request => new HomeAppHubPreferences(
+                    _services.GetRequiredService<IVersionedSettingsStore>(), request.ProfileId,
+                    token => AdmitHomeAsync(request, token)),
+                savedModels: request => new HomeSavedModelPreferences(
+                    _services.GetRequiredService<IVersionedSettingsStore>(), request.ProfileId,
+                    token => AdmitHomeAsync(request, token)),
+                explore: request => new HomeExploreDestinationPage(modes,
+                    _services.GetService<IProviderModelClient>() is { } exploreModels &&
+                        _services.GetService<HomeModelSelectionSource>() is { } exploreSelection
+                        ? new HomeExplorePlanner(exploreModels, exploreSelection) : null,
+                    token => AdmitHomeAsync(request, token), apps.HasImplementation,
+                    (address, brief, conversationId, settlement) => OriginalClose is null && _workspace is { } workspace &&
+                        workspace.QueueNavigation(new(request.TabId, address, true)
+                        { Brief = new(conversationId, brief) }, settlement), actualTheme.Context),
+                specialists: request => new HomeSpecialistsDestinationPage(_services.GetRequiredService<ICatalogRepository>(),
+                    token => AdmitHomeAsync(request, token), actualTheme.Context));
             IBrowseEngineHostFactory? engines = null;
 #if HAVEN_LINUX_CHROMIUM
             if (!OperatingSystem.IsWindows())
@@ -501,10 +523,14 @@ public sealed partial class App
             DemandCurrent();
             _sharedGateway = new HavenGateway(this);
             _workspace = new BrowseNativeWorkspace(_chrome, _ => IsCurrent,
-                CaptureOriginalDownloadFilesService(), sharedContext: new SharedHostContext(this), tabIconSource: TabIconSource);
+                CaptureOriginalDownloadFilesService(), sharedContext: new SharedHostContext(this), tabIconSource: TabIconSource,
+                windowControls: new UnifiedWindowControls(this),
+                tabSearchShortcut: () => _services.GetRequiredService<KeybindingService>().GetBinding("SearchTabs"));
             var theme = _homeTheme?.Context
                 ?? throw new InvalidOperationException("The original Home theme owner is unavailable.");
-            var scene = BrowseNativeSurface.CreateScene(_workspace, this, appearance: null, theme);
+            var scene = BrowseNativeSurface.CreateScene(_workspace, this, appearance: null, theme)
+                with { PresentationScope = PresentationForAddress(_workspace.State.SelectedTab.Address) };
+            _workspace.PropertyChanged += OnSelectedAppPresentationChanged;
             var controlRegistry = scene.ControlRegistry
                 ?? throw new InvalidOperationException("The original Browse CUI control registry is unavailable.");
             controlRegistry.RegisterImageSourceResolver((source, target) =>
@@ -515,11 +541,12 @@ public sealed partial class App
             ComposeSharedFrame();
             _sceneInitialization = Track(_scene.ShowAsync(scene, currentToken));
             var ready = await _sceneInitialization;
+            RefreshSelectedAppPresentation();
             _workspace.ObserveReadiness(ready);
             if (ready.State != CuiSceneAvailabilityState.Ready) throw new InvalidOperationException(ready.Message);
         }
 
-        private const string HavenTabLogo = "avares://Haven/Assets/haven-32.png";
+        private const string HavenTabLogo = "avares://HavenOS.Apps.Browse.NativeUI/Assets/9to1-logo.png";
 
         private static string? TabIconSource(AppContentAddress address)
         {
@@ -749,6 +776,7 @@ public sealed partial class App
         private NewDashboardPage CreateDashboard()
         {
             Dispatcher.UIThread.VerifyAccess(); DemandCurrent();
+            var actor = _actor ?? throw new UnauthorizedAccessException("The original Home profile is unavailable.");
             var page = new NewDashboardPage(_services.GetRequiredService<HavenEventBus>(),
                 _services.GetRequiredService<IModeRegistry>(), _services.GetRequiredService<IModeUsageRepository>(),
                 _services.GetRequiredService<IPinRepository>(), _services.GetRequiredService<IConversationRepository>(),
@@ -762,6 +790,8 @@ public sealed partial class App
                 _services.GetRequiredService<IHuggingFaceModelService>(), async token => await ObserveActorAsync(token),
                 () => !_services.GetRequiredService<IPrivacyPreferenceStore>().Current.LocalOnlyMode));
             page.EnableHomeBriefing(_services.GetService<IPlannerRepository>(), _services.GetService<IContainerRepository>());
+            page.ConfigureHomeBriefingAttention(new HomeDashboardAttentionSource(
+                _home.Permissions, _home.Profiles, actor, ReviewDashboardAttentionAsync));
             return page;
         }
 
@@ -1573,6 +1603,7 @@ public sealed partial class App
                 foreach (var cause in _acceptedPreparationFailures) AddAppCause(failures, cause);
                 foreach (var actual in _acceptedChromeSources.Distinct()) await Join(actual);
                 KeyDown -= OnWorkspaceKeyDown;
+                if (_workspace is not null) _workspace.PropertyChanged -= OnSelectedAppPresentationChanged;
                 try { _startupLoadingLoader?.Dispose(); _startupLoadingLoader = null; }
                 catch (Exception error) { AddAppCause(failures, error); }
                 // A failed CreateAsync can retain an owner whose own cleanup failed.

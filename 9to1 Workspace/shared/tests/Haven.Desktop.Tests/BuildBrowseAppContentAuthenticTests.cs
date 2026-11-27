@@ -1,6 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
+using Avalonia.Media;
 using Haven.Application;
 using Haven.Browser;
 using Haven.Core;
@@ -152,18 +154,31 @@ public sealed partial class CanonicalCompatibleTaskContextCompositionTests
         return new(spaces, catalog, borrowed);
     }
 
+    private sealed class BuildThemeSource : ICuiThemePreferenceSource
+    {
+        public CuiThemePreferenceSnapshot Current { get; private set; } = new("Glow", 1,
+            "build-theme-fixture", true, CuiAccessibilitySettings.Default, CuiAppearance.Dark);
+        public event EventHandler? Changed;
+        public void SelectProfessional()
+        {
+            Current = Current with { Name = "Professional", Revision = Current.Revision + 1 };
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
     private static BrowseAppContentRequest LandingRequest(Rig rig) =>
         new(Guid.NewGuid(), AppContentAddress.Parse("9to1://dev"), rig.Actor.ProfileId, BrowserTabPrivacy.Standard);
 
     private static BuildBrowseAppContentSession CreateSession(Rig rig, BuildLandingState landing, BrowseAppContentRequest request,
-        CancellationTokenSource lifetime, Func<BrowseNavigationIntent, Task, bool>? queueNavigation = null)
+        CancellationTokenSource lifetime, Func<BrowseNavigationIntent, Task, bool>? queueNavigation = null,
+        CuiThemePreferenceContext? interfaceTheme = null)
     {
         var workspaces = rig.Provider.GetRequiredService<IDeveloperWorkspaceStore>();
         var factory = rig.Provider.GetRequiredService<DeveloperProjectWorkbenchPageFactory>();
         var session = new BuildBrowseAppContentSession(request, BuildBrowseAppContentAddress.Parse(request.Address),
             workspaces, rig.Provider.GetRequiredService<DeveloperTaskWorkspaceService>(),
             rig.Provider.GetRequiredService<TaskExecutionCoordinator>(), factory,
-            landing.Spaces, landing.Catalog, lifetime, queueNavigation);
+            landing.Spaces, landing.Catalog, lifetime, queueNavigation, interfaceTheme);
         session.AttachBorrowed(landing.Borrowed);
         return session;
     }
@@ -179,12 +194,26 @@ public sealed partial class CanonicalCompatibleTaskContextCompositionTests
             var token = TestContext.Current.CancellationToken;
             var landing = BuildLanding(rig);
             using var lifetime = new CancellationTokenSource();
-            var session = CreateSession(rig, landing, LandingRequest(rig), lifetime);
+            var source = new BuildThemeSource();
+            using var theme = new CuiThemePreferenceContext(source);
+            var session = CreateSession(rig, landing, LandingRequest(rig), lifetime, interfaceTheme: theme);
 
             await session.InitializeAsync(token);
             Assert.True(session.IsPublicationCurrent);
             var view = Assert.IsType<Border>(session.OriginalNativeView);
-            Assert.IsType<DeveloperSavedProjectsPage>(view.Child);
+            var page = Assert.IsType<DeveloperSavedProjectsPage>(view.Child);
+            var scene = Assert.IsType<CuiSceneHost>(page.Content);
+            var root = Assert.IsType<CuiMaterialPanel>(scene.Content);
+            Assert.IsType<CuiGlowFieldBrush>(root.Background);
+            Assert.Equal(Colors.Transparent, Assert.IsAssignableFrom<ISolidColorBrush>(scene.Background).Color);
+            Assert.True(scene.TryFindResource("CuiEffectiveThemeName", out var initialTheme));
+            Assert.Equal("Glow", initialTheme);
+            source.SelectProfessional();
+            Assert.True(scene.TryFindResource("CuiEffectiveThemeName", out var updatedTheme));
+            Assert.Equal("Professional", updatedTheme);
+            Assert.IsNotType<CuiGlowFieldBrush>(root.Background);
+            Assert.Same(root, scene.Content);
+            Assert.Same(page, view.Child);
 
             Assert.True(await session.TryPrepareToCloseAsync(token));
             await session.CloseAndDrainAsync();

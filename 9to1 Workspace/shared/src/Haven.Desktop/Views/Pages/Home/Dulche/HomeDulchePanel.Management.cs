@@ -1,18 +1,120 @@
 using System.Globalization;
 using System.Text.Json.Nodes;
+using Haven.Desktop.Services;
 
 namespace Haven.Desktop.Views.Pages.Home;
 
 internal sealed partial class HomeDulchePanel
 {
-    private async Task ManageAsync(string command, CancellationToken token)
+    private static readonly string[] CatalogueQueryFields = ["search", "filter-architecture", "filter-size", "filter-capability", "filter-quant"];
+    private bool _catalogueObserved, _transfersObserved;
+    private int _catalogueSelectionUpdateDepth;
+
+    private void UpdateCatalogueSelection(Action update)
     {
-        var model = Model;
-        var repo = (Select("results").SelectedItem as Item)?.Id;
-        var file = (Select("files").SelectedItem as Item)?.Id;
-        var job = (Select("jobs").SelectedItem as Item)?.Id;
-        var agent = (Select("agents").SelectedItem as Item)?.Id;
-        var profile = (Select("profiles").SelectedItem as Item)?.Id;
+        // Changing ItemsSource can synchronously raise SelectionChanged while Avalonia
+        // still owns its selection batch. Hiding that same authored control then would
+        // detach it and try to change the selection source a second time. Finish the
+        // actual source/selection update before publishing catalogue visibility.
+        _catalogueSelectionUpdateDepth++;
+        try { update(); }
+        finally { _catalogueSelectionUpdateDepth--; }
+    }
+
+    private void ClearRepositoryFiles()
+    {
+        _removeConfirmation = null;
+        _inspectedRevision = null;
+        UpdateCatalogueSelection(() =>
+        {
+            Select("files").ItemsSource = Array.Empty<Item>();
+            Select("files").SelectedItem = null;
+        });
+    }
+
+    private void InvalidateCatalogueQuery()
+    {
+        // Editing a query prepares another read. Its previous repository/file choices
+        // cannot become targets under the newly displayed filters.
+        _catalogueObserved = false;
+        UpdateCatalogueSelection(() =>
+        {
+            ClearRepositoryFiles();
+            Select("results").ItemsSource = Array.Empty<Item>();
+            Select("results").SelectedItem = null;
+        });
+        ShowDetails();
+        RenderCataloguePresentation();
+    }
+
+    private bool IsCurrentCatalogueQuery(CommandIntent intent) => CatalogueQueryFields.All(field =>
+        string.Equals(intent.Text(field), Input(field).Text, StringComparison.Ordinal));
+
+    private Item? CurrentCatalogueSelection(string key, bool allowEmptyId = false) =>
+        Select(key).SelectedItem is Item item && (allowEmptyId || !string.IsNullOrWhiteSpace(item.Id)) &&
+        Select(key).ItemsSource is Item[] items && items.Any(current => ReferenceEquals(current, item)) ? item : null;
+
+    private void RenderCataloguePresentation()
+    {
+        if (_catalogueSelectionUpdateDepth != 0) return;
+        var available = _connected && !_operating && !_generating && !_runStopUnconfirmed;
+        var result = _catalogueObserved ? CurrentCatalogueSelection("results") : null;
+        var file = CurrentCatalogueSelection("files", allowEmptyId: true);
+        var job = _transfersObserved ? CurrentCatalogueSelection("jobs") : null;
+        var resultCount = (Select("results").ItemsSource as Item[])?.Length ?? 0;
+        var fileCount = (Select("files").ItemsSource as Item[])?.Length ?? 0;
+        var jobCount = (Select("jobs").ItemsSource as Item[])?.Length ?? 0;
+        var ownership = Value(result?.Data, "ownership");
+        var transferState = Value(job?.Data, "state");
+        foreach (var command in new[] { "find", "installed" }) State(_controls[command], "IsEnabled", available);
+        State(_controls["inspect"], "IsEnabled", available && result is not null);
+        State(_controls["download"], "IsEnabled", available && _projects && result is not null && file is not null &&
+            !string.IsNullOrWhiteSpace(_inspectedRevision));
+        State(_controls["remove"], "IsEnabled", available && !_projects && result is not null && ownership is ("managed" or "external"));
+        State(_controls["import"], "IsEnabled", available && Path.IsPathFullyQualified(Input("import-path").Text?.Trim() ?? ""));
+        State(_controls["pause"], "IsEnabled", available && job is not null && transferState is ("queued" or "running"));
+        State(_controls["resume"], "IsEnabled", available && job is not null && transferState is ("paused" or "paused_storage" or "failed"));
+        State(_controls["cancel"], "IsEnabled", available && job is not null && transferState is ("queued" or "running" or "paused" or "paused_storage" or "failed"));
+        State(_controls["results"], "IsEnabled", available && _catalogueObserved && resultCount > 0);
+        State(_controls["files"], "IsEnabled", available && _projects && result is not null && fileCount > 0);
+        State(_controls["jobs"], "IsEnabled", available && _transfersObserved && jobCount > 0);
+        _bindings.Set("CatalogueHasResults", _catalogueObserved && resultCount > 0);
+        _bindings.Set("CatalogueHasFiles", _projects && result is not null && fileCount > 0);
+        _bindings.Set("CatalogueHasTransfers", _transfersObserved && jobCount > 0);
+        _bindings.Set("CatalogueResultsStatus", !_catalogueObserved ? "Search the catalogue or choose Installed files to read available records." :
+            resultCount == 0 ? (_projects ? "No catalogue results match these filters." : "No installed model files were reported.") :
+            $"{resultCount} {(_projects ? "catalogue result" : "installed file")}{(resultCount == 1 ? "" : "s")} · Choose a result to inspect it.");
+        _bindings.Set("CatalogueFilesStatus", !_projects || result is null ? "Choose a catalogue result, then open Details and files to read its weights." :
+            _inspectedRevision is null ? "Open Details and files to read this repository's available weights." :
+            string.IsNullOrWhiteSpace(_inspectedRevision) ? "The repository did not report a revision. Download is unavailable." :
+            fileCount == 0 ? "This repository has no supported GGUF or SafeTensors weights." :
+            file is null ? $"{fileCount} file option{(fileCount == 1 ? "" : "s")} · Choose the weights to download." :
+            "Download uses the inspected version of this repository.");
+        var removal = _projects || result is null ? "" : ownership switch
+        {
+            "managed" => "Uninstall removes this catalogue entry and its managed files.",
+            "external" => "Uninstall removes the catalogue entry; external files stay on this device.",
+            _ => "Removal is unavailable because file ownership has not been reported."
+        };
+        _bindings.Set("CatalogueRemovalStatus", removal);
+        _bindings.Set("CatalogueHasRemovalStatus", removal.Length > 0);
+        _bindings.Set("CatalogueTransfersStatus", !_transfersObserved ? "Transfer status has not been read." :
+            jobCount == 0 ? "No model transfers were reported." : job is null ? $"{jobCount} transfer{(jobCount == 1 ? "" : "s")} · Choose a transfer to manage it." :
+            $"Selected transfer: {transferState.Replace('_', ' ')}" + (Value(job.Data, "error") is { Length: > 0 } error ? " · " + error : ""));
+    }
+
+    private async Task ManageAsync(CommandIntent intent, CancellationToken token)
+    {
+        var command = intent.Command;
+        var model = intent.Model;
+        var repo = intent.Selected("results")?.Id;
+        var file = intent.Selected("files")?.Id;
+        var job = intent.Selected("jobs")?.Id;
+        var agent = intent.Selected("agents")?.Id;
+        var profile = intent.Selected("profiles")?.Id;
+        if ((command is "profile-select" or "profile-rename" or "profile-save") &&
+            (model is null || intent.LoadedProfiles != model.Id || _loadedProfiles != model.Id || profile is null || _generating || HasActiveInferenceOperation))
+            throw new InvalidOperationException("Read the current model's profiles before applying a profile change.");
         string modelPath() => $"models/{Esc(model?.Id)}";
         switch (command)
         {
@@ -21,26 +123,30 @@ internal sealed partial class HomeDulchePanel
             case "adapter-attach":
             case "adapter-detach":
             case "adapter-refresh":
-                await ManageInferenceAsync(command, token);
+                await ManageInferenceAsync(intent, token);
                 return;
             case "find":
             case "installed":
                 var remote = command == "find";
-                var result = await _client.GetAsync(remote ? BuildSearchRoute() : "catalog/installed", token);
+                var result = await _client.GetAsync(remote ? BuildSearchRoute(intent) : "catalog/installed", token);
+                if (remote && !IsCurrentCatalogueQuery(intent)) return;
                 _projects = remote;
+                _catalogueObserved = result["items"] is JsonArray;
+                ClearRepositoryFiles();
                 Replace("results", Rows(result["items"]).Select(x => new Item(
                     remote ? Value(x, "repo") : Value(x, "id"),
                     remote ? Value(x, "name") : $"{Path.GetFileName(Value(x, "path"))} · {Value(x, "ownership")}", x)), null);
                 ShowDetails();
                 return;
             case "inspect":
-                if (!_projects)
+                if (!intent.Projects)
                 {
                     ShowDetails();
                     return;
                 }
                 var detail = await _client.GetAsync("catalog/detail?repo=" + Esc(repo), token);
                 if ((Select("results").SelectedItem as Item)?.Id != repo) return;
+                ClearRepositoryFiles();
                 _inspectedRevision = Value(detail,"revision");
                 var files = Rows(detail["files"]).Where(x => Value(x,"path").EndsWith(".gguf",StringComparison.OrdinalIgnoreCase))
                     .Select(x => new Item(Value(x,"path"), Value(x,"path"), x)).ToList();
@@ -50,23 +156,23 @@ internal sealed partial class HomeDulchePanel
                 Text("catalog-detail", Describe(detail));
                 return;
             case "download":
-                if (!_projects || file is null || string.IsNullOrWhiteSpace(_inspectedRevision))
+                if (!intent.Projects || file is null || string.IsNullOrWhiteSpace(intent.InspectedRevision))
                     throw new InvalidOperationException("Inspect a repository and select its weights.");
                 await _client.PostAsync("catalog/download", new
                 {
-                    repo, filename = file.Length == 0 ? null : file, revision = _inspectedRevision,
-                    base_model = Input("import-base").Text
+                    repo, filename = file.Length == 0 ? null : file, revision = intent.InspectedRevision,
+                    base_model = intent.Text("import-base")
                 }, token);
                 break;
             case "import":
                 await _client.PostAsync("catalog/import", new
                 {
-                    path = Need("import-path"),
-                    base_model = Input("import-base").Text
+                    path = intent.Need("import-path"),
+                    base_model = intent.Text("import-base")
                 }, token);
                 break;
             case "remove":
-                if (_projects || repo is null)
+                if (intent.Projects || repo is null)
                     throw new InvalidOperationException("Select an installed file.");
                 if (_removeConfirmation != repo)
                 {
@@ -79,7 +185,7 @@ internal sealed partial class HomeDulchePanel
                 {
                     id = repo
                 }, token);
-                await RunCoreAsync("installed", token);
+                await ManageAsync(intent with { Command = "installed" }, token);
                 break;
             case "pause":
             case "cancel":
@@ -89,30 +195,32 @@ internal sealed partial class HomeDulchePanel
             case "profile-select":
             case "profile-rename":
                 await _client.PostAsync($"{modelPath()}/profiles/{Esc(profile)}/{(command == "profile-select" ? "select" : "rename")}",
-                    command == "profile-select" ? new JsonObject() : new JsonObject { ["name"] = Need("profile-name") }, token);
+                    command == "profile-select" ? new JsonObject() : new JsonObject { ["name"] = intent.Need("profile-name") }, token);
                 _loadedProfiles = null;
                 break;
             case "profile-save":
-                var props = JsonNode.Parse(Input("profile-settings").Text is { Length: > 0 } settings ? settings : "{}") as JsonObject
+                var props = JsonNode.Parse(intent.Text("profile-settings") is { Length: > 0 } settings ? settings : "{}") as JsonObject
                     ?? throw new InvalidOperationException("Profile settings must be a JSON object.");
-                if (!string.IsNullOrWhiteSpace(Input("profile-device").Text))
-                    props["gpu"] = Input("profile-device").Text!.Trim();
-                if (!string.IsNullOrWhiteSpace(Input("profile-context").Text))
+                if (!string.IsNullOrWhiteSpace(intent.Text("profile-device")))
+                    props["gpu"] = intent.Text("profile-device")!.Trim();
+                if (!string.IsNullOrWhiteSpace(intent.Text("profile-context")))
                 {
-                    if (!int.TryParse(Input("profile-context").Text, out var context) || context < 1)
+                    if (!int.TryParse(intent.Text("profile-context"), out var context) || context < 1)
                         throw new InvalidOperationException("Enter a positive context length.");
                     props.Remove("context_length");
                     props["context"] = context;
                 }
                 await _client.PostAsync($"{modelPath()}/profiles", new
                 {
-                    name = Need("profile-name"),
+                    name = intent.Need("profile-name"),
                     settings = props,
                     source_id = profile
                 }, token);
                 _loadedProfiles = null;
                 break;
             case "benchmark-start":
+                if (model is null || !CanGenerate(ModelState(model)) || _generating || HasActiveInferenceOperation)
+                    throw new InvalidOperationException("Load this model and finish its active response before starting a benchmark.");
                 var benchmark = await _client.PostAsync("benchmarks", new
                 {
                     model = model?.Id,
@@ -128,17 +236,24 @@ internal sealed partial class HomeDulchePanel
                 ShowCandidate();
                 return;
             case "training":
-                _bindings.Set("CandidatesVisible", false);
                 var training = await _client.GetAsync("training/status", token);
-                Text("benchmark-results", TrainingSummary(training));
+                Text("training-status", TrainingSummary(training));
+                return;
+            case "load-policy-apply":
+                if (_generating || HasActiveInferenceOperation)
+                    throw new InvalidOperationException("Finish the active inference operation before changing the loading policy.");
+                var index = intent.LoadPolicyIndex;
+                if (index < 0 || index >= DulcheLocalClient.Policies.Length)
+                    throw new InvalidOperationException("Choose a loading policy.");
+                await _client.SelectPolicyAsync(DulcheLocalClient.Policies[index], token);
+                Text("message", "Loading policy saved: " + DulcheLocalClient.PolicyNames[index] + ".");
                 return;
             case "benchmarks":
                 _bindings.Set("CandidatesVisible", false);
                 var benchmarkRows = Rows((await _client.GetAsync("benchmarks", token))["items"])
-                    .Where(row => Value(row, "model") == model?.Id).ToArray();
-                Text("benchmark-results", benchmarkRows.Length == 0 ? "No recorded benchmarks for this model." :
-                    string.Join("\n", benchmarkRows.Take(8).Select(row =>
-                        $"{Value(row, "profile")} · {Value(row, "state")} · {Value(row, "passed")}/{Value(row, "issued")} verified · {Value(row, "accepted_output_tps")} accepted tokens/s")));
+                    .OfType<JsonObject>().Where(row => Value(row, "model") == model?.Id)
+                    .OrderByDescending(row => Number(row["started_epoch"]) ?? 0).ToArray();
+                PublishBenchmarkRows(benchmarkRows);
                 return;
             case "agent-resume":
                 await _client.PostAsync($"agents/{Esc(agent)}/resume", new { }, token);
@@ -183,16 +298,16 @@ internal sealed partial class HomeDulchePanel
         return string.Join("\n", lines);
     }
 
-    private string BuildSearchRoute()
+    private static string BuildSearchRoute(CommandIntent intent)
     {
         var fields = new Dictionary<string, string?>(StringComparer.Ordinal)
         {
-            ["q"] = Input("search").Text,
-            ["architecture"] = Input("filter-architecture").Text,
-            ["capability"] = Input("filter-capability").Text,
-            ["quantization"] = Input("filter-quant").Text
+            ["q"] = intent.Text("search"),
+            ["architecture"] = intent.Text("filter-architecture"),
+            ["capability"] = intent.Text("filter-capability"),
+            ["quantization"] = intent.Text("filter-quant")
         };
-        if (Input("filter-size").Text is { Length: > 0 } max)
+        if (intent.Text("filter-size") is { Length: > 0 } max)
         {
             if (!decimal.TryParse(max, NumberStyles.Number, CultureInfo.CurrentCulture, out var billions) || billions <= 0 || billions > 500)
                 throw new InvalidOperationException("Enter a model size greater than 0 and at most 500 billion parameters.");
@@ -221,17 +336,31 @@ internal sealed partial class HomeDulchePanel
     private void ShowDetails() => Text("catalog-detail", Describe((Select("results").SelectedItem as Item)?.Data));
     private async Task RefreshManagementAsync(CancellationToken token)
     {
-        var jobs = await _client.GetAsync("catalog/jobs", token);
-        if (!_active || !_managing)
-            return;
-        Replace("jobs", Rows(jobs["items"]).Select(x => new Item(Value(x, "id"), $"{Value(x, "name")} {Value(x, "state")} · {Value(x, "done_bytes")}/{Value(x, "total_bytes")} bytes", x)), (Select("jobs").SelectedItem as Item)?.Id);
-        if (Model is not { } model || _loadedProfiles == model.Id)
-            return;
+        if (_catalogueVisible)
+        {
+            var jobs = await _client.GetAsync("catalog/jobs", token);
+            if (!_active || !_catalogueVisible) return;
+            _transfersObserved = jobs["items"] is JsonArray;
+            Replace("jobs", Rows(jobs["items"]).OfType<JsonObject>().Select(x => new Item(Value(x, "id"), $"{Value(x, "name")} {Value(x, "state")} · {Value(x, "done_bytes")}/{Value(x, "total_bytes")} bytes", x)), (Select("jobs").SelectedItem as Item)?.Id);
+        }
+        if (Model is not { } model || !(_managing || _modelSection == "performance")) return;
         var previous = Epoch;
+        if (_modelSection == "performance")
+        {
+            try { await RefreshPerformanceAsync(model.Id, token); }
+            catch (Exception error) when (error is IOException or HttpRequestException)
+            { Text("metrics", "Recorded measurements are unavailable. " + error.Message); }
+        }
+        if (previous != Epoch || Model?.Id != model.Id || !_active) return;
+        if (_loadedProfiles == model.Id) return;
         var profiles = await _client.GetAsync("models/" + Uri.EscapeDataString(model.Id) + "/profiles", token);
         if (previous != Epoch || !_active)
             return;
-        Replace("profiles", Rows(profiles["items"]).Select(x => new Item(Value(x, "id"), Value(x, "name"), x)), null);
+        AdmitProfileDraftCatalogue(model.Id);
+        Replace("profiles", Rows(profiles["items"]).OfType<JsonObject>().Select(x => new Item(Value(x, "id"), Value(x, "name"), x)),
+            Value(model.Data, "profile_id") is { Length: > 0 } profile ? profile : "current");
+        ApplySelectedProfileDraft();
         _loadedProfiles = model.Id;
+        RenderModelPresentation();
     }
 }

@@ -81,6 +81,33 @@ public sealed class CuiBundledFallbackFontTests
     }
 
     [Fact]
+    public async Task Generic_monospace_resolves_to_packaged_equal_advance_glyphs_without_changing_interface_typography()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            foreach (var weight in new[] { FontWeight.Normal, FontWeight.Medium })
+            {
+                var face = new Typeface(new FontFamily("monospace"), FontStyle.Normal, weight);
+                Assert.True(FontManager.Current.TryGetGlyphTypeface(face, out var actual));
+                Assert.Equal("DejaVu Sans Mono", actual!.FamilyName);
+                var advances = "iMm0{}[]; ".Select(character =>
+                {
+                    var glyph = actual.CharacterToGlyphMap[character];
+                    Assert.NotEqual((ushort)0, glyph);
+                    Assert.True(actual.TryGetHorizontalGlyphAdvance(glyph, out var advance));
+                    return advance;
+                }).ToArray();
+                Assert.All(advances, advance => Assert.True(advance > 0));
+                Assert.All(advances, advance => Assert.Equal(advances[0], advance));
+            }
+            Assert.Equal(new FontFamily(CuiNativeHost.BundledInterfaceFontFamily), FontManager.Current.DefaultFontFamily);
+            var interfaceFace = new Typeface(new FontFamily("Montserrat"));
+            Assert.Contains("Montserrat", interfaceFace.GlyphTypeface.FamilyName, StringComparison.Ordinal);
+        }, CancellationToken.None);
+    }
+
+    [Fact]
     public async Task Fallback_font_redistribution_notices_and_provenance_are_packaged()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
@@ -90,6 +117,7 @@ public sealed class CuiBundledFallbackFontTests
             {
                 ("NotoEmoji/OFL.txt", "SIL OPEN FONT LICENSE"),
                 ("DejaVuSans/LICENSE.txt", "Arev Fonts Copyright"),
+                ("DejaVuSansMono/LICENSE.txt", "Bitstream Vera Fonts Copyright"),
                 ("fallback-provenance.json", "sha256")
             })
             {

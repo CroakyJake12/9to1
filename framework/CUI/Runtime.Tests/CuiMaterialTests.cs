@@ -37,9 +37,28 @@ public sealed class CuiMaterialTests
             {
                 if (theme == CuiTheme.Glow && !contrast)
                 {
-                    var gradient = Assert.IsAssignableFrom<ILinearGradientBrush>(resources[material]);
-                    Assert.True(gradient.GradientStops.Select(stop => stop.Color).Distinct().Count() > 1);
-                    Assert.IsNotType<CuiMaterialBrush>(gradient); // ordinary paint, no implicit backdrop filtering
+                    if (appearance is CuiAppearance.Dark or CuiAppearance.SuperDark)
+                    {
+                        if (material is "CuiShellMaterial" or "CuiWorkspaceMaterial")
+                            Assert.IsType<CuiGlowFieldBrush>(resources[material]);
+                        else
+                        {
+                            var surface = Assert.IsAssignableFrom<ISolidColorBrush>(resources[material]);
+                            Assert.Equal(material == "CuiSurfaceMaterial" ? 0xE0 : 0xFF, surface.Color.A);
+                        }
+                    }
+                    else
+                    {
+                        var gradient = Assert.IsAssignableFrom<ILinearGradientBrush>(resources[material]);
+                        Assert.True(gradient.GradientStops.Select(stop => stop.Color).Distinct().Count() > 1);
+                        Assert.IsNotType<CuiMaterialBrush>(gradient);
+                    }
+                }
+                else if (theme == CuiTheme.FrostedGlass && !contrast)
+                {
+                    if (material == "CuiWorkspaceMaterial") Assert.Same(resources[fallback], resources[material]);
+                    else Assert.Equal(material == "CuiFloatingSurfaceMaterial" ? 30 : 32,
+                        Assert.IsType<CuiMaterialBrush>(resources[material]).BlurRadius);
                 }
                 else if (theme != CuiTheme.Professional || contrast) Assert.Same(resources[fallback], resources[material]);
                 else Assert.IsType<CuiMaterialBrush>(resources[material]);
@@ -108,6 +127,89 @@ public sealed class CuiMaterialTests
             }
             finally { window.Close(); }
         }, CancellationToken.None);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Glow_field_renders_continuously_through_nested_cui_surfaces_and_keeps_an_opaque_native_fallback(bool pageRoot)
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            var field = new CuiGlowFieldBrush(Color.Parse("#10151B"), Color.Parse("#506070"), Color.Parse("#465A70"));
+            var fallback = new Border { Background = field };
+            var registry = new CuiControlRegistry();
+            registry.RegisterObjectRenderer("OrdinaryBorder", _ => fallback);
+            var model = new CuiViewModel(); model.Set("Field", field); model.Set("NestedVisible", true);
+            using var loader = new CuiControlLoader(registry); loader.SetBindingContext(model);
+            var children = """
+                  <Container id="nested-field" Type="Overlay" Background="{Binding Field}" IsVisible="{Binding NestedVisible}"
+                    Width="180" Height="120" Margin="70 55 0 0" HorizontalAlignment="Left" VerticalAlignment="Top" CornerRadius="12" />
+                  <Button id="nested-field-button" Background="{Binding Field}" IsVisible="{Binding NestedVisible}"
+                    Width="88" Height="40" Margin="250 180 0 0" HorizontalAlignment="Left" VerticalAlignment="Top" BorderWidth="0" CornerRadius="8" />
+                  <Object Type="OrdinaryBorder" Width="40" Height="30" Margin="10 10 0 0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                """;
+            var loaded = loader.LoadMarkup(pageRoot
+                ? "<Page OwnsBackdrop=\"True\" Background=\"{Binding Field}\">" + children + "</Page>"
+                : "<Container Type=\"Overlay\" Background=\"{Binding Field}\">" + children + "</Container>");
+            Assert.Empty(loaded.Diagnostics); Assert.NotNull(loaded.Root); loader.WireBindings(loaded.Root);
+            if (pageRoot)
+            {
+                var page = Assert.IsType<CuiMaterialPanel>(loaded.Root);
+                Assert.True(loader.RootOwnsBackdrop);
+                Assert.Equal(3, page.Children.Count); // The renderer is visual-only, outside authored child indices.
+                var original = page.Children[2];
+                var replacement = new Border { Width = 1, Height = 1, IsVisible = false };
+                page.Children[2] = replacement;
+                page.Children.Move(2, 0); page.Children.Move(0, 2);
+                page.Children.RemoveAt(2); page.Children.Add(original);
+                Assert.Same(original, page.Children[2]);
+            }
+            var window = new Window { Width = 560, Height = 300, Content = loaded.Root };
+            try
+            {
+                window.Show();
+                var nested = loaded.Root.GetVisualDescendants().OfType<Control>().Single(control => control.Name == "nested-field");
+                var button = loaded.Root.GetVisualDescendants().OfType<Button>().Single(control => control.Name == "nested-field-button");
+                foreach (var size in new[] { new Size(560, 300), new Size(720, 420), new Size(360, 620) })
+                {
+                    // Leave both nested surfaces visible while the ancestor resizes.
+                    // Their fixed local bounds cannot hide a stale shared field cache.
+                    window.Width = size.Width; window.Height = size.Height;
+                    using var composite = Capture(window);
+                    var cardPoint = nested.TranslatePoint(new Point(60, 40), window)!.Value;
+                    var buttonPoint = button.TranslatePoint(new Point(10, 10), window)!.Value;
+                    var fallbackPoint = fallback.TranslatePoint(new Point(15, 15), window)!.Value;
+                    Assert.Equal(new SKColor(field.FieldTop.R, field.FieldTop.G, field.FieldTop.B), Pixel(composite, fallbackPoint));
+                    model.Set("NestedVisible", false);
+                    using var behind = Capture(window);
+                    SamePixel(Pixel(behind, cardPoint), Pixel(composite, cardPoint));
+                    SamePixel(Pixel(behind, buttonPoint), Pixel(composite, buttonPoint));
+                    Assert.NotEqual(behind.GetPixel(200, 80), behind.GetPixel(200, 250));
+                    if (Environment.GetEnvironmentVariable("CUI_EVIDENCE_DIRECTORY") is { Length: > 0 } evidence)
+                    {
+                        Directory.CreateDirectory(evidence);
+                        using var data = composite.Encode(SKEncodedImageFormat.Png, 100);
+                        using var output = File.Create(Path.Combine(evidence, $"glow-{(pageRoot ? "page" : "field")}-{size.Width:0}x{size.Height:0}.png"));
+                        data.SaveTo(output);
+                    }
+                    model.Set("NestedVisible", true);
+                    using var restored = Capture(window);
+                    SamePixel(Pixel(behind, cardPoint), Pixel(restored, cardPoint));
+                }
+            }
+            finally { window.Close(); }
+        }, CancellationToken.None);
+
+        static SKColor Pixel(SKBitmap bitmap, Point point) => bitmap.GetPixel((int)Math.Round(point.X), (int)Math.Round(point.Y));
+        static void SamePixel(SKColor expected, SKColor actual)
+        {
+            Assert.InRange(Math.Abs(expected.Red - actual.Red), 0, 1);
+            Assert.InRange(Math.Abs(expected.Green - actual.Green), 0, 1);
+            Assert.InRange(Math.Abs(expected.Blue - actual.Blue), 0, 1);
+            Assert.Equal(expected.Alpha, actual.Alpha);
+        }
     }
 
     private static SKBitmap Capture(Window window)

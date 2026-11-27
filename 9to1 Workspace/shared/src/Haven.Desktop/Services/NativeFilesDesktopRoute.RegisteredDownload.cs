@@ -141,7 +141,8 @@ internal sealed partial class NativeFilesDesktopRoute
             acquired = _surface;
             if (acquired is null)
             {
-                acquired = new(_browser, _packages, actor, _readiness, _windowLifetime.Token);
+                acquired = new(_browser, _packages, actor, _readiness, _windowLifetime.Token,
+                    interfaceTheme: _interfaceTheme, boards: _boardHost?.Invoke(_browser, actor));
                 fresh = true;
             }
             // Retain the SAME acquired view before its first reveal callback, even

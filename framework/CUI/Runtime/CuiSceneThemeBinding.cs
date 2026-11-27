@@ -14,8 +14,13 @@ internal sealed class CuiSceneThemeBinding : IDisposable
     private readonly Func<bool>? _canPublish;
     private readonly Action<ResourceDictionary>? _updated;
     private CuiThemeResolution? _appliedPreference;
+    private CuiScenePresentationScope _presentationScope;
+    private CuiScenePresentationScope _appliedPresentationScope;
+    public CuiScenePresentationScope PresentationScope => _presentationScope;
     private long _globalPaletteVersion;
     private long _appliedGlobalPaletteVersion;
+    private long _publicationSerial;
+    private bool _publicationDirty;
     private bool _disposed;
     public ResourceDictionary Resources { get; } = new();
 
@@ -26,15 +31,24 @@ internal sealed class CuiSceneThemeBinding : IDisposable
         _canPublish = canPublish;
         _updated = updated;
         _appliedPreference = scene.ThemePreference?.Current;
-        Resources.MergedDictionaries.Add(CreateSnapshot(_appliedPreference));
+        _presentationScope = _appliedPresentationScope = CuiSceneVisualResources.PresentationScope(scene);
+        Resources.MergedDictionaries.Add(CreateSnapshot(_appliedPreference, _presentationScope));
         if (scene.ThemePreference is { } context) context.Changed += PreferenceChanged;
         else CuiThemeResourceApplier.PaletteChanged += GlobalPaletteChanged;
     }
 
-    private ResourceDictionary CreateSnapshot(CuiThemeResolution? resolution)
+    private ResourceDictionary CreateSnapshot(CuiThemeResolution? resolution, CuiScenePresentationScope presentation)
     {
         var appearance = _scene.Appearance ?? resolution?.Appearance ?? CuiThemeScopeApplier.DetectAppearance();
-        return CuiSceneVisualResources.Create(_scene.Surface, appearance, resolution, CuiSceneVisualResources.AccentAppId(_scene));
+        return CuiSceneVisualResources.Create(presentation.Surface, appearance, resolution, presentation.AppId);
+    }
+
+    public void UpdatePresentationScope(CuiScenePresentationScope presentation)
+    {
+        ArgumentNullException.ThrowIfNull(presentation);
+        if (_disposed || _canPublish?.Invoke() == false) return;
+        _presentationScope = presentation;
+        SynchronizeCurrent();
     }
 
     // Called after exact scene ownership is admitted as well as on Home events.
@@ -45,16 +59,25 @@ internal sealed class CuiSceneThemeBinding : IDisposable
         {
             if (_disposed || _canPublish?.Invoke() == false) return;
             var resolution = _scene.ThemePreference?.Current;
+            var presentation = _presentationScope;
             var globalVersion = _scene.ThemePreference is null ? Interlocked.Read(ref _globalPaletteVersion) : 0;
             var globalPaletteChanged = _scene.ThemePreference is null &&
                 globalVersion != Interlocked.Read(ref _appliedGlobalPaletteVersion);
-            if (!globalPaletteChanged && ReferenceEquals(resolution, _appliedPreference)) return;
+            if (!_publicationDirty && !globalPaletteChanged && ReferenceEquals(resolution, _appliedPreference) &&
+                presentation == _appliedPresentationScope) return;
             // Build off-tree and replace one provider: observers never see a
             // partially populated palette. Failed callbacks remain owned by the
             // canonical context's retry/error tracking, not a detached UI task.
-            var snapshot = CreateSnapshot(resolution);
+            var snapshot = CreateSnapshot(resolution, presentation);
             if (_disposed || _canPublish?.Invoke() == false) return;
             var previous = _appliedPreference;
+            var previousPresentation = _appliedPresentationScope;
+            var publication = ++_publicationSerial;
+            // Cache the in-flight identity to suppress same-revision reentry. If this attempt
+            // loses admission after replacing the provider, the dirty marker forces a real
+            // repaint on readmission even when the requested identity is the previous one.
+            _publicationDirty = false;
+            _appliedPresentationScope = presentation;
             _appliedPreference = resolution; // Reentrant newer updates retain their own identity.
             try
             {
@@ -66,14 +89,16 @@ internal sealed class CuiSceneThemeBinding : IDisposable
                     // Resource notifications and the scene callback can revoke
                     // ownership synchronously. Keep this revision retryable on
                     // readmission without rolling back a newer reentrant update.
-                    if (ReferenceEquals(_appliedPreference, resolution)) _appliedPreference = previous;
+                    if (_publicationSerial == publication)
+                    { _appliedPreference = previous; _appliedPresentationScope = previousPresentation; _publicationDirty = true; }
                 }
                 else if (_scene.ThemePreference is null)
                     MarkGlobalPaletteApplied(globalVersion);
             }
             catch
             {
-                if (ReferenceEquals(_appliedPreference, resolution)) _appliedPreference = previous;
+                if (_publicationSerial == publication)
+                { _appliedPreference = previous; _appliedPresentationScope = previousPresentation; _publicationDirty = true; }
                 throw;
             }
         }

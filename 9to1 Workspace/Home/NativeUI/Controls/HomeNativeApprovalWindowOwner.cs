@@ -86,13 +86,17 @@ public sealed class HomeNativeApprovalWindowOwner(
 
     /// <summary>Returns the actual acquisition/publication task, not the window's lifetime.
     /// Exact request identifiers are observations; the same surface rereads canonical Home.</summary>
-    public Task OpenOriginalAsync(string? requestId = null, CancellationToken cancellationToken = default)
-        => OpenOriginalCore(requestId, cancellationToken, observeDecision: false);
+    public Task OpenOriginalAsync(string? requestId = null, CancellationToken cancellationToken = default,
+        AuthenticatedResourceActor? expectedActor = null)
+        => OpenOriginalCore(requestId, cancellationToken, observeDecision: false, expectedActor);
 
-    private Task OpenOriginalCore(string? requestId, CancellationToken cancellationToken, bool observeDecision)
+    private Task OpenOriginalCore(string? requestId, CancellationToken cancellationToken, bool observeDecision,
+        AuthenticatedResourceActor? expectedActor = null)
     {
         Dispatcher.UIThread.VerifyAccess();
         if (requestId is not null) ArgumentException.ThrowIfNullOrWhiteSpace(requestId);
+        if (expectedActor is not null && requestId is null)
+            throw new ArgumentException("An actor-bound review requires its exact request.", nameof(requestId));
         cancellationToken.ThrowIfCancellationRequested();
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         Review review;
@@ -107,11 +111,11 @@ public sealed class HomeNativeApprovalWindowOwner(
             if (_current is { } active && active.Close is null)
             {
                 // A new request uses the same real surface, never a copied model or new Home owner.
-                return FocusOriginalAsync(active, requestId, cancellationToken, observeDecision);
+                return FocusOriginalAsync(active, requestId, cancellationToken, observeDecision, expectedActor);
             }
             review = new Review(cancellationToken);
             _current = review;
-            review.Open = OpenCoreAsync(start.Task, review, requestId, cancellationToken);
+            review.Open = OpenCoreAsync(start.Task, review, requestId, cancellationToken, expectedActor);
             _reviews.Add(review); // Actual frame/task custody before native acquisition.
             _work.Add(review.Open);
         }
@@ -225,7 +229,8 @@ public sealed class HomeNativeApprovalWindowOwner(
         }
     }
 
-    private async Task OpenCoreAsync(Task start, Review review, string? requestId, CancellationToken caller)
+    private async Task OpenCoreAsync(Task start, Review review, string? requestId, CancellationToken caller,
+        AuthenticatedResourceActor? expectedActor)
     {
         await start.ConfigureAwait(false);
         using var originalScope = CloudflareOriginalExecutionGuard.EnterOriginal(this);
@@ -256,7 +261,9 @@ public sealed class HomeNativeApprovalWindowOwner(
                 await InvokeOriginalAsync(() =>
                 {
                     DemandOpen(review, caller);
-                    return review.Focus = review.Surface!.FocusRequestAsync(requestId, review.Lifetime.Token);
+                    return review.Focus = expectedActor is null
+                        ? review.Surface!.FocusRequestAsync(requestId, review.Lifetime.Token)
+                        : review.Surface!.FocusRequestAsync(requestId, expectedActor, review.Lifetime.Token);
                 }, errors).ConfigureAwait(false);
                 if (errors.Count != 0) Throw(errors);
                 if (!review.Focus!.GetAwaiter().GetResult())
@@ -280,19 +287,21 @@ public sealed class HomeNativeApprovalWindowOwner(
         }
     }
 
-    private Task FocusOriginalAsync(Review review, string? requestId, CancellationToken caller, bool observeDecision)
+    private Task FocusOriginalAsync(Review review, string? requestId, CancellationToken caller, bool observeDecision,
+        AuthenticatedResourceActor? expectedActor)
     {
         // Called under the owning gate: publish each actual focus before its callbacks.
         review.Focuses.RemoveAll(task => task.IsCompletedSuccessfully);
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var original = FocusCoreAsync(start.Task, review, requestId, caller, observeDecision);
+        var original = FocusCoreAsync(start.Task, review, requestId, caller, observeDecision, expectedActor);
         review.Focuses.Add(original);
         _work.Add(original);
         start.SetResult();
         return original;
     }
 
-    private async Task FocusCoreAsync(Task start, Review review, string? requestId, CancellationToken caller, bool observeDecision)
+    private async Task FocusCoreAsync(Task start, Review review, string? requestId, CancellationToken caller, bool observeDecision,
+        AuthenticatedResourceActor? expectedActor)
     {
         await start.ConfigureAwait(false);
         using var originalScope = CloudflareOriginalExecutionGuard.EnterOriginal(this);
@@ -309,7 +318,9 @@ public sealed class HomeNativeApprovalWindowOwner(
                 await InvokeOriginalAsync(() =>
                 {
                     DemandOpen(review, caller);
-                    return originalFocus = review.Surface!.FocusRequestAsync(requestId, request.Token);
+                    return originalFocus = expectedActor is null
+                        ? review.Surface!.FocusRequestAsync(requestId, request.Token)
+                        : review.Surface!.FocusRequestAsync(requestId, expectedActor, request.Token);
                 }, errors).ConfigureAwait(false);
                 if (errors.Count != 0) Throw(errors);
                 focused = originalFocus!.GetAwaiter().GetResult();

@@ -118,6 +118,10 @@
     <EmbeddedResource Include="Views/Pages/Home/HomeSettingsKeyboard.cui" LogicalName="Haven.Desktop.Home.SettingsKeyboard.cui" />
     <EmbeddedResource Include="Views/Pages/Home/PreferenceRecovery.cui" LogicalName="Haven.Desktop.PreferenceRecovery.cui" />
     <EmbeddedResource Include="Views/Pages/Home/UnifiedHomeApps.cui" LogicalName="Haven.Desktop.Home.UnifiedApps.cui" />
+    <EmbeddedResource Include="Views/Pages/Home/UnifiedHomeHubs.cui" LogicalName="Haven.Desktop.Home.UnifiedHubs.cui" />
+    <EmbeddedResource Include="Views/Pages/Home/HomeExplore.cui" LogicalName="Haven.Desktop.Home.Explore.cui" />
+    <EmbeddedResource Include="Views/Pages/Home/HomeSpecialists.cui" LogicalName="Haven.Desktop.Views.Pages.Home.HomeSpecialists.cui" />
+    <EmbeddedResource Include="Views/Pages/Spaces/SpacesOrganisation.cui" LogicalName="Haven.Desktop.Views.Pages.Spaces.SpacesOrganisation.cui" />
     <!-- The shared-header shell and notifications documents are owned and compiled by the
          Haven.SharedHeader component (genuine V1 artifact resource "CUI.Compilation.v1"). They are
          NOT raw-embedded here; this host consumes the emitted compiled bundle through the component. -->
@@ -131,6 +135,7 @@
     <EmbeddedResource Include="Views/Pages/Study/StudyWorkspace.cui" LogicalName="Haven.Desktop.Study.Workspace.cui" />
     <EmbeddedResource Include="Views/Pages/Spaces/SpaceDetailsDecision.cui" LogicalName="Haven.Desktop.Spaces.SpaceDetailsDecision.cui" />
     <EmbeddedResource Include="Views/Pages/Chat/ChatRecovery.cui" LogicalName="Haven.Desktop.Chat.Recovery.cui" />
+    <EmbeddedResource Include="Views/Pages/Chat/ChatConversationHeader.cui" LogicalName="Haven.Desktop.Chat.ConversationHeader.cui" />
     <Compile Update="Prefabs\**\*.hui.cs"><DependentUpon>%(Filename)</DependentUpon></Compile>
     <EmbeddedResource Include="Views/Pages/Write/UI/WriteSharedInk.cui" LogicalName="Haven.Desktop.Write.SharedInk.cui" />
   </ItemGroup>

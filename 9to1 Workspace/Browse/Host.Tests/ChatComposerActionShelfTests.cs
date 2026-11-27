@@ -68,6 +68,130 @@ public sealed class ChatComposerActionShelfTests
         Assert.Equal("retain me", source.Draft);
     }
 
+    [AvaloniaTheory]
+    [InlineData("composer.add")]
+    [InlineData("composer.send")]
+    [InlineData("composer.queue")]
+    [InlineData("composer.submit")]
+    [InlineData("composer.steer")]
+    [InlineData("composer.resume")]
+    [InlineData("composer.voice")]
+    [InlineData("composer.format")]
+    public async Task Action_issued_before_safety_lock_cannot_mutate_or_admit_work_after_the_lock(string command)
+    {
+        var sender = new TextBox();
+        var source = new Source
+        {
+            Draft = "Keep this entire draft", IsSending = command == "composer.queue",
+            CanSendOverride = true, CanSteer = true, CanResume = true, CanEnterVoice = true
+        };
+        var bindings = new ChatComposerBindings(source, candidate => ReferenceEquals(candidate, sender));
+        Assert.True(bindings.IsActionAvailable(command));
+        source.IsSafetyLocked = true; // The previously issued action now observes the current authority.
+        Assert.False(bindings.IsActionAvailable(command));
+        object parameter = command == "composer.submit"
+            ? new CuiInputSubmitRequest(sender, Key.Enter, CuiInputSubmitModifiers.None) : "Bold";
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => bindings.DispatchAsync(command, parameter,
+            TestContext.Current.CancellationToken).AsTask());
+
+        Assert.Equal(0, source.Sends);
+        Assert.Equal(0, source.Mutations);
+        Assert.Equal(0, source.Stops);
+        Assert.Equal("Keep this entire draft", source.Draft);
+    }
+
+    [Fact]
+    public void Draft_writeback_observes_the_current_lock_without_overwriting_retained_input()
+    {
+        var source = new Source { Draft = "Original draft" };
+        var bindings = new ChatComposerBindings(source);
+        Assert.True(bindings.TrySetValue("Composer.Draft", "Latest admitted draft"));
+        Assert.Equal("Latest admitted draft", source.Draft);
+        source.IsSafetyLocked = true;
+
+        Assert.False(bindings.TrySetValue("Composer.Draft", "Stale input writeback"));
+        Assert.Equal("Latest admitted draft", source.Draft);
+
+        source.IsSafetyLocked = false;
+        Assert.True(bindings.TrySetValue("Composer.Draft", "New unlocked edit"));
+        Assert.Equal("New unlocked edit", source.Draft);
+    }
+
+    [Fact]
+    public async Task Withdrawn_add_capability_refuses_an_already_issued_add_action()
+    {
+        var source = new Source { Draft = "Keep this draft" };
+        var bindings = new ChatComposerBindings(source);
+        Assert.True(bindings.IsActionAvailable("composer.add"));
+        source.HasAdd = false;
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => bindings.DispatchAsync("composer.add", null,
+            TestContext.Current.CancellationToken).AsTask());
+
+        Assert.Equal(0, source.Mutations);
+        Assert.Equal("Keep this draft", source.Draft);
+    }
+
+    [AvaloniaFact]
+    public async Task Locked_native_composer_blocks_editing_and_add_but_joins_the_exact_owned_stop()
+    {
+        var held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var source = new Source
+        {
+            Draft = "Retain while stopping", IsSending = true, IsSafetyLocked = true,
+            CanSendOverride = true, StopOperation = held.Task
+        };
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Width = 500, Height = 360, Content = view };
+        try
+        {
+            window.Show();
+            await view.InitializeAsync(TestContext.Current.CancellationToken);
+            Refresh();
+            var input = Assert.Single(view.GetVisualDescendants().OfType<TextBox>(), control =>
+                AutomationProperties.GetAutomationId(control) == "composer-input");
+            Assert.False(input.IsEffectivelyEnabled);
+            Assert.False(Find("add-button")!.IsEffectivelyEnabled);
+            var stop = Find("send-button")!;
+            Assert.True(stop.IsEffectivelyEnabled);
+            Assert.Equal("Cancel response, 1 of 1", AutomationProperties.GetName(stop));
+            Assert.False(Find("action-shelf-next")?.IsVisible ?? false);
+
+            stop.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, stop));
+            var settlement = view.CaptureOriginalActionSettlement();
+            Assert.Equal(1, source.Stops);
+            Assert.False(settlement.IsCompleted);
+            Assert.Equal("Retain while stopping", source.Draft);
+            held.SetResult();
+            await settlement.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            Refresh();
+            Assert.Equal(1, source.Stops);
+            Assert.Equal(0, source.Sends);
+            Assert.Equal(0, source.Mutations);
+            Assert.False(Find("send-button")?.IsVisible ?? false);
+            Assert.Equal("Retain while stopping", source.Draft);
+        }
+        finally
+        {
+            held.TrySetResult();
+            await view.CloseAsync().WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            window.Content = null; window.Close();
+        }
+
+        Button? Find(string id) => view.GetVisualDescendants().OfType<Button>()
+            .SingleOrDefault(control => AutomationProperties.GetAutomationId(control) == id);
+        void Refresh()
+        {
+            view.RefreshSurface();
+            for (var pass = 0; pass < 3; pass++)
+            {
+                Dispatcher.UIThread.RunJobs();
+                window.UpdateLayout();
+            }
+        }
+    }
+
     [Fact]
     public void Stopping_or_noninterruptible_work_cannot_advertise_queue_from_busy_state_alone()
     {
@@ -230,29 +354,38 @@ public sealed class ChatComposerActionShelfTests
         public bool Stopping { get; set; }
         public bool CanStop => IsSending && !Stopping;
         public bool IsSafetyLocked { get; set; }
-        public bool HasAdd => true;
-        public bool CanSend => !IsSafetyLocked && !string.IsNullOrWhiteSpace(Draft);
+        public bool HasAdd { get; set; } = true;
+        public bool? CanSendOverride { get; set; }
+        public bool CanSend => CanSendOverride ?? (!IsSafetyLocked && !string.IsNullOrWhiteSpace(Draft));
+        public bool CanSteer { get; set; }
+        public bool CanResume { get; set; }
+        public bool CanEnterVoice { get; set; }
         public bool IsEditing => false;
         public IReadOnlyList<ChatComposerChip> Chips => [];
         public Task Operation { get; set; } = Task.CompletedTask;
+        public Task StopOperation { get; set; } = Task.CompletedTask;
         public int Sends;
         public int Stops;
+        public int Mutations;
         public Exception? StopFailure;
         public ValueTask Send() { Sends++; return new(Operation); }
         public ValueTask Stop()
         {
             Stops++;
             Stopping = true;
-            return StopFailure is null ? ValueTask.CompletedTask : ValueTask.FromException(StopFailure);
+            return StopFailure is null ? new ValueTask(StopOperation) : ValueTask.FromException(StopFailure);
         }
-        public ValueTask Add() => ValueTask.CompletedTask;
+        public ValueTask Add() { Mutations++; return ValueTask.CompletedTask; }
+        public ValueTask Steer() { Mutations++; return ValueTask.CompletedTask; }
+        public ValueTask Resume() { Mutations++; return ValueTask.CompletedTask; }
+        public ValueTask EnterVoice() { Mutations++; return ValueTask.CompletedTask; }
         public ValueTask OpenSettings() => ValueTask.CompletedTask;
         public ValueTask CloseSettings() => ValueTask.CompletedTask;
         public ValueTask SetActionMode(string mode) => ValueTask.CompletedTask;
         public ValueTask SetResponseMode(string mode) => ValueTask.CompletedTask;
         public ValueTask InvokeChip(string id) => ValueTask.CompletedTask;
         public ValueTask RemoveChip(string id) => ValueTask.CompletedTask;
-        public ValueTask FormatSelection(string command) => ValueTask.CompletedTask;
+        public ValueTask FormatSelection(string command) { Mutations++; return ValueTask.CompletedTask; }
         public ValueTask InsertEmoji(string emoji) => ValueTask.CompletedTask;
         public ValueTask CancelEdit() => ValueTask.CompletedTask;
     }
@@ -385,7 +518,11 @@ public sealed class CanonicalTaskComposerTests
         Assert.False(bindings.IsActionAvailable("composer.steer"));
         Assert.Equal(1, rig.Tasks.Writes);
         Assert.Empty(actual.Snapshot.Attempts);
-        Assert.Contains(mode == TaskFollowUpMode.Queue ? "task:queue" : "task:steer", rig.Authority.Commands);
+        var published = Assert.Single(rig.Events.Published);
+        Assert.Equal(mode == TaskFollowUpMode.Queue ? ExecutionActionType.Queue : ExecutionActionType.Steer, published.ActionType);
+        Assert.Equal(rig.Initial.TaskId, published.TaskId);
+        Assert.Equal(rig.Initial.ExecutionId, published.ExecutionId);
+        Assert.Equal("use the existing source", published.SafeDetail);
     }
 
     private sealed class Rig : IAsyncDisposable
@@ -394,7 +531,7 @@ public sealed class CanonicalTaskComposerTests
         internal TaskExecutionSnapshot Initial = null!;
         internal Guid SpaceId;
         internal Tasks Tasks = new();
-        internal Authority Authority = new();
+        internal Events Events = new();
         internal static async Task<Rig> CreateAsync(UserPreferencesService? preferences = null)
         {
             var rig = new Rig();
@@ -410,7 +547,17 @@ public sealed class CanonicalTaskComposerTests
                 { PersistenceRevision = 2, OwnerBinding = new(task, conversation.Id, run,
                     "controlled actor", "controlled profile", null, null, "revision", "test-only observation") };
             rig.Tasks.Current = rig.Initial;
-            var coordinator = new TaskExecutionCoordinator(rig.Tasks, new Events(), admissionAuthority: rig.Authority);
+            // Recorded owner provenance alone cannot expose current task commands. Use
+            // the real observation/command authority with an independently supplied
+            // current actor; provider/route capabilities remain deliberately absent.
+            var unused = new UnusedModelDependencies();
+            var authority = new TaskRunPermissionAuthority(new Actors(), unused, unused, unused, new(unused));
+            var coordinator = new TaskExecutionCoordinator(rig.Tasks, rig.Events, admissionAuthority: authority);
+            var observation = await coordinator.ReadAuthorizedTaskObservationAsync(task, TestContext.Current.CancellationToken);
+            Assert.Equal(TaskObservationDisposition.Authorized, observation.Disposition);
+            Assert.True(observation.HasCurrentCommandIdentity);
+            Assert.Same(rig.Initial, observation.Snapshot);
+            Assert.Equal(0, rig.Tasks.Writes);
             rig.Page = new(new SpaceTaskWorkspaceService(spaces, new Conversations(conversation), coordinator), coordinator,
                 space.Id, conversation.Id, new UnavailableReadiness(), expectedOriginalTaskId: task, expectedOriginalExecutionId: run);
             if (preferences is not null) rig.Page.BindOriginalComposerPreferences(preferences);
@@ -436,14 +583,29 @@ public sealed class CanonicalTaskComposerTests
             await Page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
         }
     }
-    private sealed class Authority : ITaskRunCommandAuthority
+    private sealed class Actors : IAuthenticatedResourceActorSource
     {
-        internal List<string> Commands = [];
-        public Task ValidateTaskCommandAsync(TaskExecutionSnapshot task, string command, CancellationToken token)
-        { token.ThrowIfCancellationRequested(); Commands.Add(command); return Task.CompletedTask; }
-        public Task<TaskExecutionOwnerBinding> AuthorizeStartAsync(TaskExecutionSnapshot task, CancellationToken token) => throw new NotSupportedException();
-        public Task<ITaskRunAdmissionLease> AuthorizeAttemptAsync(TaskExecutionSnapshot task, Guid id, TaskRunRouteCandidate route, Guid? previous, CancellationToken token) => throw new NotSupportedException();
-        public Task ValidateAcceptedActionAsync(TaskExecutionSnapshot task, Guid attempt, Guid action, string receipt, CancellationToken token) => throw new NotSupportedException();
+        public ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            return new(new AuthenticatedResourceActor("controlled actor", "controlled profile", null, null, "revision"));
+        }
+    }
+    private sealed class UnusedModelDependencies : IModelProviderRegistry, IProviderConfigurationStore,
+        IPrivacyPreferenceStore, IModelPermissionStore
+    {
+        public IReadOnlyList<IModelProvider> Providers => throw new NotSupportedException();
+        public IModelProvider? Find(string providerId) => throw new NotSupportedException();
+        public IModelProvider GetRequired(string providerId) => throw new NotSupportedException();
+        public Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(CancellationToken token) => throw new NotSupportedException();
+        public Task<IReadOnlyList<ProviderConfiguration>> GetAllAsync(CancellationToken token) => throw new NotSupportedException();
+        public Task<ProviderConfiguration?> GetAsync(string providerId, CancellationToken token) => throw new NotSupportedException();
+        public Task UpsertAsync(ProviderConfiguration value, CancellationToken token) => throw new NotSupportedException();
+        public Task DeleteAsync(string providerId, CancellationToken token) => throw new NotSupportedException();
+        public PrivacyPreferences Current => throw new NotSupportedException();
+        public Task UpdateAsync(PrivacyPreferences value, CancellationToken token) => throw new NotSupportedException();
+        public Task<ModelPermissionPolicy> GetPolicyAsync(CancellationToken token) => throw new NotSupportedException();
+        public Task SavePolicyAsync(ModelPermissionPolicy value, CancellationToken token) => throw new NotSupportedException();
     }
     private sealed class Tasks : ITaskExecutionRepository
     {
@@ -480,7 +642,11 @@ public sealed class CanonicalTaskComposerTests
         public Task<SettingsExportManifest> ExportAsync(CancellationToken token) => throw new NotSupportedException();
         public Task<SettingsImportResult> ImportAsync(SettingsExportManifest value, CancellationToken token) => throw new NotSupportedException();
     }
-    private sealed class Events : IExecutionEventSink { public bool TryPublish(ExecutionEvent value) => true; }
+    private sealed class Events : IExecutionEventSink
+    {
+        internal List<ExecutionEvent> Published { get; } = [];
+        public bool TryPublish(ExecutionEvent value) { Published.Add(value); return true; }
+    }
     private sealed class UnavailableReadiness : ICuiSceneReadiness
     {
         public ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken token) => new(new CuiSceneAvailability(

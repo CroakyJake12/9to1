@@ -42,6 +42,7 @@ public sealed class KeybindingService
         ["Send"] = "Enter",
         ["Stop"] = "Escape",
         ["NewTab"] = "Ctrl+T",
+        ["SearchTabs"] = "Ctrl+Shift+A",
         ["CloseTab"] = "Ctrl+W",
         ["NextTab"] = "Ctrl+Tab",
         ["PreviousTab"] = "Ctrl+Shift+Tab",

@@ -1,0 +1,234 @@
+<Cui id="home.hubs" version="1">
+  <Actions>
+    <Action name="SelectHub" command="home.hub-select" parameter="{Binding hub.target}" />
+    <Action name="OpenHubApp" command="home.hub-open-app" parameter="{Binding placement.target}" />
+    <Action name="OpenBuildProjects" command="home.hub-open-app" parameter="{Binding hubs.buildProjectsTarget}" />
+    <Action name="FilterInstalled" command="home.hub-filter" parameter="installed" />
+    <Action name="FilterAll" command="home.hub-filter" parameter="all" />
+    <Action name="FilterPinned" command="home.hub-filter" parameter="pinned" />
+    <Action name="RenameHub" command="home.hub-rename" parameter="{Binding hub.target}" />
+    <Action name="SubmitHubName" command="home.hub-rename" parameter="{Binding Event}" />
+    <Action name="SubmitNewHub" command="home.hub-add" parameter="{Binding Event}" />
+    <Action name="MoveHubUp" command="home.hub-move-up" parameter="{Binding hub.target}" />
+    <Action name="MoveHubDown" command="home.hub-move-down" parameter="{Binding hub.target}" />
+    <Action name="RemoveHub" command="home.hub-remove" parameter="{Binding hub.target}" />
+    <Action name="AddPlacement" command="home.hub-add-app" parameter="{Binding placement.target}" />
+    <Action name="RemovePlacement" command="home.hub-remove-app" parameter="{Binding placement.target}" />
+    <Action name="MovePlacementUp" command="home.hub-app-up" parameter="{Binding placement.target}" />
+    <Action name="MovePlacementDown" command="home.hub-app-down" parameter="{Binding placement.target}" />
+  </Actions>
+  <Theme Name="user_preference">
+    <Page id="home-hubs-page" Role="main" AccessibleName="Hubs" OwnsBackdrop="True" Background="{Resource CuiWorkspaceBrush}">
+      <Container id="home-hubs-body" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False"
+                 Padding="{Binding apps.pagePadding}" CellGap="20" Background="{Resource CuiTransparentBrush}">
+        <Container id="home-hubs-browse" Type="Vertical Stack" CellGap="20" IsVisible="{Binding hubs.browsing}">
+          <Container Type="Grid" ColumnSizes="{Binding hubs.headerColumns}" RowSizes="{Binding hubs.headerRows}" CellGap="16">
+            <Container Type="Vertical Stack" CellGap="7">
+              <Text Text="9TO1 APPS" FontSize="11" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
+              <Text Text="Hubs" FontSize="36" FontWeight="800" />
+              <Text Text="Browse apps by hub." FontSize="13" Foreground="{Resource CuiTextSoftBrush}" />
+            </Container>
+            <Container Type="Wrap" Row="{Binding hubs.actionsRow}" Column="{Binding hubs.actionsColumn}" CellGap="9" VerticalAlignment="Center">
+              <Button id="home-hubs-all-apps" Content="All apps" Action="home.hub-all-apps" MinHeight="38" Padding="16 9" CornerRadius="{Binding apps.buttonRadius}" />
+              <Button id="home-hubs-customise" Content="Customise hubs" Action="home.hub-customise" AccentRole="Primary"
+                      MinHeight="38" Padding="16 9" CornerRadius="{Binding apps.buttonRadius}" />
+            </Container>
+          </Container>
+          <Container id="home-hubs-navigation" Type="Grid" ColumnSizes="{Binding hubs.navigationColumns}"
+                     RowSizes="{Binding hubs.navigationRows}" CellGap="10" IsVisible="{Binding hubs.hasHubs}">
+            <Repeat Source="{Binding hubs.navigation}" As="hub" Key="{Binding hub.key}" ItemRow="{Binding hub.row}" ItemColumn="{Binding hub.column}">
+              <Button id="home-hub-card" Action="SelectHub" Selected="{Binding hub.selected}" AccessibleName="{Binding hub.label}"
+                      MinHeight="106" Padding="15" CornerRadius="{Binding apps.rowRadius}" Background="{Resource CuiPanelBrush}"
+                      BorderColor="{Resource CuiLineBrush}" BorderWidth="1" HorizontalContentAlignment="Stretch">
+                <Container Type="Vertical Stack" CellGap="7">
+                  <Image Source="{Binding hub.iconSource}" Width="21" Height="21" HorizontalAlignment="Left" />
+                  <Text Text="{Binding hub.name}" FontSize="14" FontWeight="750" TextWrapping="Wrap" />
+                  <Text id="home-hub-card-count" Text="{Binding hub.count}" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+              </Button>
+            </Repeat>
+          </Container>
+          <Container id="home-hubs-empty-arrangement" Type="Vertical Stack" Padding="24" CellGap="8" CornerRadius="{Binding apps.cardRadius}"
+                     Background="{Resource CuiPanelBrush}" IsVisible="{Binding hubs.noHubs}" Role="status">
+            <Text Text="Your arrangement has no hubs" FontSize="19" FontWeight="750" />
+            <Text Text="Add a hub in Customise hubs, or turn customisation off to show the standard hubs. Your saved arrangement is kept."
+                  TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+          <Container id="home-hub-selected" Type="Vertical Stack" CellGap="18" Padding="22" CornerRadius="{Binding apps.cardRadius}"
+                     Background="{Resource CuiPanelBrush}" IsVisible="{Binding hubs.hasSelection}">
+            <Container Type="Wrap" CellGap="14">
+              <Container Type="Vertical Stack" CellGap="6">
+                <Text Text="{Binding hubs.selectedName}" FontSize="24" FontWeight="800" />
+                <Text Text="{Binding hubs.selectedDescription}" FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              </Container>
+              <Container Type="Overlay" Background="{Resource CuiPanel2Brush}" CornerRadius="14" Padding="11 7" VerticalAlignment="Center">
+                <Text Text="{Binding hubs.arrangementLabel}" FontSize="11" FontWeight="650" Foreground="{Resource CuiTextSoftBrush}" />
+              </Container>
+            </Container>
+            <Container id="home-hub-build-projects" Type="Grid" ColumnSizes="1fr Auto" CellGap="12" Padding="14" CornerRadius="18"
+                       Background="{Resource CuiPanel2Brush}" IsVisible="{Binding hubs.hasBuildProjects}">
+              <Container Type="Vertical Stack" CellGap="5">
+                <Text Text="Build projects" FontSize="14" FontWeight="750" />
+                <Text Text="Open your projects in Build." FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              </Container>
+              <Button id="home-hub-open-projects" Column="1" Content="Open projects" Action="OpenBuildProjects"
+                      IsEnabled="{Binding hubs.canOpenBuildProjects}" VerticalAlignment="Center" MinHeight="36" Padding="13 8" CornerRadius="{Binding apps.buttonRadius}" />
+            </Container>
+            <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="10" MinHeight="43" Padding="12 7"
+                       Background="{Resource CuiPanel2Brush}" CornerRadius="15">
+              <Input id="home-hub-search" Type="Text" Value="{Binding hubs.query, mode=TwoWay}" AccessibleName="Search this hub"
+                     PlaceholderText="Search this hub" Background="{Resource CuiTransparentBrush}" BorderWidth="0" MinWidth="0" Padding="0" />
+              <Button Column="1" Action="home.hub-clear-query" AccessibleName="Clear hub search" Tooltip="Clear hub search"
+                      Width="28" Height="28" Padding="6" Chromeless="True" IsVisible="{Binding hubs.hasQuery}" CornerRadius="{Binding apps.buttonRadius}">
+                <Image Source="icon:close" Width="14" Height="14" />
+              </Button>
+            </Container>
+            <Container Type="Horizontal Stack" CellGap="8">
+              <Button id="home-hub-filter-installed" Content="Installed" Action="FilterInstalled" Selected="{Binding apps.filterInstalled}" AccentRole="Primary"
+                      Background="{Resource CuiPanel2Brush}" Foreground="{Resource CuiTextBrush}" MinHeight="32" Padding="12 7" CornerRadius="{Binding apps.buttonRadius}" BorderWidth="0" />
+              <Button id="home-hub-filter-all" Content="All apps" Action="FilterAll" Selected="{Binding apps.filterAll}" AccentRole="Primary"
+                      Background="{Resource CuiPanel2Brush}" Foreground="{Resource CuiTextBrush}" MinHeight="32" Padding="12 7" CornerRadius="{Binding apps.buttonRadius}" BorderWidth="0" />
+              <Button id="home-hub-filter-pinned" Content="Pinned" Action="FilterPinned" Selected="{Binding apps.filterPinned}" AccentRole="Primary"
+                      Background="{Resource CuiPanel2Brush}" Foreground="{Resource CuiTextBrush}" MinHeight="32" Padding="12 7" CornerRadius="{Binding apps.buttonRadius}" BorderWidth="0" />
+            </Container>
+            <Container id="home-hub-apps" Type="Grid" ColumnSizes="{Binding hubs.appColumns}" RowSizes="{Binding hubs.appRows}" CellGap="10">
+              <Repeat Source="{Binding hubs.apps}" As="placement" Key="{Binding placement.identity}" ItemRow="{Binding placement.row}" ItemColumn="{Binding placement.column}">
+                <Button id="home-hub-app-open" Action="OpenHubApp" AccessibleName="{Binding placement.openLabel}" Tooltip="{Binding placement.detail}"
+                        IsEnabled="{Binding placement.canOpen}" Padding="15" MinHeight="76" CornerRadius="{Binding apps.rowRadius}"
+                        Background="{Resource CuiPanel2Brush}" BorderWidth="0" HorizontalContentAlignment="Stretch">
+                  <Container Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="12">
+                    <Image id="home-hub-app-icon" Source="{Binding placement.iconSource}" Width="33" Height="33" VerticalAlignment="Center" />
+                    <Container Column="1" Type="Vertical Stack" CellGap="5" VerticalAlignment="Center">
+                      <Text Text="{Binding placement.name}" FontSize="14" FontWeight="750" TextWrapping="Wrap" />
+                      <Text id="home-hub-app-detail" Text="{Binding placement.detail}" FontSize="11" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                    </Container>
+                    <Image Column="2" Source="icon:arrow-up-right" Width="14" Height="14" VerticalAlignment="Center" />
+                  </Container>
+                </Button>
+              </Repeat>
+            </Container>
+            <Container id="home-hub-empty" Type="Vertical Stack" CellGap="6" Padding="12" IsVisible="{Binding hubs.noApps}" Role="status">
+              <Text Text="{Binding hubs.emptyTitle}" FontWeight="700" />
+              <Text Text="{Binding hubs.emptyDetail}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            </Container>
+          </Container>
+        </Container>
+        <Container id="home-hubs-editor" Type="Vertical Stack" CellGap="20" IsVisible="{Binding hubs.editing}">
+          <Container Type="Grid" ColumnSizes="{Binding hubs.headerColumns}" RowSizes="{Binding hubs.headerRows}" CellGap="16">
+            <Container Type="Vertical Stack" CellGap="7">
+              <Text Text="HUBS" FontSize="11" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
+              <Text Text="Your arrangement" FontSize="30" FontWeight="800" TextWrapping="Wrap" />
+              <Text Text="Choose how apps appear together." FontSize="13" Foreground="{Resource CuiTextSoftBrush}" />
+            </Container>
+            <Button id="home-hubs-back" Row="{Binding hubs.actionsRow}" Column="{Binding hubs.actionsColumn}" Content="Back to hubs"
+                    Action="home.hub-back" MinHeight="38" Padding="16 9" CornerRadius="{Binding apps.buttonRadius}" VerticalAlignment="Center" HorizontalAlignment="Left" />
+          </Container>
+          <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="16" Padding="20" CornerRadius="{Binding apps.cardRadius}" Background="{Resource CuiPanelBrush}">
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Customise hubs" FontSize="16" FontWeight="750" />
+              <Text Text="Turn off to show the standard hubs. Your custom arrangement stays saved."
+                    FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            </Container>
+            <Input id="home-hubs-customise-toggle" Type="Switch" Column="1" Checked="{Binding hubs.customise, mode=TwoWay}"
+                   AccessibleName="Customise hubs" IsEnabled="{Binding hubs.canToggle}" VerticalAlignment="Center" />
+          </Container>
+          <Text Text="This profile cannot save app arrangements in the current host." IsVisible="{Binding hubs.readOnly}"
+                TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" Role="status" />
+          <Container id="home-hubs-confirmation" Type="Vertical Stack" CellGap="10" Padding="18" CornerRadius="18"
+                     Background="{Resource CuiPanel2Brush}" IsVisible="{Binding hubs.hasConfirmation}" Role="alert">
+            <Text Text="{Binding hubs.confirmationTitle}" FontSize="16" FontWeight="750" TextWrapping="Wrap" />
+            <Text Text="{Binding hubs.confirmationDetail}" FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            <Container Type="Wrap" CellGap="8">
+              <Button id="home-hub-cancel-confirm" Content="{Binding hubs.confirmationCancel}" Action="home.hub-cancel-confirm" MinHeight="36" Padding="14 8"  CornerRadius="{Binding apps.buttonRadius}" />
+              <Button id="home-hub-confirm" Content="{Binding hubs.confirmationAction}" Action="home.hub-confirm" AccentRole="Primary" MinHeight="36" Padding="14 8"
+                      IsEnabled="{Binding hubs.editEnabled}"  CornerRadius="{Binding apps.buttonRadius}" />
+            </Container>
+          </Container>
+          <Container Type="Grid" ColumnSizes="{Binding hubs.editorColumns}" RowSizes="{Binding hubs.editorRows}" CellGap="18">
+            <Container Type="Vertical Stack" CellGap="14" Padding="20" CornerRadius="{Binding apps.cardRadius}" Background="{Resource CuiPanelBrush}">
+              <Container Type="Wrap" CellGap="12">
+                <Text Text="Hub order and names" FontSize="18" FontWeight="750" VerticalAlignment="Center" />
+                <Button id="home-hubs-reset" Content="Reset arrangement" Action="home.hub-reset" IsEnabled="{Binding hubs.editEnabled}"
+                        MinHeight="32" Padding="12 7" CornerRadius="{Binding apps.buttonRadius}" />
+              </Container>
+              <Text Text="Save a name with Enter or Save; Escape restores it. Use the arrow controls or Alt+Up/Down to reorder."
+                    FontSize="11" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Repeat Source="{Binding hubs.editorHubs}" As="hub" Key="{Binding hub.key}">
+                <Container id="home-hub-editor-row" Type="Vertical Stack" CellGap="8" Padding="12" Margin="0 0 0 8"
+                           CornerRadius="17" Background="{Resource CuiPanel2Brush}">
+                  <Container Type="Grid" ColumnSizes="Auto 1fr" CellGap="10">
+                    <Text Text="{Binding hub.position}" FontSize="12" FontWeight="650" VerticalAlignment="Center" />
+                    <Input id="home-hub-name" Type="Text" Column="1" Value="{Binding hub.draftName, mode=TwoWay}"
+                           SubmitAction="SubmitHubName" AccessibleName="{Binding hub.renameLabel}" IsEnabled="{Binding hub.canEdit}" MinWidth="0" />
+                  </Container>
+                  <Text id="home-hub-editor-count" Text="{Binding hub.count}" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" />
+                  <Container Type="Wrap" CellGap="5">
+                    <Button Content="Save" Action="RenameHub" AccessibleName="{Binding hub.renameLabel}" IsEnabled="{Binding hub.canEdit}" MinHeight="30" Padding="10 5"  CornerRadius="{Binding apps.buttonRadius}" />
+                    <Button Action="MoveHubUp" AccessibleName="{Binding hub.earlierLabel}" Tooltip="{Binding hub.earlierLabel}"
+                            IsEnabled="{Binding hub.canMoveEarlier}" Width="30" Height="30" Padding="7" CornerRadius="{Binding apps.buttonRadius}"><Image id="home-hub-move-up-icon" Source="icon:arrow-up" Width="14" Height="14" /></Button>
+                    <Button Action="MoveHubDown" AccessibleName="{Binding hub.laterLabel}" Tooltip="{Binding hub.laterLabel}"
+                            IsEnabled="{Binding hub.canMoveLater}" Width="30" Height="30" Padding="7" CornerRadius="{Binding apps.buttonRadius}"><Image id="home-hub-move-down-icon" Source="icon:arrow-down" Width="14" Height="14" /></Button>
+                    <Button Content="Apps" Action="SelectHub" AccessibleName="{Binding hub.appsLabel}" MinHeight="30" Padding="10 5"  CornerRadius="{Binding apps.buttonRadius}" />
+                    <Button Content="Remove" Action="RemoveHub" AccessibleName="{Binding hub.removeLabel}" IsEnabled="{Binding hub.canEdit}" MinHeight="30" Padding="10 5"  CornerRadius="{Binding apps.buttonRadius}" />
+                  </Container>
+                </Container>
+              </Repeat>
+              <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
+                <Input id="home-hub-new-name" Type="Text" Value="{Binding hubs.newName, mode=TwoWay}" PlaceholderText="New hub name"
+                       SubmitAction="SubmitNewHub" AccessibleName="New hub name" MinWidth="0" IsEnabled="{Binding hubs.editEnabled}" />
+                <Button id="home-hub-add" Column="1" Content="Add hub" Action="home.hub-add" IsEnabled="{Binding hubs.canAddHub}" AccentRole="Primary" MinHeight="36" Padding="12 8"  CornerRadius="{Binding apps.buttonRadius}" />
+              </Container>
+              <Container Type="Wrap" CellGap="10" IsVisible="{Binding hubs.hasUndo}">
+                <Text Text="{Binding hubs.undoDescription}" FontSize="12" VerticalAlignment="Center" />
+                <Button id="home-hubs-undo" Content="Undo" Action="home.hub-undo" IsEnabled="{Binding hubs.canUndo}" MinHeight="32" Padding="12 7"  CornerRadius="{Binding apps.buttonRadius}" />
+              </Container>
+            </Container>
+            <Container id="home-hub-editor-apps" Type="Vertical Stack" Row="{Binding hubs.editorAppsRow}" Column="{Binding hubs.editorAppsColumn}"
+                       CellGap="14" Padding="20" CornerRadius="{Binding apps.cardRadius}" Background="{Resource CuiPanelBrush}">
+              <Text Text="{Binding hubs.placementHeading}" FontSize="18" FontWeight="750" TextWrapping="Wrap" />
+              <Text Text="An app can appear in several hubs. Removing a placement does not uninstall it."
+                    FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Button id="home-hub-chooser" Content="{Binding hubs.selectedName}" Action="home.hub-choose" AccessibleName="Choose a hub to edit"
+                      IsEnabled="{Binding hubs.hasHubs}" HorizontalContentAlignment="Left" MinHeight="37" Padding="12 8" CornerRadius="{Binding apps.buttonRadius}">
+                <Container Type="Context Menu" AccessibleName="Choose a hub">
+                  <Repeat Source="{Binding hubs.navigation}" As="hub" Key="{Binding hub.key}">
+                    <Button Type="Menu Item" Content="{Binding hub.name}" Action="SelectHub" ToggleType="Radio" Checked="{Binding hub.selected}" />
+                  </Repeat>
+                </Container>
+              </Button>
+              <Repeat Source="{Binding hubs.apps}" As="placement" Key="{Binding placement.identity}">
+                <Container Type="Vertical Stack" CellGap="7" Padding="12" Margin="0 0 0 7" Background="{Resource CuiPanel2Brush}" CornerRadius="16">
+                  <Container Type="Grid" ColumnSizes="Auto 1fr" CellGap="10">
+                    <Image Source="{Binding placement.iconSource}" Width="28" Height="28" VerticalAlignment="Center" />
+                    <Container Column="1" Type="Vertical Stack" CellGap="4">
+                      <Text Text="{Binding placement.name}" FontSize="13" FontWeight="750" TextWrapping="Wrap" />
+                      <Text id="home-hub-placement-detail" Text="{Binding placement.detail}" FontSize="11" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                    </Container>
+                  </Container>
+                  <Container Type="Horizontal Stack" CellGap="5">
+                    <Button Action="MovePlacementUp" AccessibleName="{Binding placement.earlierLabel}" Tooltip="{Binding placement.earlierLabel}"
+                            IsEnabled="{Binding placement.canMoveEarlier}" Width="30" Height="30" Padding="7" CornerRadius="{Binding apps.buttonRadius}"><Image id="home-hub-placement-up-icon" Source="icon:arrow-up" Width="14" Height="14" /></Button>
+                    <Button Action="MovePlacementDown" AccessibleName="{Binding placement.laterLabel}" Tooltip="{Binding placement.laterLabel}"
+                            IsEnabled="{Binding placement.canMoveLater}" Width="30" Height="30" Padding="7" CornerRadius="{Binding apps.buttonRadius}"><Image id="home-hub-placement-down-icon" Source="icon:arrow-down" Width="14" Height="14" /></Button>
+                    <Button Content="Remove" Action="RemovePlacement" AccessibleName="{Binding placement.removeLabel}" IsEnabled="{Binding placement.canEdit}" MinHeight="30" Padding="10 5"  CornerRadius="{Binding apps.buttonRadius}" />
+                  </Container>
+                </Container>
+              </Repeat>
+              <Text Text="Add a hub to choose its apps." IsVisible="{Binding hubs.noHubs}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Button id="home-hub-add-app-menu" Content="Add app" Action="home.hub-add-app-menu" AccessibleName="Choose an app to add"
+                      IsEnabled="{Binding hubs.canAddApp}" MinHeight="37" Padding="12 8" AccentRole="Primary" HorizontalAlignment="Left" CornerRadius="{Binding apps.buttonRadius}">
+                <Container Type="Context Menu" AccessibleName="Add an app placement">
+                  <Repeat Source="{Binding hubs.addableApps}" As="placement" Key="{Binding placement.identity}">
+                    <Button Type="Menu Item" Content="{Binding placement.addLabel}" Action="AddPlacement" />
+                  </Repeat>
+                </Container>
+              </Button>
+            </Container>
+          </Container>
+        </Container>
+        <Text id="home-hubs-status" Text="{Binding apps.status}" AccessibleName="Hubs status" FontSize="12"
+              TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" Role="status" />
+      </Container>
+    </Page>
+  </Theme>
+</Cui>

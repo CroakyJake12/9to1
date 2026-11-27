@@ -20,10 +20,12 @@ using Haven.Application.Haven;
 using Haven.Desktop.Accounts;
 using Haven.Desktop.Services;
 using Haven.Desktop.Views.Pages.Automations;
+using Haven.Desktop.Views.Pages.Home;
 using Haven.Desktop.Views.Shell;
 using Haven.SharedHeader;
 using HavenOS.Home;
 using HavenOS.Home.Core;
+using HavenOS.Home.Discover;
 using HavenOS.Home.PermissionsTrustNotifications;
 using Microsoft.Extensions.DependencyInjection;
 using NineToOne.Accounts.Native;
@@ -1026,14 +1028,33 @@ public sealed partial class App
         /// state/broker/authorization/provider-registry/privacy owners (User scope only).
         /// If the genuine composition is unavailable the rail model control stays truthfully
         /// refused — never a fixture catalogue or permanently disabled stand-in.</summary>
-        private Task<HavenSharedOpenResult> OpenModelPickerPanelAsync(CancellationToken cancellationToken)
+        private sealed record ModelPickerPanelOutcome(HavenSharedOpenResult OpenResult, HomeDiscoverModelUseResult? Selection = null);
+
+        private async Task<HavenSharedOpenResult> OpenModelPickerPanelAsync(CancellationToken token) =>
+            (await OpenModelPickerPanelCoreAsync(token, null)).OpenResult;
+
+        private async Task<HomeDiscoverModelUseResult> UseDiscoveredModelAsync(HomeDiscoverIdentity identity, CancellationToken token)
+        {
+            var outcome = await OpenModelPickerPanelCoreAsync(token, identity);
+            return outcome.Selection ?? new(false, outcome.OpenResult.Code,
+                outcome.OpenResult.Message ?? "The model picker could not choose this model.");
+        }
+
+        private Task<ModelPickerPanelOutcome> OpenModelPickerPanelCoreAsync(CancellationToken cancellationToken, HomeDiscoverIdentity? modelToUse)
         {
             Dispatcher.UIThread.VerifyAccess();
-            if (!IsCurrent) return Task.FromResult(HavenSharedOpenResult.Denied);
+            if (!IsCurrent) return Task.FromResult(new ModelPickerPanelOutcome(HavenSharedOpenResult.Denied));
             var theme = _homeTheme?.Context;
-            if (theme is null) return Task.FromResult(HavenSharedOpenResult.Refused("ThemeUnavailable", "The genuine Home theme is not ready."));
+            if (theme is null) return Task.FromResult(new ModelPickerPanelOutcome(HavenSharedOpenResult.Refused("ThemeUnavailable", "The genuine Home theme is not ready.")));
             var generation = checked(++_sharedPanelGeneration);
-            return AdmitOriginal(async () =>
+            // Preserve the actual originating tab before the first asynchronous actor
+            // read. A Home details-page choice changes the shared preference only; it
+            // must never acquire a different conversation merely because focus moved.
+            var originalChrome = _chrome;
+            var originalTab = originalChrome?.State.SelectedTabId;
+            var originalSession = originalChrome is not null && originalTab is { } originatingTab
+                ? originalChrome.ObserveOriginalAppContent(originatingTab) : null;
+            return AdmitOriginal<ModelPickerPanelOutcome>(async () =>
             {
                 // Re-observe the ACTUAL current Home actor (not the startup-cached _actor) and
                 // refuse before any work if this panel's profile no longer matches. The whole
@@ -1042,15 +1063,14 @@ public sealed partial class App
                 // are fenced before visible mutation on the UI thread.
                 var actor = await ObserveActorAsync(cancellationToken);
                 if (actor is null || !IsPanelCurrent(generation, actor.ProfileId))
-                    return HavenSharedOpenResult.Denied;
+                    return new(HavenSharedOpenResult.Denied);
                 // Capture the exact originating tab and Chat before awaiting picker setup.
                 // A later route commit must never be redirected to whichever tab happens
                 // to be selected when its asynchronous model resolution completes.
-                var originalChrome = _chrome;
-                var originalTab = originalChrome?.State.SelectedTabId;
                 NativeAppContentRegistry.IOriginalChatModelTarget? originalChat = null;
-                if (originalChrome is not null && originalTab is { } tabId &&
-                    originalChrome.ObserveOriginalAppContent(tabId) is { } originalSession)
+                if (modelToUse is null && originalChrome is not null && originalTab is { } tabId && originalSession is not null &&
+                    originalChrome.State.SelectedTabId == tabId &&
+                    ReferenceEquals(originalChrome.ObserveOriginalAppContent(tabId), originalSession))
                 {
                     originalChat = NativeAppContentRegistry.CaptureOriginalChatModelTarget(
                         originalSession, tabId, actor.ProfileId);
@@ -1059,70 +1079,107 @@ public sealed partial class App
                          !ReferenceEquals(originalChrome.ObserveOriginalAppContent(tabId), originalChat.OriginalSession)))
                         originalChat = null;
                 }
-                HomeModelPickerOriginalSessionProvider session;
+                HomeModelPickerOriginalSessionProvider? incomingSession = null;
+                CuiControlLoader? incomingLoader = null;
+                var loaderTransferred = false;
+                var sessionTransferred = false;
+                Exception? openingFailure = null;
                 try
                 {
-                    var routes = new HomeVersionedModelRouteRepository(_home.StateStore);
-                    var provider = new HomeModelPickerFeatureProvider(_home.Profiles, routes,
-                        _services.GetRequiredService<IModelProviderRegistry>(),
-                        _services.GetRequiredService<IPrivacyPreferenceStore>(),
-                        _home.Resources, _home.Broker);
-                    // The single shared route-commit seam: a successful guarded CAS save notifies the
-                    // retained Home-owned selection source so the genuine projection republishes live.
-                    var notifying = new RouteNotifyingModelPickerProvider(provider, async () =>
+                    HomeModelPickerOriginalSessionProvider session;
+                    try
                     {
-                        var source = _homeModelSelectionSource ?? _services.GetService<HomeModelSelectionSource>();
-                        source?.NotifyRouteCommitted();
-                        if (source is not null && originalChrome is not null && originalTab is { } tab &&
-                            originalChat is not null)
+                        var routes = new HomeVersionedModelRouteRepository(_home.StateStore);
+                        var provider = new HomeModelPickerFeatureProvider(_home.Profiles, routes,
+                            _services.GetRequiredService<IModelProviderRegistry>(),
+                            _services.GetRequiredService<IPrivacyPreferenceStore>(),
+                            _home.Resources, _home.Broker);
+                        // The single shared route-commit seam: a successful guarded CAS save notifies the
+                        // retained Home-owned selection source so the genuine projection republishes live.
+                        var notifying = new RouteNotifyingModelPickerProvider(provider, async () =>
                         {
-                            var commit = Interlocked.Increment(ref _chatRouteCommitGeneration);
-                            var applied = ApplyCommittedRouteToOriginalChatAsync(source, originalChrome, tab,
-                                originalChat, actor, commit, ModelProjectionToken);
-                            await Track(applied).ConfigureAwait(false);
-                        }
-                    });
-                    session = new HomeModelPickerOriginalSessionProvider(notifying, _home.Profiles);
-                    var begun = await session.BeginAsync(cancellationToken);
-                    if (!begun) return HavenSharedOpenResult.Refused("OriginalModelSessionUnavailable",
-                        "The originating model manager session could not be bound to the current Home actor.");
-                }
-                catch (Exception error)
-                {
-                    return HavenSharedOpenResult.Refused("ModelCompositionUnavailable", error.Message);
-                }
+                            var source = _homeModelSelectionSource ?? _services.GetService<HomeModelSelectionSource>();
+                            source?.NotifyRouteCommitted();
+                            if (source is not null && originalChrome is not null && originalTab is { } tab &&
+                                originalChat is not null)
+                            {
+                                var commit = Interlocked.Increment(ref _chatRouteCommitGeneration);
+                                var applied = ApplyCommittedRouteToOriginalChatAsync(source, originalChrome, tab,
+                                    originalChat, actor, commit, ModelProjectionToken);
+                                await Track(applied).ConfigureAwait(false);
+                            }
+                        });
+                        session = new HomeModelPickerOriginalSessionProvider(notifying, _home.Profiles);
+                        incomingSession = session;
+                        var begun = await session.BeginAsync(cancellationToken);
+                        if (!begun) return new(HavenSharedOpenResult.Refused("OriginalModelSessionUnavailable",
+                            "The originating model manager session could not be bound to the current Home actor."));
+                    }
+                    catch (Exception error)
+                    {
+                        return new(HavenSharedOpenResult.Refused("ModelCompositionUnavailable", error.Message));
+                    }
 
-                var controller = new HomeModelPickerCuiController(new HomeModelPickerRouteEditor(session),
-                    source: _homeModelSelectionSource, actor: actor);
-                // Fence publication BEFORE the controller mutates its surface: a retired panel or
-                // actor switch must never publish. Preserves standalone callers (gate null).
-                controller.PublicationGate = () => IsPanelCurrent(generation, actor.ProfileId);
-                var loader = new CuiControlLoader(new CuiControlRegistry { ScaleAuthoredInterfaceMetrics = true });
-                loader.SetThemePreferenceContext(theme);
-                loader.SetBindingContext(controller.Surface);
-                loader.SetActionDispatcher(new HomeModelPickerDispatcher(controller, this, generation, actor));
-                var loaded = loader.TryLoad(controller.Surface.Document);
-                if (loaded.Root is null || loaded.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
-                {
-                    RetireLoader(loader);
-                    return HavenSharedOpenResult.Refused("PanelLoadFailed", "The authored model-picker panel failed to load.");
+                    var controller = new HomeModelPickerCuiController(new HomeModelPickerRouteEditor(session),
+                        source: _homeModelSelectionSource, actor: actor,
+                        conversationSource: originalChat?.CreateConversationPickerSource(actor));
+                    // Fence publication BEFORE the controller mutates its surface: a retired panel or
+                    // actor switch must never publish. Preserves standalone callers (gate null).
+                    controller.PublicationGate = () => IsPanelCurrent(generation, actor.ProfileId);
+                    var loader = new CuiControlLoader(new CuiControlRegistry { ScaleAuthoredInterfaceMetrics = true });
+                    incomingLoader = loader;
+                    loader.SetThemePreferenceContext(theme);
+                    loader.SetBindingContext(new HomeModelPickerConversationBindings(controller.Surface,
+                        () => IsPanelCurrent(generation, actor.ProfileId)));
+                    loader.SetActionDispatcher(new HomeModelPickerDispatcher(controller, this, generation, actor));
+                    var loaded = loader.TryLoad(controller.Surface.Document);
+                    if (loaded.Root is null || loaded.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
+                    {
+                        return new(HavenSharedOpenResult.Refused("PanelLoadFailed", "The authored model-picker panel failed to load."));
+                    }
+                    loader.WireBindings(loaded.Root);
+                    // Await the real session/controller/catalogue initialization BEFORE reporting
+                    // success; surface its typed refusal/failure rather than discarding it.
+                    var opened = await controller.OpenAsync("User", "chat", cancellationToken);
+                    if (!opened.Succeeded || !IsPanelCurrent(generation, actor.ProfileId))
+                    {
+                        return new(opened.Succeeded ? HavenSharedOpenResult.Denied
+                            : HavenSharedOpenResult.Refused(opened.Code ?? "ModelOpenFailed", opened.Message));
+                    }
+                    var shown = ShowSharedPanel(loader, loaded.Root, controller.Surface);
+                    loaderTransferred = true; // Show either mounted or retired the exact incoming loader.
+                    if (!shown)
+                        return new(HavenSharedOpenResult.Refused("PanelHostUnavailable",
+                            "The authored shared-panel host is unavailable."));
+                    _modelSessions.Add(session); sessionTransferred = true;
+                    HomeDiscoverModelUseResult? selection = null;
+                    if (modelToUse is not null)
+                        selection = await HomeDiscoverModelSelection.UseAsync(controller, modelToUse, cancellationToken);
+                    if (IsPanelCurrent(generation, actor.ProfileId))
+                        FocusModelPickerControl(loaded.Root, "compact-model-picker-edit");
+                    return new(HavenSharedOpenResult.Succeeded(), selection);
                 }
-                loader.WireBindings(loaded.Root);
-                // Await the real session/controller/catalogue initialization BEFORE reporting
-                // success; surface its typed refusal/failure rather than discarding it.
-                var opened = await controller.OpenAsync("User", "chat", cancellationToken);
-                if (!opened.Succeeded || !IsPanelCurrent(generation, actor.ProfileId))
+                catch (Exception error) { openingFailure = error; throw; }
+                finally
                 {
-                    RetireLoader(loader);
-                    return opened.Succeeded ? HavenSharedOpenResult.Denied
-                        : HavenSharedOpenResult.Refused(opened.Code ?? "ModelOpenFailed", opened.Message);
+                    try
+                    {
+                        if (incomingLoader is not null && !loaderTransferred)
+                        {
+                            if (ReferenceEquals(_sharedPanelLoader, incomingLoader))
+                            {
+                                // A throwing mount callback can follow the actual transfer.
+                                // The host still owns that exact loader and its session.
+                                if (!sessionTransferred && incomingSession is not null)
+                                { _modelSessions.Add(incomingSession); sessionTransferred = true; }
+                            }
+                            else RetireLoader(incomingLoader);
+                        }
+                        if (!sessionTransferred) incomingSession?.Dispose();
+                    }
+                    catch (Exception cleanup) when (openingFailure is not null)
+                    { throw new AggregateException("The original model-picker opening and incoming-resource cleanup failed.", openingFailure, cleanup); }
                 }
-                _modelSessions.Add(session);
-                if (!ShowSharedPanel(loader, loaded.Root, controller.Surface))
-                    return HavenSharedOpenResult.Refused("PanelHostUnavailable",
-                        "The authored shared-panel host is unavailable.");
-                FocusModelPickerControl(loaded.Root, "compact-model-picker-edit");
-                return HavenSharedOpenResult.Succeeded();
             });
         }
 
@@ -1319,6 +1376,10 @@ public sealed partial class App
                         await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
                             HomeModelPickerAction.RefreshCatalogue), cancellationToken));
                         return;
+                    case "RefreshPickerConversation":
+                        await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
+                            HomeModelPickerAction.RefreshConversation), cancellationToken));
+                        return;
                     case "ToggleFamily" when parameter is HomeModelPickerFamilySelection family:
                         await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
                             HomeModelPickerAction.ToggleFamily, FamilyKey: family.FamilyKey), cancellationToken));
@@ -1339,7 +1400,11 @@ public sealed partial class App
                             HomeModelPickerAction.ChooseCompactModel, Category: compactChoice.CompactRole, ProviderId: compactChoice.ProviderId,
                             ModelId: compactChoice.ModelId, ArtifactRevision: compactChoice.ArtifactRevision), cancellationToken));
                         return;
-                    case "SelectCompactRole" or "ToggleCompactSection" or "ChooseCompactModel":
+                    case "ChooseCompactSpecialist" when parameter is HomeModelPickerSpecialistSelection specialist:
+                        await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
+                            HomeModelPickerAction.ChooseCompactSpecialist, SpecialistSelection: specialist), cancellationToken));
+                        return;
+                    case "SelectCompactRole" or "ToggleCompactSection" or "ChooseCompactModel" or "ChooseCompactSpecialist":
                         RefuseMalformed(command);
                         return;
                     case "AddCatalogueCandidate" when parameter is HomeModelPickerCatalogueSelection candidate:

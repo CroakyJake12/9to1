@@ -162,6 +162,7 @@ public sealed partial class NewDashboardPage
             await EnsureCustomWidgetStateLoadedAsync(token);
             await EnsureWidgetLayoutStateLoadedAsync(token);
             PublishHomeBriefingVisibility();
+            await RefreshDashboardAttentionAsync(token);
             var snapshot = await AwaitHomeSourceAsync(_widgetDashboard!.GetSnapshotAsync(DateTimeOffset.Now, token));
             token.ThrowIfCancellationRequested();
             await RefreshHomeBriefingAsync(snapshot, token);

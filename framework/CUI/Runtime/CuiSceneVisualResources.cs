@@ -32,9 +32,12 @@ public static class CuiSceneVisualResources
             resources[backend] = resources[semantic];
         return resources;
     }
+    internal static CuiScenePresentationScope PresentationScope(CuiNativeScene scene) =>
+        scene.PresentationScope ?? new(scene.Surface, AccentAppId(scene));
+
     internal static string? AccentAppId(CuiNativeScene scene) =>
         scene.AppId.StartsWith("app.", StringComparison.Ordinal) ? scene.AppId :
-        CuiAppAccentCatalog.Find(scene.AppId)?.AppId ?? CuiAppAccentCatalog.Find(scene.Surface)?.AppId;
+        CuiAppAccentCatalog.IdentityFor(scene.AppId) ?? CuiAppAccentCatalog.IdentityFor(scene.Surface);
 
     public static ThemeVariant Variant(CuiAppearance appearance) => appearance is CuiAppearance.Dark or CuiAppearance.SuperDark
         ? ThemeVariant.Dark : ThemeVariant.Light;

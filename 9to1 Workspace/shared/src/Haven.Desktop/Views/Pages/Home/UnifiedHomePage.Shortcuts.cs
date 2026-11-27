@@ -380,15 +380,24 @@ internal sealed partial class UnifiedHomePage
             args.Key is not (Key.Up or Key.Down or Key.Left or Key.Right) || args.Source is not Button button ||
             AutomationProperties.GetAutomationId(button) is not { } automation) return;
         var fromGrip = automation.StartsWith(ShortcutDragAutomationPrefix, StringComparison.Ordinal);
-        if (!fromGrip && (!automation.StartsWith(ShortcutAutomationPrefix, StringComparison.Ordinal) ||
-            args.Key is Key.Left or Key.Right)) return;
+        if (!fromGrip && !automation.StartsWith(ShortcutAutomationPrefix, StringComparison.Ordinal)) return;
         var prefix = fromGrip ? ShortcutDragAutomationPrefix : ShortcutAutomationPrefix;
         var id = automation[prefix.Length..];
         var direction = args.Key is Key.Up or Key.Left ? -1 : 1;
         args.Handled = true;
-        _ = _work.RunAsync(original => MoveNewTabShortcutAsync(id, direction, original, original.Token,
-            () => { if (fromGrip) FocusNewTabShortcutGrip(id); else FocusNewTabShortcut(id); }),
-            task => _shortcutReorderAction = task);
+        var visit = _selection;
+        var order = SavedShortcuts;
+        _ = _work.RunAsync(async original =>
+        {
+            // Match pointer reorder custody: an earlier visit or replaced order
+            // must not dispatch a new reorder or restore focus into another view.
+            original.BindPublicationGuard(() => IsAlive && _section == "newtab" && _selection == visit);
+            if (!original.IsAcceptedPublicationCurrent || !CanReorderNewTabShortcuts ||
+                _shortcutDrag is not null || SavedShortcuts != order)
+                return;
+            await MoveNewTabShortcutAsync(id, direction, original, original.Token,
+                () => { if (fromGrip) FocusNewTabShortcutGrip(id); else FocusNewTabShortcut(id); });
+        }, task => _shortcutReorderAction = task);
     }
 
     private void FocusNewTabShortcut(string id, bool edit = false) => FocusAfterSelection(() => this.GetVisualDescendants()
@@ -396,10 +405,15 @@ internal sealed partial class UnifiedHomePage
             (edit && IsNewTabCustomising ? ShortcutEditAutomationPrefix : ShortcutAutomationPrefix) + id)
         ?.Focus(NavigationMethod.Tab));
 
+    // Atlas 007 shows four equally sized shortcut tiles at desktop widths. The
+    // responsive column count must depend on space, not on whether Add is allowed.
+    internal static int NewTabShortcutColumnCount(double width) =>
+        width >= 780 ? 4 : width >= 660 ? 3 : width >= 312 ? 2 : 1;
+
     private void UpdateNewTabShortcutWidth(double width)
     {
-        _shortcutColumns = width >= 660 ? 3 : width >= 312 ? 2 : 1;
-        _shortcutTileHeight = _shortcutColumns == 3 ? 94 : 80;
+        _shortcutColumns = NewTabShortcutColumnCount(width);
+        _shortcutTileHeight = _shortcutColumns >= 3 ? 94 : 80;
         PublishNewTabShortcuts();
     }
 
@@ -411,7 +425,7 @@ internal sealed partial class UnifiedHomePage
         var shortcuts = SavedShortcuts;
         if (_shortcutDrag is { } drag && (!CanReorderNewTabShortcuts || shortcuts != drag.Order))
             EndNewTabShortcutDrag();
-        var columns = _shortcutColumns == 3 && ShortcutProjectionCanAdd ? 4 : _shortcutColumns;
+        var columns = _shortcutColumns;
         var count = shortcuts.Length + (ShortcutProjectionCanAdd ? 1 : 0);
         var rows = Math.Max(1, (count + columns - 1) / columns);
         var editorTitle = _editingShortcutId is { } id && shortcuts.FirstOrDefault(shortcut => shortcut.Id == id) is { } edited

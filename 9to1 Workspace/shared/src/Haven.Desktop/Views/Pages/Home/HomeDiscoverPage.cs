@@ -7,6 +7,7 @@ using Haven.Desktop.Services;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Application;
 using Haven.Desktop.ViewModels;
 using HavenOS.Home.Discover;
@@ -15,16 +16,16 @@ using HavenOS.Home.Core;
 namespace Haven.Desktop.Views.Pages.Home;
 
 /// <summary>Home's provider catalogue view, backed by the registered model providers.</summary>
-public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposable
+public sealed partial class HomeDiscoverPage : UserControl, IActivatablePage, IDisposable
 {
     private readonly HomeDiscoverCatalog _catalog;
     private readonly HomeHuggingFaceBrowser _huggingFace;
     private readonly HomeDulchePanel? _dulche;
     private readonly DesktopOriginalWorkLifetime _work;
-    private readonly CuiControlLoader _loader = new();
+    private readonly CuiControlLoader _loader;
     private readonly CuiViewModel _bindings = new();
     private readonly Button _browse = new();
-    private bool _browsing;
+    private bool _browsing = true;
     private bool _huggingFaceActivated;
     private readonly TextBox _search = new();
     private readonly ComboBox _category = new() { ItemsSource = new[] { "All categories", "Chat", "Image", "Voice", "Audio (advanced)", "Video (advanced)" }, SelectedIndex = 0 };
@@ -43,10 +44,15 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
         HomeLocalProfileIdentity? homeProfiles = null) : this(catalog, huggingFace, homeProfiles, null) { }
 
     public HomeDiscoverPage(HomeDiscoverCatalog catalog, IHuggingFaceModelService? huggingFace,
-        HomeLocalProfileIdentity? homeProfiles, DulcheLocalClient? dulche, ICatalogRepository? specialists = null)
+        HomeLocalProfileIdentity? homeProfiles, DulcheLocalClient? dulche, ICatalogRepository? specialists = null,
+        CuiThemePreferenceContext? theme = null, Func<CancellationToken, Task<bool>>? openModelPicker = null,
+        Func<HomeDiscoverIdentity, CancellationToken, Task<HomeDiscoverModelUseResult>>? useModel = null)
     {
         _catalog = catalog;
-        _browsing = dulche is null;
+        _openModelPicker = openModelPicker;
+        _useModel = useModel;
+        _loader = new(HomeAppsCuiDocument.CreateControlRegistry());
+        if (theme is not null) _loader.SetThemePreferenceContext(theme);
         _work = new(StopDiscoverAsync, DetachDiscoverAsync);
         Func<CancellationToken, ValueTask<AuthenticatedResourceActor?>>? currentProfile = homeProfiles is null
             ? null
@@ -72,18 +78,19 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
         _loader.BindAuthoredControl("discover-huggingface-mount", _ => _huggingFace);
         if (dulche is not null)
         {
-            _dulche = new HomeDulchePanel(dulche, RunDiscoverAsync, specialists);
+            _dulche = new HomeDulchePanel(dulche, RunDiscoverAsync, specialists, theme);
+            _dulche.ModelDetailsRequested += OnLocalModelDetails;
             _loader.BindAuthoredControl("discover-dulche-mount", _ => _dulche);
         }
         _bindings.Set("HasDulche", dulche is not null);
-        _bindings.Set("BrowseVisible", _browsing);
-        _loader.SetBindingContext(_bindings);
+        InitializePresentation();
+        _loader.SetBindingContext(this);
+        _loader.SetActionDispatcher(this);
         var loaded = _loader.TryLoad(document);
         if (loaded.Root is null || loaded.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
             throw new InvalidDataException("Home Discover could not be rendered: " + string.Join("; ", loaded.Diagnostics.Select(item => item.Message)));
         Content = loaded.Root;
         _loader.WireBindings(loaded.Root);
-        SetDiscoverValue(_browse, "Content", _browsing ? "Hide model catalogue" : "Find or install models");
         _models.ItemTemplate = new FuncDataTemplate<HomeDiscoverModel>((model, _) => new TextBlock
         {
             Text = model is null ? string.Empty : $"{model.DisplayName ?? model.Name} · {model.Identity.ProviderId} · {model.Locality} · {model.InstallState} · {model.ConnectionState}",
@@ -94,22 +101,9 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
             var selected = SelectedModels();
             SetDiscoverValue(_compare, "IsEnabled", selected.Length is > 0 and <= 20);
             SetDiscoverValue(_details, "Text", selected.Length > 0 ? string.Join("\n\n", selected.Select(Describe)) : "Select a model to inspect its reported metadata.");
+            RefreshPresentation();
         };
-        _browse.Click += async (_, _) =>
-        {
-            if (_disposed || _work.IsRetiring) return;
-            _browsing = !_browsing;
-            _bindings.Set("BrowseVisible", _browsing);
-            SetDiscoverValue(_browse, "Content", _browsing ? "Hide model catalogue" : "Find or install models");
-            if (_browsing)
-                await RunDiscoverEventAsync(() => ActivateAsync(CancellationToken.None));
-            else
-            {
-                // Retire only catalogue reads; the selected model and its response keep their owner.
-                _generation++;
-                _readCancellation?.Cancel();
-            }
-        };
+        _browse.Click += async (_, _) => await RunDiscoverEventAsync(OpenCatalogueAsync);
         _refresh.Click += async (_, _) => await RunDiscoverEventAsync(() => ActivateAsync(CancellationToken.None));
         _manage.Click += (_, _) => { if (!_work.IsRetiring) ManageProvidersRequested?.Invoke(this, EventArgs.Empty); };
         _compare.Click += async (_, _) => await RunDiscoverEventAsync(CompareSelectedAsync);
@@ -119,6 +113,19 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
             args.Handled = true;
             await RunDiscoverEventAsync(() => ActivateAsync(CancellationToken.None));
         };
+        _search.TextChanged += (_, _) => RefreshPresentation();
+        _category.SelectionChanged += (_, _) =>
+        {
+            if (_settingQuickFilter) return;
+            _capabilityFilter = null;
+            RefreshPresentation();
+        };
+        _locality.SelectionChanged += (_, _) => RefreshPresentation();
+        SizeChanged += OnDiscoverSizeChanged;
+        AttachedToVisualTree += OnDiscoverAttached;
+        DetachedFromVisualTree += OnDiscoverDetached;
+        ApplyDiscoverWidth();
+        RefreshPresentation();
     }
 
     public event EventHandler? ManageProvidersRequested;
@@ -139,6 +146,7 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
     private async Task ActivateCoreAsync(CancellationToken cancellationToken)
     {
         if (_disposed) return;
+        _active = true;
         _dulche?.Activate();
         if (!_browsing) return;
         var selected = SelectedModels().Select(model => model.Identity.StableKey).ToHashSet(StringComparer.Ordinal);
@@ -146,21 +154,21 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
         _models.ItemsSource = Array.Empty<HomeDiscoverModel>();
         SetDiscoverValue(_details, "Text", "Reading registered providers…");
         SetDiscoverValue(_status, "Text", "Reading registered providers…");
-        var category = _category.SelectedIndex > 0 ? (HomeDiscoverCategory?)(_category.SelectedIndex - 1) : null;
-        var locality = _locality.SelectedIndex > 0 ? (HomeDiscoverLocality?)_locality.SelectedIndex : null;
         try
         {
-            var page = await AwaitDiscoverSourceAsync(_catalog.SearchAsync(new(_search.Text, category, locality, PageSize: 200), token));
+            var page = await AwaitDiscoverSourceAsync(_catalog.SearchAsync(CurrentQuery(), token));
             if (!Current(generation, token)) return;
-            _models.ItemsSource = page.Models;
-            foreach (var model in page.Models.Where(model => selected.Contains(model.Identity.StableKey)))
+            PublishCatalogue(page);
+            await ReadSavedModelsAsync(generation, token);
+            if (!Current(generation, token)) return;
+            foreach (var model in _catalogueModels.Where(model => selected.Contains(model.Identity.StableKey)))
                 _models.SelectedItems?.Add(model);
             var problems = page.Providers.Where(provider => provider.ErrorMessage is not null)
                 .Select(provider => $"{provider.DisplayName}: {provider.ErrorMessage}");
-            SetDiscoverValue(_status, "Text", $"{page.State} · {page.Models.Count} of {page.TotalCount} models · {page.Providers.Count} registered providers" +
-                (page.NextPageToken is null ? string.Empty : ". Narrow your search to see more results.") +
+            SetDiscoverValue(_status, "Text", $"{page.State} · {_catalogueModels.Length} observed models · {page.Providers.Count} registered providers" +
+                (_observedModelCount <= MaximumObservedModels ? string.Empty : $". Showing up to {MaximumObservedModels} of {_observedModelCount} models. Narrow the filters and refresh to find more.") +
                 string.Concat(problems.Select(problem => "\n" + problem)));
-            if (!_huggingFaceActivated)
+            if (_view == "catalogue" && _catalogueSource == "huggingface" && !_huggingFaceActivated)
             {
                 await _huggingFace.ActivateAsync(token);
                 if (Current(generation, token)) _huggingFaceActivated = true;
@@ -217,34 +225,67 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
         $"Architecture: {model.Architecture ?? "Unknown"} · Parameters: {model.ParameterInformation ?? "Unknown"} · Format: {model.QuantizationOrFormat ?? "Unknown"}\n" +
         $"Context: {model.ContextLimit?.ToString() ?? "Unknown"} · Cost: {model.CostClass ?? "Unknown"} · Residency: {model.Residency ?? "Unknown"}\n" +
         $"Capabilities: {(model.Capabilities is { Count: > 0 } ? string.Join(", ", model.Capabilities.Order()) : "Unknown")}";
-    public void Deactivate() { _huggingFaceActivated = false; _generation++; _readCancellation?.Cancel(); _huggingFace.Deactivate(); _dulche?.Deactivate(); }
+    public void Deactivate() { _active = false; _huggingFaceActivated = false; _generation++; _modelDetailsEpoch++; _readCancellation?.Cancel(); _huggingFace.Deactivate(); _dulche?.Deactivate(); RefreshPresentation(); }
     public Task? OriginalClose => _work.OriginalClose;
     public Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken)
     {
+        CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
+        _work.DemandExternalClose();
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(true);
+        if (_preparation is null || _preparation.IsCompletedSuccessfully) _preparation = PrepareDiscoverAsync();
+        return _preparation.WaitAsync(cancellationToken);
     }
+    private async Task<bool> PrepareDiscoverAsync()
+    { await _loader.WhenActionsIdleAsync(); await _work.JoinAdmittedOriginalsAsync(); return true; }
     public Task CloseAndDrainAsync() => _work.CloseAndDrainAsync();
     public void Dispose() => _work.RequestRetirement();
 
     private Task<T> AwaitDiscoverSourceAsync<T>(Task<T> actual) =>
         (_work.Executing ?? throw new InvalidOperationException("Discover source work requires its owning operation.")).AwaitAsync(actual);
 
-    private Task RunDiscoverAsync(Func<CancellationToken, Task> body, CancellationToken token) => _work.RunAsync(async original =>
+    private Task RunDiscoverAsync(Func<CancellationToken, Task> body, CancellationToken token) => RunDiscoverAsync(body, token, null);
+
+    private Task RunDiscoverAsync(Func<CancellationToken, Task> body, CancellationToken token, Action? completed) => _work.RunAsync(async original =>
     {
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(original.Token, token);
-        Task? source = null;
-        await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() => { source = body(linked.Token); }).GetTask()).ConfigureAwait(false);
-        await original.AwaitAsync(source ?? throw new InvalidOperationException("The Discover read was not acquired.")).ConfigureAwait(false);
+        Exception? failure = null;
+        try
+        {
+            if (_admit is { } admit) await original.AwaitAsync(admit(linked.Token)).ConfigureAwait(false);
+            linked.Token.ThrowIfCancellationRequested();
+            Task? source = null;
+            await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() => { source = body(linked.Token); }).GetTask()).ConfigureAwait(false);
+            await original.AwaitAsync(source ?? throw new InvalidOperationException("The Discover read was not acquired.")).ConfigureAwait(false);
+        }
+        catch (Exception error) { failure = error; throw; }
+        finally
+        {
+            if (completed is not null)
+            {
+                try { await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(completed).GetTask()).ConfigureAwait(false); }
+                catch (Exception cleanup) when (failure is not null)
+                { throw new AggregateException("The original Models action and final publication failed.", failure, cleanup); }
+            }
+        }
     });
     private async Task StopDiscoverAsync()
     {
         await Dispatcher.UIThread.InvokeAsync(() => { _disposed = true; Deactivate(); });
+        if (_preparation is { } preparation) await preparation.ConfigureAwait(false);
     }
     private async Task DetachDiscoverAsync()
     {
         Task? actions = null;
-        await Dispatcher.UIThread.InvokeAsync(() => { _dulche?.Dispose(); _huggingFace.Dispose(); _loader.Dispose(); actions = _loader.WhenActionsIdleAsync(); });
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            SizeChanged -= OnDiscoverSizeChanged;
+            AttachedToVisualTree -= OnDiscoverAttached;
+            DetachedFromVisualTree -= OnDiscoverDetached;
+            StopDiscoverThemeObservation();
+            _bindings.PropertyChanged -= OnDiscoverBindingChanged;
+            if (_dulche is not null) _dulche.ModelDetailsRequested -= OnLocalModelDetails;
+            _dulche?.Dispose(); _huggingFace.Dispose(); _loader.Dispose(); actions = _loader.WhenActionsIdleAsync();
+        });
         if (actions is not null) await actions.ConfigureAwait(false);
         await Dispatcher.UIThread.InvokeAsync(() => { _readCancellation?.Dispose(); Content = null; });
     }

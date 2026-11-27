@@ -95,6 +95,26 @@ internal static class ConversationProductionSchema
         CREATE UNIQUE INDEX IF NOT EXISTS ix_message_versions_number ON message_versions(message_id, branch_id, version_number);
         CREATE UNIQUE INDEX IF NOT EXISTS ix_message_versions_current ON message_versions(message_id, branch_id) WHERE is_current=1;
 
+        -- Coverage is additive. Existing unscoped CompactSummary rows stay untouched and
+        -- cannot exclude prompt history until exact branch/source provenance exists.
+        CREATE TABLE IF NOT EXISTS conversation_compactions(
+            summary_id TEXT PRIMARY KEY REFERENCES conversation_context(id) ON DELETE CASCADE,
+            conversation_id TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+            source_branch_id TEXT NULL REFERENCES conversation_branches(id) ON DELETE SET NULL,
+            source_count INTEGER NOT NULL CHECK(source_count > 0),
+            summary_sha256 TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS ix_conversation_compactions_conversation ON conversation_compactions(conversation_id);
+        CREATE TABLE IF NOT EXISTS conversation_compaction_sources(
+            summary_id TEXT NOT NULL REFERENCES conversation_compactions(summary_id) ON DELETE CASCADE,
+            message_id TEXT NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
+            source_order INTEGER NOT NULL CHECK(source_order >= 0),
+            message_sha256 TEXT NOT NULL,
+            effective_version_id TEXT NULL,
+            PRIMARY KEY(summary_id, message_id),
+            UNIQUE(summary_id, source_order)
+        );
+
         CREATE TABLE IF NOT EXISTS message_attachments(
             id TEXT PRIMARY KEY,
             conversation_id TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,

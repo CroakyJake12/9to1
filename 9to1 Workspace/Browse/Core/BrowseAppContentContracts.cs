@@ -61,7 +61,21 @@ public interface IBrowseInternalContentFactory
 
 /// <summary>A navigation request from an existing content owner. The host retains
 /// execution separately from the originating CUI action so retirement cannot join itself.</summary>
-public sealed record BrowseNavigationIntent(Guid SourceTabId, AppContentAddress Address, bool OpenInNewTab);
+public sealed record BrowseNavigationIntent(Guid SourceTabId, AppContentAddress Address, bool OpenInNewTab)
+{
+    /// <summary>Transient, plain-text context only; never a command or artifact authority.</summary>
+    public BrowseNavigationBrief? Brief { get; init; }
+}
+
+public sealed record BrowseNavigationBrief(Guid ConversationId, string Text);
+
+/// <summary>The original conversation owner can restore its own existing presentation.
+/// A recreated tab or a new brief cannot impersonate the captured source.</summary>
+public interface IBrowseNavigationBriefSource
+{
+    bool CanRestoreNavigationBrief(Guid conversationId);
+    Task<bool> RestoreNavigationBriefAsync(Guid conversationId, CancellationToken cancellationToken);
+}
 
 /// <summary>
 /// A borrowed-service native app presentation, shared by embedded and standalone

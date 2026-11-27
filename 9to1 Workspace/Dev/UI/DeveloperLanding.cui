@@ -2,90 +2,227 @@
   <Actions>
     <Action name="dev.references.open-task" command="dev.references.open-task" parameter="{Binding item.SelectionKey}" />
     <Action name="dev.templates.select" command="dev.templates.select" parameter="{Binding item.SelectionKey}" />
+    <Action name="dev.start.details" command="dev.start.details" parameter="{Binding item.SelectionKey}" />
+    <Action name="dev.setup.resume" command="dev.setup.resume" parameter="{Binding item.SelectionKey}" />
+    <Action name="dev.setup.pin-draft" command="dev.setup.pin-draft" parameter="{Binding item.SelectionKey}" />
+    <Action name="dev.setup.pin-project" command="dev.setup.pin-project" parameter="{Binding item.SelectionKey}" />
   </Actions>
-  <Page id="dev-saved-projects-page" role="main" accessible-name="Saved development projects">
-    <Container id="dev-saved-projects-root" margin="16" Type="Vertical Stack" CellGap="16" MaxWidth="1120" HorizontalAlignment="Left" VerticalScrolling="True" HorizontalScrolling="False">
-      <Container id="dev-landing-header" Type="Vertical Stack" CellGap="4">
-        <Text id="dev-title" text="Build" font-size="28" font-weight="800" />
-        <Text text="Open a saved project root manually, or continue an existing task with the same task and run. Check the location, environment and repository before opening." text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+  <Page OwnsBackdrop="True" Background="{Resource CuiWorkspaceBrush}" id="dev-saved-projects-page" role="main" accessible-name="Build projects">
+    <Container id="dev-saved-projects-root" Type="Grid" ColumnSizes="{Binding StartColumns}" RowSizes="1fr" Background="{Resource CuiTransparentBrush}">
+      <Container Type="Vertical Stack" id="dev-start-sidebar" CellGap="27" Padding="{Binding StartSidebarPadding}" IsVisible="{Binding StartSidebarVisible}" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 1 0" Background="{Resource CuiTransparentBrush}">
+        <Container Type="Horizontal Stack" CellGap="12" Margin="10 0 0 0">
+          <Image Source="ownerbrand:build|code" Width="28" Height="28" />
+          <Text Text="Build" FontSize="21" FontWeight="750" VerticalAlignment="Center" IsVisible="{Binding StartSidebarLabels}" />
+        </Container>
+        <Container Type="Vertical Stack" CellGap="5">
+          <Button id="dev-start-projects" Action="dev.start.projects" Selected="{Binding StartProjectsSelected}" IsEnabled="{Binding StartCanNavigate}" AccessibleName="Projects" Tooltip="Projects" MinHeight="43" Padding="13 10" BorderWidth="0" Background="{Resource CuiTransparentBrush}" HorizontalContentAlignment="Left">
+            <Container Type="Horizontal Stack" CellGap="12">
+              <Image Source="icon:folder" Width="17" Height="17" />
+              <Text Text="Projects" FontSize="12" FontWeight="650" IsVisible="{Binding StartSidebarLabels}" />
+            </Container>
+          </Button>
+          <Button id="dev-start-new" Action="dev.start.new" Selected="{Binding StartNewSelected}" IsEnabled="{Binding StartCanNavigate}" AccessibleName="New project" Tooltip="New project" MinHeight="43" Padding="13 10" BorderWidth="0" Background="{Resource CuiTransparentBrush}" HorizontalContentAlignment="Left">
+            <Container Type="Horizontal Stack" CellGap="12">
+              <Image Source="icon:plus" Width="17" Height="17" />
+              <Text Text="New project" FontSize="12" FontWeight="650" IsVisible="{Binding StartSidebarLabels}" />
+            </Container>
+          </Button>
+          <Button id="dev-start-open" Action="dev.start.open" Selected="{Binding StartOpenSelected}" IsEnabled="{Binding StartCanNavigate}" AccessibleName="Open project" Tooltip="Open project" MinHeight="43" Padding="13 10" BorderWidth="0" Background="{Resource CuiTransparentBrush}" HorizontalContentAlignment="Left">
+            <Container Type="Horizontal Stack" CellGap="12">
+              <Image Source="icon:folder-open" Width="17" Height="17" />
+              <Text Text="Open project" FontSize="12" FontWeight="650" IsVisible="{Binding StartSidebarLabels}" />
+            </Container>
+          </Button>
+        </Container>
+        <Container Type="Vertical Stack" CellGap="9" Padding="13 0" IsVisible="{Binding StartSidebarLabels}">
+          <Text Text="DEVELOP" FontSize="10" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
+          <Text Text="Open a project to edit source, inspect its preview or run its declared tasks." FontSize="11" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+        </Container>
       </Container>
-
-      <!-- Section: Open Manual Project (Immediately accessible) -->
-      <Container id="dev-landing-manual-section" Type="Vertical Stack" CellGap="10" Background="{Resource CuiPanelBrush}" CornerRadius="12" Padding="16">
-        <Text text="Open existing project folder" font-size="18" font-weight="750" />
-        <Text text="Open an existing project folder as a manual project (no AI task or model). Reads use your real configured Files store and Home profile." text-wrapping="Wrap" accessible-name="Manual project help" foreground="{Resource CuiTextSoftBrush}" />
-        <Input id="dev-manual-folder" placeholdertext="Absolute path to an existing project folder" accessible-name="Existing project folder" Type="Text" Value="{Binding ManualFolderPath}" />
-        <Button id="dev-create-manual" action="dev.references.create-manual-project" content="Open as manual project" Interactive="{Binding CanCreateManual}" HorizontalAlignment="Left" />
-        <Text text="{Binding ManualStatus}" text-wrapping="Wrap" accessible-name="Manual project operation status" font-weight="600" />
-        <Text text="{Binding RetainedAttempt}" text-wrapping="Wrap" accessible-name="Retained manual setup recovery state" foreground="{Resource CuiTextSoftBrush}" />
-      </Container>
-
-      <!-- Section: Saved Projects & Spaces -->
-      <Container id="dev-landing-saved-section" Type="Vertical Stack" CellGap="10" Background="{Resource CuiPanelBrush}" CornerRadius="12" Padding="16">
-        <Text text="Saved projects" font-size="18" font-weight="750" />
-        <Input id="dev-project-query" Type="Text" Value="{Binding ProjectQuery}" placeholdertext="Filter projects, roots, environments or repositories" accessible-name="Filter saved project and task references" />
-        <Container id="dev-saved-project-controls" Type="Horizontal Stack" CellGap="8">
-          <Button id="dev-refresh-saved-projects" action="dev.references.refresh" content="Refresh" Interactive="{Binding CanRefresh}" accessible-name="Refresh saved development projects" />
-          <Button id="dev-open-selected-space" action="dev.references.open-space" content="Open Space" Interactive="{Binding CanOpenSpace}" accessible-name="Open the selected Space" />
+      <Container Type="Vertical Stack" id="dev-start-main" Column="1" CellGap="28" Padding="{Binding StartPagePadding}" VerticalScrolling="True" HorizontalScrolling="False" Background="{Resource CuiTransparentBrush}">
+        <Container Type="Wrap" CellGap="8" IsVisible="{Binding StartMobileNavigation}">
+          <Button Content="Projects" Action="dev.start.projects" Selected="{Binding StartProjectsSelected}" IsEnabled="{Binding StartCanNavigate}" />
+          <Button Content="New project" Action="dev.start.new" Selected="{Binding StartNewSelected}" IsEnabled="{Binding StartCanNavigate}" />
+          <Button Content="Open project" Action="dev.start.open" Selected="{Binding StartOpenSelected}" IsEnabled="{Binding StartCanNavigate}" />
         </Container>
-        <Repeat id="dev-saved-projects" Source="{Binding Projects}" As="item" Key="{Binding item.SelectionKey}">
-          <Container id="dev-saved-project-item" Type="Vertical Stack" CellGap="4" Padding="8 6" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
-            <Text id="dev-project-title" text="{Binding item.Title}" font-weight="700" />
-            <Text text="{Binding item.Summary}" text-wrapping="Wrap" />
-            <Text text="{Binding item.TaskLabel}" foreground="{Resource CuiTextSoftBrush}" />
-            <Text text="{Binding item.CheckpointLabel}" foreground="{Resource CuiTextSoftBrush}" />
-            <Button id="dev-open-task" action="dev.references.open-task" content="{Binding item.OpenLabel}" Interactive="{Binding item.CanOpen}" accessible-name="{Binding item.OpenAccessibleName}" HorizontalAlignment="Left" Margin="0 4 0 0" />
+        <Container id="dev-landing-header" Type="Vertical Stack" CellGap="9">
+          <Button Content="Back to projects" Action="dev.start.projects" id="dev-start-back" IsVisible="{Binding StartShowsBack}" IsEnabled="{Binding StartCanNavigate}" HorizontalAlignment="Left" Chromeless="True" />
+          <Text Text="YOUR DEVELOPMENT WORKSPACE" FontSize="10" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
+          <Text Text="{Binding StartTitle}" id="dev-title" FontSize="{Binding StartTitleSize}" FontWeight="800" />
+          <Text Text="{Binding StartDescription}" FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+        </Container>
+        <Container id="dev-start-cards" Type="Grid" ColumnSizes="{Binding StartCardColumns}" RowSizes="{Binding StartCardRows}" CellGap="14" IsVisible="{Binding StartIsProjects}">
+          <Button id="dev-start-new-card" Action="dev.start.new" IsEnabled="{Binding StartCanNavigate}" AccessibleName="New project" Padding="21" CornerRadius="{Resource CuiCardRadius}" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" HorizontalContentAlignment="Stretch">
+            <Container Type="Vertical Stack" CellGap="12">
+              <Image Source="icon:plus" Width="26" Height="26" HorizontalAlignment="Left" />
+              <Text Text="New project" FontSize="16" FontWeight="750" />
+              <Text Text="Choose an installed template and a folder." FontSize="11" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            </Container>
+          </Button>
+          <Button id="dev-start-open-card" Action="dev.start.open" IsEnabled="{Binding StartCanNavigate}" AccessibleName="Open your work" Padding="21" CornerRadius="{Resource CuiCardRadius}" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" HorizontalContentAlignment="Stretch" Column="{Binding StartOpenCardColumn}" Row="{Binding StartOpenCardRow}">
+            <Container Type="Vertical Stack" CellGap="12">
+              <Image Source="icon:folder-open" Width="26" Height="26" HorizontalAlignment="Left" />
+              <Text Text="Open your work" FontSize="16" FontWeight="750" />
+              <Text Text="Continue a project or open an existing repository." FontSize="11" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            </Container>
+          </Button>
+          <Button id="dev-start-extension-card" Action="dev.start.extension" IsEnabled="{Binding StartCanNavigate}" AccessibleName="9to1 Extension" Padding="21" CornerRadius="{Resource CuiCardRadius}" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" HorizontalContentAlignment="Stretch" Column="{Binding StartExtensionCardColumn}" Row="{Binding StartExtensionCardRow}">
+            <Container Type="Vertical Stack" CellGap="12">
+              <Image Source="icon:puzzle" Width="26" Height="26" HorizontalAlignment="Left" />
+              <Text Text="9to1 Extension" FontSize="16" FontWeight="750" />
+              <Text Text="Check installed target and contribution support." FontSize="11" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            </Container>
+          </Button>
+        </Container>
+        <Container Type="Vertical Stack" id="dev-extension-unavailable" CellGap="12" Padding="24" Background="{Resource CuiPanelBrush}" CornerRadius="{Resource CuiCardRadius}" IsVisible="{Binding StartIsExtension}" Role="status">
+          <Text Text="Extension setup is not available in this host" FontSize="18" FontWeight="750" TextWrapping="Wrap" />
+          <Text Text="The connected template catalogue does not expose installed extension SDK targets or compatible contributions. Build cannot validate a new extension here. Existing extension source can still be opened as a project." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          <Button Content="Open existing extension source" Action="dev.start.open" IsEnabled="{Binding StartCanNavigate}" HorizontalAlignment="Left" />
+        </Container>
+        <Container Type="Grid" ColumnSizes="{Binding StartSetupColumns}" RowSizes="{Binding StartSetupRows}" CellGap="24" IsVisible="{Binding StartShowsFolder}">
+          <Container id="dev-landing-manual-section" Type="Vertical Stack" CellGap="12" Background="{Resource CuiPanelBrush}" CornerRadius="{Resource CuiCardRadius}" Padding="24">
+            <Text text="{Binding StartFolderTitle}" font-size="18" font-weight="750" />
+            <Text text="{Binding StartFolderHelp}" text-wrapping="Wrap" accessible-name="Manual project help" foreground="{Resource CuiTextSoftBrush}" font-size="12" />
+            <Input id="dev-manual-folder" placeholdertext="Absolute path to an existing project folder" accessible-name="Existing project folder" Type="Text" Value="{Binding ManualFolderPath}" IsEnabled="{Binding StartInputsEnabled}" />
+            <Container Type="Wrap" CellGap="8">
+              <Button Content="Choose folder" Action="dev.start.browse-folder" id="dev-browse-project-folder" IsEnabled="{Binding StartCanBrowseFolder}" />
+              <Button id="dev-create-manual" action="dev.references.create-manual-project" content="Open project" Interactive="{Binding CanCreateManual}" HorizontalAlignment="Left" IsVisible="{Binding StartIsOpen}" AccentRole="Primary" />
+            </Container>
+            <Text text="{Binding ManualStatus}" text-wrapping="Wrap" accessible-name="Manual project operation status" font-weight="600" />
+            <Text text="{Binding RetainedAttempt}" text-wrapping="Wrap" accessible-name="Retained manual setup recovery state" foreground="{Resource CuiTextSoftBrush}" />
           </Container>
-        </Repeat>
-        <Container Type="Horizontal Stack" CellGap="8" Margin="0 4 0 0">
-          <Button id="dev-projects-previous" action="dev.references.previous-projects" content="Previous projects" Interactive="{Binding CanPreviousProjectPage}" />
-          <Button id="dev-projects-next" action="dev.references.next-projects" content="Next projects" Interactive="{Binding CanNextProjectPage}" />
-        </Container>
-        <Text text="{Binding ProjectFilterStatus}" text-wrapping="Wrap" accessible-name="Filtered project list and current page" />
-        <Text id="dev-reference-coverage" text="{Binding Coverage}" foreground="{Resource CuiTextSoftBrush}" accessible-name="Saved project observation coverage" />
-        <Text id="dev-reference-status" text="{Binding Status}" accessible-name="Development project status" />
-      </Container>
-
-      <!-- Section: Starter Templates -->
-      <Container id="dev-landing-template-section" Type="Vertical Stack" CellGap="10" Background="{Resource CuiPanelBrush}" CornerRadius="12" Padding="16">
-        <Text text="Create project from template" font-size="18" font-weight="750" />
-        <Text text="Create a starter in an empty existing project folder. Build registers that folder through the Home setup flow, then creates each reviewed file through the normal Home CREATE approval." text-wrapping="Wrap" accessible-name="Template project creation help" foreground="{Resource CuiTextSoftBrush}" />
-        <Input id="dev-template-query" Type="Text" Value="{Binding TemplateQuery}" placeholdertext="Filter project templates" accessible-name="Filter project templates" />
-        <Container id="dev-template-filters-primary" Type="Wrap" CellGap="8">
-          <Input id="dev-template-provider-filter" Type="Select" ItemsSource="{Binding TemplateProviderOptions}" SelectedIndex="{Binding TemplateProviderIndex, mode=TwoWay, type=int}" accessible-name="Template provider filter" />
-          <Input id="dev-template-project-type-filter" Type="Select" ItemsSource="{Binding TemplateProjectTypeOptions}" SelectedIndex="{Binding TemplateProjectTypeIndex, mode=TwoWay, type=int}" accessible-name="Project type filter" />
-          <Input id="dev-template-language-filter" Type="Select" ItemsSource="{Binding TemplateLanguageOptions}" SelectedIndex="{Binding TemplateLanguageIndex, mode=TwoWay, type=int}" accessible-name="Language filter" />
-          <Input id="dev-template-framework-filter" Type="Select" ItemsSource="{Binding TemplateFrameworkOptions}" SelectedIndex="{Binding TemplateFrameworkIndex, mode=TwoWay, type=int}" accessible-name="Framework filter" />
-          <Input id="dev-template-runtime-filter" Type="Select" ItemsSource="{Binding TemplateRuntimeOptions}" SelectedIndex="{Binding TemplateRuntimeIndex, mode=TwoWay, type=int}" accessible-name="Target runtime filter" />
-        </Container>
-        <Container id="dev-template-filters-secondary" Type="Wrap" CellGap="8">
-          <Input id="dev-template-platform-filter" Type="Select" ItemsSource="{Binding TemplatePlatformOptions}" SelectedIndex="{Binding TemplatePlatformIndex, mode=TwoWay, type=int}" accessible-name="Platform filter" />
-          <Input id="dev-template-surface-filter" Type="Select" ItemsSource="{Binding TemplateSurfaceOptions}" SelectedIndex="{Binding TemplateSurfaceIndex, mode=TwoWay, type=int}" accessible-name="Product surface filter" />
-          <Input id="dev-template-organisation-filter" Type="Select" ItemsSource="{Binding TemplateOrganisationOptions}" SelectedIndex="{Binding TemplateOrganisationIndex, mode=TwoWay, type=int}" accessible-name="Organisation template filter" />
-          <Input id="dev-template-readiness-filter" Type="Select" ItemsSource="{Binding TemplateReadinessOptions}" SelectedIndex="{Binding TemplateReadinessIndex, mode=TwoWay, type=int}" accessible-name="Required toolchain readiness filter" />
-        </Container>
-        <Text id="dev-template-filter-status" text="{Binding TemplateFilterStatus}" text-wrapping="Wrap" accessible-name="Template filter results" />
-        <Repeat id="dev-project-templates" Source="{Binding Templates}" As="item" Key="{Binding item.SelectionKey}">
-          <Container id="dev-project-template-item" Type="Vertical Stack" CellGap="4" Padding="6 4" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
-            <Text id="dev-project-template-name" text="{Binding item.DisplayName}" font-weight="700" />
-            <Text text="{Binding item.Summary}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
-            <Button id="dev-select-project-template" action="dev.templates.select" content="Select template" accessible-name="Select project template" HorizontalAlignment="Left" />
+          <Container id="dev-landing-template-section" Type="Vertical Stack" CellGap="10" Background="{Resource CuiPanelBrush}" CornerRadius="{Resource CuiCardRadius}" Padding="24" Row="1" IsVisible="{Binding StartIsNew}">
+            <Text text="Template" font-size="18" font-weight="750" />
+            <Input id="dev-template-query" Type="Text" Value="{Binding TemplateQuery}" placeholdertext="Filter project templates" accessible-name="Filter project templates" IsEnabled="{Binding StartInputsEnabled}" />
+            <Button Content="{Binding StartTemplateFiltersLabel}" Action="dev.start.template-filters" id="dev-template-filters-toggle" HorizontalAlignment="Left" />
+            <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding StartTemplateFiltersVisible}">
+              <Container id="dev-template-filters-primary" Type="Wrap" CellGap="8">
+                <Input id="dev-template-provider-filter" Type="Select" ItemsSource="{Binding TemplateProviderOptions}" SelectedIndex="{Binding TemplateProviderIndex, mode=TwoWay, type=int}" accessible-name="Template provider filter" />
+                <Input id="dev-template-project-type-filter" Type="Select" ItemsSource="{Binding TemplateProjectTypeOptions}" SelectedIndex="{Binding TemplateProjectTypeIndex, mode=TwoWay, type=int}" accessible-name="Project type filter" />
+                <Input id="dev-template-language-filter" Type="Select" ItemsSource="{Binding TemplateLanguageOptions}" SelectedIndex="{Binding TemplateLanguageIndex, mode=TwoWay, type=int}" accessible-name="Language filter" />
+                <Input id="dev-template-framework-filter" Type="Select" ItemsSource="{Binding TemplateFrameworkOptions}" SelectedIndex="{Binding TemplateFrameworkIndex, mode=TwoWay, type=int}" accessible-name="Framework filter" />
+                <Input id="dev-template-runtime-filter" Type="Select" ItemsSource="{Binding TemplateRuntimeOptions}" SelectedIndex="{Binding TemplateRuntimeIndex, mode=TwoWay, type=int}" accessible-name="Target runtime filter" />
+              </Container>
+              <Container id="dev-template-filters-secondary" Type="Wrap" CellGap="8">
+                <Input id="dev-template-platform-filter" Type="Select" ItemsSource="{Binding TemplatePlatformOptions}" SelectedIndex="{Binding TemplatePlatformIndex, mode=TwoWay, type=int}" accessible-name="Platform filter" />
+                <Input id="dev-template-surface-filter" Type="Select" ItemsSource="{Binding TemplateSurfaceOptions}" SelectedIndex="{Binding TemplateSurfaceIndex, mode=TwoWay, type=int}" accessible-name="Product surface filter" />
+                <Input id="dev-template-organisation-filter" Type="Select" ItemsSource="{Binding TemplateOrganisationOptions}" SelectedIndex="{Binding TemplateOrganisationIndex, mode=TwoWay, type=int}" accessible-name="Organisation template filter" />
+                <Input id="dev-template-readiness-filter" Type="Select" ItemsSource="{Binding TemplateReadinessOptions}" SelectedIndex="{Binding TemplateReadinessIndex, mode=TwoWay, type=int}" accessible-name="Required toolchain readiness filter" />
+              </Container>
+            </Container>
+            <Text id="dev-template-filter-status" text="{Binding TemplateFilterStatus}" text-wrapping="Wrap" accessible-name="Template filter results" />
+            <Container id="dev-template-grid" Type="Grid" ColumnSizes="{Binding StartTemplateColumns}" RowSizes="{Binding StartTemplateRows}" CellGap="11">
+              <Repeat id="dev-project-templates" Source="{Binding Templates}" As="item" Key="{Binding item.SelectionKey}" ItemRow="{Binding item.CardRow}" ItemColumn="{Binding item.CardColumn}">
+                <Container id="dev-project-template-item" Type="Vertical Stack" CellGap="4" Padding="14" BorderColor="{Resource CuiLineBrush}" Margin="0 0 0 8" CornerRadius="{Resource CuiControlRadius}" Background="{Resource CuiPanel2Brush}">
+                  <Text id="dev-project-template-name" text="{Binding item.DisplayName}" font-weight="700" />
+                  <Text text="{Binding item.Summary}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+                  <Button id="dev-select-project-template" action="dev.templates.select" content="{Binding item.SelectLabel}" accessible-name="Select project template" HorizontalAlignment="Left" Selected="{Binding item.Selected}" />
+                </Container>
+              </Repeat>
+            </Container>
           </Container>
-        </Repeat>
-        <Text text="Project name is the final folder name:" foreground="{Resource CuiTextSoftBrush}" />
-        <Text text="{Binding TemplateProjectName}" accessible-name="Project name from selected folder" font-weight="600" />
-        <Text text="{Binding SelectedTemplate}" accessible-name="Selected project template" />
-        <Button id="dev-review-project-template" action="dev.templates.review" content="Review template files" Interactive="{Binding CanReviewTemplate}" HorizontalAlignment="Left" />
-        <Text text="{Binding TemplateReviewStatus}" text-wrapping="Wrap" accessible-name="Template review status" />
-        <Repeat id="dev-template-review-files" Source="{Binding TemplateFiles}" As="item" Key="{Binding item.RelativePath}">
-          <Container id="dev-template-review-file" Type="Vertical Stack" CellGap="2" Margin="0 4">
-            <Text id="dev-template-review-path" text="{Binding item.RelativePath}" font-weight="Bold" />
-            <Text text="{Binding item.Metadata}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
-            <Text id="dev-template-review-source" text="{Binding item.Text}" font-family="monospace" text-wrapping="Wrap" />
+          <Container Type="Vertical Stack" id="dev-setup-summary" Column="{Binding StartSummaryColumn}" Row="{Binding StartSummaryRow}" RowSpan="{Binding StartSummaryRowSpan}" CellGap="12" Padding="24" Background="{Resource CuiPanelBrush}" CornerRadius="{Resource CuiCardRadius}" VerticalAlignment="Top" IsVisible="{Binding StartIsNew}">
+            <Text Text="Project summary" FontSize="17" FontWeight="750" text-wrapping="Wrap" />
+            <Text text="Name" foreground="{Resource CuiTextSoftBrush}" text-wrapping="Wrap" font-size="11" />
+            <Text text="{Binding StartProjectName}" accessible-name="Project name from selected folder" font-weight="600" text-wrapping="Wrap" />
+            <Text Text="Location" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" />
+            <Text Text="{Binding StartDestination}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" text-wrapping="Wrap" />
+            <Text text="{Binding SelectedTemplate}" accessible-name="Selected project template" text-wrapping="Wrap" />
+            <Text Text="{Binding StartTemplateReadiness}" TextWrapping="Wrap" FontSize="11" text-wrapping="Wrap" />
+            <Button id="dev-review-project-template" action="dev.templates.review" content="Review template files" Interactive="{Binding CanReviewTemplate}" HorizontalAlignment="Left" />
+            <Text text="{Binding TemplateReviewStatus}" text-wrapping="Wrap" accessible-name="Template review status" />
+            <Repeat id="dev-template-review-files" Source="{Binding TemplateFiles}" As="item" Key="{Binding item.RelativePath}">
+              <Container id="dev-template-review-file" Type="Vertical Stack" CellGap="2" Margin="0 4">
+                <Text id="dev-template-review-path" text="{Binding item.RelativePath}" font-weight="Bold" text-wrapping="Wrap" />
+                <Text text="{Binding item.Metadata}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+                <Text id="dev-template-review-source" text="{Binding item.Text}" font-family="monospace" text-wrapping="Wrap" />
+              </Container>
+            </Repeat>
+            <Button id="dev-create-template-project" action="dev.templates.create" content="Create reviewed project" Interactive="{Binding CanCreateTemplateProject}" HorizontalAlignment="Left" AccentRole="Primary" />
+            <Text text="{Binding TemplateProjectStatus}" text-wrapping="Wrap" accessible-name="Template project creation status" />
           </Container>
-        </Repeat>
-        <Button id="dev-create-template-project" action="dev.templates.create" content="Create project from reviewed template" Interactive="{Binding CanCreateTemplateProject}" HorizontalAlignment="Left" />
-        <Text text="{Binding TemplateProjectStatus}" text-wrapping="Wrap" accessible-name="Template project creation status" />
+        </Container>
+        <Container id="dev-setup-draft-form" Type="Vertical Stack" CellGap="10" Padding="20" Background="{Resource CuiPanelBrush}" CornerRadius="{Resource CuiCardRadius}" IsVisible="{Binding SetupFormVisible}">
+          <Text id="dev-setup-draft-heading" Text="Keep your setup choices" FontSize="16" FontWeight="700" />
+          <Input id="dev-setup-draft-name" Type="Text" Value="{Binding SetupDraftName}" PlaceholderText="Setup draft name" AccessibleName="Setup draft name" IsEnabled="{Binding StartInputsEnabled}" MinWidth="0" MinHeight="40" />
+          <Text id="dev-setup-draft-name-help" Text="This names the saved setup. The destination folder still determines the actual project name." TextWrapping="Wrap" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" />
+          <Container id="dev-setup-draft-actions" Type="Wrap" CellGap="8">
+            <Button id="dev-save-setup-draft" Content="{Binding SetupSaveLabel}" Action="dev.setup.save" IsEnabled="{Binding CanSaveSetupDraft}" AccentRole="Primary" />
+            <Button id="dev-another-setup-draft" Content="Start another draft" Action="dev.setup.new" IsEnabled="{Binding CanStartAnotherDraft}" />
+          </Container>
+          <Text id="dev-setup-draft-status" Text="{Binding SetupStatus}" TextWrapping="Wrap" FontSize="11" Role="status" />
+        </Container>
+        <Container id="dev-landing-saved-section" Type="Vertical Stack" CellGap="15" IsVisible="{Binding StartShowsProjects}">
+          <Container Type="Wrap" CellGap="16">
+            <Text Text="Your projects" FontSize="18" FontWeight="750" VerticalAlignment="Center" />
+            <Input id="dev-project-query" Type="Text" Value="{Binding ProjectQuery}" placeholdertext="Search projects" accessible-name="Filter saved project and task references" Width="290" MinWidth="0" MinHeight="41" />
+          </Container>
+          <Container id="dev-project-views" Type="Wrap" CellGap="8">
+            <Button id="dev-projects-recent" Content="Recent" Action="dev.setup.recent" Selected="{Binding ProjectViewRecent}" IsEnabled="{Binding StartCanNavigate}" />
+            <Button id="dev-projects-pinned" Content="Pinned" Action="dev.setup.pinned" Selected="{Binding ProjectViewPinned}" IsEnabled="{Binding StartCanNavigate}" />
+            <Button id="dev-projects-setup-drafts" Content="Setup drafts" Action="dev.setup.drafts" Selected="{Binding ProjectViewDrafts}" IsEnabled="{Binding StartCanNavigate}" />
+          </Container>
+          <Text id="dev-project-view-status" Text="{Binding ProjectViewStatus}" TextWrapping="Wrap" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" />
+          <Container id="dev-saved-project-controls" Type="Wrap" CellGap="8">
+            <Button id="dev-refresh-saved-projects" action="dev.references.refresh" content="Refresh" Interactive="{Binding CanRefresh}" accessible-name="Refresh saved development projects" />
+            <Button id="dev-open-selected-space" action="dev.references.open-space" content="Open Space" Interactive="{Binding CanOpenSpace}" accessible-name="Open the selected Space" />
+            <Button Content="{Binding StartDiagnosticsLabel}" Action="dev.start.diagnostics" id="dev-project-details-toggle" />
+          </Container>
+          <Container Type="Vertical Stack" id="dev-projects-empty" CellGap="8" Padding="24" Background="{Resource CuiPanelBrush}" CornerRadius="{Resource CuiCardRadius}" IsVisible="{Binding StartEmptyProjects}" Role="status">
+            <Text Text="{Binding StartEmptyMessage}" TextWrapping="Wrap" />
+          </Container>
+          <Container Type="Vertical Stack" Background="{Resource CuiPanelBrush}" CornerRadius="{Resource CuiCardRadius}" IsVisible="{Binding StartHasProjects}">
+            <Repeat id="dev-saved-projects" Source="{Binding Projects}" As="item" Key="{Binding item.SelectionKey}">
+              <Container id="dev-saved-project-item" Type="Grid" ColumnSizes="{Binding StartProjectRowColumns}" RowSizes="{Binding StartProjectRowRows}" CellGap="12" Padding="18 17" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
+                <Container Type="Vertical Stack" CellGap="5">
+                  <Text id="dev-project-title" text="{Binding item.Title}" font-weight="700" font-size="13" text-wrapping="Wrap" />
+                  <Text Text="{Binding item.DisplaySummary}" FontSize="10" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+                <Container Type="Vertical Stack" Column="{Binding StartProjectStateColumn}" Row="{Binding StartProjectStateRow}" CellGap="5" VerticalAlignment="Center">
+                  <Text Text="{Binding item.StateLabel}" FontSize="10" FontWeight="600" />
+                  <Text Text="{Binding item.EnvironmentLabel}" FontSize="10" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+                <Container Type="Vertical Stack" Column="{Binding StartProjectToolsColumn}" CellGap="5" VerticalAlignment="Center">
+                  <Button id="dev-open-task" action="dev.references.open-task" content="{Binding item.OpenLabel}" Interactive="{Binding item.CanOpen}" accessible-name="{Binding item.OpenAccessibleName}" HorizontalAlignment="Left" font-size="11" Padding="10 7" />
+                  <Button Content="{Binding item.DetailsLabel}" Action="dev.start.details" AccessibleName="Inspect this project reference" FontSize="11" Padding="8 5" />
+                  <Button id="dev-project-pin" Content="{Binding item.PinLabel}" Action="dev.setup.pin-project" IsEnabled="{Binding item.CanPin}" AccessibleName="Pin or unpin this exact project" FontSize="11" Padding="8 5" />
+                </Container>
+                <Container Type="Vertical Stack" Row="{Binding StartProjectDetailsRow}" ColumnSpan="{Binding StartProjectDetailsSpan}" CellGap="5" IsVisible="{Binding item.DetailsVisible}">
+                  <Text text="{Binding item.Summary}" text-wrapping="Wrap" font-size="11" />
+                  <Text text="{Binding item.TaskLabel}" foreground="{Resource CuiTextSoftBrush}" font-size="11" text-wrapping="Wrap" />
+                  <Text text="{Binding item.CheckpointLabel}" foreground="{Resource CuiTextSoftBrush}" font-size="11" text-wrapping="Wrap" />
+                </Container>
+              </Container>
+            </Repeat>
+          </Container>
+          <Container id="dev-setup-drafts-list" Type="Vertical Stack" CellGap="0" Background="{Resource CuiPanelBrush}" CornerRadius="{Resource CuiCardRadius}" IsVisible="{Binding SetupDraftListVisible}">
+            <Repeat id="dev-setup-drafts" Source="{Binding SetupDrafts}" As="item" Key="{Binding item.SelectionKey}">
+              <Container id="dev-setup-draft-item" Type="Grid" ColumnSizes="1fr Auto" RowSizes="Auto" CellGap="12" Padding="18 17" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
+                <Container id="dev-setup-draft-description" Type="Vertical Stack" CellGap="5">
+                  <Text id="dev-saved-setup-name" Text="{Binding item.Title}" FontSize="13" FontWeight="700" TextWrapping="Wrap" />
+                  <Text id="dev-saved-setup-destination" Text="{Binding item.Destination}" FontSize="11" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                  <Text id="dev-saved-setup-template" Text="{Binding item.TemplateSummary}" FontSize="11" TextWrapping="Wrap" />
+                  <Text id="dev-saved-setup-time" Text="{Binding item.SavedLabel}" FontSize="10" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+                <Container id="dev-setup-draft-tools" Type="Vertical Stack" Column="1" CellGap="6" VerticalAlignment="Center">
+                  <Button id="dev-resume-setup-draft" Content="Resume setup" Action="dev.setup.resume" IsEnabled="{Binding item.CanResume}" FontSize="11" Padding="9 7" />
+                  <Button id="dev-setup-draft-pin" Content="{Binding item.PinLabel}" Action="dev.setup.pin-draft" IsEnabled="{Binding item.CanPin}" AccessibleName="{Binding item.PinAccessibleName}" FontSize="11" Padding="9 7" />
+                </Container>
+              </Container>
+            </Repeat>
+          </Container>
+          <Text id="dev-setup-drafts-empty" Text="{Binding SetupEmptyMessage}" IsVisible="{Binding SetupEmptyDrafts}" TextWrapping="Wrap" />
+          <Container Type="Horizontal Stack" CellGap="8" Margin="0 4 0 0" IsVisible="{Binding ProjectListVisible}">
+            <Button id="dev-projects-previous" action="dev.references.previous-projects" content="Previous projects" Interactive="{Binding CanPreviousProjectPage}" />
+            <Button id="dev-projects-next" action="dev.references.next-projects" content="Next projects" Interactive="{Binding CanNextProjectPage}" />
+          </Container>
+          <Text text="{Binding ProjectFilterStatus}" text-wrapping="Wrap" accessible-name="Filtered project list and current page" IsVisible="{Binding ProjectListVisible}" />
+          <Text id="dev-saved-setup-operation-status" Text="{Binding SetupStatus}" TextWrapping="Wrap" FontSize="11" Role="status" />
+          <Container Type="Vertical Stack" CellGap="6" IsVisible="{Binding StartDiagnosticsVisible}">
+            <Text id="dev-reference-coverage" text="{Binding Coverage}" foreground="{Resource CuiTextSoftBrush}" accessible-name="Saved project observation coverage" text-wrapping="Wrap" font-size="11" />
+            <Text id="dev-reference-status" text="{Binding Status}" accessible-name="Development project status" text-wrapping="Wrap" font-size="11" />
+          </Container>
+        </Container>
       </Container>
     </Container>
   </Page>

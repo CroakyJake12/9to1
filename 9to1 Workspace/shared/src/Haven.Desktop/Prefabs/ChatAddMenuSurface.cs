@@ -12,7 +12,7 @@ namespace Haven.Desktop.Prefabs;
 /// Shared behavior for the Chatbox Add popup. The visual tree is owned by the
 /// ChatAddMenu prefab so Go and Chat cannot drift into separate popup designs.
 /// </summary>
-internal sealed class ChatAddMenuSurface : IDisposable
+internal sealed partial class ChatAddMenuSurface : IDisposable
 {
     private readonly List<(HavenButton Button, AddMenu.AddMenuAction Action, object Item)> _catalogRows = [];
     private readonly bool _composerOwnsSearch;
@@ -85,6 +85,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
             VisualResponsesButton.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
             CurrentResponseState.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         }
+        if (UsesAttachCategories) InitializeAttachCategories();
 
         DismissButton.Invoked += OnDismissInvoked;
         CatalogBackButton.Invoked += OnCatalogBackInvoked;
@@ -96,7 +97,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
         AppsButton.Invoked += OnAppsInvoked;
         AllowActionsButton.Invoked += OnAllowActionsInvoked;
         VisualResponsesButton.Invoked += OnVisualResponsesInvoked;
-        if (!_composerOwnsSearch)
+        if (!_composerOwnsSearch || UsesAttachCategories)
             CatalogSearch.Invalidated += OnCatalogSearchInvalidated;
         Hide();
     }
@@ -170,6 +171,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
         AllowActionsButton.Accessibility.Description = "Current setting: " + ActionModeSummary(_currentActionMode);
         VisualResponsesButton.Accessibility.Description = "Current setting: " + VisualModeSummary(_currentVisualMode);
         if (_catalogAction is not null || _searchAll) RebuildCatalogue();
+        if (UsesAttachCategories) RefreshAttachDisclosures();
     }
 
     public void Show()
@@ -183,6 +185,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
         CatalogPanel.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         CatalogBackButton.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         Overlay.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
+        if (UsesAttachCategories) ShowAttachCategories();
     }
 
     public void Hide()
@@ -198,6 +201,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
         CatalogPanel.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         MainMenu.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         Overlay.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
+        if (UsesAttachCategories) CloseAttachCategories();
         if (wasOpen) Dismissed?.Invoke(this, EventArgs.Empty);
     }
 
@@ -214,6 +218,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
         _catalogAction = null;
         _searchAll = true;
         _externalQuery = query?.Trim() ?? string.Empty;
+        if (UsesAttachCategories) ShowMentionCatalogue();
         CatalogSearch.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         CatalogBackButton.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         MainMenu.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
@@ -235,6 +240,11 @@ internal sealed class ChatAddMenuSurface : IDisposable
 
     private void OpenCatalogue(AddMenu.AddMenuAction action)
     {
+        if (UsesAttachCategories && IsAttachCategory(action))
+        {
+            ToggleAttachCategory(action);
+            return;
+        }
         _catalogAction = action;
         _searchAll = false;
         _externalQuery = string.Empty;
@@ -268,13 +278,14 @@ internal sealed class ChatAddMenuSurface : IDisposable
         CatalogSearch.Text = string.Empty;
         CatalogPanel.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         MainMenu.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
+        if (UsesAttachCategories) ShowAttachCategories();
     }
 
     private void RebuildCatalogue()
     {
         foreach (var child in CatalogResults.Children.ToArray()) CatalogResults.Remove(child);
         _catalogRows.Clear();
-        var query = (_composerOwnsSearch ? _externalQuery : CatalogSearch.Text).Trim();
+        var query = (_searchAll && _composerOwnsSearch ? _externalQuery : CatalogSearch.Text).Trim();
         if (_searchAll)
         {
             RebuildMentionSearch(query);
@@ -283,8 +294,11 @@ internal sealed class ChatAddMenuSurface : IDisposable
         if (_catalogAction is null) return;
         switch (_catalogAction.Value)
         {
+            case AddMenu.AddMenuAction.File:
+                AddFileSourceRows(query);
+                break;
             case AddMenu.AddMenuAction.Agent:
-                AddCatalogHeading("Current: " + _currentAgentName);
+                if (!UsesAttachCategories) AddCatalogHeading("Current: " + _currentAgentName);
                 AddCatalogRows(AddMenu.AddMenuAction.Agent, _agents.Where(item => Matches(item.Name, item.Description, query)), item => item.Name, item => item.Description);
                 break;
             case AddMenu.AddMenuAction.Assistant:
@@ -312,6 +326,8 @@ internal sealed class ChatAddMenuSurface : IDisposable
                 break;
             case AddMenu.AddMenuAction.Capability:
                 AddCatalogRows(AddMenu.AddMenuAction.Capability, _capabilities.Where(item => Matches(item.Name, item.Description, query)), item => item.Name, item => item.Description);
+                if (UsesAttachCategories)
+                    AddCatalogRows(AddMenu.AddMenuAction.App, _apps.Where(item => Matches(item.Name, item.Description, query)), item => item.Name, item => item.Description);
                 break;
             case AddMenu.AddMenuAction.Instruction:
                 AddCatalogRows(AddMenu.AddMenuAction.Instruction, _instructions.Where(item => Matches(item.Name, item.Description, query)), item => item.Name, item => item.Description);
@@ -332,6 +348,8 @@ internal sealed class ChatAddMenuSurface : IDisposable
                 AddModeRow("Always Text", AddMenu.AddMenuAction.VisualResponses, GenerativeUiResponseMode.AlwaysText);
                 break;
         }
+        if (UsesAttachCategories && CatalogResults.Children.Count == 0)
+            AddCatalogHeading(string.IsNullOrWhiteSpace(query) ? "No available items in this category." : "No matching items.");
     }
 
     private void AddCatalogRows<T>(
@@ -346,9 +364,11 @@ internal sealed class ChatAddMenuSurface : IDisposable
             var button = MenuButton(label(item), 260, IconFor(action));
             button.Accessibility.Description = description(item);
             var boxed = (object)item;
+            if (UsesAttachCategories)
+                button.Accessibility.Description = ContextDescription(boxed, button.Accessibility.Description);
             button.Invoked += (_, _) => SelectCatalogue(new AddMenuSelection(action, boxed));
             _catalogRows.Add((button, action, boxed));
-            CatalogResults.Add(button);
+            AddResultRow(button, action, boxed);
         }
     }
 
@@ -361,7 +381,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
             var boxed = (object)assistant;
             button.Invoked += (_, _) => SelectCatalogue(new AddMenuSelection(AddMenu.AddMenuAction.Assistant, boxed));
             _catalogRows.Add((button, AddMenu.AddMenuAction.Assistant, boxed));
-            CatalogResults.Add(button);
+            AddResultRow(button, AddMenu.AddMenuAction.Assistant, boxed);
         }
     }
 
@@ -370,7 +390,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
         var button = MenuButton(label, 260, IconFor(action));
         button.Invoked += (_, _) => SelectCatalogue(new AddMenuSelection(action, item));
         _catalogRows.Add((button, action, item));
-        CatalogResults.Add(button);
+        AddResultRow(button, action, item);
     }
 
     private void AddCatalogHeading(string text)
@@ -387,7 +407,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
         button.Accessibility.Description = "Open the Assistants workspace to create or choose an Assistant.";
         button.Invoked += (_, _) => SelectCatalogue(new AddMenuSelection(
             AddMenu.AddMenuAction.Assistant, OpenAssistantsRequest.Instance));
-        CatalogResults.Add(button);
+        AddResultRow(button, AddMenu.AddMenuAction.Assistant, OpenAssistantsRequest.Instance);
     }
 
     private void RebuildMentionSearch(string query)
@@ -417,8 +437,8 @@ internal sealed class ChatAddMenuSurface : IDisposable
         {
             var files = MenuButton("Files", 260, "file");
             files.Accessibility.Description = "Attach files from this device";
-            files.Invoked += OnAttachFilesInvoked;
-            CatalogResults.Add(files);
+            files.Invoked += OnChooseFilesInvoked;
+            AddResultRow(files, AddMenu.AddMenuAction.File, null);
         }
 
         foreach (var candidate in candidates
@@ -429,11 +449,11 @@ internal sealed class ChatAddMenuSurface : IDisposable
             var button = MenuButton(candidate.Name, 260, IconFor(candidate.Action));
             button.Accessibility.Description = candidate.Action == AddMenu.AddMenuAction.Assistant
                 ? AssistantDescription(candidate.Description)
-                : candidate.Description;
+                : UsesAttachCategories ? ContextDescription(candidate.Item, candidate.Description) : candidate.Description;
             var selection = new AddMenuSelection(candidate.Action, candidate.Item);
             button.Invoked += (_, _) => SelectCatalogue(selection);
             _catalogRows.Add((button, candidate.Action, candidate.Item));
-            CatalogResults.Add(button);
+            AddResultRow(button, candidate.Action, candidate.Item);
         }
 
         if (CatalogResults.Children.Count == 0)
@@ -557,6 +577,11 @@ internal sealed class ChatAddMenuSurface : IDisposable
     private void OnDismissInvoked(object? sender, EventArgs e) => Hide();
     private void OnAttachFilesInvoked(object? sender, EventArgs e)
     {
+        if (UsesAttachCategories) OpenCatalogue(AddMenu.AddMenuAction.File);
+        else OnChooseFilesInvoked(sender, e);
+    }
+    private void OnChooseFilesInvoked(object? sender, EventArgs e)
+    {
         Hide();
         AddActionSelected?.Invoke(this, AddMenu.AddMenuAction.File);
     }
@@ -564,6 +589,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
     private void OnAssistantsInvoked(object? sender, EventArgs e)
     {
         OpenCatalogue(AddMenu.AddMenuAction.Assistant);
+        if (_catalogAction != AddMenu.AddMenuAction.Assistant) return;
         _assistantCatalogueRequestGeneration++;
         AssistantCatalogueRequested?.Invoke(this, EventArgs.Empty);
     }
@@ -595,7 +621,7 @@ internal sealed class ChatAddMenuSurface : IDisposable
         AppsButton.Invoked -= OnAppsInvoked;
         AllowActionsButton.Invoked -= OnAllowActionsInvoked;
         VisualResponsesButton.Invoked -= OnVisualResponsesInvoked;
-        if (!_composerOwnsSearch)
+        if (!_composerOwnsSearch || UsesAttachCategories)
             CatalogSearch.Invalidated -= OnCatalogSearchInvalidated;
         _catalogRows.Clear();
     }

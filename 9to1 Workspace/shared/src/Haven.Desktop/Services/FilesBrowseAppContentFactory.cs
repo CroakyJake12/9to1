@@ -1,7 +1,10 @@
 using Haven.Application;
+using CakeOS.Cui.Themes;
 using Haven.Browser;
 using Haven.Core;
 using HavenOS.Apps.Browse;
+using HavenOS.Files.NativeHost;
+using HavenOS.Files.NativeUI;
 using HavenOS.Home.Core;
 
 namespace Haven.Desktop.Services;
@@ -9,31 +12,35 @@ namespace Haven.Desktop.Services;
 /// <summary>Only trusted native composition supplies the original Home graph and lifetimes.</summary>
 internal sealed class FilesBrowseAppContentFactory : IBrowseAppContentFactory
 {
-    private readonly Func<CancellationToken, NativeFilesDesktopRoute> _bindOriginal;
+    private readonly Func<BrowseAppContentRequest, CancellationToken, NativeFilesDesktopRoute> _bindOriginal;
     private readonly CancellationToken _hostLifetime;
 
-    private FilesBrowseAppContentFactory(Func<CancellationToken, NativeFilesDesktopRoute> bind,
+    private FilesBrowseAppContentFactory(Func<BrowseAppContentRequest, CancellationToken, NativeFilesDesktopRoute> bind,
         CancellationToken hostLifetime)
     { _bindOriginal = bind; _hostLifetime = hostLifetime; }
 
     internal static FilesBrowseAppContentFactory BindOriginalSameProcess(IServiceProvider originalProvider,
         HomeNativeWindowsComposition sameHome, CancellationToken originalAppLifetime,
-        CancellationToken originalHostLifetime)
+        CancellationToken originalHostLifetime, CuiThemePreferenceContext? interfaceTheme = null,
+        Func<BrowseAppContentRequest, FilesNativeBrowserService, AuthenticatedResourceActor, IFilesNativeBoardOpenHost?>? boardHost = null)
     {
         WindowsHomeSameProcessRuntimeObservation.DemandOriginalBinding(originalProvider, sameHome);
         DemandLifetimes(originalAppLifetime, originalHostLifetime);
-        return new(tab => NativeFilesDesktopRoute.BindOriginalSameProcess(originalProvider, sameHome,
-            originalAppLifetime, tab), originalHostLifetime);
+        return new((request, tab) => NativeFilesDesktopRoute.BindOriginalSameProcess(originalProvider, sameHome,
+            originalAppLifetime, tab, interfaceTheme,
+            boardHost is null ? null : (browser, actor) => boardHost(request, browser, actor)), originalHostLifetime);
     }
 
     internal static FilesBrowseAppContentFactory BindOriginal(IServiceProvider originalProvider,
         IHomeNativeStartupSession originalStartup, CancellationToken originalConnectionLifetime,
-        CancellationToken originalHostLifetime)
+        CancellationToken originalHostLifetime, CuiThemePreferenceContext? interfaceTheme = null,
+        Func<BrowseAppContentRequest, FilesNativeBrowserService, AuthenticatedResourceActor, IFilesNativeBoardOpenHost?>? boardHost = null)
     {
         ArgumentNullException.ThrowIfNull(originalProvider); ArgumentNullException.ThrowIfNull(originalStartup);
         DemandLifetimes(originalConnectionLifetime, originalHostLifetime);
-        return new(tab => NativeFilesDesktopRoute.BindOriginal(originalProvider, originalStartup,
-            originalConnectionLifetime, tab), originalHostLifetime);
+        return new((request, tab) => NativeFilesDesktopRoute.BindOriginal(originalProvider, originalStartup,
+            originalConnectionLifetime, tab, interfaceTheme,
+            boardHost is null ? null : (browser, actor) => boardHost(request, browser, actor)), originalHostLifetime);
     }
 
     private static void DemandLifetimes(CancellationToken connection, CancellationToken host)
@@ -55,7 +62,7 @@ internal sealed class FilesBrowseAppContentFactory : IBrowseAppContentFactory
         try
         {
             // Allocation only: route constructors validate service identity but create no Control.
-            var route = _bindOriginal(lifetime.Token);
+            var route = _bindOriginal(request, lifetime.Token);
             return new FilesBrowseAppContentSession(request, location, route, lifetime);
         }
         catch { lifetime.Dispose(); throw; }

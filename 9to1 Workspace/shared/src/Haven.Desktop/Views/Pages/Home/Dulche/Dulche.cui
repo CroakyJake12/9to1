@@ -1,129 +1,226 @@
 <Cui id="home.models.dulche" version="1">
+  <Actions>
+    <Action name="InspectLocalModel" command="dulche.inspect" parameter="{Binding local.target}" />
+  </Actions>
   <Theme Name="user_preference">
-    <Page AccessibleName="Dulche local inference">
-      <Container Type="Vertical Stack" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderThickness="1" CornerRadius="14" Padding="16" CellGap="8" MinWidth="0">
-        <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="12">
-          <Text Text="Installed models" FontSize="18" FontWeight="700" />
-          <Text id="dulche-status" Text="Connecting to local service…" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" Column="1" FontSize="12" VerticalAlignment="Center" MaxWidth="240" />
+    <Page AccessibleName="Dulche local inference" Background="{Resource CuiTransparentBrush}">
+      <Container id="dulche-root" Type="Vertical Stack" CellGap="8" MinWidth="0" Background="{Resource CuiTransparentBrush}">
+        <Text id="dulche-status" Text="Connecting to local service…" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" FontSize="11" />
+        <Text id="dulche-message" TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Dulche run status" IsVisible="{Binding HasRunStatus, fallback=false}" />
+        <Container id="dulche-library" Type="Vertical Stack" CellGap="15" IsVisible="{Binding LibraryVisible, fallback=true}" AccessibleName="Configured local models">
+          <Container Type="Wrap" CellGap="12">
+            <Text Text="Dulche on this device" FontSize="20" FontWeight="750" VerticalAlignment="Center" />
+            <Text Text="{Binding LocalModelCount}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" />
+          </Container>
+          <Input id="dulche-library-search" Type="Text" AccessibleName="Search your local models" PlaceholderText="Search your models" HorizontalAlignment="Stretch" MinHeight="40" />
+          <Text Text="Inspect a model before choosing Load or Send. Selecting it here does not start inference." FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          <Repeat Source="{Binding LocalModels}" As="local" Key="{Binding local.id}" Panel="Vertical Stack">
+            <Container id="dulche-local-card" Type="Vertical Stack" Padding="18" Margin="0 0 0 10" CellGap="9" CornerRadius="{Resource CuiCardRadius}" Background="{Resource CuiPanelBrush}">
+              <Text Text="{Binding local.name}" FontSize="17" FontWeight="750" TextWrapping="Wrap" />
+              <Text Text="{Binding local.state}" FontSize="12" FontWeight="600" TextWrapping="Wrap" />
+              <Text Text="{Binding local.route}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+              <Text Text="{Binding local.context}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+              <Button id="dulche-local-details" Action="InspectLocalModel" Content="Details" AccessibleName="{Binding local.detailslabel}" HorizontalAlignment="Left" MinHeight="32" Padding="12 6" CornerRadius="{Resource CuiControlRadius}" />
+            </Container>
+          </Repeat>
+          <Text Text="No configured models match this view. Find or install models from the catalogue." IsVisible="{Binding LocalModelsEmpty, fallback=false}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
         </Container>
-        <Input id="dulche-model" Type="Select" AccessibleName="Installed inference model" MinWidth="0" HorizontalAlignment="Stretch" MinHeight="40" />
-        <Text Text="{Binding SelectedModelName}" FontSize="20" FontWeight="700" TextWrapping="Wrap" />
-        <Text Text="{Binding SelectedModelSummary}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
-        <Text Text="{Binding SelectedModelIssue}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" IsVisible="{Binding HasSelectedModelIssue, fallback=false}" />
-        <Container Type="Wrap" CellGap="8">
-          <Button id="dulche-toggle" Content="Load" AccessibleName="Change selected model state" />
-          <Button id="dulche-unload" Content="Unload" />
+        <Container id="dulche-selected-details" Type="Vertical Stack" CellGap="8" IsVisible="{Binding DetailsVisible, fallback=false}">
+          <Container Type="Vertical Stack" Background="{Resource CuiPanelBrush}" CornerRadius="{Resource CuiCardRadius}" Padding="10" CellGap="4">
+            <Text Text="{Binding SelectedModelName}" FontSize="20" FontWeight="750" TextWrapping="Wrap" AccessibleName="Selected model name" />
+            <Container Type="Grid" ColumnSizes="1fr Auto Auto" CellGap="6">
+              <Input id="dulche-model" Type="Select" AccessibleName="Installed inference model" HorizontalAlignment="Stretch" MinWidth="0" MinHeight="34" />
+              <Button id="dulche-toggle" Column="1" Content="Load" AccessibleName="Change selected model state" MinHeight="32" Padding="13 6" />
+              <Button id="dulche-unload" Column="2" Content="Unload" MinHeight="32" Padding="13 6" />
+            </Container>
+            <Text Text="{Binding SelectedModelSummary}" TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+            <Text Text="{Binding SelectedModelIssue}" TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" IsVisible="{Binding HasSelectedModelIssue, fallback=false}" />
+          </Container>
+          <Button id="dulche-swarm-return" Content="Back to model" AccessibleName="Return from Swarm to the selected model" IsVisible="{Binding SwarmVisible, fallback=false}" HorizontalAlignment="Left" />
+          <Container id="dulche-swarm-mount" Type="Vertical Stack" IsVisible="{Binding SwarmVisible, fallback=false}" AccessibleName="Swarm configuration and monitoring" />
+          <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding SingleVisible, fallback=true}">
+            <Container Type="Wrap" CellGap="6" AccessibleName="Selected model sections">
+              <Button id="dulche-view-chat" Content="Chat" Selected="{Binding ChatSelected}" AccessibleName="Chat for the selected model" MinHeight="32" Padding="12 6" />
+              <Button id="dulche-view-performance" Content="Performance" Selected="{Binding PerformanceSelected}" AccessibleName="Performance for the selected model" MinHeight="32" Padding="12 6" />
+              <Button id="dulche-view-adapters" Content="Adapters" Selected="{Binding AdaptersSelected}" AccessibleName="Adapters for the selected model" MinHeight="32" Padding="12 6" />
+              <Button id="dulche-manage" Content="Advanced" Selected="{Binding AdvancedSelected}" AccessibleName="Advanced model settings" MinHeight="32" Padding="12 6" />
+            </Container>
+            <Container id="dulche-chat-section" Type="Vertical Stack" CellGap="8" IsVisible="{Binding ChatVisible, fallback=true}" AccessibleName="Chat with the selected model">
+              <Text Text="Quick test for this model. Use Spaces for ongoing conversations." FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="dulche-prompt" Type="Text" PlaceholderText="Message this model…" AccessibleName="Dulche prompt" MinHeight="56" MaxHeight="160" AcceptsReturn="True" TextWrapping="Wrap" />
+              <Container Type="Wrap" CellGap="8">
+                <Button id="dulche-generate" Content="Send" AccentRole="Primary" MinWidth="88" MinHeight="34" Padding="14 7" />
+                <Button id="dulche-generation-cancel" Content="Stop" AccessibleName="Cancel this Dulche response" IsVisible="{Binding GenerationActive, fallback=false}" MinHeight="34" Padding="14 7" />
+                <Button id="dulche-new" Content="New conversation" MinHeight="34" Padding="14 7" />
+              </Container>
+              <Text id="dulche-output" TextWrapping="Wrap" AccessibleName="Dulche response" />
+            </Container>
+            <Container id="dulche-performance-section" Type="Vertical Stack" CellGap="15" IsVisible="{Binding PerformanceVisible, fallback=false}" AccessibleName="Inference performance">
+              <Container Type="Vertical Stack" CellGap="10" Padding="16" CornerRadius="{Resource CuiCardRadius}" Background="{Resource CuiPanelBrush}">
+                <Text Text="Current profile and context" FontSize="17" FontWeight="750" />
+                <Text id="dulche-profile-status" TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Observed inference profile" />
+                <Container Type="Wrap" CellGap="8">
+                  <Input id="dulche-profiles" Type="Select" Width="220" AccessibleName="Inference profiles" />
+                  <Button id="dulche-profile-select" Content="Apply saved profile" AccessibleName="Apply selected inference profile" />
+                </Container>
+                <Text Text="Applying a saved profile reloads a loaded model. Editing these fields only prepares a new profile." FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                <Container Type="Wrap" CellGap="8">
+                  <Container Type="Vertical Stack" Width="180" CellGap="4">
+                    <Text id="dulche-profile-device-label" Text="Execution device" FontSize="12" TextWrapping="Wrap" />
+                    <Input id="dulche-profile-device" Type="Text" PlaceholderText="GPU, CPU or auto" AccessibleName="Profile execution device" HorizontalAlignment="Stretch" />
+                  </Container>
+                  <Container Type="Vertical Stack" Width="190" CellGap="4">
+                    <Text id="dulche-profile-context-label" Text="Context length (tokens)" FontSize="12" TextWrapping="Wrap" />
+                    <Input id="dulche-profile-context" Type="Text" PlaceholderText="Number of tokens" AccessibleName="Profile context length" HorizontalAlignment="Stretch" />
+                  </Container>
+                </Container>
+                <Text id="dulche-profile-name-label" Text="New profile name" FontSize="12" TextWrapping="Wrap" />
+                <Container Type="Wrap" CellGap="8">
+                  <Input id="dulche-profile-name" Type="Text" Width="210" PlaceholderText="Name this profile" AccessibleName="Profile name" />
+                  <Button id="dulche-profile-save" Content="Save new profile" />
+                  <Button id="dulche-profile-rename" Content="Rename profile" />
+                </Container>
+              </Container>
+              <Container Type="Vertical Stack" CellGap="9" Padding="16" CornerRadius="{Resource CuiCardRadius}" Background="{Resource CuiPanelBrush}">
+                <Text Text="Runtime resources" FontSize="17" FontWeight="750" />
+                <Text id="dulche-resources" Text="GPU and memory telemetry has not been reported." TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Observed GPU and memory resources" />
+                <Text id="dulche-metrics" Text="No recorded timing observation for this model." TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Measured inference timings" />
+                <Container Type="Wrap" CellGap="8">
+                  <Button id="dulche-benchmarks" Content="Benchmark results" />
+                  <Button id="dulche-benchmark-start" Content="Run local benchmark" />
+                  <Button id="dulche-candidates" Content="Compare candidates" />
+                </Container>
+                <Input id="dulche-candidate" Type="Select" AccessibleName="Candidate checkpoints" IsVisible="{Binding CandidatesVisible, fallback=false}" />
+                <Text id="dulche-benchmark-results" TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+              </Container>
+              <Container Type="Vertical Stack" CellGap="9" Padding="16" CornerRadius="{Resource CuiCardRadius}" Background="{Resource CuiPanelBrush}">
+                <Text Text="Optimise inference" FontSize="17" FontWeight="750" />
+                <Text id="dulche-inference-support" TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Inference management availability" />
+                <Text Text="Measure and apply qualified settings at the current context. The service keeps the previous settings for rollback." FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                <Container Type="Wrap" CellGap="8">
+                  <Button id="dulche-optimise" Content="Optimise inference" AccessibleName="Optimise inference while preserving current context" AccentRole="Primary" />
+                  <Button id="dulche-optimise-restore" Content="Restore previous settings" AccessibleName="Restore settings before the selected optimisation" />
+                </Container>
+                <Text id="dulche-inference-operation" TextWrapping="Wrap" FontSize="12" AccessibleName="Inference optimisation status" />
+                <Text id="dulche-optimisation-comparison" TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Measured optimisation comparison" />
+              </Container>
+            </Container>
+            <Container id="dulche-adapters-section" Type="Vertical Stack" CellGap="12" Padding="16" CornerRadius="{Resource CuiCardRadius}" Background="{Resource CuiPanelBrush}" IsVisible="{Binding AdaptersVisible, fallback=false}" AccessibleName="Model and Specialist adapters">
+              <Text Text="LoRA adapters" FontSize="18" FontWeight="750" />
+              <Text Text="{Binding AdapterCapability}" TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+              <Text id="dulche-adapter-status" TextWrapping="Wrap" FontSize="12" AccessibleName="LoRA adapter runtime status" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="dulche-adapters" Type="Select" HorizontalAlignment="Stretch" AccessibleName="Attached LoRA adapters" />
+              <Text id="dulche-adapter-identity" TextWrapping="Wrap" FontSize="12" AccessibleName="Selected adapter identity and scope" />
+              <Container Type="Wrap" CellGap="8">
+                <Button id="dulche-adapter-refresh" Content="Refresh adapters" />
+                <Button id="dulche-adapter-detach" Content="Detach selected adapter" />
+              </Container>
+              <Text Text="Attach a compatible adapter" FontSize="15" FontWeight="700" Margin="0 8 0 0" />
+              <Text id="dulche-adapter-path-label" Text="Adapter path on this device" FontSize="12" TextWrapping="Wrap" />
+              <Input id="dulche-adapter-path" Type="Text" PlaceholderText="Absolute local adapter path" AccessibleName="LoRA adapter path" HorizontalAlignment="Stretch" IsEnabled="{Binding AdapterInputsAvailable, fallback=false}" />
+              <Container Type="Wrap" CellGap="8">
+                <Container Type="Vertical Stack" Width="155" CellGap="4">
+                  <Text id="dulche-adapter-scale-label" Text="Scale (multiplier)" FontSize="12" TextWrapping="Wrap" />
+                  <Input id="dulche-adapter-scale" Type="Text" PlaceholderText="For example, 1" AccessibleName="LoRA adapter scale" HorizontalAlignment="Stretch" IsEnabled="{Binding AdapterInputsAvailable, fallback=false}" />
+                </Container>
+                <Container Type="Vertical Stack" Width="170" CellGap="4">
+                  <Text id="dulche-adapter-scope-label" Text="Attach to" FontSize="12" TextWrapping="Wrap" />
+                  <Input id="dulche-adapter-scope" Type="Select" AccessibleName="LoRA adapter binding scope" HorizontalAlignment="Stretch" IsEnabled="{Binding AdapterInputsAvailable, fallback=false}" />
+                </Container>
+              </Container>
+              <Text id="dulche-adapter-specialist-label" Text="Choose a Specialist" FontSize="12" TextWrapping="Wrap" IsVisible="{Binding SpecialistAdapterScope, fallback=false}" />
+              <Input id="dulche-adapter-specialist" Type="Select" AccessibleName="Choose a Specialist" IsVisible="{Binding SpecialistAdapterScope, fallback=false}" />
+              <Text Text="{Binding SpecialistAdapterStatus}" TextWrapping="Wrap" FontSize="12" IsVisible="{Binding SpecialistAdapterScope, fallback=false}" Foreground="{Resource CuiTextSoftBrush}" />
+              <Button id="dulche-adapter-attach" Content="Attach adapter" HorizontalAlignment="Left" AccentRole="Primary" />
+            </Container>
+            <Container id="dulche-management" Type="Vertical Stack" CellGap="12" Padding="16" CornerRadius="{Resource CuiCardRadius}" Background="{Resource CuiPanelBrush}" IsVisible="{Binding Manage, fallback=false}" AccessibleName="Advanced model controls">
+              <Text Text="Runtime and recovery" FontSize="18" FontWeight="750" />
+              <Text id="dulche-route" TextWrapping="Wrap" FontSize="12" AccessibleName="Selected model engine and devices" />
+              <Text id="dulche-detail" TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+              <Text id="dulche-recovery" TextWrapping="Wrap" FontSize="12" AccessibleName="Observed automatic recovery state" Foreground="{Resource CuiTextSoftBrush}" />
+              <Text Text="Loading policy" FontSize="15" FontWeight="700" Margin="0 8 0 0" />
+              <Text Text="{Binding ObservedLoadPolicy}" FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Container Type="Wrap" CellGap="8">
+                <Input id="dulche-load-policy" Type="Select" AccessibleName="Dulche service loading policy" Width="220" />
+                <Button id="dulche-load-policy-apply" Content="Apply loading policy" />
+              </Container>
+              <Text Text="This device setting applies to the Dulche service. Choosing an option prepares a change; Apply saves it. Manual suspension stays separate." FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Text Text="Model identity" FontSize="12" FontWeight="700" />
+              <Text Text="{Binding SelectedModelIdentity}" FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Text Text="Advanced profile settings" FontSize="15" FontWeight="700" Margin="0 8 0 0" />
+              <Input id="dulche-profile-settings" Type="Text" PlaceholderText="Profile settings as JSON" AccessibleName="GPU, context and inference profile settings" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80" MaxHeight="160" />
+              <Text Text="Profile changes remain a draft until you save them in Performance." FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Text Text="Swarm" FontSize="15" FontWeight="700" Margin="0 8 0 0" />
+              <Text Text="Configure multiple participants separately from this model's quick test." FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Button id="dulche-swarm" Content="Swarm Mode" HorizontalAlignment="Left" />
+              <Text Text="Agents and saved runs" FontSize="15" FontWeight="700" Margin="0 8 0 0" />
+              <Input id="dulche-agents" Type="Select" HorizontalAlignment="Stretch" AccessibleName="Dulche agents and saved runs" />
+              <Container Type="Wrap" CellGap="8">
+                <Button id="dulche-recover" Content="Open saved run" />
+                <Button id="dulche-stop" Content="Stop selected agent" />
+                <Button id="dulche-stop-all" Content="Stop all agents" />
+                <Button id="dulche-agent-resume" Content="Resume selected agent" />
+                <Button id="dulche-allow" Content="Allow new agents" />
+                <Button id="dulche-training" Content="Training status" />
+              </Container>
+              <Text id="dulche-training-status" TextWrapping="Wrap" FontSize="12" AccessibleName="Observed training status" Foreground="{Resource CuiTextSoftBrush}" />
+            </Container>
+          </Container>
         </Container>
-        <Text id="dulche-message" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Dulche run status" IsVisible="{Binding HasRunStatus, fallback=false}" />
-        <Button id="dulche-swarm-return" Content="Back to model" AccessibleName="Return from Swarm to the selected model" IsVisible="{Binding SwarmVisible, fallback=false}" HorizontalAlignment="Left" />
-        <Container id="dulche-swarm-mount" Type="Vertical Stack" IsVisible="{Binding SwarmVisible, fallback=false}" AccessibleName="Swarm configuration and monitoring" />
-        <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding SingleVisible, fallback=true}">
-          <Container Type="Wrap" CellGap="8" AccessibleName="Selected model sections">
-            <Button id="dulche-view-chat" Content="Chat" AccessibleName="Chat for the selected model" />
-            <Button id="dulche-view-performance" Content="Performance" AccessibleName="Performance for the selected model" />
-            <Button id="dulche-view-adapters" Content="Adapters" AccessibleName="Adapters for the selected model" />
-            <Button id="dulche-manage" Content="Advanced" AccessibleName="Advanced model settings" />
+        <Container id="dulche-catalogue-manager" Type="Vertical Stack" CellGap="12" IsVisible="{Binding CatalogueVisible, fallback=false}" AccessibleName="Dulche catalogue and transfers">
+          <Text Text="Dulche catalogue" FontSize="20" FontWeight="750" />
+          <Text id="dulche-search-label" Text="Search models" FontSize="12" TextWrapping="Wrap" />
+          <Container Type="Wrap" CellGap="8">
+            <Input id="dulche-search" Type="Text" PlaceholderText="Model name or repository" AccessibleName="Find local or downloadable models" Width="255" />
+            <Button id="dulche-find" Content="Search catalogue" />
+            <Button id="dulche-installed" Content="Installed files" />
           </Container>
-          <Container Type="Vertical Stack" id="dulche-chat-section" CellGap="10" IsVisible="{Binding ChatVisible, fallback=true}" AccessibleName="Chat with the selected model">
-            <Input id="dulche-prompt" Type="Text" PlaceholderText="Message this model…" AccessibleName="Dulche prompt" MinHeight="56" MaxHeight="180" AcceptsReturn="True" TextWrapping="Wrap" />
-            <Container Type="Wrap" CellGap="8">
-              <Button id="dulche-generate" Content="Send" AccentRole="Primary" MinWidth="96" />
-              <Button id="dulche-generation-cancel" Content="Cancel response" AccessibleName="Cancel this Dulche response" IsVisible="{Binding GenerationActive, fallback=false}" />
-              <Button id="dulche-new" Content="New conversation" />
+          <Container Type="Wrap" CellGap="8">
+            <Container Type="Vertical Stack" Width="200" CellGap="4">
+              <Text id="dulche-filter-architecture-label" Text="Architecture / family" FontSize="12" TextWrapping="Wrap" />
+              <Input id="dulche-filter-architecture" Type="Text" PlaceholderText="Any architecture" AccessibleName="Architecture filter" HorizontalAlignment="Stretch" />
             </Container>
-            <Text id="dulche-output" TextWrapping="Wrap" AccessibleName="Dulche response" />
-          </Container>
-          <Container Type="Vertical Stack" id="dulche-performance-section" CellGap="10" IsVisible="{Binding PerformanceVisible, fallback=false}" AccessibleName="Inference performance">
-            <Text Text="Performance" FontSize="18" FontWeight="700" />
-            <Text id="dulche-inference-support" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Inference management availability" />
-            <Container Type="Wrap" CellGap="8">
-              <Button id="dulche-optimise" Content="Optimise inference" AccessibleName="Optimise inference while preserving current context" />
-              <Button id="dulche-optimise-restore" Content="Restore previous settings" AccessibleName="Restore settings before the selected optimisation" />
+            <Container Type="Vertical Stack" Width="210" CellGap="4">
+              <Text id="dulche-filter-size-label" Text="Maximum parameters (billions)" FontSize="12" TextWrapping="Wrap" />
+              <Input id="dulche-filter-size" Type="Text" PlaceholderText="Any size" AccessibleName="Maximum billions of parameters" HorizontalAlignment="Stretch" />
             </Container>
-            <Text Text="Optimisation keeps the selected model's current context. Progress and measured results appear below." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
-            <Text id="dulche-inference-operation" TextWrapping="Wrap" AccessibleName="Inference optimisation status" />
-          </Container>
-          <Container Type="Vertical Stack" id="dulche-adapters-section" CellGap="10" IsVisible="{Binding AdaptersVisible, fallback=false}" AccessibleName="Model and Specialist adapters">
-            <Text Text="LoRA adapters" FontSize="18" FontWeight="700" />
-            <Text id="dulche-adapter-status" TextWrapping="Wrap" AccessibleName="LoRA adapter runtime status" Foreground="{Resource CuiTextSoftBrush}" />
-            <Input id="dulche-adapter-path" Type="Text" PlaceholderText="Absolute local adapter path" AccessibleName="LoRA adapter path" HorizontalAlignment="Stretch" />
-            <Container Type="Wrap" CellGap="8">
-              <Input id="dulche-adapter-scale" Type="Text" Width="90" PlaceholderText="Scale" AccessibleName="LoRA adapter scale" />
-              <Input id="dulche-adapter-scope" Type="Select" Width="150" AccessibleName="LoRA adapter binding scope" />
+            <Container Type="Vertical Stack" Width="175" CellGap="4">
+              <Text id="dulche-filter-capability-label" Text="Capability" FontSize="12" TextWrapping="Wrap" />
+              <Input id="dulche-filter-capability" Type="Text" PlaceholderText="Any capability" AccessibleName="Capability filter" HorizontalAlignment="Stretch" />
             </Container>
-            <Input id="dulche-adapter-specialist" Type="Select" AccessibleName="Choose a Specialist" IsVisible="{Binding SpecialistAdapterScope, fallback=false}" />
-            <Text Text="{Binding SpecialistAdapterStatus}" TextWrapping="Wrap" IsVisible="{Binding SpecialistAdapterScope, fallback=false}" Foreground="{Resource CuiTextSoftBrush}" />
-            <Container Type="Wrap" CellGap="8">
-              <Button id="dulche-adapter-attach" Content="Attach adapter" />
-              <Button id="dulche-adapter-refresh" Content="Refresh adapters" />
-              <Input id="dulche-adapters" Type="Select" Width="270" AccessibleName="Attached LoRA adapters" />
-              <Button id="dulche-adapter-detach" Content="Detach selected adapter" />
+            <Container Type="Vertical Stack" Width="170" CellGap="4">
+              <Text id="dulche-filter-quant-label" Text="Quantisation" FontSize="12" TextWrapping="Wrap" />
+              <Input id="dulche-filter-quant" Type="Text" PlaceholderText="Any quantisation" AccessibleName="Quantisation filter" HorizontalAlignment="Stretch" />
             </Container>
           </Container>
-          <Container Type="Vertical Stack" id="dulche-management" CellGap="12" IsVisible="{Binding Manage, fallback=false}" AccessibleName="Advanced model controls">
-            <Text Text="Advanced" FontSize="18" FontWeight="700" />
-            <Text id="dulche-detail" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
-            <Text id="dulche-resources" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
-            <Button id="dulche-swarm" Content="Swarm Mode" />
-            <Text Text="Find, import and transfer models" FontSize="18" FontWeight="700" />
-            <Container Type="Wrap" CellGap="6">
-              <Input id="dulche-search" Type="Text" PlaceholderText="Model name or repository" AccessibleName="Find local or downloadable models" Width="255" />
-              <Button id="dulche-find" Content="Search catalogue" />
-              <Button id="dulche-installed" Content="Installed files" />
-            </Container>
-            <Container Type="Wrap" CellGap="6">
-              <Input id="dulche-filter-architecture" Type="Text" Width="165" PlaceholderText="Architecture or family" AccessibleName="Architecture filter" />
-              <Input id="dulche-filter-size" Type="Text" Width="155" PlaceholderText="Max parameters (B)" AccessibleName="Maximum billions of parameters" />
-              <Input id="dulche-filter-capability" Type="Text" Width="175" PlaceholderText="Capability" AccessibleName="Capability filter" />
-              <Input id="dulche-filter-quant" Type="Text" Width="150" PlaceholderText="Quantisation" AccessibleName="Quantisation filter" />
-            </Container>
-            <Input id="dulche-results" Type="Select" AccessibleName="Catalogue results" />
-            <Container Type="Wrap" CellGap="6">
-              <Button id="dulche-inspect" Content="Details and files" />
-              <Input id="dulche-files" Type="Select" Width="245" AccessibleName="Repository file" />
-              <Button id="dulche-download" Content="Download selected file" />
-              <Button id="dulche-remove" Content="Uninstall selected file" />
-            </Container>
-            <Text id="dulche-catalog-detail" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
-            <Container Type="Wrap" CellGap="6">
-              <Input id="dulche-import-path" Type="Text" Width="250" PlaceholderText="Absolute file or model directory path" AccessibleName="Local model path" />
-              <Input id="dulche-import-base" Type="Text" Width="190" PlaceholderText="Base model for an adapter" AccessibleName="Adapter base model" />
-              <Button id="dulche-import" Content="Import local model" />
-            </Container>
-            <Container Type="Wrap" CellGap="6">
-              <Input id="dulche-jobs" Type="Select" Width="250" AccessibleName="Model transfers" />
-              <Button id="dulche-pause" Content="Pause transfer" />
-              <Button id="dulche-resume" Content="Resume transfer" />
-              <Button id="dulche-cancel" Content="Cancel transfer" />
-            </Container>
-            <Text Text="Inference profile" FontWeight="700" />
-            <Container Type="Wrap" CellGap="6">
-              <Input id="dulche-profiles" Type="Select" Width="220" AccessibleName="Inference profiles" />
-              <Button id="dulche-profile-select" Content="Select profile" />
-              <Input id="dulche-profile-name" Type="Text" Width="170" PlaceholderText="Profile name" AccessibleName="Profile name" />
-              <Button id="dulche-profile-save" Content="Save new profile" />
-              <Button id="dulche-profile-rename" Content="Rename profile" />
-            </Container>
-            <Container Type="Wrap" CellGap="6">
-              <Input id="dulche-profile-device" Type="Text" Width="155" PlaceholderText="GPU or CPU" AccessibleName="Profile execution device" />
-              <Input id="dulche-profile-context" Type="Text" Width="165" PlaceholderText="Context tokens" AccessibleName="Profile context length" />
-              <Button id="dulche-benchmarks" Content="Benchmark results" />
-              <Button id="dulche-benchmark-start" Content="Run local benchmark" />
-              <Button id="dulche-candidates" Content="Compare candidates" />
-              <Button id="dulche-training" Content="Training status" />
-            </Container>
-            <Input id="dulche-candidate" Type="Select" AccessibleName="Candidate checkpoints" IsVisible="{Binding CandidatesVisible, fallback=false}" />
-            <Text id="dulche-benchmark-results" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
-            <Input id="dulche-profile-settings" Type="Text" PlaceholderText="Profile settings as JSON" AccessibleName="GPU, context and inference profile settings" />
-            <Text Text="Agents" FontWeight="700" />
-            <Container Type="Wrap" CellGap="6">
-              <Input id="dulche-agents" Type="Select" Width="250" AccessibleName="Dulche agents and saved runs" />
-              <Button id="dulche-recover" Content="Open saved run" />
-              <Button id="dulche-stop" Content="Stop selected agent" />
-              <Button id="dulche-stop-all" Content="Stop all agents" />
-              <Button id="dulche-agent-resume" Content="Resume selected agent" />
-              <Button id="dulche-allow" Content="Allow new agents" />
-            </Container>
+          <Text id="dulche-results-label" Text="Results" FontSize="13" FontWeight="700" />
+          <Text id="dulche-results-status" Text="{Binding CatalogueResultsStatus}" TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+          <Input id="dulche-results" Type="Select" AccessibleName="Catalogue results" HorizontalAlignment="Stretch" IsVisible="{Binding CatalogueHasResults, fallback=false}" />
+          <Container Type="Wrap" CellGap="8">
+            <Button id="dulche-inspect" Content="Details and files" />
+            <Button id="dulche-remove" Content="Uninstall selected file" />
+          </Container>
+          <Text id="dulche-removal-status" Text="{Binding CatalogueRemovalStatus}" TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" IsVisible="{Binding CatalogueHasRemovalStatus, fallback=false}" />
+          <Text id="dulche-catalog-detail" TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+          <Text id="dulche-files-label" Text="Repository file" FontSize="13" FontWeight="700" />
+          <Text id="dulche-files-status" Text="{Binding CatalogueFilesStatus}" TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+          <Input id="dulche-files" Type="Select" HorizontalAlignment="Stretch" AccessibleName="Repository file" IsVisible="{Binding CatalogueHasFiles, fallback=false}" />
+          <Button id="dulche-download" Content="Download selected file" HorizontalAlignment="Left" />
+          <Text Text="Import from this device" FontSize="16" FontWeight="750" Margin="0 8 0 0" />
+          <Text id="dulche-import-path-label" Text="Model file or directory path" FontSize="12" TextWrapping="Wrap" />
+          <Input id="dulche-import-path" Type="Text" PlaceholderText="Absolute file or model directory path" AccessibleName="Local model path" HorizontalAlignment="Stretch" />
+          <Text id="dulche-import-base-label" Text="Base model for an adapter (optional)" FontSize="12" TextWrapping="Wrap" />
+          <Container Type="Wrap" CellGap="8">
+            <Input id="dulche-import-base" Type="Text" Width="220" PlaceholderText="Base model for an adapter" AccessibleName="Adapter base model" />
+            <Button id="dulche-import" Content="Import local model" />
+          </Container>
+          <Text Text="Transfers" FontSize="16" FontWeight="750" Margin="0 8 0 0" />
+          <Text id="dulche-transfers-status" Text="{Binding CatalogueTransfersStatus}" TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+          <Input id="dulche-jobs" Type="Select" HorizontalAlignment="Stretch" AccessibleName="Model transfers" IsVisible="{Binding CatalogueHasTransfers, fallback=false}" />
+          <Container Type="Wrap" CellGap="8">
+            <Button id="dulche-pause" Content="Pause transfer" />
+            <Button id="dulche-resume" Content="Resume transfer" />
+            <Button id="dulche-cancel" Content="Cancel transfer" />
           </Container>
         </Container>
       </Container>

@@ -2,6 +2,7 @@ using System.Runtime.ExceptionServices;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Application;
 using Haven.Desktop.Views.Shell;
 using HavenOS.Files.NativeHost;
@@ -27,6 +28,8 @@ internal sealed partial class NativeFilesDesktopRoute : IAsyncDisposable
     private readonly FilesNativeBrowserService _browser;
     private readonly FilesCompatibilityPackageOpenCoordinator? _packages;
     private readonly OriginalReadiness _readiness;
+    private readonly CuiThemePreferenceContext? _interfaceTheme;
+    private readonly Func<FilesNativeBrowserService, AuthenticatedResourceActor, IFilesNativeBoardOpenHost?>? _boardHost;
     private readonly object _sync = new();
     private Task<FilesNativeBrowserSurface>? _open;
     private Task? _close;
@@ -37,9 +40,13 @@ internal sealed partial class NativeFilesDesktopRoute : IAsyncDisposable
     private readonly List<Exception> _publicationFailures = [];
 
     private NativeFilesDesktopRoute(IServiceProvider provider, IHomeNativeStartupSession startup,
-        CancellationToken originalConnectionLifetime, CancellationToken originalWindowLifetime)
+        CancellationToken originalConnectionLifetime, CancellationToken originalWindowLifetime,
+        CuiThemePreferenceContext? interfaceTheme,
+        Func<FilesNativeBrowserService, AuthenticatedResourceActor, IFilesNativeBoardOpenHost?>? boardHost)
     {
         _originalProvider = provider; _originalStartup = startup;
+        _interfaceTheme = interfaceTheme;
+        _boardHost = boardHost;
         _originalConnectionLifetime = originalConnectionLifetime;
         _profiles = provider.GetRequiredService<HomeLocalProfileIdentity>();
         _actors = provider.GetRequiredService<IAuthenticatedResourceActorSource>();
@@ -71,7 +78,8 @@ internal sealed partial class NativeFilesDesktopRoute : IAsyncDisposable
 
     internal static NativeFilesDesktopRoute BindOriginal(IServiceProvider originalHomeProvider,
         IHomeNativeStartupSession originalWindowsStartup, CancellationToken originalConnectionLifetime,
-        CancellationToken originalWindowLifetime)
+        CancellationToken originalWindowLifetime, CuiThemePreferenceContext? interfaceTheme = null,
+        Func<FilesNativeBrowserService, AuthenticatedResourceActor, IFilesNativeBoardOpenHost?>? boardHost = null)
     {
         ArgumentNullException.ThrowIfNull(originalHomeProvider);
         ArgumentNullException.ThrowIfNull(originalWindowsStartup);
@@ -82,25 +90,28 @@ internal sealed partial class NativeFilesDesktopRoute : IAsyncDisposable
         if (!originalConnectionLifetime.CanBeCanceled || !originalWindowLifetime.CanBeCanceled)
             throw new UnauthorizedAccessException("Retain the original native connection and window lifetimes.");
         return new(originalHomeProvider, originalWindowsStartup, originalConnectionLifetime,
-            originalWindowLifetime);
+            originalWindowLifetime, interfaceTheme, boardHost);
     }
 
     // This separate factory is called only by the trusted owning App over its actual
     // Home/provider. The installed-IPC factory and its original checks are unchanged.
     internal static NativeFilesDesktopRoute BindOriginalSameProcess(IServiceProvider originalHomeProvider,
         HomeNativeWindowsComposition sameHome, CancellationToken originalAppLifetime,
-        CancellationToken originalWindowLifetime)
+        CancellationToken originalWindowLifetime, CuiThemePreferenceContext? interfaceTheme = null,
+        Func<FilesNativeBrowserService, AuthenticatedResourceActor, IFilesNativeBoardOpenHost?>? boardHost = null)
     {
         WindowsHomeSameProcessRuntimeObservation.DemandOriginalBinding(originalHomeProvider, sameHome);
         originalAppLifetime.ThrowIfCancellationRequested(); originalWindowLifetime.ThrowIfCancellationRequested();
         if (!originalAppLifetime.CanBeCanceled || !originalWindowLifetime.CanBeCanceled)
             throw new ArgumentException("Retain the actual App and native window work lifetimes.");
-        return new(originalHomeProvider, sameHome, originalAppLifetime, originalWindowLifetime);
+        return new(originalHomeProvider, sameHome, originalAppLifetime, originalWindowLifetime, interfaceTheme, boardHost);
     }
 
     private NativeFilesDesktopRoute(IServiceProvider provider, HomeNativeWindowsComposition sameHome,
-        CancellationToken originalAppLifetime, CancellationToken originalWindowLifetime)
-        : this(provider, (IHomeNativeStartupSession)null!, originalAppLifetime, originalWindowLifetime)
+        CancellationToken originalAppLifetime, CancellationToken originalWindowLifetime,
+        CuiThemePreferenceContext? interfaceTheme,
+        Func<FilesNativeBrowserService, AuthenticatedResourceActor, IFilesNativeBoardOpenHost?>? boardHost)
+        : this(provider, (IHomeNativeStartupSession)null!, originalAppLifetime, originalWindowLifetime, interfaceTheme, boardHost)
     {
         // No installed startup is fabricated. Only the distinct same-process branch
         // below can read this route's real process-owned Home runtime.
@@ -176,7 +187,8 @@ internal sealed partial class NativeFilesDesktopRoute : IAsyncDisposable
         List<Exception> cleanup = [];
         try
         {
-            candidate = new(_browser, _packages, actor, _readiness, _windowLifetime.Token);
+            candidate = new(_browser, _packages, actor, _readiness, _windowLifetime.Token,
+                interfaceTheme: _interfaceTheme, boards: _boardHost?.Invoke(_browser, actor));
             await candidate.InitializeAsync(token.Token);
             await RequireReadyAsync(token.Token);
             await candidate.RevalidateOriginalOwnerAsync(token.Token);

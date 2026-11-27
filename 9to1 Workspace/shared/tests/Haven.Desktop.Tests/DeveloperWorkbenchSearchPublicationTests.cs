@@ -1,3 +1,7 @@
+using CakeOS.Cui.Themes;
+using CakeOS.Cui;
+using CakeOS.Cui.Language;
+using Avalonia.Headless;
 using System.Reflection;
 using Avalonia;
 using Avalonia.Automation;
@@ -5,6 +9,7 @@ using Avalonia.Threading;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
+using Avalonia.Media;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
@@ -23,6 +28,229 @@ namespace HavenOS.Apps.Dev.Tests;
 // not claim original Home search admission, native frame readiness or installed acceptance.
 public sealed partial class DeveloperTaskWorkspaceServiceTests
 {
+    [AvaloniaFact]
+    public async Task Atlas_workbench_panel_switches_preserve_the_actual_source_draft_context_and_outcomes()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var f = await Fixture.CreateAsync(); DeveloperProjectWorkbenchPage? page = null;
+        try
+        {
+            page = await CreateWorkbenchPresentationControlAsync(f, token);
+            Assert.True(page.TrySetValue("DraftText", "retained source draft\nwith an unsaved change"));
+            var editor = Assert.IsType<DeveloperEditorSnapshot>(SearchPublicationField("_editor").GetValue(page));
+            var task = f.Current; var reads = f.Tools.ReadCalls; var metadataReads = f.Store.GetCalls;
+            Assert.True(page.TryGetValue("SourceTabs", out var tabs));
+            var originalTabs = Assert.IsAssignableFrom<object[]>(tabs).ToArray();
+            foreach (var command in new[] { "files", "explorer-search", "explorer-create", "explorer-files", "preview",
+                "mission", "project", "problems", "terminal", "tests", "tasks", "hide-output", "output", "find", "line-endings", "review", "code" })
+                await page.DispatchAsync("dev.layout." + command, null, token);
+            Assert.True(page.TryGetValue("DraftText", out var draft)); Assert.Equal(editor.DraftText, draft);
+            Assert.Same(editor, SearchPublicationField("_editor").GetValue(page)); Assert.Equal(task, f.Current);
+            Assert.True(page.TryGetValue("SourceTabs", out var after));
+            var afterTabs = Assert.IsAssignableFrom<object[]>(after);
+            Assert.Equal(originalTabs.Select(value => ((ICuiBindingContext)value).TryGetValue("SelectionKey", out var key) ? key : null),
+                afterTabs.Select(value => ((ICuiBindingContext)value).TryGetValue("SelectionKey", out var key) ? key : null));
+            Assert.Equal(reads, f.Tools.ReadCalls); Assert.Equal(metadataReads, f.Store.GetCalls);
+            Assert.Equal(0, f.Tools.WriteCalls); Assert.Equal(0, f.Tools.ProcessCalls);
+            Assert.True(page.HasUnsavedWork);
+            page.Deactivate();
+            Assert.False(page.TryGetValue("LayoutProjectLocation", out var withdrawn)); Assert.Null(withdrawn);
+            Assert.False(page.IsActionAvailable("dev.layout.code")); Assert.Same(editor, SearchPublicationField("_editor").GetValue(page));
+            var close = page.CloseAndDrainAsync(); await close;
+            Assert.Same(close, page.CloseAndDrainAsync()); Assert.Same(editor, SearchPublicationField("_editor").GetValue(page));
+        }
+        finally { try { if (page is not null) await page.CloseAndDrainAsync(); } finally { await f.Dev.CloseAndDrainAsync(); } }
+    }
+
+    [AvaloniaTheory]
+    [InlineData("Glow")]
+    [InlineData("Professional")]
+    public async Task Atlas_compiled_workbench_renderer_preserves_source_at_720_and_1440(string themeName)
+    {
+        // Isolated renderer evidence: the same compiled document, real page bindings, actual Dev
+        // source session and the existing synthetic tool fixture. No Ready certificate is minted;
+        // the page's production host still has SearchPublicationNoReadiness. Native activation is a
+        // separate gate. The additional loader below belongs only to this rendering test.
+        var token = TestContext.Current.CancellationToken;
+        var f = await Fixture.CreateAsync(); DeveloperProjectWorkbenchPage? page = null;
+        CuiControlLoader? loader = null; Window? window = null;
+        using var theme = new CuiThemePreferenceContext(new WorkbenchPresentationTheme(themeName));
+        try
+        {
+            f.Tools.TextValue = "namespace ExistingProject;\n\npublic static class Example\n{\n    public static string Name => \"Existing source\";\n}\n";
+            page = await CreateWorkbenchPresentationControlAsync(f, token);
+            var draft = f.Tools.TextValue.Replace("Existing source", "Unsaved draft", StringComparison.Ordinal);
+            Assert.True(page.TrySetValue("DraftText", draft));
+            var originalEditor = SearchPublicationField("_editor").GetValue(page);
+            var reads = f.Tools.ReadCalls; var metadataReads = f.Store.GetCalls;
+            var typefaces = new List<(string Requested, string Resolved, double I, double M)>();
+            loader = new CuiControlLoader(Assert.IsType<CuiControlRegistry>(SearchPublicationField("_controls").GetValue(page)));
+            loader.SetThemePreferenceContext(theme); loader.SetSurface("Dev");
+            loader.SetBindingContext(page); loader.SetActionDispatcher(page);
+            var loaded = loader.TryLoad(page.Document);
+            Assert.DoesNotContain(loaded.Diagnostics, item => item.Severity == CuiDiagnosticSeverity.Error);
+            var root = Assert.IsAssignableFrom<Control>(loaded.Root); loader.WireBindings(root);
+            window = new Window { Width = 1440, Height = 900, Content = root }; window.Show();
+            foreach (var size in new[] { new Size(1440, 900), new Size(720, 650) })
+            {
+                // Drive the owning page's normal size callback as well as the isolated viewport.
+                page.Width = size.Width; page.Height = size.Height; page.Measure(size); page.Arrange(new Rect(size));
+                window.Width = size.Width; window.Height = size.Height;
+                window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                var editor = WorkbenchControl<TextBox>(root, "dev-code-editor");
+                Assert.Equal(draft, editor.Text); Assert.True(editor.IsEffectivelyVisible);
+                var sourcePoint = editor.TranslatePoint(default, root); Assert.NotNull(sourcePoint);
+                Assert.True(editor.Bounds.Width > 250);
+                Assert.InRange(sourcePoint.Value.X, -1, root.Bounds.Width);
+                Assert.True(sourcePoint.Value.X + editor.Bounds.Width <= root.Bounds.Width + 1);
+                // This selected document is C#: it cannot use the CUI preview. Explicit Preview
+                // remains available, and the selected .cui case is covered by the real preview test.
+                Assert.False(WorkbenchControl<Control>(root, "dev-cui-designer-section").IsEffectivelyVisible);
+                Assert.Equal(size.Width >= 800, WorkbenchControl<Control>(root, "dev-explorer-section").IsEffectivelyVisible);
+                AssertWorkbenchControlInsideViewport(root, editor);
+                AssertWorkbenchEditActionsInsideViewport(root);
+                var typeface = new Typeface(editor.FontFamily, editor.FontStyle, editor.FontWeight, editor.FontStretch);
+                var glyphs = typeface.GlyphTypeface;
+                Assert.True(glyphs.CharacterToGlyphMap.TryGetGlyph('i', out var iGlyph), glyphs.FamilyName);
+                Assert.True(glyphs.CharacterToGlyphMap.TryGetGlyph('m', out var mGlyph), glyphs.FamilyName);
+                Assert.True(glyphs.TryGetHorizontalGlyphAdvance(iGlyph, out var iAdvance), glyphs.FamilyName);
+                Assert.True(glyphs.TryGetHorizontalGlyphAdvance(mGlyph, out var mAdvance), glyphs.FamilyName);
+                Assert.True(glyphs.Metrics.DesignEmHeight > 0);
+                var emScale = editor.FontSize / glyphs.Metrics.DesignEmHeight;
+                typefaces.Add((editor.FontFamily.Name, glyphs.FamilyName, iAdvance * emScale, mAdvance * emScale));
+                var output = WorkbenchControl<Control>(root, "dev-output-content");
+                Assert.False(output.IsEffectivelyVisible);
+                await page.DispatchAsync("dev.layout.output", null, token);
+                window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                Assert.True(output.IsEffectivelyVisible);
+                Assert.InRange(output.Bounds.Height, 1, size.Height == 650 ? 151 : 211);
+                var outputPoint = output.TranslatePoint(default, root); Assert.NotNull(outputPoint);
+                Assert.True(outputPoint.Value.Y + output.Bounds.Height <= root.Bounds.Height + 1);
+                AssertWorkbenchEditActionsInsideViewport(root);
+                await page.DispatchAsync("dev.layout.review", null, token);
+                window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                Assert.True(WorkbenchControl<Control>(root, "dev-editor-details").IsEffectivelyVisible);
+                AssertWorkbenchControlInsideViewport(root, editor);
+                AssertWorkbenchEditActionsInsideViewport(root);
+                Assert.Same(editor, WorkbenchControl<TextBox>(root, "dev-code-editor"));
+                Assert.Same(originalEditor, SearchPublicationField("_editor").GetValue(page));
+                Assert.Equal(draft, editor.Text);
+                await page.DispatchAsync("dev.layout.review", null, token);
+                await page.DispatchAsync("dev.layout.hide-output", null, token);
+                window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                Assert.False(output.IsEffectivelyVisible);
+                var directory = Environment.GetEnvironmentVariable("HAVEN_VISUAL_CAPTURE_DIR") ?? Environment.GetEnvironmentVariable("CUI_EVIDENCE_DIRECTORY");
+                if (!string.IsNullOrWhiteSpace(directory))
+                {
+                    Directory.CreateDirectory(directory); using var frame = window.CaptureRenderedFrame(); Assert.NotNull(frame);
+                    frame.Save(Path.Combine(directory, $"build-code-component-{themeName}-{size.Width:0}x{size.Height:0}.png"));
+                }
+            }
+            await page.DispatchAsync("dev.layout.preview", null, token);
+            window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+            Assert.True(WorkbenchControl<Control>(root, "dev-cui-designer-section").IsEffectivelyVisible);
+            Assert.True(page.TryGetValue("DraftText", out var retained)); Assert.Equal(draft, retained);
+            Assert.Equal(reads, f.Tools.ReadCalls); Assert.Equal(metadataReads, f.Store.GetCalls);
+            Assert.Equal(0, f.Tools.ProcessCalls); Assert.Equal(0, f.Tools.WriteCalls);
+            await loader.WhenActionsIdleAsync();
+            foreach (var observed in typefaces)
+                Assert.True(observed.I > 0 && Math.Abs(observed.I - observed.M) < 0.000001,
+                    $"Code editor requested '{observed.Requested}', resolved '{observed.Resolved}': i={observed.I:0.######}, m={observed.M:0.######} logical-pixel advances. The authored monospace contract requires equal advances.");
+        }
+        finally
+        {
+            loader?.Dispose(); if (window is not null) { window.Content = null; window.Close(); }
+            try { if (page is not null) await page.CloseAndDrainAsync(); } finally { await f.Dev.CloseAndDrainAsync(); }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Atlas_workbench_output_opens_for_the_original_command_and_cannot_hide_before_settlement()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var f = await Fixture.CreateAsync(); DeveloperProjectWorkbenchPage? page = null; Task? pending = null;
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        try
+        {
+            page = await CreateWorkbenchPresentationControlAsync(f, token);
+            Assert.True(page.TrySetValue("DraftText", "source retained while the exact command runs"));
+            var editor = SearchPublicationField("_editor").GetValue(page);
+            Assert.True(page.TryGetValue("LayoutOutputVisible", out var visible)); Assert.False(Assert.IsType<bool>(visible));
+            Assert.True(page.TrySetValue("Command", "echo original-owned-command"));
+            f.Owner.BeforeBody = release.Task; f.Owner.OnPrepare = () => entered.TrySetResult();
+            pending = page.DispatchAsync("dev.run-command", null, token).AsTask();
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
+            Assert.False(pending.IsCompleted); Assert.Equal(0, f.Tools.ProcessCalls);
+            Assert.True(page.TryGetValue("LayoutOutputVisible", out visible)); Assert.True(Assert.IsType<bool>(visible));
+            Assert.True(page.TryGetValue("LayoutCanHideOutput", out var canHide)); Assert.False(Assert.IsType<bool>(canHide));
+            await page.DispatchAsync("dev.layout.hide-output", null, token);
+            Assert.True(page.TryGetValue("LayoutOutputVisible", out visible)); Assert.True(Assert.IsType<bool>(visible));
+            Assert.Same(editor, SearchPublicationField("_editor").GetValue(page));
+            release.TrySetResult(); await pending;
+            Assert.Equal(1, f.Tools.ProcessCalls); Assert.Equal(0, f.Tools.WriteCalls);
+            Assert.True(page.TryGetValue("ProcessOutput", out var output)); Assert.Contains("observed", Assert.IsType<string>(output));
+            Assert.True(page.TryGetValue("LayoutOutputVisible", out visible)); Assert.True(Assert.IsType<bool>(visible));
+            Assert.True(page.TryGetValue("LayoutCanHideOutput", out canHide)); Assert.True(Assert.IsType<bool>(canHide));
+            await page.DispatchAsync("dev.layout.hide-output", null, token);
+            Assert.True(page.TryGetValue("LayoutOutputVisible", out visible)); Assert.False(Assert.IsType<bool>(visible));
+            Assert.True(page.TryGetValue("DraftText", out var retained)); Assert.Equal("source retained while the exact command runs", retained);
+        }
+        finally
+        {
+            release.TrySetResult();
+            try { if (pending is not null) await pending; }
+            finally { try { if (page is not null) await page.CloseAndDrainAsync(); } finally { await f.Dev.CloseAndDrainAsync(); } }
+        }
+    }
+
+    private static void AssertWorkbenchEditActionsInsideViewport(Control root)
+    {
+        foreach (var id in new[] { "dev-preview-edit", "dev-apply-edit", "dev-save-reviewed" })
+            AssertWorkbenchControlInsideViewport(root, WorkbenchControl<Button>(root, id));
+    }
+
+    private static void AssertWorkbenchControlInsideViewport(Control root, Control control)
+    {
+        Assert.True(control.IsEffectivelyVisible, control.Name);
+        Assert.True(control.Bounds.Width > 0 && control.Bounds.Height > 0, control.Name);
+        var point = control.TranslatePoint(default, root); Assert.NotNull(point);
+        Assert.InRange(point.Value.X, -1, root.Bounds.Width);
+        Assert.InRange(point.Value.Y, -1, root.Bounds.Height);
+        Assert.True(point.Value.X + control.Bounds.Width <= root.Bounds.Width + 1, control.Name);
+        Assert.True(point.Value.Y + control.Bounds.Height <= root.Bounds.Height + 1, control.Name);
+    }
+
+    private static async Task<DeveloperProjectWorkbenchPage> CreateWorkbenchPresentationControlAsync(Fixture f, CancellationToken token)
+    {
+        var resolved = (await f.Dev.ResolveAsync(f.Reference, token)).Value!;
+        var page = new DeveloperProjectWorkbenchPage(f.Dev, f.Tasks, resolved, f.Current.TaskId, f.Current.ExecutionId,
+            f.Current.ContextId, new SearchPublicationNoReadiness(), (_, path, cancellation) =>
+            {
+                cancellation.ThrowIfCancellationRequested(); Assert.Equal(f.Document.RelativePath, path);
+                return Task.FromResult(DeveloperOperationResult<DeveloperCodeDocument>.Success(f.Document));
+            }, () => { }, token);
+        try
+        {
+            SearchPublicationField("_active").SetValue(page, true); // Component generation only, matching this file's existing enrollment seam.
+            Assert.True(page.TrySetValue("SourcePath", f.Document.RelativePath));
+            await page.DispatchAsync("dev.open-source", null, token);
+            Assert.True(page.TryGetValue("DraftText", out var actual)); Assert.Equal(f.Tools.TextValue, actual);
+            return page;
+        }
+        catch { await page.CloseAndDrainAsync(); throw; }
+    }
+
+    private static T WorkbenchControl<T>(Control root, string id) where T : Control => Assert.Single(
+        global::Haven.Desktop.Tests.AuthoredCuiControls.Enumerate(root).OfType<T>(), control => control.Name == id || AutomationProperties.GetAutomationId(control) == id);
+
+    private sealed class WorkbenchPresentationTheme(string name) : ICuiThemePreferenceSource
+    {
+        public CuiThemePreferenceSnapshot Current { get; } = new(name, 1, "build-renderer-component", true,
+            CuiAccessibilitySettings.Default, CuiAppearance.Dark);
+        public event EventHandler? Changed { add { } remove { } }
+    }
+
     [AvaloniaFact]
     public Task Eight_late_query_refusals_do_not_leak_owner_capacity_or_change_existing_draft_selection() =>
         RefusedSearchPublication(false);
@@ -662,25 +890,43 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         }
     }
 
-    [AvaloniaFact]
-    public async Task Native_static_CUI_preview_retains_last_valid_scene_without_source_effects()
+    [AvaloniaTheory]
+    [InlineData("Glow")]
+    [InlineData("Professional")]
+    public async Task Native_static_CUI_preview_retains_last_valid_scene_without_source_effects(string themeName)
     {
+        // Keep the test body's token before native layout pumps the dispatcher. Later work
+        // continues through this captured owner, never a transient ambient TestContext.
+        var token = TestContext.Current.CancellationToken;
         Assert.SkipWhen(!OperatingSystem.IsLinux(), "The genuine optional Home/Files reader fixture requires Linux; other platforms need their owning graph.");
         var f = await Fixture.CreateAsync(); var reader = await ActualOptionalReaderFixture();
-        DeveloperProjectWorkbenchPage? page = null;
+        DeveloperProjectWorkbenchPage? page = null; Window? window = null;
+        using var theme = new CuiThemePreferenceContext(new WorkbenchPresentationTheme(themeName));
         try
         {
             const string saved = "<Cui><Page><Container Type='Vertical Stack'><Text text='compiled &amp; literal' /></Container></Page></Cui>";
-            f.Tools.TextValue = saved; page = await SearchPublicationPage(f, reader.Owner, new PreviewComponentReadiness());
-            // Real workbench artifact, registered Object and child scene. Readiness is
-            // a controlled component input, not a native frame/installation witness.
-            await page.ActivateAsync(OriginalTestBodyToken);
-            page.TrySetValue("SourcePath", "Main.cui"); await page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken);
+            f.Tools.TextValue = saved;
+            page = await SearchPublicationPage(f, reader.Owner, new PreviewComponentReadiness(), theme);
+            // Real workbench artifact, registered Object and child scene. The borrowed theme
+            // is bound before activation; controlled component readiness is unchanged and
+            // does not establish native installation, Home admission or a production frame.
+            await page.ActivateAsync(token);
+            window = new Window { Width = 1440, Height = 900, Content = page }; window.Show();
+            window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+            page.TrySetValue("SourcePath", "Main.cui"); await page.DispatchAsync("dev.open-source", null, token);
+            window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+            Assert.True(page.TryGetValue("LayoutPreviewVisible", out var automaticPreview)); Assert.True(Assert.IsType<bool>(automaticPreview));
+            Assert.True(page.TryGetValue("LayoutMainColumns", out var columns)); Assert.Equal("214 1fr 300", columns);
             var editor = SearchPublicationField("_editor").GetValue(page);
             var selection = SearchPublicationField("_editorTextSelection").GetValue(page);
+            var nativeEditor = WorkbenchControl<TextBox>(page, "dev-code-editor");
+            Assert.True(nativeEditor.TryFindResource("CuiEffectiveThemeName", out var effectiveTheme)); Assert.Equal(themeName, effectiveTheme);
+            Assert.True(nativeEditor.TryFindResource("CuiWorkspaceBrush", out var workspaceBrush));
+            window.Background = Assert.IsAssignableFrom<IBrush>(workspaceBrush);
+            var selectedTab = Assert.Single(NativeSourceTabs(page));
             var reads = f.Tools.ReadCalls; var preparations = f.Owner.PrepareCalls;
             var slot = Assert.IsType<ContentControl>(SearchPublicationField("_cuiPreviewSlot").GetValue(page));
-            await page.DispatchAsync("dev.preview-cui-draft", null, OriginalTestBodyToken);
+            await page.DispatchAsync("dev.preview-cui-draft", null, token);
             var host = Assert.IsType<CuiSceneHost>(slot.Content);
             Assert.False(host.IsHitTestVisible); Assert.Equal(CuiSceneAvailabilityState.Ready, host.Availability!.State);
             Assert.Contains(Assert.IsAssignableFrom<Control>(host.Content).GetVisualDescendants().OfType<TextBlock>(), value => value.Text == "compiled & literal");
@@ -689,15 +935,81 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
             Assert.True(page.TryGetValue("CuiDraftPreviewStatus", out var status)); Assert.Contains("Preview updated.", Assert.IsType<string>(status));
             var previewObservation = Assert.IsType<DeveloperCuiDraftPreview>(SearchPublicationField("_cuiPreviewLastValid").GetValue(page));
             Assert.Equal("Main.cui", previewObservation.RelativePath); Assert.Equal(DeveloperManualSourceEditOwner.Sha256(saved), previewObservation.SourceSha256);
+            var previewRevision = Assert.IsType<long>(SearchPublicationField("_cuiPreviewDraftRevision").GetValue(page));
             const string unsupported = "<Cui><Page><Image Source='https://example.test/not-fetched.png' /></Page></Cui>";
-            Assert.True(page.TrySetValue("DraftText", unsupported));
-            await page.DispatchAsync("dev.preview-cui-draft", null, OriginalTestBodyToken);
-            Assert.Same(host, slot.Content);
-            Assert.True(page.TryGetValue("CuiDraftPreviewDiagnostics", out var diagnostics)); Assert.Contains("DEVCP003", Assert.IsType<string>(diagnostics));
-            Assert.True(page.TryGetValue("CuiDraftPreviewStatus", out status)); Assert.Contains("out of date", Assert.IsType<string>(status));
-            Assert.True(page.TryGetValue("DraftText", out var draft)); Assert.Equal(unsupported, draft);
+            foreach (var state in new[] { "current", "last-valid" })
+            {
+                var expectedDraft = state == "current" ? saved : unsupported;
+                if (state == "last-valid")
+                {
+                    Assert.True(page.TrySetValue("DraftText", unsupported));
+                    await page.DispatchAsync("dev.preview-cui-draft", null, token);
+                    Assert.Same(host, slot.Content);
+                    Assert.True(page.TryGetValue("CuiDraftPreviewDiagnostics", out var diagnostics)); Assert.Contains("DEVCP003", Assert.IsType<string>(diagnostics));
+                    Assert.True(page.TryGetValue("CuiDraftPreviewStatus", out status));
+                    AssertPreviewEvidence(Assert.IsType<string>(status), current: false);
+                    Assert.True(page.TryGetValue("LayoutPreviewVisible", out automaticPreview)); Assert.True(Assert.IsType<bool>(automaticPreview));
+                    Assert.True(page.TryGetValue("DraftText", out var staleDraft)); Assert.Equal(unsupported, staleDraft);
+                }
+                var stateEditor = SearchPublicationField("_editor").GetValue(page);
+                var stateSelection = SearchPublicationField("_editorTextSelection").GetValue(page);
+                foreach (var size in new[] { new Size(1440, 900), new Size(720, 650) })
+                {
+                    window.Width = size.Width; window.Height = size.Height;
+                    await page.DispatchAsync("dev.layout.code", null, token);
+                    window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                    Assert.Same(nativeEditor, WorkbenchControl<TextBox>(page, "dev-code-editor"));
+                    Assert.Equal(expectedDraft, nativeEditor.Text);
+                    AssertWorkbenchControlInsideViewport(page, nativeEditor);
+                    AssertWorkbenchEditActionsInsideViewport(page);
+                    Assert.True(page.TryGetValue("LayoutMainColumns", out columns));
+                    Assert.Equal(size.Width >= 1180 ? "214 1fr 300" : "1fr", columns);
+                    Assert.Equal(size.Width >= 1180, WorkbenchControl<Control>(page, "dev-cui-designer-section").IsEffectivelyVisible);
+                    if (size.Width < 1180)
+                    {
+                        var previewAction = WorkbenchControl<Button>(page, "dev-view-preview");
+                        AssertWorkbenchControlInsideViewport(page, previewAction); Assert.True(previewAction.IsEffectivelyEnabled);
+                        await page.DispatchAsync("dev.layout.preview", null, token);
+                        window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                        Assert.False(WorkbenchControl<Control>(page, "dev-editor-section").IsVisible);
+                        Assert.DoesNotContain(nativeEditor.GetVisualAncestors(), ancestor => ReferenceEquals(ancestor, page));
+                    }
+                    var preview = WorkbenchControl<Control>(page, "dev-cui-designer-section");
+                    var update = WorkbenchControl<Button>(page, "dev-preview-cui-draft");
+                    update.BringIntoView(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                    slot.BringIntoView(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                    AssertWorkbenchControlInsideViewport(page, preview);
+                    AssertWorkbenchControlInsideViewport(preview, update);
+                    AssertWorkbenchControlInsideViewport(preview, slot);
+                    AssertWorkbenchControlInsideViewport(page, WorkbenchControl<Button>(page, "dev-view-code"));
+                    var previewStatus = Assert.Single(preview.GetVisualDescendants().OfType<TextBlock>(),
+                        value => AutomationProperties.GetName(value) == "Preview status");
+                    AssertWorkbenchControlInsideViewport(preview, previewStatus);
+                    AssertPreviewEvidence(Assert.IsType<string>(previewStatus.Text), current: state == "current");
+                    Assert.Same(host, slot.Content); Assert.Same(previewObservation, SearchPublicationField("_cuiPreviewLastValid").GetValue(page));
+                    Assert.Same(selectedTab, Assert.Single(NativeSourceTabs(page)));
+                    Assert.Same(stateEditor, SearchPublicationField("_editor").GetValue(page));
+                    Assert.Same(stateSelection, SearchPublicationField("_editorTextSelection").GetValue(page));
+                    Assert.True(page.TryGetValue("DraftText", out var retainedDraft)); Assert.Equal(expectedDraft, retainedDraft);
+                    Assert.Equal(reads, f.Tools.ReadCalls); Assert.Equal(preparations, f.Owner.PrepareCalls);
+                    Assert.Equal(0, f.Tools.WriteCalls); Assert.Equal(0, f.Tools.ProcessCalls);
+                    var directory = Environment.GetEnvironmentVariable("HAVEN_VISUAL_CAPTURE_DIR") ?? Environment.GetEnvironmentVariable("CUI_EVIDENCE_DIRECTORY");
+                    if (!string.IsNullOrWhiteSpace(directory))
+                    {
+                        Directory.CreateDirectory(directory); using var frame = window.CaptureRenderedFrame(); Assert.NotNull(frame);
+                        frame.Save(Path.Combine(directory, $"build-cui-preview-{state}-{themeName}-{size.Width:0}x{size.Height:0}.png"));
+                    }
+                    // Returning from the narrow Preview restores the same editor and its
+                    // retained write-review controls; navigation performs no source operation.
+                    await page.DispatchAsync("dev.layout.code", null, token);
+                    window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                    Assert.Same(nativeEditor, WorkbenchControl<TextBox>(page, "dev-code-editor"));
+                    AssertWorkbenchControlInsideViewport(page, nativeEditor); AssertWorkbenchEditActionsInsideViewport(page);
+                    Assert.Equal(expectedDraft, nativeEditor.Text);
+                }
+            }
             page.TrySetValue("DraftText", "<Cui><Page><Text text='next compiled draft' /></Page></Cui>");
-            await page.DispatchAsync("dev.preview-cui-draft", null, OriginalTestBodyToken);
+            await page.DispatchAsync("dev.preview-cui-draft", null, token);
             var replacement = Assert.IsType<CuiSceneHost>(slot.Content); Assert.NotSame(host, replacement);
             Assert.Contains(Assert.IsAssignableFrom<Control>(replacement.Content).GetVisualDescendants().OfType<TextBlock>(), value => value.Text == "next compiled draft");
             Assert.Equal(reads, f.Tools.ReadCalls); Assert.Equal(preparations, f.Owner.PrepareCalls);
@@ -705,11 +1017,32 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
             var scenes = Assert.IsAssignableFrom<System.Collections.IEnumerable>(SearchPublicationField("_cuiPreviewScenes").GetValue(page));
             Assert.Same(replacement, Assert.Single(scenes.Cast<object>()));
             await page.CloseAndDrainAsync(); Assert.Empty(scenes.Cast<object>());
+
+            void AssertPreviewEvidence(string value, bool current)
+            {
+                var retainedSource = $"Main.cui · draft revision {previewRevision}";
+                if (current)
+                {
+                    Assert.Contains("Preview updated.", value);
+                    Assert.Contains("Showing " + retainedSource, value);
+                    Assert.DoesNotContain("Last valid (stale)", value);
+                }
+                else
+                {
+                    Assert.Contains("This draft could not be previewed. Check the problems below.", value);
+                    Assert.Contains("Last valid (stale): " + retainedSource, value);
+                    Assert.Contains("Not a preview of the current draft.", value);
+                }
+            }
         }
         finally
         {
             try { if (page is not null) await page.CloseAndDrainAsync(); }
-            finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+            finally
+            {
+                try { if (window is not null) { window.Content = null; window.Close(); } }
+                finally { try { await f.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+            }
         }
     }
 
@@ -726,6 +1059,8 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
             page.TrySetValue("SourcePath", "Main.cui"); await page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken);
             await page.DispatchAsync("dev.preview-cui-draft", null, OriginalTestBodyToken);
             var slot = Assert.IsType<ContentControl>(SearchPublicationField("_cuiPreviewSlot").GetValue(page)); var valid = slot.Content;
+            var previewObservation = Assert.IsType<DeveloperCuiDraftPreview>(SearchPublicationField("_cuiPreviewLastValid").GetValue(page));
+            var previewRevision = Assert.IsType<long>(SearchPublicationField("_cuiPreviewDraftRevision").GetValue(page));
             page.TrySetValue("DraftText", "<Cui><Page><Text text='captured before readiness' /></Page></Cui>");
             readiness.HoldNext = true;
             pending = page.DispatchAsync("dev.preview-cui-draft", null, OriginalTestBodyToken).AsTask();
@@ -734,7 +1069,11 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
             Assert.True(page.TrySetValue("DraftText", newer)); readiness.Release.TrySetResult(); await pending;
             Assert.Same(valid, slot.Content);
             Assert.True(page.TryGetValue("DraftText", out var draft)); Assert.Equal(newer, draft);
-            Assert.True(page.TryGetValue("CuiDraftPreviewStatus", out var status)); Assert.Contains("out of date", Assert.IsType<string>(status));
+            Assert.True(page.TryGetValue("CuiDraftPreviewStatus", out var status));
+            Assert.Contains($"Last valid (stale): Main.cui · draft revision {previewRevision}", Assert.IsType<string>(status));
+            Assert.Contains("Not a preview of the current draft.", Assert.IsType<string>(status));
+            Assert.Same(previewObservation, SearchPublicationField("_cuiPreviewLastValid").GetValue(page));
+            Assert.Equal(DeveloperManualSourceEditOwner.Sha256("<Cui><Page><Text text='first valid' /></Page></Cui>"), previewObservation.SourceSha256);
             var scenes = Assert.IsAssignableFrom<System.Collections.IEnumerable>(SearchPublicationField("_cuiPreviewScenes").GetValue(page));
             Assert.Same(valid, Assert.Single(scenes.Cast<object>()));
             Assert.Equal(0, f.Tools.ProcessCalls); Assert.Equal(0, f.Tools.WriteCalls);
@@ -974,7 +1313,8 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     private static string NativeTabGroup(object tab) => Assert.IsType<string>(tab.GetType().GetField("GroupId")!.GetValue(tab));
     private static string NativeTabPath(object tab) => Assert.IsType<string>(tab.GetType().GetProperty("Path")!.GetValue(tab));
 
-    private static async Task<DeveloperProjectWorkbenchPage> SearchPublicationPage(Fixture fixture, DeveloperManualSourceReadOwner reader, ICuiSceneReadiness? componentReadiness = null)
+    private static async Task<DeveloperProjectWorkbenchPage> SearchPublicationPage(Fixture fixture, DeveloperManualSourceReadOwner reader,
+        ICuiSceneReadiness? componentReadiness = null, CuiThemePreferenceContext? componentTheme = null)
     {
         var resolved = (await fixture.Dev.ResolveAsync(fixture.Reference)).Value!;
         var documents = new Dictionary<string, DeveloperCodeDocument>(StringComparer.Ordinal);
@@ -986,12 +1326,10 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         }
         Func<DeveloperResolvedProject, string, CancellationToken, Task<DeveloperOperationResult<DeveloperCodeDocument>>> resolver =
             (_, path, _) => Task.FromResult(DeveloperOperationResult<DeveloperCodeDocument>.Success(ResolveDocument(path)));
-        var ctor = typeof(DeveloperProjectWorkbenchPage).GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)
-            .Single(value => value.GetParameters().Length == 15 && value.GetParameters()[11].ParameterType == typeof(DeveloperManualSourceReadOwner)
-                && value.GetParameters()[14].ParameterType == typeof(DeveloperTaskDraftRecoveryOwner));
-        var page = (DeveloperProjectWorkbenchPage)ctor.Invoke([fixture.Dev, fixture.Tasks, resolved,
+        var page = new DeveloperProjectWorkbenchPage(fixture.Dev, fixture.Tasks, resolved,
             fixture.Current.TaskId, fixture.Current.ExecutionId, fixture.Current.ContextId, componentReadiness ?? new SearchPublicationNoReadiness(), resolver,
-            (Action)(() => { }), OriginalTestBodyToken, null, reader, null, null, null]);
+            () => { }, OriginalTestBodyToken, retainOriginalAcquisition: null, sourceExplorerReader: reader);
+        page.BindInterfaceTheme(componentTheme); // Borrow before this helper's existing enrollment and the real host Show.
         SearchPublicationField("_active").SetValue(page, true); // component admission only, not a native frame witness
         return page;
     }

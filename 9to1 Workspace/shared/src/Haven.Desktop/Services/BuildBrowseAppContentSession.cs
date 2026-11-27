@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Threading;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Views.Pages.Development;
@@ -52,18 +53,39 @@ internal sealed class BuildBrowseAppContentSession : IBrowseNativeAppContentSess
     private DeveloperSavedProjectsPage? _landing;
     private volatile bool _published, _closing, _workbenchMode;
 
+    private readonly CuiThemePreferenceContext? _interfaceTheme;
+    private readonly BuildProjectStartPreferences? _startPreferences;
+
     internal BuildBrowseAppContentSession(BrowseAppContentRequest request, BuildBrowseAppContentAddress location,
         IDeveloperWorkspaceStore workspaces, DeveloperTaskWorkspaceService development,
         TaskExecutionCoordinator canonical, DeveloperProjectWorkbenchPageFactory factory,
         SpaceRegistry spaces, SpaceDevelopmentReferenceCatalog catalog,
-        CancellationTokenSource lifetime, Func<BrowseNavigationIntent, Task, bool>? queueNavigation)
+        CancellationTokenSource lifetime, Func<BrowseNavigationIntent, Task, bool>? queueNavigation,
+        CuiThemePreferenceContext? interfaceTheme = null, IVersionedSettingsStore? startSettings = null)
     {
         _request = request; _location = location;
         _workspaces = workspaces; _development = development; _canonical = canonical; _factory = factory;
         _spaces = spaces ?? throw new ArgumentNullException(nameof(spaces));
         _catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
         _queueNavigation = queueNavigation;
+        _interfaceTheme = interfaceTheme;
         _lifetime = lifetime; _token = lifetime.Token;
+        _startPreferences = startSettings is null ? null : new BuildProjectStartPreferences(
+            startSettings, request.ProfileId, RevalidateStartPreferencesAsync);
+    }
+
+    // Settings reads and final guarded commits may resume off the UI thread. The SAME
+    // borrowed route still owns every actual profile/readiness check and its settlement.
+    private Task RevalidateStartPreferencesAsync(CancellationToken token)
+    {
+        async Task RevalidateOnUiAsync()
+        {
+            DemandAlive(); token.ThrowIfCancellationRequested();
+            await Borrowed.RevalidateOriginalAppContentAsync(_request.ProfileId, token);
+            DemandAlive(); token.ThrowIfCancellationRequested();
+        }
+        return Dispatcher.UIThread.CheckAccess() ? RevalidateOnUiAsync()
+            : Dispatcher.UIThread.InvokeAsync<Task>(RevalidateOnUiAsync).GetTask().Unwrap();
     }
 
     /// <summary>Attaches the borrowed native route resources LAST, after session construction. This
@@ -204,6 +226,8 @@ internal sealed class BuildBrowseAppContentSession : IBrowseNativeAppContentSess
                 throw new InvalidOperationException("The SAME Build landing page was not retained before publication.");
             await Borrowed.RevalidateOriginalAppContentAsync(_request.ProfileId, token);
             _view.Child = landing;
+            landing.BindInterfaceTheme(_interfaceTheme);
+            if (_startPreferences is { } preferences) landing.ConfigureStartPreferences(preferences);
             await landing.ActivateAsync(token);
             await Borrowed.RevalidateOriginalAppContentAsync(_request.ProfileId, token);
             DemandAlive(); token.ThrowIfCancellationRequested();
@@ -235,7 +259,7 @@ internal sealed class BuildBrowseAppContentSession : IBrowseNativeAppContentSess
     /// Task/Run/context. EVERY acquired candidate (including one that fails activation) is retained
     /// as an owner and drained at close; the published live page is set only after successful
     /// activation and the visible swap, so a failed activation keeps the prior usable landing.</summary>
-    private async Task AcquireWorkbenchAsync(DeveloperResolvedProject resolved, TaskExecutionSnapshot snapshot, CancellationToken token)
+    private async Task<DeveloperProjectWorkbenchPage> AcquireWorkbenchAsync(DeveloperResolvedProject resolved, TaskExecutionSnapshot snapshot, CancellationToken token)
     {
         var readiness = Borrowed.BorrowOriginalHomeReadiness();
         DeveloperProjectWorkbenchPage? retained = null;
@@ -250,6 +274,7 @@ internal sealed class BuildBrowseAppContentSession : IBrowseNativeAppContentSess
             token);
         if (!ReferenceEquals(retained, page))
             throw new InvalidOperationException("The SAME Build workbench page was not retained before publication.");
+        page.BindInterfaceTheme(_interfaceTheme);
         await page.ActivateAsync(token);
         await Borrowed.RevalidateOriginalAppContentAsync(_request.ProfileId, token);
         DemandAlive(); token.ThrowIfCancellationRequested();
@@ -258,6 +283,7 @@ internal sealed class BuildBrowseAppContentSession : IBrowseNativeAppContentSess
         lock (_gate) _page = page; // Published only after successful activation/swap.
         _published = true;
         CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { StateChanged?.Invoke(this, EventArgs.Empty); return true; });
+        return page;
     }
 
     private void RetainWorkbench(DeveloperProjectWorkbenchPage page)
@@ -291,8 +317,13 @@ internal sealed class BuildBrowseAppContentSession : IBrowseNativeAppContentSess
 
         // Swap to the real workbench only after successful activation. Deactivate the picker here;
         // its full retirement happens at session close (never from inside its own callback).
-        await AcquireWorkbenchAsync(view.Project, snapshot, token);
-        if (_landing is { } landing) landing.Deactivate();
+        var openedPage = await AcquireWorkbenchAsync(view.Project, snapshot, token);
+        try
+        {
+            await RecordSuccessfulOpenAsync(BuildProjectStartIdentity.ForTask(
+                view.Space.Id, view.ContextReferenceId, view.Link.Project), openedPage, token);
+        }
+        finally { if (_landing is { } landing) landing.Deactivate(); }
     }
 
     /// <summary>Manual (no-AI) open of a normally saved project. It resolves the REAL workspace-
@@ -318,14 +349,36 @@ internal sealed class BuildBrowseAppContentSession : IBrowseNativeAppContentSess
         var resolved = await ResolveAsync(reference, token);
         DemandAlive(); token.ThrowIfCancellationRequested();
         await Borrowed.RevalidateOriginalAppContentAsync(_request.ProfileId, token);
-        await AcquireManualWorkbenchAsync(resolved, token, template);
-        if (_landing is { } landing) landing.Deactivate();
+        var openedPage = await AcquireManualWorkbenchAsync(resolved, token, template);
+        try { await RecordSuccessfulOpenAsync(BuildProjectStartIdentity.ForManual(reference), openedPage, token); }
+        finally { if (_landing is { } landing) landing.Deactivate(); }
+    }
+
+    private async Task RecordSuccessfulOpenAsync(BuildProjectStartIdentity identity,
+        DeveloperProjectWorkbenchPage openedPage, CancellationToken token)
+    {
+        if (_startPreferences is null) return;
+        try { await _startPreferences.RecordOpenedAsync(identity, token); }
+        catch (OperationCanceledException) { throw; }
+        catch (Exception error)
+        {
+            // Acquisition already succeeded. Keep the published workbench and retain the
+            // metadata failure in the originating action; never repeat an open or CREATE.
+            const string message = "The project opened, but its Recent entry could not be saved.";
+            if (ReferenceEquals(_page, openedPage) && IsPublicationCurrent)
+            {
+                try { await openedPage.ReportOpenedMetadataFailureAsync(message + " " + error.Message); }
+                catch (Exception publicationError)
+                { throw new AggregateException(message, error, publicationError); }
+            }
+            throw new InvalidOperationException(message, error);
+        }
     }
 
     /// <summary>Acquires the SAME compiled-CUI workbench in manual mode for the exact resolved saved
     /// project. Every acquired candidate (including a failed activation) is retained and drained at
     /// close; the published live page is set only after successful activation and swap.</summary>
-    private async Task AcquireManualWorkbenchAsync(DeveloperResolvedProject resolved, CancellationToken token,
+    private async Task<DeveloperProjectWorkbenchPage> AcquireManualWorkbenchAsync(DeveloperResolvedProject resolved, CancellationToken token,
         DeveloperProjectTemplateMaterialization? template = null)
     {
         var readiness = Borrowed.BorrowOriginalHomeReadiness();
@@ -341,6 +394,7 @@ internal sealed class BuildBrowseAppContentSession : IBrowseNativeAppContentSess
             token);
         if (!ReferenceEquals(retained, page))
             throw new InvalidOperationException("The SAME Build manual workbench page was not retained before publication.");
+        page.BindInterfaceTheme(_interfaceTheme);
         await page.ActivateAsync(token);
         if (template is not null)
         {
@@ -360,6 +414,7 @@ internal sealed class BuildBrowseAppContentSession : IBrowseNativeAppContentSess
         lock (_gate) _page = page;
         _published = true;
         CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { StateChanged?.Invoke(this, EventArgs.Empty); return true; });
+        return page;
     }
 
     internal Task OpenExistingManualTemplateProjectAsync(DeveloperProjectReference reference,

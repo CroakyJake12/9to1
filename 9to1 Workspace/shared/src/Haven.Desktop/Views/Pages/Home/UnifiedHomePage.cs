@@ -34,6 +34,9 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
     private readonly Func<HomeEventsDestinationPage>? _createEvents;
     private readonly Func<HomeSettingsDestinationPage>? _createSettings;
     private readonly Func<HomeLibraryDestinationPage>? _createLibrary;
+    private readonly Func<HomeExploreDestinationPage>? _createExplore;
+    private readonly Func<HomeSpecialistsDestinationPage>? _createSpecialists;
+    private readonly HomeSavedModelPreferences? _savedModels;
     private readonly Func<BrowseNavigationIntent, Task, bool> _queue;
     private readonly Func<string, CancellationToken, Task<AppContentAddress>> _prepareAiDraft;
     private readonly bool _aiAvailable;
@@ -64,6 +67,8 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
     private HomeEventsDestinationPage? _events;
     private HomeSettingsDestinationPage? _settings;
     private HomeLibraryDestinationPage? _library;
+    private HomeExploreDestinationPage? _explore;
+    private HomeSpecialistsDestinationPage? _specialists;
     private Control? _appsView;
     private string _section;
     private string _settingsReturnSection = "apps";
@@ -83,17 +88,23 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         Func<HomeLibraryDestinationPage>? createLibrary = null,
         NewTabLayoutPreferences? newTabLayout = null, NewTabWidgetSources? newTabWidgets = null,
         bool assistantsAvailable = false, Func<ModeDefinition, bool>? shortcutAppAvailable = null,
-        CuiThemePreferenceContext? interfaceTheme = null)
+        CuiThemePreferenceContext? interfaceTheme = null, IPinRepository? appPins = null,
+        HomeAppHubPreferences? appHubs = null, Func<CancellationToken, Task>? admitAppChange = null,
+        Func<HomeExploreDestinationPage>? createExplore = null, Func<HomeSpecialistsDestinationPage>? createSpecialists = null,
+        HomeSavedModelPreferences? savedModels = null)
     {
         Dispatcher.UIThread.VerifyAccess();
         _request = request; _modes = modes; _createDashboard = createDashboard;
         _createDiscover = createDiscover; _queue = queue; _createEvents = createEvents; _createSettings = createSettings; _createLibrary = createLibrary; _prepareAiDraft = prepareAiDraft; _aiAvailable = aiAvailable;
+        _createExplore = createExplore; _createSpecialists = createSpecialists;
+        _savedModels = savedModels;
         _section = request.Address.Authority switch
         {
             "newtab" => "newtab",
             "home" when HomeSettingsCatalog.IsSettingsAddress(request.Address) => "settings",
+            "home" when request.Address.ResourceSegments.SequenceEqual(new[] { "hubs", "customise" }) => "hubs-customise",
             _ when request.Address.ResourceSegments.Count == 1 &&
-                request.Address.ResourceSegments[0] is "dashboard" or "models" or "events" or "library" => request.Address.ResourceSegments[0],
+                request.Address.ResourceSegments[0] is "dashboard" or "models" or "events" or "library" or "hubs" or "explore" or "specialists" => request.Address.ResourceSegments[0],
             _ => "apps"
         };
         if (_section == "newtab")
@@ -111,9 +122,11 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         // register each other's targets. The loader is ( after the bindings exist so the coordinator
         // can be captured. All brand observations are retired before loader teardown (see StopAsync).
         _appsLoader = CreateHomeInterfaceLoader(_appsBindings);
+        RegisterHomeApps(appPins, appHubs, admitAppChange);
         _assistantsAvailable = assistantsAvailable;
         _shortcutAppAvailable = shortcutAppAvailable;
-        _railBindings = new(() => _section, _createSettings is not null, _createLibrary is not null, _assistantsAvailable);
+        _railBindings = new(() => _section, _createSettings is not null, _createLibrary is not null, _assistantsAvailable,
+            _createExplore is not null, _createSpecialists is not null);
         using var stream = typeof(UnifiedHomePage).Assembly.GetManifestResourceStream("Haven.Desktop.Home.Unified.cui")
             ?? throw new InvalidDataException("The shared Home document is missing.");
         using var reader = new StreamReader(stream);
@@ -165,11 +178,18 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
     internal Task? OriginalInitialization => _initialization;
     internal Task? OriginalClose => _work.OriginalClose;
     internal bool IsAlive => !_work.IsRetiring && !_stopping;
-    internal string? SettingsTitle => _section == "settings" ? _settings?.CategoryTitle : null;
-    internal event EventHandler? SettingsTitleChanged;
+    // The host tab describes the admitted visible destination, not a second navigation owner.
+    internal string TabTitle => _section switch
+    {
+        "models" => _discover?.PageTitle ?? "Discover",
+        "settings" => _settings?.CategoryTitle ?? "Settings",
+        _ => HeadingFor(_section)
+    };
+    internal event EventHandler? TabTitleChanged;
     internal Task WhenActionsIdleAsync() => Task.WhenAll(
         _loader.WhenActionsIdleAsync(), _appsLoader.WhenActionsIdleAsync(),
-        WhenNewTabCustomisationActionsIdleAsync(), WhenWidgetActionsIdleAsync(), WhenShortcutPickerActionsIdleAsync(), _shortcutReorderAction, _shortcutContextAction);
+        WhenNewTabCustomisationActionsIdleAsync(), WhenWidgetActionsIdleAsync(), WhenShortcutPickerActionsIdleAsync(),
+        WhenHubActionsIdleAsync(), _shortcutReorderAction, _shortcutContextAction, _appPinAction);
 
     internal Task InitializeAsync(CancellationToken cancellationToken)
     {
@@ -187,9 +207,14 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         command.StartsWith(NewTabCustomisationPrefix, StringComparison.Ordinal) ? NewTabCustomisationActionAvailable(command) :
         command.StartsWith(NewTabShortcutPrefix, StringComparison.Ordinal) ? NewTabShortcutActionAvailable(command) :
         command.StartsWith(widgetActionPrefix, StringComparison.Ordinal) ? IsNewTabWidgetActionAvailable(command) :
+        command == "home.manage-apps" ? _createSettings is not null && (_section is "apps" or "hubs" or "hubs-customise") :
+        _appsBindings.IsActionAvailable(command) is { } appAction
+            ? (_section is "apps" or "hubs" or "hubs-customise") && appAction :
         command == "home.events"
         ? _createEvents is not null : command is "home.settings" or "home.account" ? _createSettings is not null :
         command == "home.library" ? _createLibrary is not null :
+        command == "home.explore" ? _createExplore is not null :
+        command == "home.specialists" ? _createSpecialists is not null :
         command == "home.assistants" ? _assistantsAvailable :
         command == "home.ask-ai" ? _aiAvailable && _section == "newtab" : command is
         "home.apps" or "home.dashboard" or "home.models" or "home.newtab" or "home.submit" or
@@ -217,10 +242,13 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
                 case "home.apps" when _request.Address == DashboardAddress:
                     Queue(AppContentAddress.Parse("browse://home"), original);
                     break;
+                case "home.apps" when _request.Address.ResourceSegments.FirstOrDefault() == "hubs":
+                    Queue(AppContentAddress.Parse("browse://home"), original, newTab: false);
+                    break;
                 case "home.models" when _request.Address == DashboardAddress:
                     Queue(AppContentAddress.Parse("browse://home/models"), original);
                     break;
-                case "home.apps": case "home.models":
+                case "home.apps": case "home.models": case "home.explore": case "home.specialists":
                     await SelectAsync(command[5..], original, linked.Token); break;
                 case "home.events":
                     if (_createEvents is null) throw new InvalidOperationException("The Home Events source is unavailable.");
@@ -251,10 +279,19 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
                 case "home.ask-ai": await AskAiAsync(original, linked.Token); break;
                 case "home.open-app":
                     if (TryResolveAppRoute(parameter as string, out var appAddress)) Queue(appAddress, original);
-                    else UpdateAppsState("That app is no longer in this profile. Open it again from the current list.");
+                    else UpdateAppsState("That exact app cannot be opened in this profile. Choose an available app from the current list.");
                     break;
                 case "home.set-app-query": SetAppsQuery(parameter as string); break;
                 case "home.clear-app-query": SetAppsQuery(string.Empty); break;
+                case "home.app-filters": OpenAppFilters(); break;
+                case "home.app-filter": await SetAppFilterAsync(parameter as string, original, linked.Token); break;
+                case "home.app-pin": await ChangeAppPinAsync(parameter as string, null, original, linked.Token); break;
+                case "home.app-move-earlier": await ChangeAppPinAsync(parameter as string, -1, original, linked.Token); break;
+                case "home.app-move-later": await ChangeAppPinAsync(parameter as string, 1, original, linked.Token); break;
+                case "home.manage-apps": Queue(AppContentAddress.Parse("browse://home/settings/settings-apps"), original); break;
+                case "home.explore-hubs": await ShowHomeHubsAsync(original, linked.Token); break;
+                case var _ when HomeAppsCuiBindings.IsHubCommand(command):
+                    await DispatchHomeHubCommandAsync(command, parameter, original, linked.Token); break;
                 case "home.mesh": Queue(AppContentAddress.Parse("9to1://mesh"), original); break;
                 default: Queue(AppContentAddress.Parse("9to1://home/" + command[5..]), original); break;
             }
@@ -264,6 +301,8 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
     private static string HeadingFor(string section) => section switch
     {
         "newtab" => "New Tab", "models" => "Models", "dashboard" => "Dashboard",
+        "hubs" => "Hubs", "hubs-customise" => "Your arrangement",
+        "explore" => "Explore", "specialists" => "Specialists",
         "events" => "Events", "settings" => "Settings", "library" => "Library", _ => "Apps"
     };
 
@@ -278,9 +317,9 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         // publication must not leave the prior section deactivated, its search row hidden or its
         // heading relabelled: the page stays exactly as it was, with the real diagnostic reported.
         Control? prepared = null;
-        if (section == "apps")
+        if (section is "apps" or "hubs" or "hubs-customise")
         {
-            try { prepared = _appsView ??= BuildAppsView(); }
+            try { prepared = _appsView ??= BuildAppsView(section); }
             catch (Exception failure)
             {
                 Set(_status, "Text", "The Apps launcher could not be published: " + failure.Message);
@@ -340,11 +379,32 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
             if (!original.IsAcceptedPublicationCurrent) return;
             prepared = library;
         }
+        if (section == "explore")
+        {
+            if (_explore is null)
+                original.RunAcceptedPublicationCallback(() => _explore = (_createExplore
+                    ?? throw new InvalidOperationException("The Home Explore owner is unavailable."))());
+            if (!original.IsAcceptedPublicationCurrent) return;
+            await original.AwaitAsync(_explore!.ActivateAsync(token));
+            if (!original.IsAcceptedPublicationCurrent) return;
+            prepared = _explore;
+        }
+        if (section == "specialists")
+        {
+            if (_specialists is null)
+                original.RunAcceptedPublicationCallback(() => _specialists = (_createSpecialists
+                    ?? throw new InvalidOperationException("The Home Specialists owner is unavailable."))());
+            if (!original.IsAcceptedPublicationCurrent) return;
+            await original.AwaitAsync(_specialists!.ActivateAsync(token));
+            if (!original.IsAcceptedPublicationCurrent) return;
+            prepared = _specialists;
+        }
         _dashboard?.Deactivate(); _discover?.Deactivate();
         if (section != "events") _events?.Deactivate();
         if (section != "settings") _settings?.Deactivate();
         if (section != "library") _library?.Deactivate();
-        var settingsVisibilityChanged = (_section == "settings") != (section == "settings");
+        if (section != "explore") _explore?.Deactivate();
+        if (section != "specialists") _specialists?.Deactivate();
         _section = section;
         if (section != "newtab")
         {
@@ -363,25 +423,32 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         UpdateHeaderVisibilityForDashboardBriefing();
         Set(_status, "IsVisible", section != "settings");
         Set(_status, "Text", string.Empty);
-        if (settingsVisibilityChanged) SettingsTitleChanged?.Invoke(this, EventArgs.Empty);
-        if (section == "apps")
+        if (section is "apps" or "hubs" or "hubs-customise")
         {
             _viewport.Child = prepared!;
             var modes = await original.AwaitAsync(_modes.GetModesAsync(token));
             if (!IsAlive || generation != _selection) return;
             original.DemandPublication();
-            // Canonical catalogue ownership: only enabled modes the shared route policy still admits
-            // as standalone applications are projected, each with its registered identity, name and
-            // icon key. Obsolete standalone identities stay resolvable through the route policy and
-            // are never deleted here.
-            _appsCatalogue = modes.Where(mode => mode.IsEnabled && !HavenAppRoutePolicy.IsDeprecatedStandalone(mode))
+            // The installed catalogue and actual native route availability are separate facts.
+            // Disabled/unsupported entries stay visible with their exact identity and reason.
+            _appsCatalogue = modes.Where(HomeAppHubCatalogue.IsAppRecord)
                 .OrderBy(mode => mode.Name, StringComparer.OrdinalIgnoreCase)
-                .Select(mode => new HomeAppItem(mode.Key, mode.Name, mode.Description, mode.IconKey,
-                    CanonicalId: mode.Id, Source: mode.Source))
+                .Select(mode =>
+                {
+                    var nativeAvailable = _shortcutAppAvailable?.Invoke(mode) ?? true;
+                    return new HomeAppItem(mode.Key, mode.Name, mode.Description, mode.IconKey,
+                        CanonicalId: mode.Id, Source: mode.Source,
+                        IsAvailable: mode.IsEnabled && nativeAvailable,
+                        AvailabilityNote: !mode.IsEnabled ? "Disabled in this profile." :
+                            !nativeAvailable ? "This app has no available native workspace." : string.Empty,
+                        InstallState: mode.InstallState);
+                })
                 .ToArray();
+            await ReadAppPresentationAsync(original, token);
+            if (!original.IsAcceptedPublicationCurrent) return;
             UpdateAppsState();
         }
-        else if (section is "events" or "settings" or "library")
+        else if (section is "events" or "settings" or "library" or "explore" or "specialists")
         {
             _viewport.Child = prepared!;
         }
@@ -401,7 +468,10 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
                 original.RunAcceptedPublicationCallback(() =>
                 {
                     _discover = _createDiscover();
+                    _discover.BindOriginalAdmission(_admitAppChange);
+                    _discover.BindSavedModels(_savedModels);
                     _discover.ManageProvidersRequested += OnManageProviders;
+                    _discover.PageTitleChanged += OnDiscoverTitleChanged;
                 });
             }
             if (!original.IsAcceptedPublicationCurrent) return;
@@ -420,7 +490,7 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
                     _dashboard.ManageAppsRequested += OnManageApps;
                     _dashboard.DiscoverRequested += OnDiscover;
                     _dashboard.ConversationRequested += OnConversation;
-                    _dashboard.ConfigureHomeBriefingLibrary(_createLibrary is not null);
+                    _dashboard.ConfigureHomeBriefingLibrary(_createLibrary);
                     _dashboard.BriefingDestinationRequested += OnDashboardBriefingDestination;
                     _dashboard.HomeBriefingVisibilityChanged += OnDashboardBriefingVisibilityChanged;
                 });
@@ -432,10 +502,14 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         }
         if (!IsAlive || generation != _selection) return;
         original.DemandPublication();
+        // Publish only after the selected destination has settled under its current generation.
+        TabTitleChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    private void OnSettingsCategoryChanged(object? sender, EventArgs args) =>
-        SettingsTitleChanged?.Invoke(this, EventArgs.Empty);
+    private void OnSettingsCategoryChanged(object? sender, EventArgs args)
+    {
+        if (IsAlive && _section == "settings") TabTitleChanged?.Invoke(this, EventArgs.Empty);
+    }
 
     private Task OpenDashboardAsync(DesktopOriginalWorkLifetime.Original original, CancellationToken token,
         string? focusRailButton = null)
@@ -484,9 +558,9 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         }, DispatcherPriority.Loaded);
     }
 
-    private Control BuildAppsView()
+    private Control BuildAppsView(string section)
     {
-        var document = HomeAppsCuiDocument.Parse();
+        var document = HomeAppsCuiDocument.Parse(section);
         // The authored launcher is rendered from the document itself. The search field, the wrapped
         // icon tiles and the empty states are CUI elements bound through HomeAppsCuiBindings, so no
         // legacy list control is substituted for the authored surface. The loader owns a bounded
@@ -499,6 +573,7 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
                 loaded.Diagnostics.Where(item => item.Severity == CuiDiagnosticSeverity.Error)
                     .Select(item => item.Code + " " + item.Message)));
         _appsLoader.WireBindings(loaded.Root);
+        ObserveAppsSurface(loaded.Root);
         return loaded.Root;
     }
 
@@ -521,6 +596,7 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
             launcher,
             group,
             groupVisible);
+        ApplyAppPresentation();
         _appsBindings.Refresh();
     }
 
@@ -544,15 +620,19 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
     {
         address = AppContentAddress.Parse("9to1://home/apps");
         if (string.IsNullOrWhiteSpace(key)) return false;
-        var app = _appsCatalogue.FirstOrDefault(entry => entry.Key.Equals(key, StringComparison.OrdinalIgnoreCase));
-        if (app is null) return false;
+        var identified = key.StartsWith("mode:", StringComparison.Ordinal) || key.StartsWith("catalogue:", StringComparison.Ordinal);
+        var matches = _appsCatalogue.Where(entry => identified
+            ? entry.StableIdentity == key : entry.Key.Equals(key, StringComparison.OrdinalIgnoreCase)).Take(2).ToArray();
+        if (matches is not [{ IsAvailable: true, IsInstalled: true } app] ||
+            _appsCatalogue.Any(entry => entry.Key.Equals(app.Key, StringComparison.OrdinalIgnoreCase) &&
+                entry.StableIdentity != app.StableIdentity)) return false;
         // Real Chat is owned by the canonical Spaces Chat space; canonicalize before strict native
         // admission so the registered Spaces owner receives the resource. Other apps keep their plain route.
         address = HomeLaunchRouteResolver.Resolve(app.Key);
         return true;
     }
     private void UpdateHeaderVisibilityForDashboardBriefing() =>
-        Set(_heading, "IsVisible", _section is not ("settings" or "newtab" or "events") &&
+        Set(_heading, "IsVisible", _section is not ("settings" or "newtab" or "events" or "library" or "apps" or "hubs" or "hubs-customise" or "explore" or "specialists" or "models") &&
             (_section != "dashboard" || _dashboard?.ShowsHomeBriefing != true));
 
     private void OnDashboardBriefingVisibilityChanged(object? sender, EventArgs args)
@@ -582,8 +662,10 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
     private void OnConversation(object? sender, Conversation conversation) =>
         StartNavigation(AppContentAddress.Parse($"9to1://spaces/chat/{conversation.Id:D}"));
     private void OnManageProviders(object? sender, EventArgs args) => StartNavigation(AppContentAddress.Parse("browse://home/settings/settings-providers"));
+    private void OnDiscoverTitleChanged(object? sender, EventArgs args)
+    { if (_section == "models" && IsAlive) TabTitleChanged?.Invoke(this, EventArgs.Empty); }
     private void OnManageApps(object? sender, EventArgs args) =>
-        StartNavigation(AppContentAddress.Parse("browse://home"));
+        StartNavigation(AppContentAddress.Parse("browse://home/settings/settings-apps"));
     private void OnDiscover(object? sender, EventArgs args) =>
         StartNavigation(AppContentAddress.Parse("browse://home/models"));
     private void StartNavigation(AppContentAddress address)
@@ -614,6 +696,7 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         if (_interfaceScale == scale) return;
         _interfaceScale = scale;
         RefreshInterfaceViewport(Bounds.Width);
+        if (_observedAppsSurface is { } appsSurface) RefreshAppsViewport(appsSurface.Bounds.Width);
         if (_newTabShortcuts is { } shortcuts) RefreshNewTabShortcutViewport(shortcuts.Bounds.Width);
         if (_widgetPickerOpen) ApplyPickerSize();
         if (_newTabWidgetSources is not null) PublishNewTabWidgets();
@@ -626,7 +709,11 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
 
     private double InterfaceWidth(double width) => CuiInterfaceScale.LogicalWidth(width, _interfaceScale);
 
-    private void RefreshInterfaceViewport(double width) => _railBindings.SetViewportWidth(InterfaceWidth(width));
+    private void RefreshInterfaceViewport(double width)
+    {
+        _railBindings.SetViewportWidth(InterfaceWidth(width));
+        if (_appsView is { } apps) RefreshAppsViewport(apps.Bounds.Width);
+    }
 
     private void OnNewTabClockTick(object? sender, EventArgs args) => RefreshNewTabClock();
 
@@ -816,6 +903,8 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
             if (_discover is not null && !await original.AwaitAsync(_discover.TryPrepareToCloseAsync(linked.Token))) return false;
             if (_events is not null && !await original.AwaitAsync(_events.TryPrepareToCloseAsync(linked.Token))) return false;
             if (_settings is not null && !await original.AwaitAsync(_settings.TryPrepareToCloseAsync(linked.Token))) return false;
+            if (_explore is not null && !await original.AwaitAsync(_explore.TryPrepareToCloseAsync(linked.Token))) return false;
+            if (_specialists is not null && !await original.AwaitAsync(_specialists.TryPrepareToCloseAsync(linked.Token))) return false;
             return _library is null || await original.AwaitAsync(_library.TryPrepareToCloseAsync(linked.Token));
         });
         start.SetResult(); return _preparation;
@@ -842,6 +931,7 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         Attempt(_keyboardTooltips.Dispose);
         Attempt(() => _interfaceScaleObservation?.Dispose());
         Attempt(_appsBindings.RetireAppearanceObservation);
+        Attempt(StopHomeApps);
         Attempt(StopNewTabCustomisation);
         Attempt(StopNewTabShortcutPicker);
         Attempt(StopNewTabShortcutContextMenu);
@@ -858,6 +948,8 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
             Acquire(_settings.CloseAndDrainAsync);
         }
         if (_library is not null) Acquire(_library.CloseAndDrainAsync);
+        if (_explore is not null) Acquire(_explore.CloseAndDrainAsync);
+        if (_specialists is not null) Acquire(_specialists.CloseAndDrainAsync);
         Acquire(_loader.WhenActionsIdleAsync); Acquire(_appsLoader.WhenActionsIdleAsync);
         Acquire(WhenNewTabCustomisationActionsIdleAsync); Acquire(WhenWidgetActionsIdleAsync);
         Acquire(WhenShortcutPickerActionsIdleAsync);
@@ -886,7 +978,11 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
             _dashboard.BriefingDestinationRequested -= OnDashboardBriefingDestination;
             _dashboard.HomeBriefingVisibilityChanged -= OnDashboardBriefingVisibilityChanged;
         }
-        if (_discover is not null) _discover.ManageProvidersRequested -= OnManageProviders;
+        if (_discover is not null)
+        {
+            _discover.ManageProvidersRequested -= OnManageProviders;
+            _discover.PageTitleChanged -= OnDiscoverTitleChanged;
+        }
         _viewport.Child = null; Content = null;
         return Task.CompletedTask;
     }

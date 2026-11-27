@@ -148,7 +148,8 @@ public sealed partial class FilesNativeBrowserSurface
                 try
                 {
                     available = await ObserveRegisteredRevealSourceAsync(() => _scene!.ShowAsync(
-                        new("files", "Files", "Browser", LoadDocument(), this, this, readiness), token),
+                        new("files", "Files", "Files", LoadDocument(), this, this, readiness)
+                            { ThemePreference = _interfaceTheme }, token),
                         scope, retain);
                 }
                 finally { readiness.ReleaseOriginalRevealCallbacks(); }

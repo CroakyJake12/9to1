@@ -1,5 +1,9 @@
 <Cui id="9to1.Browse.Workspace" version="1">
   <Actions>
+    <Action name="BackToExplore" command="9to1.Browse.BackToExplore" parameter="{Binding ExploreBriefTarget}" />
+    <Action name="DismissExploreBrief" command="9to1.Browse.DismissExploreBrief" parameter="{Binding ExploreBriefTarget}" />
+    <Action name="SelectSearchTab" command="9to1.Browse.SelectTab" parameter="{Binding searchTab.Target}" />
+    <Action name="CloseSearchTab" command="9to1.Browse.CloseTabRow" parameter="{Binding searchTab.Target}" />
     <Action name="RunPageCommand" command="9to1.Browse.RunPageCommand" parameter="{Binding PageCommandTarget}" />
     <Action name="SelectTab" command="9to1.Browse.SelectTab" parameter="{Binding tab.Target}" />
     <Action name="CloseTabRow" command="9to1.Browse.CloseTabRow" parameter="{Binding tab.Target}" />
@@ -19,17 +23,18 @@
     <Action name="ShowDownloadInFiles" command="9to1.Browse.ShowDownloadInFiles" parameter="{Binding download.Target}" />
     <Action name="RegisterDownloadDestination" command="9to1.Browse.RegisterDownloadDestination" parameter="{Binding folder.Target}" />
   </Actions>
-  <Page id="BrowseRoot" AccessibleName="9to1 Haven browser">
+  <Page id="BrowseRoot" AccessibleName="9to1 Haven browser" OwnsBackdrop="True">
     <Container id="BrowseLayout" Type="Grid" RowSizes="Auto Auto 1fr" ColumnSizes="1fr" CellGap="0" Background="{Resource CuiWorkspaceBrush}">
       <Container id="BrowseTabStrip" Type="Overlay" Column="0" MinHeight="{Binding Browse.TabStripMinimumHeight}" Background="{Resource CuiChromeMaterial}" AccessibleName="Open tabs" AccessibleDescription="Drag a tab to swap at either outer edge, split on either inner edge, or group in the center. Invalid privacy, profile, or pinned boundaries are refused. Keyboard move controls are also available in More tools.">
-        <Container Type="Grid" ColumnSizes="Auto 1fr Auto" HorizontalAlignment="Left" VerticalAlignment="Center" Padding="8 4 8 2">
+        <Container Type="Grid" ColumnSizes="Auto 1fr Auto" VerticalAlignment="Center" Padding="{Binding Browse.TabStripPadding}">
+        <Container Type="Grid" ColumnSizes="Auto 1fr Auto" MaxWidth="{Binding Browse.TabClusterMaximumWidth}" HorizontalAlignment="Left" VerticalAlignment="Center">
           <If Condition="{Binding Haven.HostMarkVisible}">
-            <Image id="HavenHostMark" Width="24" Height="24" Margin="2 0 8 0" VerticalAlignment="Center" AccessibleName="9to1 Haven" IsHitTestVisible="False" />
+            <Image id="HavenHostMark" Width="28" Height="28" Margin="0 0 12 0" VerticalAlignment="Center" AccessibleName="9to1 Haven" IsHitTestVisible="False" />
           </If>
           <Container id="BrowseTabViewport" Type="Overlay" Column="1" HorizontalScrolling="True" HorizontalOverflowArrows="True" VerticalScrolling="False">
             <Repeat Source="{Binding Tabs}" As="tab" Key="{Binding tab.Key}" Panel="Horizontal Stack">
-              <Container id="BrowseTabRow" Type="Grid" ColumnSizes="1fr Auto" Width="172" MinWidth="100" MaxWidth="240" Margin="0 0 4 0" CornerRadius="8" Background="{Binding tab.Background}" Class="cui-hover-surface" BringIntoView="{Binding tab.Selected}">
-                <Button id="BrowseTabButton" HorizontalContentAlignment="Left" action="SelectTab" Text="{Binding tab.Label}" AccessibleName="{Binding tab.Label}" AccessibleDescription="{Binding tab.Description}" Tooltip="{Binding tab.Description}" Interactive="{Binding Can.SelectTab}" Height="{Binding Browse.TabControlHeight}" MinHeight="32" Padding="{Binding tab.TitlePadding}" FontSize="13" FontWeight="700" Chromeless="True" Background="Transparent" Color="{Binding tab.Foreground}" BorderWidth="0" CornerRadius="8" />
+              <Container id="BrowseTabRow" Type="Grid" ColumnSizes="1fr Auto" MinWidth="{Binding Browse.TabMinimumWidth}" MaxWidth="260" Margin="{Binding Browse.TabMargin}" CornerRadius="9" Background="{Binding tab.Background}" Class="cui-hover-surface" BringIntoView="{Binding tab.Selected}">
+                <Button id="BrowseTabButton" HorizontalContentAlignment="Left" action="SelectTab" Text="{Binding tab.Label}" AccessibleName="{Binding tab.Label}" AccessibleDescription="{Binding tab.Description}" Tooltip="{Binding tab.Description}" Interactive="{Binding Can.SelectTab}" Height="{Binding Browse.TabControlHeight}" MinHeight="36" Padding="{Binding tab.TitlePadding}" FontSize="13" FontWeight="700" Chromeless="True" Background="Transparent" Color="{Binding tab.Foreground}" BorderWidth="0" CornerRadius="9" />
                 <If Condition="{Binding tab.HasIcon}">
                   <Container id="BrowseTabIconSlot" Type="Overlay" IsHitTestVisible="False" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10 0 0 0">
                     <Image Source="{Binding tab.IconSource}" Width="16" Height="16" />
@@ -53,54 +58,76 @@
           </Container>
             <Button id="BrowseNewTabButton" Column="2" action="9to1.Browse.NewTab" Interactive="{Binding Can.NewTab}" AccessibleName="New tab" Tooltip="New tab (Ctrl+T)" Height="{Binding Browse.TabControlHeight}" MinHeight="32" Width="32" MinWidth="32" Padding="4" FontSize="18" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8">+</Button>
         </Container>
+          <Container id="BrowseCaptionDragRegion" Type="Overlay" Column="1" MinWidth="24" Height="36" Background="Transparent" IsVisible="{Binding WindowControlsVisible}" AccessibleName="Window title area" AccessibleDescription="Drag to move the window. Double-click to maximize or restore. Right-click for window actions; Alt+Space opens the operating-system menu where supported." />
+          <Container Type="Horizontal Stack" Column="2" CellGap="4" VerticalAlignment="Center">
+            <Button id="BrowseTabSearchButton" action="9to1.Browse.ToggleTabSearch" Interactive="{Binding Can.ToggleTabSearch}" AccessibleName="Search open tabs" Tooltip="{Binding TabSearchTooltip}" Width="30" Height="30" MinHeight="30" MinWidth="30" Padding="6" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="15"><Image Source="avares://HavenOS.Apps.Browse.NativeUI/Assets/search-mode.svg" Width="18" Height="18" /></Button>
+            <Button id="BrowseOverflowButton" action="9to1.Browse.ToggleProfileMenu" Interactive="{Binding Can.ToggleProfileMenu}" AccessibleName="More tools and account" Tooltip="More tools and account" Height="30" MinHeight="30" Width="30" MinWidth="30" Padding="4" FontSize="18" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="15">⋯</Button>
+            <Container Type="Horizontal Stack" CellGap="0" Margin="6 0 0 0" IsVisible="{Binding WindowControlsVisible}">
+              <Button id="BrowseWindowMinimizeButton" Interactive="{Binding WindowCanMinimize}" AccessibleName="Minimize window" Tooltip="Minimize window" Height="36" MinHeight="36" Width="30" MinWidth="30" Padding="4" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="6">−</Button>
+              <Button id="BrowseWindowMaximizeButton" Interactive="{Binding WindowCanMaximize}" AccessibleName="{Binding WindowMaximizeLabel}" Tooltip="{Binding WindowMaximizeLabel}" Text="{Binding WindowMaximizeGlyph}" Height="36" MinHeight="36" Width="30" MinWidth="30" Padding="4" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="6" />
+              <Button id="BrowseWindowCloseButton" Interactive="{Binding WindowCanClose}" AccessibleName="Close window" Tooltip="Close window · pending edits are checked first" Height="36" MinHeight="36" Width="30" MinWidth="30" Padding="4" FontSize="18" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="6">×</Button>
+            </Container>
+          </Container>
+        </Container>
       </Container>
       <Container id="BrowseNavigationBar" Type="Overlay" Row="1" Column="0" MinHeight="{Binding Browse.NavigationMinimumHeight}" Background="{Resource CuiChromeMaterial}">
-        <Container Type="Grid" ColumnSizes="Auto Auto Auto 1fr Auto Auto Auto Auto" CellGap="2" Padding="4 4 4 6" VerticalAlignment="Center">
-          <Button id="BrowseBackButton" action="9to1.Browse.Back" AccessibleName="Go back" Tooltip="Go back (Alt+Left)" Interactive="{Binding CanBack}" Height="32" MinHeight="32" Width="32" MinWidth="32" Padding="7" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8"><Image Source="avares://HavenOS.Apps.Browse.NativeUI/Assets/nav-back.svg" Width="18" Height="18" /></Button>
-          <Button id="BrowseForwardButton" action="9to1.Browse.Forward" Column="1" AccessibleName="Go forward" Tooltip="Go forward (Alt+Right)" Interactive="{Binding CanForward}" Height="32" MinHeight="32" Width="32" MinWidth="32" Padding="7" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8"><Image Source="avares://HavenOS.Apps.Browse.NativeUI/Assets/nav-forward.svg" Width="18" Height="18" /></Button>
-          <Container Type="Overlay" Column="2">
-            <Button id="BrowseReloadButton" action="9to1.Browse.Reload" IsVisible="{Binding IsNotLoading}" AccessibleName="Reload page" Tooltip="Reload page · pending edits are checked first" Interactive="{Binding Can.Reload}" Height="32" MinHeight="32" Width="32" MinWidth="32" Padding="7" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8"><Image Source="avares://HavenOS.Apps.Browse.NativeUI/Assets/nav-reload.svg" Width="18" Height="18" /></Button>
-            <Button id="BrowseStopButton" action="9to1.Browse.Stop" IsVisible="{Binding IsLoading}" AccessibleName="Stop loading" Tooltip="Stop loading" Interactive="{Binding Can.Stop}" Height="32" MinHeight="32" Width="32" MinWidth="32" Padding="7" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8"><Image Source="avares://HavenOS.Apps.Browse.NativeUI/Assets/nav-stop.svg" Width="18" Height="18" /></Button>
+        <Container Type="Grid" ColumnSizes="Auto Auto Auto 1fr Auto Auto Auto Auto" CellGap="{Binding Browse.NavigationGap}" Padding="{Binding Browse.NavigationPadding}" VerticalAlignment="Center">
+          <Button id="BrowseBackButton" action="9to1.Browse.Back" AccessibleName="Go back" Tooltip="Go back (Alt+Left)" Interactive="{Binding CanBack}" Height="30" MinHeight="30" Width="30" MinWidth="30" Padding="6" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="15"><Image Source="avares://HavenOS.Apps.Browse.NativeUI/Assets/nav-back.svg" Width="18" Height="18" /></Button>
+          <Button id="BrowseForwardButton" action="9to1.Browse.Forward" Column="1" IsVisible="{Binding Browse.HistoryControlsVisible}" AccessibleName="Go forward" Tooltip="Go forward (Alt+Right)" Interactive="{Binding CanForward}" Height="30" MinHeight="30" Width="30" MinWidth="30" Padding="6" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="15"><Image Source="avares://HavenOS.Apps.Browse.NativeUI/Assets/nav-forward.svg" Width="18" Height="18" /></Button>
+          <Container Type="Overlay" Column="2" IsVisible="{Binding Browse.HistoryControlsVisible}">
+            <Button id="BrowseReloadButton" action="9to1.Browse.Reload" IsVisible="{Binding IsNotLoading}" AccessibleName="Reload page" Tooltip="Reload page · pending edits are checked first" Interactive="{Binding Can.Reload}" Height="30" MinHeight="30" Width="30" MinWidth="30" Padding="6" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="15"><Image Source="avares://HavenOS.Apps.Browse.NativeUI/Assets/nav-reload.svg" Width="18" Height="18" /></Button>
+            <Button id="BrowseStopButton" action="9to1.Browse.Stop" IsVisible="{Binding IsLoading}" AccessibleName="Stop loading" Tooltip="Stop loading" Interactive="{Binding Can.Stop}" Height="30" MinHeight="30" Width="30" MinWidth="30" Padding="6" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="15"><Image Source="avares://HavenOS.Apps.Browse.NativeUI/Assets/nav-stop.svg" Width="18" Height="18" /></Button>
           </Container>
-          <Container id="BrowseOmnibox" Type="Grid" Column="3" ColumnSizes="Auto 1fr Auto" Height="32" MinHeight="32" Background="{Resource CuiInputSurfaceBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" CornerRadius="16">
+          <Container id="BrowseOmnibox" Type="Grid" Column="3" ColumnSizes="Auto 1fr Auto" Height="36" MinHeight="36" Background="{Resource CuiInputSurfaceBrush}" BorderColor="{Resource CuiControlBorderBrush}" BorderWidth="{Resource CuiControlBorderWidth}" CornerRadius="18">
             <Container Type="Menu" id="BrowseSearchModeMenu" Background="Transparent" VerticalAlignment="Center">
-              <Button Type="Menu Item" id="BrowseSearchModeButton" IconSource="avares://HavenOS.Apps.Browse.NativeUI/Assets/search-mode.svg" IconOnly="True" IconSize="30" Height="30" MinHeight="30" Width="48" MinWidth="48" Padding="6 0" Background="Transparent" BorderWidth="0" CornerRadius="15" AccessibleName="{Binding SearchModeLabel}" Tooltip="{Binding SearchModeLabel}">
+              <Button Type="Menu Item" id="BrowseSearchModeButton" Content="{Binding SearchModeShortLabel}" IconSource="avares://HavenOS.Apps.Browse.NativeUI/Assets/search-mode.svg" IconOnly="False" IconSize="18" Height="28" MinHeight="28" MinWidth="72" Margin="4 0 4 0" Padding="8 0" FontSize="12" FontWeight="650" Background="{Resource CuiAccentSoftBrush}" BorderWidth="0" CornerRadius="14" AccessibleName="{Binding SearchModeLabel}" Tooltip="{Binding SearchModeLabel}">
                 <Button Type="Menu Item" id="BrowseSearchHomeMode" Content="9to1" Tooltip="Search saved items across 9to1" action="9to1.Browse.SearchHome" Interactive="{Binding Can.SearchHome}" />
                 <Button Type="Menu Item" id="BrowseSearchFilesMode" Content="Files" Tooltip="Search your files" action="9to1.Browse.SearchFiles" Interactive="{Binding Can.SearchFiles}" />
                 <Button Type="Menu Item" id="BrowseSearchWebMode" Content="Web" action="9to1.Browse.SearchWeb" Interactive="{Binding Can.SearchWeb}" />
               </Button>
             </Container>
-            <Input Type="Text" id="BrowseAddressBox" Column="1" Interactive="{Binding CanEdit}" AccessibleName="{Binding AddressHint}" PlaceholderText="{Binding AddressHint}" Value="{Binding Address, mode=TwoWay}" DisplayValue="{Binding AddressDisplay}" Height="30" MinHeight="30" MinWidth="64" Padding="0 4" FontSize="13" FontWeight="600" VerticalContentAlignment="Center" Background="Transparent" BorderWidth="0" CornerRadius="15" />
+            <Input Type="Text" id="BrowseAddressBox" Column="1" Interactive="{Binding CanEdit}" AccessibleName="{Binding AddressHint}" PlaceholderText="{Binding AddressHint}" Value="{Binding Address, mode=TwoWay}" DisplayValue="{Binding AddressDisplay}" Height="34" MinHeight="34" MinWidth="64" Padding="0 4" FontSize="12" FontWeight="600" VerticalContentAlignment="Center" Background="Transparent" BorderWidth="0" CornerRadius="17" />
             <Button id="BrowseNavigateButton" action="9to1.Browse.Navigate" Column="2" AccessibleName="Go to address or search" Tooltip="Go to address or search" Interactive="{Binding Can.Navigate}" Height="30" MinHeight="30" Width="30" MinWidth="30" Padding="6" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="15"><Image Source="avares://HavenOS.Apps.Browse.NativeUI/Assets/nav-forward.svg" Width="16" Height="16" /></Button>
           </Container>
-          <Button id="BrowsePrimaryPageCommand" Column="4" Action="RunPageCommand" AccessibleName="{Binding PageCommandLabel}" IsVisible="{Binding PageCommandInBar}" Interactive="{Binding Can.RunPageCommand}" AccentRole="Primary" Padding="14 4" CornerRadius="16" Height="32">
+          <Button id="BrowsePrimaryPageCommand" Column="4" Action="RunPageCommand" AccessibleName="{Binding PageCommandLabel}" IsVisible="{Binding PageCommandInBar}" Interactive="{Binding Can.RunPageCommand}" AccentRole="Primary" Padding="14 4" CornerRadius="18" Height="36">
             <Container Type="Horizontal Stack" CellGap="7" VerticalAlignment="Center" IsHitTestVisible="False">
               <Image id="BrowsePrimaryPageCommandIcon" Source="{Binding PageCommandIcon}" IsVisible="{Binding PageCommandHasIcon}" Width="16" Height="16" VerticalAlignment="Center" />
               <Text Text="{Binding PageCommandLabel}" FontSize="13" FontWeight="750" VerticalAlignment="Center" />
             </Container>
           </Button>
           <Container id="HavenSharedCluster" Type="Horizontal Stack" Column="5" CellGap="4" VerticalAlignment="Center" IsVisible="{Binding Haven.Embedded}" AccessibleName="Haven model and notifications">
-            <Button id="HavenModelButton" action="9to1.Haven.OpenModel" accessible-name="{Binding Haven.ModelAccessibleName}" Tooltip="{Binding Haven.ModelTooltip}" Interactive="{Binding Haven.ModelAvailable}" Height="32" MinHeight="32" MinWidth="32" Padding="4" HorizontalAlignment="Center" Background="{Resource CuiAccentSoftBrush}" BorderWidth="0" CornerRadius="16">
+            <Button id="HavenModelButton" action="9to1.Haven.OpenModel" accessible-name="{Binding Haven.ModelAccessibleName}" Tooltip="{Binding Haven.ModelTooltip}" Interactive="{Binding Haven.ModelAvailable}" Height="36" MinHeight="36" MinWidth="35" MaxWidth="{Binding Browse.ModelMaximumWidth}" Padding="{Binding Browse.ModelPadding}" HorizontalAlignment="Center" AccentRole="Primary" BorderWidth="0" CornerRadius="18">
               <Container Type="Horizontal Stack" CellGap="6" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False">
                 <Image Source="avares://Haven/Assets/haven-model.svg" Width="18" Height="18" VerticalAlignment="Center" />
                 <Container Type="Horizontal Stack" CellGap="6" Margin="0 0 4 0" VerticalAlignment="Center" IsVisible="{Binding Haven.ModelDetailsVisible}">
-                  <Text id="HavenModelLabel" Text="{Binding Haven.ModelDisplayName}" Foreground="{Resource CuiTextBrush}" FontSize="13" FontWeight="700" MaxWidth="144" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-                  <Text id="HavenModelEffort" Text="{Binding Haven.EffortPercent}" Foreground="{Resource CuiTextSoftBrush}" FontSize="11" FontWeight="600" IsVisible="{Binding Haven.EffortKnown}" VerticalAlignment="Center" />
+                  <Text id="HavenModelLabel" Text="{Binding Haven.ModelDisplayName}" Foreground="{Resource CuiAccentPrimaryForegroundBrush}" FontSize="13" FontWeight="700" MaxWidth="144" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                  <Text id="HavenModelEffort" Text="{Binding Haven.EffortPercent}" Foreground="{Resource CuiAccentPrimaryForegroundBrush}" FontSize="12" FontWeight="700" IsVisible="{Binding Haven.EffortKnown}" VerticalAlignment="Center" />
                   <Image id="HavenModelDisclosure" Source="avares://HavenOS.Apps.Browse.NativeUI/Assets/model-disclosure.svg" Width="12" Height="12" VerticalAlignment="Center" />
                 </Container>
               </Container>
             </Button>
-            <Button id="HavenNotificationsButton" action="9to1.Haven.OpenNotifications" accessible-name="Notifications" Tooltip="Open notifications" Interactive="{Binding Haven.NotificationsAvailable}" Height="32" MinHeight="32" Width="32" MinWidth="32" Padding="4" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
+            <Button id="HavenNotificationsButton" action="9to1.Haven.OpenNotifications" IsVisible="{Binding Browse.HeaderExtrasVisible}" accessible-name="Notifications" Tooltip="Open notifications" Interactive="{Binding Haven.NotificationsAvailable}" Height="30" MinHeight="30" Width="30" MinWidth="30" Padding="4" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="15">
               <Image Source="avares://Haven/Assets/haven-notifications.svg" Width="18" Height="18" />
             </Button>
           </Container>
-          <Button id="BrowseBookmarkButton" action="9to1.Browse.Bookmark" Column="6" AccessibleName="{Binding BookmarkLabel}" Tooltip="{Binding BookmarkLabel}" Text="{Binding BookmarkGlyph}" Selected="{Binding IsBookmarked}" Interactive="{Binding Can.Bookmark}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="18" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8" />
-          <Button id="HavenProfileButton" action="9to1.Browse.ToggleProfileMenu" Column="7" AccessibleName="Account, profile and browser tools" Tooltip="Open the profile menu" Selected="{Binding ProfileMenuOpen}" Height="32" MinHeight="32" Width="32" MinWidth="32" Padding="4" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
+          <Button id="BrowseBookmarkButton" action="9to1.Browse.Bookmark" Column="6" IsVisible="{Binding Browse.HeaderExtrasVisible}" AccessibleName="{Binding BookmarkLabel}" Tooltip="{Binding BookmarkLabel}" Text="{Binding BookmarkGlyph}" Selected="{Binding IsBookmarked}" Interactive="{Binding Can.Bookmark}" Height="30" MinHeight="30" Width="28" MinWidth="28" Padding="4" FontSize="18" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="15" />
+          <Button id="HavenProfileButton" action="9to1.Browse.ToggleProfileMenu" Column="7" IsVisible="{Binding Browse.HeaderExtrasVisible}" AccessibleName="Account, profile and browser tools" Tooltip="Open the profile menu" Selected="{Binding ProfileMenuOpen}" Height="28" MinHeight="28" Width="28" MinWidth="28" Padding="4" HorizontalAlignment="Center" VerticalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="14">
             <Image Source="avares://Haven/Assets/haven-profile.svg" Width="18" Height="18" />
           </Button>
         </Container>
       </Container>
-      <Container id="BrowseContentViewport" Type="Grid" Row="2" Column="0" ColumnSizes="1fr" RowSizes="1fr" MinHeight="180">
+      <Container id="BrowseContentLayout" Type="Grid" Row="2" Column="0" ColumnSizes="1fr" RowSizes="Auto 1fr" MinHeight="180">
+        <Container id="BrowseExploreBrief" Type="Vertical Stack" CellGap="8" Padding="16 10" Background="{Resource CuiPanel2Brush}" IsVisible="{Binding ExploreBriefVisible}" AccessibleName="Original Explore brief">
+          <Container Type="Wrap" CellGap="12">
+            <Text Text="Your brief" FontWeight="750" FontSize="13" VerticalAlignment="Center" />
+            <Button id="BrowseBackToExplore" Action="BackToExplore" Interactive="{Binding Can.BackToExplore}" Tooltip="{Binding ExploreBriefReturnHint}" MinHeight="32" Padding="10 5">Back to Explore</Button>
+            <Button id="BrowseDismissExploreBrief" Action="DismissExploreBrief" Interactive="{Binding Can.DismissExploreBrief}" MinHeight="32" Padding="10 5">Dismiss brief</Button>
+          </Container>
+          <Container Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" MaxHeight="100">
+            <Text id="BrowseExploreBriefText" Text="{Binding ExploreBriefText}" FontSize="13" TextWrapping="Wrap" />
+          </Container>
+        </Container>
+      <Container id="BrowseContentViewport" Type="Grid" Row="1" Column="0" ColumnSizes="1fr" RowSizes="1fr" MinHeight="180">
         <Object Type="browse.engine" id="BrowseEngineView" MinHeight="180" AccessibleName="Original native browser engine surface" />
         <Container id="BrowseNativePagePanel" Type="Overlay" VerticalScrolling="True" HorizontalScrolling="False" IsVisible="{Binding IsNativePage}">
           <Container Type="Vertical Stack" CellGap="8" Margin="12">
@@ -203,9 +230,49 @@
           </Container>
         </Container>
       </Container>
+      </Container>
     </Container>
 
-    <Container id="BrowseProfileOverlay" Type="Overlay" IsVisible="{Binding ProfileMenuOpen}" AccessibleName="Profile menu" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0 84 8 0">
+    <Container id="BrowseTabSearchOverlay" Type="Grid" RowSizes="Auto Auto 1fr" Width="{Binding TabSearchWidth}" MaxHeight="{Binding TabSearchMaxHeight}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="12 48 12 12" Padding="12" CellGap="8" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiControlBorderBrush}" BorderWidth="{Resource CuiControlBorderWidth}" CornerRadius="12" IsVisible="{Binding TabSearchOpen}" AccessibleName="Search open tabs">
+      <Container Type="Grid" ColumnSizes="1fr Auto">
+        <Container Type="Vertical Stack" CellGap="2">
+          <Text Text="Open tabs" FontSize="15" FontWeight="700" Foreground="{Resource CuiTextBrush}" />
+          <Text Text="{Binding TabSearchSummary}" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" />
+        </Container>
+        <Button id="BrowseTabSearchClose" Column="1" action="9to1.Browse.CloseTabSearch" AccessibleName="Close tab search" Tooltip="Close tab search (Escape)" Interactive="{Binding Can.CloseTabSearch}" Width="30" Height="30" MinWidth="30" MinHeight="30" Padding="4" Background="Transparent" BorderWidth="0" Color="{Resource CuiTextBrush}">×</Button>
+      </Container>
+      <Input id="BrowseTabSearchQuery" Row="1" Type="Text" Value="{Binding TabSearchQuery, mode=TwoWay}" PlaceholderText="Search tab titles or destinations" AccessibleName="Search tab titles or destinations" Interactive="{Binding Can.ToggleTabSearch}" MinHeight="36" />
+      <Container Type="Overlay" Row="2" VerticalScrolling="True" HorizontalScrolling="False">
+        <Container Type="Vertical Stack" CellGap="4">
+          <Repeat Source="{Binding TabSearchRows}" As="searchTab" Key="{Binding searchTab.Key}" Panel="Vertical Stack">
+            <Container id="BrowseTabSearchRow" Type="Grid" ColumnSizes="1fr Auto" Margin="0 0 0 4" CornerRadius="8" Background="{Binding searchTab.Background}">
+              <Button id="BrowseTabSearchResult" action="SelectSearchTab" Interactive="{Binding Can.SelectTab}" AccessibleName="{Binding searchTab.Label}" AccessibleDescription="{Binding searchTab.Description}" HorizontalContentAlignment="Stretch" Padding="10 7" Background="Transparent" Color="{Binding searchTab.Foreground}" BorderWidth="0" CornerRadius="8">
+                <Container Type="Vertical Stack" CellGap="2" IsHitTestVisible="False">
+                  <Text Text="{Binding searchTab.Label}" FontSize="13" FontWeight="700" TextTrimming="CharacterEllipsis" />
+                  <Text Text="{Binding searchTab.SearchDestination}" FontSize="11" TextTrimming="CharacterEllipsis" />
+                  <Text Text="{Binding searchTab.SearchDetail}" FontSize="11" TextTrimming="CharacterEllipsis" />
+                </Container>
+                <Container Type="Context Menu" AccessibleName="Tab actions">
+                  <Button Type="Menu Item" Content="Switch to tab" action="SelectSearchTab" Interactive="{Binding Can.SelectTab}" />
+                  <Button Type="Menu Item" Content="{Binding searchTab.CloseLabel}" action="CloseSearchTab" Interactive="{Binding Can.CloseTabRow}" IsVisible="{Binding searchTab.CanClose}" />
+                </Container>
+              </Button>
+              <Button id="BrowseTabSearchCloseResult" Column="1" action="CloseSearchTab" IsVisible="{Binding searchTab.CanClose}" Interactive="{Binding Can.CloseTabRow}" AccessibleName="{Binding searchTab.CloseLabel}" Tooltip="Close this tab without selecting it" Width="30" MinWidth="30" Padding="4" Background="Transparent" Color="{Binding searchTab.CloseForeground}" BorderWidth="0">×</Button>
+            </Container>
+          </Repeat>
+          <Container Type="Vertical Stack" IsVisible="{Binding TabSearchEmpty}" CellGap="8" Padding="4 10">
+            <Text Text="No open tabs match." Foreground="{Resource CuiTextSoftBrush}" />
+            <Button id="BrowseTabSearchNewTab" action="9to1.Browse.NewTab" Interactive="{Binding Can.NewTab}" AccessibleName="Open a new tab">New tab</Button>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="BrowseWindowMenu" Type="Vertical Stack" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="12 48 12 0" Width="220" Padding="8" CellGap="4" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiControlBorderBrush}" BorderWidth="{Resource CuiControlBorderWidth}" CornerRadius="10" IsVisible="{Binding WindowMenuOpen}" AccessibleName="Window actions">
+      <Button id="BrowseWindowMenuMinimize" Interactive="{Binding WindowCanMinimize}" HorizontalContentAlignment="Left">Minimize window</Button>
+      <Button id="BrowseWindowMenuMaximize" Interactive="{Binding WindowCanMaximize}" Text="{Binding WindowMaximizeLabel}" HorizontalContentAlignment="Left" />
+      <Button id="BrowseWindowMenuClose" Interactive="{Binding WindowCanClose}" HorizontalContentAlignment="Left">Close window</Button>
+    </Container>
+    <Container id="BrowseProfileOverlay" Type="Overlay" IsVisible="{Binding ProfileMenuOpen}" AccessibleName="Profile menu" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0 100 9 0">
       <Container id="BrowseProfileMenu" Type="Vertical Stack" Width="340" MaxHeight="560" CellGap="2" Padding="8" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" CornerRadius="12" VerticalScrolling="True" HorizontalScrolling="False" AccessibleName="Account and profile">
         <Button id="BrowseOverflowPageCommand" Action="RunPageCommand" AccessibleName="{Binding PageCommandLabel}" IsVisible="{Binding PageCommandInOverflow}" Interactive="{Binding Can.RunPageCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
           <Container Type="Horizontal Stack" CellGap="7" VerticalAlignment="Center" IsHitTestVisible="False">
@@ -225,6 +292,12 @@
         <Container Type="Grid" Height="1" Margin="8 2 8 2" Background="{Resource CuiLineBrush}" />
 
         <Button id="BrowseSwitchUsersButton" action="9to1.Browse.OpenManageUsers" Interactive="{Binding Can.OpenManageUsers}" HorizontalContentAlignment="Left" Padding="10 8" CornerRadius="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0">Switch &amp; Manage Users</Button>
+        <Button id="BrowseOverflowNotificationsButton" action="9to1.Haven.OpenNotifications" IsVisible="{Binding Haven.Embedded}" Interactive="{Binding Haven.NotificationsAvailable}" HorizontalContentAlignment="Left" Padding="10 8" CornerRadius="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0">Notifications</Button>
+        <Container Type="Wrap" CellGap="6">
+          <Button action="9to1.Browse.Back" Interactive="{Binding CanBack}" AccessibleName="Go back" Padding="10 8">Back</Button>
+          <Button action="9to1.Browse.Forward" Interactive="{Binding CanForward}" AccessibleName="Go forward" Padding="10 8">Forward</Button>
+          <Button action="9to1.Browse.Reload" Interactive="{Binding Can.Reload}" AccessibleName="Reload page" Padding="10 8">Reload</Button>
+        </Container>
 
         <Container Type="Vertical Stack" CellGap="6" IsVisible="{Binding ShowStorage}" Padding="8 2 8 10">
           <Text Text="Storage" FontWeight="Bold" />

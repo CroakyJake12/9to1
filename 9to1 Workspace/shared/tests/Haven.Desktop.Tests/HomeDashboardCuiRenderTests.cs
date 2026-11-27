@@ -15,11 +15,222 @@ using Haven.Desktop.ViewModels;
 using Haven.Desktop.Views.Pages.Home;
 using Haven.Desktop.Services;
 using HavenOS.Home.Core;
+using HavenOS.Home;
 
 namespace Haven.Desktop.Tests;
 
 public sealed class HomeDashboardCuiRenderTests
 {
+    [AvaloniaTheory]
+    [InlineData("Glow", 1440, 900)]
+    [InlineData("Glow", 1280, 720)]
+    [InlineData("Glow", 720, 700)]
+    [InlineData("Professional", 1440, 900)]
+    [InlineData("Professional", 1280, 720)]
+    [InlineData("Professional", 720, 700)]
+    public async Task Dashboard_continue_cards_borrow_Library_permissions_exact_targets_and_responsive_layout(string themeName, int width, int height)
+    {
+        using var theme = new CuiThemePreferenceContext(new PresentationThemeSource(themeName));
+        using var bus = new HavenEventBus();
+        using var page = CreatePage(bus, new SnapshotRepository(), theme);
+        page.EnableHomeBriefing(null, null);
+        var source = new BriefingLibrarySource();
+        source.Denied.Add(source.Rows[2].ArtifactId);
+        HomeLibraryDestinationPage? library = null; HomeDeepLink? opened = null; Task? settlement = null;
+        var constructions = 0;
+        page.ConfigureHomeBriefingLibrary(() =>
+        {
+            constructions++;
+            return library = new(source.CreateService, source.RevalidateAsync,
+                (link, actual) => { opened = link; settlement = actual; return true; }, source, theme);
+        });
+        Assert.Equal(0, constructions);
+        var window = new Window { Content = page, Width = width, Height = height };
+        try
+        {
+            window.Show(); await page.ActivateAsync(CancellationToken.None); SettleDashboardLayout(window);
+            Assert.Equal(1, constructions); Assert.NotNull(library);
+            var cards = library.GetVisualDescendants().OfType<Button>().Where(button =>
+                CuiRuntimeIdentity.GetStableId(button)?.EndsWith("/id:dashboard-library-item", StringComparison.Ordinal) == true).ToArray();
+            Assert.Equal(2, cards.Length);
+            Assert.True(cards[0].TryFindResource("CuiEffectiveThemeName", out var effectiveTheme));
+            Assert.Equal(themeName, effectiveTheme);
+            var firstTop = cards.Min(card => card.TranslatePoint(default, library)!.Value.Y);
+            Assert.InRange(firstTop, 0, 1); // Hidden Library controls must not leave an empty strip above the cards.
+            Assert.DoesNotContain(library.GetVisualDescendants().OfType<TextBox>(), box => box.IsEffectivelyVisible);
+            Assert.DoesNotContain(library.GetVisualDescendants().OfType<TextBlock>(), text => text.Text == source.Rows[2].DisplayName);
+            foreach (var card in cards)
+            {
+                var point = card.TranslatePoint(default, library)!.Value;
+                Assert.True(point.X >= 0 && point.X + card.Bounds.Width <= library.Bounds.Width + 1);
+                Assert.True(card.Bounds.Height >= 168);
+            }
+            Assert.True(cards[1].TranslatePoint(default, library)!.Value.X > cards[0].TranslatePoint(default, library)!.Value.X);
+            if (Environment.GetEnvironmentVariable("HAVEN_VISUAL_CAPTURE_DIR") is { Length: > 0 } captures)
+            {
+                Directory.CreateDirectory(captures);
+                using var frame = window.CaptureRenderedFrame(); Assert.NotNull(frame);
+                frame.Save(Path.Combine(captures, $"home-dashboard-library-{themeName.ToLowerInvariant()}-{width}x{height}.png"));
+            }
+            cards[0].RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await library.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Same(source.Rows[0].OpenLink, opened);
+            await settlement!.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.True(source.OpenChecks > 0); Assert.Equal(3, source.Rows.Count);
+            page.Deactivate(); Assert.False(library.IsActionAvailable("OpenHomeLibraryArtifact"));
+            await page.ActivateAsync(CancellationToken.None);
+            Assert.Equal(1, constructions); Assert.True(library.IsActionAvailable("OpenHomeLibraryArtifact"));
+            Assert.True(await page.TryPrepareToCloseAsync(CancellationToken.None));
+            await page.CloseAndDrainAsync(); Assert.True(source.Disposed);
+        }
+        finally { window.Close(); await page.CloseAndDrainAsync(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Dashboard_custom_widget_layout_does_not_construct_the_briefing_Library()
+    {
+        using var bus = new HavenEventBus();
+        var settings = new TestSettings();
+        await settings.SetAsync("dashboard.widget-layouts.v1", new DashboardWidgetLayoutState(1,
+            new() { ["home"] = [] }, UsesHomeBriefing: false), CancellationToken.None);
+        using var page = new NewDashboardPage(bus, null!, null!, null!, null!, settings, new SnapshotRepository(), new TestLayout(), []);
+        page.EnableHomeBriefing(null, null);
+        page.ConfigureHomeBriefingLibrary(() => throw new InvalidOperationException("An unused Library must not be created."));
+        try
+        {
+            await page.ActivateAsync(CancellationToken.None);
+            Assert.False(page.ShowsHomeBriefing);
+            Assert.DoesNotContain(page.GetVisualDescendants(), control => control is HomeLibraryDestinationPage);
+        }
+        finally { await page.CloseAndDrainAsync(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Dashboard_preflight_waits_for_its_embedded_Library_original_initialization()
+    {
+        using var bus = new HavenEventBus(); using var page = CreatePage(bus, new SnapshotRepository());
+        page.EnableHomeBriefing(null, null);
+        var source = new BriefingLibrarySource { Held = new(TaskCreationOptions.RunContinuationsAsynchronously) };
+        page.ConfigureHomeBriefingLibrary(() => new(source.CreateService, source.RevalidateAsync, (_, _) => false, source));
+        var activation = page.ActivateAsync(CancellationToken.None);
+        try
+        {
+            await source.Entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            var preparation = page.TryPrepareToCloseAsync(CancellationToken.None);
+            Assert.False(preparation.IsCompleted); Assert.False(source.Disposed);
+            source.Held.TrySetResult(source.Rows);
+            await activation.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.True(await preparation.WaitAsync(TimeSpan.FromSeconds(10)));
+            await page.CloseAndDrainAsync(); Assert.True(source.Disposed);
+        }
+        finally { source.Held.TrySetResult(source.Rows); await page.CloseAndDrainAsync(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Dashboard_preflight_does_not_hide_its_embedded_Library_original_fault()
+    {
+        using var bus = new HavenEventBus(); using var page = CreatePage(bus, new SnapshotRepository());
+        page.EnableHomeBriefing(null, null);
+        var source = new BriefingLibrarySource { AdmissionFailure = new InvalidOperationException("retained original Library failure") };
+        page.ConfigureHomeBriefingLibrary(() => new(source.CreateService, source.RevalidateAsync, (_, _) => false, source));
+        _ = await Record.ExceptionAsync(() => page.ActivateAsync(CancellationToken.None));
+        Assert.Contains(source.AdmissionFailure.Message, (await Record.ExceptionAsync(() => page.TryPrepareToCloseAsync(CancellationToken.None)))!.ToString());
+        Assert.Contains(source.AdmissionFailure.Message, (await Record.ExceptionAsync(() => page.CloseAndDrainAsync()))!.ToString());
+        Assert.True(source.Disposed);
+    }
+
+    [AvaloniaFact]
+    public async Task Dashboard_deactivation_fences_delayed_Library_without_reclassifying_it_as_a_failed_original()
+    {
+        using var bus = new HavenEventBus(); using var page = CreatePage(bus, new SnapshotRepository());
+        page.EnableHomeBriefing(null, null);
+        var source = new BriefingLibrarySource { Held = new(TaskCreationOptions.RunContinuationsAsynchronously) };
+        HomeLibraryDestinationPage? library = null;
+        page.ConfigureHomeBriefingLibrary(() => library = new(source.CreateService, source.RevalidateAsync, (_, _) => false, source));
+        var activation = page.ActivateAsync(CancellationToken.None);
+        try
+        {
+            await source.Entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            page.Deactivate();
+            source.Held.TrySetResult(source.Rows);
+            await activation.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.NotNull(library); Assert.Null(library.Current);
+            Assert.False(library.IsActionAvailable("OpenHomeLibraryArtifact"));
+            Assert.True(await page.TryPrepareToCloseAsync(CancellationToken.None));
+            await page.CloseAndDrainAsync(); Assert.True(source.Disposed);
+        }
+        finally { source.Held.TrySetResult(source.Rows); await page.CloseAndDrainAsync(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Dashboard_close_keeps_embedded_Library_until_its_actual_delayed_source_settles()
+    {
+        using var bus = new HavenEventBus(); using var page = CreatePage(bus, new SnapshotRepository());
+        page.EnableHomeBriefing(null, null);
+        var source = new BriefingLibrarySource { Held = new(TaskCreationOptions.RunContinuationsAsynchronously) };
+        HomeLibraryDestinationPage? library = null;
+        page.ConfigureHomeBriefingLibrary(() => library = new(source.CreateService, source.RevalidateAsync, (_, _) => false, source));
+        var activation = page.ActivateAsync(CancellationToken.None);
+        try
+        {
+            await source.Entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            var original = Assert.IsAssignableFrom<Task>(library!.OriginalInitialization);
+            var close = page.CloseAndDrainAsync();
+            await source.CancellationObserved.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.False(close.IsCompleted); Assert.False(source.Disposed); Assert.NotNull(page.Content);
+            Assert.False(original.IsCompleted); // Closing an observer cannot stand in for source acknowledgement.
+            source.Held.TrySetResult(source.Rows);
+            await activation.WaitAsync(TimeSpan.FromSeconds(10));
+            await close.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.True(original.IsCompletedSuccessfully); // The child owner qualified its own cooperative cancellation.
+            Assert.True(source.Disposed); Assert.Null(page.Content);
+        }
+        finally { source.Held.TrySetResult(source.Rows); await page.CloseAndDrainAsync(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Dashboard_close_retains_a_genuine_Library_failure_after_its_owner_requested_cancellation()
+    {
+        using var bus = new HavenEventBus(); using var page = CreatePage(bus, new SnapshotRepository());
+        page.EnableHomeBriefing(null, null);
+        var source = new BriefingLibrarySource { Held = new(TaskCreationOptions.RunContinuationsAsynchronously) };
+        var failure = new IOException("Actual Library permission source failed during close.");
+        HomeLibraryDestinationPage? library = null;
+        page.ConfigureHomeBriefingLibrary(() => library = new(source.CreateService, source.RevalidateAsync, (_, _) => false, source));
+        var activation = page.ActivateAsync(CancellationToken.None);
+        try
+        {
+            await source.Entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            var close = page.CloseAndDrainAsync();
+            await source.CancellationObserved.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.False(close.IsCompleted); Assert.False(source.Disposed);
+            source.ReadFailure = failure;
+            source.Held.TrySetResult(source.Rows);
+            var actual = await Record.ExceptionAsync(() => close.WaitAsync(TimeSpan.FromSeconds(10)));
+            Assert.NotNull(actual);
+            Assert.True(ContainsActualCause(actual), actual.ToString());
+            // Dashboard activation presents source errors and can settle successfully;
+            // the actual Library original and external close must retain the real failure.
+            // Qualify that original, not a second failure from the presentation observer.
+            var childOriginal = Assert.IsAssignableFrom<Task>(library!.OriginalInitialization);
+            var childFailure = await Record.ExceptionAsync(() => childOriginal.WaitAsync(TimeSpan.FromSeconds(10)));
+            Assert.True(childOriginal.IsFaulted);
+            Assert.NotNull(childFailure);
+            Assert.True(ContainsActualCause(childFailure));
+            await activation.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Same(close, page.CloseAndDrainAsync()); Assert.True(source.Disposed);
+        }
+        finally
+        {
+            source.Held.TrySetResult(source.Rows);
+            _ = await Record.ExceptionAsync(() => page.CloseAndDrainAsync());
+        }
+
+        bool ContainsActualCause(Exception error) => ReferenceEquals(error, failure) ||
+            error is AggregateException aggregate && aggregate.InnerExceptions.Any(ContainsActualCause) ||
+            error.InnerException is { } inner && ContainsActualCause(inner);
+    }
+
     [AvaloniaFact]
     public async Task Dashboard_interface_scale_reflows_the_briefing_and_custom_widget_without_writing_its_layout()
     {
@@ -489,8 +700,16 @@ public sealed class HomeDashboardCuiRenderTests
         finally { settings.WriteRelease.TrySetResult(); window.Close(); page.Dispose(); }
     }
 
-    private static NewDashboardPage CreatePage(HavenEventBus bus, IDashboardRepository source) =>
-        new(bus, null!, null!, null!, null!, new TestSettings(), source, new TestLayout(), []);
+    private sealed class PresentationThemeSource(string name) : ICuiThemePreferenceSource
+    {
+        public CuiThemePreferenceSnapshot Current { get; } =
+            new(name, 1, "dashboard-presentation", true, CuiAccessibilitySettings.Default, CuiAppearance.Dark);
+        public event EventHandler? Changed { add { } remove { } }
+    }
+
+    private static NewDashboardPage CreatePage(HavenEventBus bus, IDashboardRepository source,
+        CuiThemePreferenceContext? theme = null) =>
+        new(bus, null!, null!, null!, null!, new TestSettings(), source, new TestLayout(), [], theme);
 
     private static void SettleDashboardLayout(Window window)
     {
@@ -535,6 +754,46 @@ public sealed class HomeDashboardCuiRenderTests
         public Task<IReadOnlyList<DashboardTileLayout>> GetAsync(CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<DashboardTileLayout>>([]);
         public Task SaveAsync(IReadOnlyList<DashboardTileLayout> layout, CancellationToken cancellationToken) => Task.CompletedTask;
+    }
+
+    /// <summary>Controlled canonical-source inputs for this component gate; not native Files acceptance.</summary>
+    private sealed class BriefingLibrarySource : IHomeOriginalLibrarySource, IHomeLibraryPreferences
+    {
+        internal IReadOnlyList<HomeArtifactReference> Rows { get; } = Enumerable.Range(0, 3).Select(index =>
+        {
+            var app = index == 1 ? "files" : "boards";
+            var id = Guid.NewGuid().ToString("D");
+            return new HomeArtifactReference(app, id, new[] { "Research notebook", "Lesson outline", "Restricted notebook" }[index],
+                app == "boards" ? "Boards notebook" : "Files document", "Coursework", "fixture", null,
+                DateTimeOffset.UtcNow.AddMinutes(-index), false, false, false, false, [],
+                new(HomeRoute.Library, app, id, "open", app == "boards" ? "boards.notebook" : "files.preview"));
+        }).ToArray();
+        internal readonly HashSet<string> Denied = [];
+        internal TaskCompletionSource<IReadOnlyList<HomeArtifactReference>>? Held;
+        internal readonly TaskCompletionSource Entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal readonly TaskCompletionSource CancellationObserved = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal Exception? AdmissionFailure, ReadFailure;
+        internal bool Disposed;
+        internal int OpenChecks;
+        public string? AvailabilityNotice => null;
+        public HomeLibraryService CreateService(IHomeDeepLinkRouter router) => new(this, this, router, this);
+        public Task RevalidateAsync(CancellationToken token) => AdmissionFailure is { } failure ? Task.FromException(failure) : Task.CompletedTask;
+        public bool IsExpectedRefusal(Exception error) => false;
+        public void DemandExternalOriginalJoin() { }
+        public async Task<IReadOnlyList<HomeArtifactReference>> SearchAsync(HomeLibraryQuery query, CancellationToken token)
+        {
+            using var registration = token.Register(() => CancellationObserved.TrySetResult());
+            Entered.TrySetResult();
+            return Held is { } held ? await held.Task : Rows;
+        }
+        public Task<HomeArtifactReference?> GetByIdAsync(string app, string id, CancellationToken token) =>
+            Task.FromResult(Rows.SingleOrDefault(row => row.OwnerApp == app && row.ArtifactId == id));
+        public Task<bool> CanReadAsync(string app, string id, CancellationToken token) =>
+            ReadFailure is { } failure ? Task.FromException<bool>(failure) : Task.FromResult(!Denied.Contains(id));
+        public Task<bool> CanOpenAsync(HomeDeepLink link, CancellationToken token) { OpenChecks++; return Task.FromResult(!Denied.Contains(link.ObjectId)); }
+        public Task<bool> IsPinnedAsync(string app, string id, CancellationToken token) => Task.FromResult(false);
+        public Task SetPinnedAsync(string app, string id, bool pinned, CancellationToken token) => throw new NotSupportedException();
+        public ValueTask DisposeAsync() { Disposed = true; return ValueTask.CompletedTask; }
     }
 
     private sealed class TestSettings : IVersionedSettingsStore

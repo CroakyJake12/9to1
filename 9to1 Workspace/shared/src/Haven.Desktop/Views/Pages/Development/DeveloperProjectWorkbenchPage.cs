@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Services;
@@ -185,7 +186,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         _review = new(development); Document = DeveloperWorkbenchCuiDocument.Load();
         // Each host gets its own registry with the canonical built-in ReadOnlyText contract.
         // The normal compiler admits the same typed properties without an app-specific factory.
-        _controls = new();
+        _controls = DeveloperBuildCuiControls.Create();
         _controls.RegisterObjectRenderer("DeveloperCuiDraftPreview", _ => CreateCuiPreviewSlot());
         _host = new(_controls);
         _work = new(StopOriginalPresentationAsync, DetachOriginalPresentationAsync);
@@ -262,7 +263,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         _autonomousMissionStoreDirectory = autonomousMissionStoreDirectory;
         _review = null; // No AI Task-backed review session; manual edits route through the genuine edit admission + kernel.
         Document = DeveloperWorkbenchCuiDocument.Load();
-        _controls = new();
+        _controls = DeveloperBuildCuiControls.Create();
         _controls.RegisterObjectRenderer("DeveloperCuiDraftPreview", _ => CreateCuiPreviewSlot());
         _host = new(_controls);
         _work = new(StopOriginalPresentationAsync, DetachOriginalPresentationAsync);
@@ -324,6 +325,23 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
     private bool IsCurrent(long generation)
     { lock (_gate) return !_work.IsRetiring && _active && _generation == generation; }
 
+    private CuiThemePreferenceContext? _interfaceTheme;
+
+    /// <summary>Borrows the actual Home observation before this native page activates.
+    /// The scene owns its subscription; this page never owns Home preferences.</summary>
+    internal void BindInterfaceTheme(CuiThemePreferenceContext? theme)
+    {
+        if (theme is null) return;
+        lock (_gate)
+        {
+            _work.DemandAdmission();
+            if (_active) throw new InvalidOperationException("Bind the Home theme before page activation.");
+            if (_interfaceTheme is not null && !ReferenceEquals(_interfaceTheme, theme))
+                throw new InvalidOperationException("The page already borrows a different Home theme observation.");
+            _interfaceTheme = theme;
+        }
+    }
+
     public Task ActivateAsync(CancellationToken cancellationToken)
     {
         long generation;
@@ -354,7 +372,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
             {
                 original.DemandPublication();
                 show = InvokeOriginalSource(() => _host.ShowAsync(new("dev.project-workbench", project.Project.Name, "Dev",
-                    Document, this, this, _readiness) { ControlRegistry = _controls, IsPublicationCurrent = () => IsCurrent(generation) }, scope.Token));
+                    Document, this, this, _readiness) { ThemePreference = _interfaceTheme, ControlRegistry = _controls, IsPublicationCurrent = () => IsCurrent(generation) }, scope.Token));
             }).GetTask();
             try { await original.AwaitAsync(dispatcher).ConfigureAwait(false); }
             catch (Exception error) { original.Capture(dispatcher, error); }
@@ -373,6 +391,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         {
             // Preserve source/outcome evidence in its actual owner; a withdrawn binding cannot disclose it.
             if (!_active || _work.IsRetiring) { value = null; return false; }
+            if (TryGetWorkbenchLayoutValue(path, out value)) return true;
             if (TryGetManualRecoveryConflictValue(path, out value)) return true;
             if (TryGetNewFileValue(path, out value)) return true;
             if (TryGetRunTargetValue(path, out value)) return true;
@@ -542,6 +561,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         lock (_gate)
         {
             if (!_active || _work.IsRetiring) return false;
+            if (IsWorkbenchLayoutCommand(command)) return true;
             if (IsAutonomousCommand(command)) return IsAutonomousActionAvailable(command);
             if (command == "dev.stop-manual-run") return _manualRunStop is not null && !_manualRunStop.IsCancellationRequested;
             if (_pending) return false;
@@ -630,6 +650,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (IsWorkbenchLayoutCommand(command)) return DispatchWorkbenchLayout(command, cancellationToken);
+        RevealWorkbenchCommand(command, cancellationToken);
         if (IsAutonomousCommand(command)) return DispatchAutonomousAsync(command, parameter, cancellationToken);
         if (command is "dev.new-compile-stage" or "dev.new-test-stage" or "dev.edit-build-stage" or "dev.review-build-stage") return ConfigureBuildStage(command);
         if (command == "dev.save-build-stage") return SaveBuildStageAsync(cancellationToken);
@@ -1150,6 +1172,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
     }
     private void SelectTab(SourceTab tab)
     {
+        _workbenchPanel = "code"; // A successfully selected existing source is shown in its editor.
         _selectedSourceTab = tab.Id; _sourcePath = tab.Path; _pass = tab.Pass;
         _editorTextSelection = null; InvalidateSourceFind();
         _editor = tab.Editor;

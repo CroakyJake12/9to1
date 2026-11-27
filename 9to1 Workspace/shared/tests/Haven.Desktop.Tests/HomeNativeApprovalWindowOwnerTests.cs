@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
+using Haven.Application;
 using HavenOS.Home.Core;
 using HavenOS.Home.NativeUI;
 using HomeObjectReference = HavenOS.Home.PermissionsTrustNotifications.HomeObjectReference;
@@ -38,12 +39,13 @@ public sealed class HomeNativeApprovalWindowOwnerTests
             var request = await permissions.AuthorizeAsync(new(null,
                 new(actor.ActorId, "Local frontdoor writer", actor.ProfileId, actor.AuthenticationRevision, true),
                 "frontdoor-once", new("write", "write.file.save", [target]),
-                new(["files.item"], 1, [target], false, "Save the exact reviewed document")), ct);
+                new(["files.item"], 1, [target], false, "Save the exact reviewed document",
+                    ResourceBinding: new(1, actor, [new("files.item", target.ObjectId, "1", ResourceAccess.Write)]))), ct);
             Assert.Equal(HomePermissionRequestState.PendingApproval, request.State);
             runtime = new HomeCoreRuntime([new HomeCoreStateService(store), new HomePermissionsCoreService(permissions, profiles)]);
             start = runtime.StartAsync(ct); await start;
             owner = new HomeNativeApprovalWindowOwner(runtime, profiles, permissions);
-            open = owner.OpenOriginalAsync(request.RequestId, ct); await open;
+            open = owner.OpenOriginalAsync(request.RequestId, ct, expectedActor: actor); await open;
             var window = Assert.IsType<Window>(owner.OriginalWindow);
             var surface = Assert.IsType<HomeApprovalCuiSurface>(owner.OriginalSurface);
             Assert.Same(surface, window.Content);
@@ -167,6 +169,83 @@ public sealed class HomeNativeApprovalWindowOwnerTests
                 if (coreClose is not null) await Collect(coreClose, errors);
             }
             try { if (created) Directory.Delete(root, true); } catch (Exception error) { Add(errors, error); }
+        }
+        Throw(errors);
+    }
+
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Actor_bound_review_refuses_a_different_profile_after_initialization_or_before_refocus(bool reuseWindow)
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var root = Path.Combine(Path.GetTempPath(), "astra-home-frontdoor-actor-" + Guid.NewGuid().ToString("N"));
+        var errors = new List<Exception>();
+        var principals = new HoldingPrincipal(new OperatingSystemPrincipalSource());
+        HomeCoreRuntime? runtime = null;
+        HomeNativeApprovalWindowOwner? owner = null;
+        Task? start = null, first = null, rejected = null, close = null, coreClose = null;
+        Exception? expectedOpen = null, expectedClose = null;
+        try
+        {
+            Directory.CreateDirectory(root);
+            var store = new FileHomeCoreStateStore(Path.Combine(root, "home.json"));
+            var profiles = new HomeLocalProfileIdentity(store, principals);
+            var actor = await profiles.GetCurrentAsync(ct); Assert.NotNull(actor);
+            var permissions = Permissions(store);
+            var target = new HomeObjectReference("files.item", Guid.NewGuid().ToString("N"));
+            var request = await permissions.AuthorizeAsync(new(null,
+                new(actor.ActorId, "Original writer", actor.ProfileId, actor.AuthenticationRevision, true),
+                "frontdoor-actor", new("write", "write.file.save", [target]),
+                new(["files.item"], 1, [target], false,
+                    ResourceBinding: new(1, actor, [new("files.item", target.ObjectId, "1", ResourceAccess.Write)]))), ct);
+            runtime = new HomeCoreRuntime([new HomeCoreStateService(store), new HomePermissionsCoreService(permissions, profiles)]);
+            start = runtime.StartAsync(ct); await start;
+            owner = new HomeNativeApprovalWindowOwner(runtime, profiles, permissions);
+            if (reuseWindow)
+            {
+                first = owner.OpenOriginalAsync(request.RequestId, ct, expectedActor: actor); await first;
+                Assert.True(owner.OriginalWindow!.IsVisible);
+            }
+            else principals.ArmOriginal();
+            rejected = owner.OpenOriginalAsync(request.RequestId, ct,
+                expectedActor: actor with { AuthenticationRevision = "another-authentication" });
+            if (!reuseWindow)
+            {
+                await principals.Entered.Task.WaitAsync(TimeSpan.FromSeconds(10), ct);
+                Assert.False(rejected.IsCompleted);
+                Assert.False(owner.OriginalWindow?.IsVisible ?? false);
+                principals.Release.TrySetResult();
+            }
+            expectedOpen = await Record.ExceptionAsync(() => rejected);
+            Assert.NotNull(expectedOpen);
+            Assert.Contains(LeafCauses(expectedOpen!), cause => cause is InvalidOperationException &&
+                cause.Message.Contains("exact canonical Home request", StringComparison.Ordinal));
+            var snapshot = await permissions.GetSnapshotAsync(cancellationToken: ct);
+            Assert.Equal(request.RequestId, Assert.Single(snapshot.PendingRequests).RequestId);
+            Assert.Empty(snapshot.Grants);
+            close = owner.CloseAndDrainAsync();
+            expectedClose = await Record.ExceptionAsync(() => close);
+            Assert.NotNull(expectedClose);
+            Assert.Contains(LeafCauses(expectedClose!), cause => LeafCauses(expectedOpen!).Any(original => ReferenceEquals(original, cause)));
+            Assert.True(owner.OriginalRetirementCapturedAndSettled);
+        }
+        catch (Exception error) { Add(errors, error); }
+        finally
+        {
+            principals.Release.TrySetResult();
+            if (owner is not null)
+                try { close ??= owner.CloseAndDrainAsync(); } catch (Exception error) { Add(errors, error); }
+            if (start is not null) await Collect(start, errors);
+            if (first is not null) await Collect(first, errors);
+            if (rejected is not null) await Collect(rejected, errors, expectedOpen);
+            if (close is not null) await Collect(close, errors, expectedClose);
+            if (runtime is not null)
+            {
+                try { coreClose = runtime.DisposeAsync().AsTask(); } catch (Exception error) { Add(errors, error); }
+                if (coreClose is not null) await Collect(coreClose, errors);
+            }
+            try { if (Directory.Exists(root)) Directory.Delete(root, true); } catch (Exception error) { Add(errors, error); }
         }
         Throw(errors);
     }

@@ -1,5 +1,6 @@
 using Avalonia.Threading;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Application;
 using Haven.Browser;
 using Haven.Core;
@@ -78,21 +79,24 @@ internal sealed class BuildBrowseAppContentFactory : IBrowseAppContentFactory
     private readonly HomeNativeWindowsComposition _home;
     private readonly CancellationToken _appLifetime, _hostLifetime;
     private readonly Func<BrowseNavigationIntent, Task, bool>? _queueNavigation;
+    private readonly CuiThemePreferenceContext? _interfaceTheme;
 
     private BuildBrowseAppContentFactory(IServiceProvider services, HomeNativeWindowsComposition home,
         CancellationToken appLifetime, CancellationToken hostLifetime,
-        Func<BrowseNavigationIntent, Task, bool>? queueNavigation)
+        Func<BrowseNavigationIntent, Task, bool>? queueNavigation, CuiThemePreferenceContext? interfaceTheme)
     {
         _services = services ?? throw new ArgumentNullException(nameof(services));
         _home = home ?? throw new ArgumentNullException(nameof(home));
         _appLifetime = appLifetime;
         _hostLifetime = hostLifetime;
         _queueNavigation = queueNavigation;
+        _interfaceTheme = interfaceTheme;
     }
 
     internal static BuildBrowseAppContentFactory BindOriginalSameProcess(IServiceProvider originalProvider,
         HomeNativeWindowsComposition sameHome, CancellationToken originalAppLifetime,
-        CancellationToken originalHostLifetime, Func<BrowseNavigationIntent, Task, bool>? queueNavigation = null)
+        CancellationToken originalHostLifetime, Func<BrowseNavigationIntent, Task, bool>? queueNavigation = null,
+        CuiThemePreferenceContext? interfaceTheme = null)
     {
         WindowsHomeSameProcessRuntimeObservation.DemandOriginalBinding(originalProvider, sameHome);
         ArgumentNullException.ThrowIfNull(originalProvider);
@@ -100,7 +104,7 @@ internal sealed class BuildBrowseAppContentFactory : IBrowseAppContentFactory
         originalHostLifetime.ThrowIfCancellationRequested();
         if (!originalAppLifetime.CanBeCanceled || !originalHostLifetime.CanBeCanceled)
             throw new ArgumentException("Retain the actual native app and host lifetimes.");
-        return new(originalProvider, sameHome, originalAppLifetime, originalHostLifetime, queueNavigation);
+        return new(originalProvider, sameHome, originalAppLifetime, originalHostLifetime, queueNavigation, interfaceTheme);
     }
 
     public IBrowseAppContentSession CreateSession(BrowseAppContentRequest request)
@@ -128,6 +132,7 @@ internal sealed class BuildBrowseAppContentFactory : IBrowseAppContentFactory
             var actors = _services.GetRequiredService<IAuthenticatedResourceActorSource>();
             var catalog = new SpaceDevelopmentReferenceCatalog(spaces, taskViews, workspace, actors);
             var workspaces = _services.GetRequiredService<IDeveloperWorkspaceStore>();
+            var startSettings = _services.GetRequiredService<IVersionedSettingsStore>();
             var workbenchFactory = _services.GetRequiredService<DeveloperProjectWorkbenchPageFactory>();
             var templateProviders = ResolveTemplateProviders(_services);
             var templateCatalog = new DeveloperProjectCatalog(templateProviders);
@@ -137,7 +142,7 @@ internal sealed class BuildBrowseAppContentFactory : IBrowseAppContentFactory
             //    been acquired yet, so construction cannot leak an acquired resource.
             var session = new BuildBrowseAppContentSession(request, location,
                 workspaces, development, coordinator, workbenchFactory,
-                spaces, catalog, lifetime, _queueNavigation);
+                spaces, catalog, lifetime, _queueNavigation, _interfaceTheme, startSettings);
 
             // 3) Acquire the native route LAST. If acquisition throws, no route was retained and the
             //    outer lifetime is disposed; nothing leaks. Once acquired, attach it through the

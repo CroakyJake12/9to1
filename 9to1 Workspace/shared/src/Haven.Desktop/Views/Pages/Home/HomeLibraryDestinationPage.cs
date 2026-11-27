@@ -21,7 +21,10 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
 {
     private sealed record LibraryRow(string Key, string DisplayName, string OwnerApp, string ArtifactType,
         string LastModified, string? Location, string? Owner, string? SharedBy, bool IsRecent, bool IsPinned,
-        bool IsShared, bool IsGenerated, HomeDeepLink Target);
+        bool IsShared, bool IsGenerated, HomeDeepLink Target, string AppName, string IconSource,
+        string FavouriteLabel, string FavouriteGlyph, int CardRow, int CardColumn);
+    private sealed record AppChoice(string? Id, string Name)
+    { public override string ToString() => Name; }
 
     private readonly HomeLibraryService _library;
     private readonly IHomeOriginalLibrarySource? _source;
@@ -36,14 +39,16 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     private Func<ReadOnlyMemory<byte>>? _createBoardDraft;
     private readonly TaskCompletionSource<BoardEmbeddedArtifactReference?> _selection = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly TaskCompletionSource<HomeDeepLink?> _folderSelection = new(TaskCreationOptions.RunContinuationsAsynchronously);
-    private readonly CuiControlLoader _loader = new();
+    private readonly CuiControlLoader _loader;
     private readonly CuiViewModel _bindings = new();
     private readonly TextBox _search = new() { MaxLength = 256 };
     private readonly TextBox _boardCreateName = new() { MaxLength = 120, Text = "New board" };
-    private readonly TextBox _ownerFilter = new() { MaxLength = 256 };
+    private readonly ComboBox _ownerFilter = new();
+    private readonly Dictionary<string, AppChoice> _knownApps = new(StringComparer.Ordinal);
+    private readonly AppChoice _allApps = new(null, "All apps");
     private readonly TextBox _typeFilter = new() { MaxLength = 256 };
     private readonly ComboBox _sort = new() { ItemsSource = new[] { "Recently modified", "Oldest first", "Name", "Type" }, SelectedIndex = 0 };
-    private readonly ComboBox _pinnedFilter = new() { ItemsSource = new[] { "Any pin state", "Pinned", "Not pinned" }, SelectedIndex = 0 };
+    private readonly ComboBox _pinnedFilter = new() { ItemsSource = new[] { "Any favourites", "Favourites", "Not favourites" }, SelectedIndex = 0 };
     private readonly ComboBox _sharedFilter = new() { ItemsSource = new[] { "Any sharing", "Shared", "Not shared" }, SelectedIndex = 0 };
     private readonly ComboBox _generatedFilter = new() { ItemsSource = new[] { "Any origin", "Generated", "Not generated" }, SelectedIndex = 0 };
     private readonly DesktopOriginalWorkLifetime _work;
@@ -58,6 +63,9 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     private Task<bool>? _preparation;
     private long _generation;
     private bool _active, _busy, _stopped;
+    private bool _dashboardPresentation, _showFilters, _updatingFilters;
+    private int _cardColumns = 1;
+    private readonly double _initialInterfaceScale;
     private string _status = "Browse authorised references from your apps.";
     internal string? SelectedBoardCreateDisplayName { get; private set; }
 
@@ -76,6 +84,9 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     {
         Dispatcher.UIThread.VerifyAccess(); _admit = admit; _queue = queue; _source = ownedSource;
         _prepareNavigation = prepareNavigation; _selectArtifact = selectArtifact;
+        _initialInterfaceScale = theme?.Current.Accessibility.DisplayScale ?? 1;
+        _loader = new(HomeAppsCuiDocument.CreateControlRegistry());
+        _ownerFilter.ItemsSource = new[] { _allApps }; _ownerFilter.SelectedItem = _allApps;
         _bindings.PropertyChanged += (_, args) => _bindingPropertyChanged?.Invoke(this, args);
         if (_selectArtifact is not null) _status = "Choose a Write document to embed. The selected reference does not grant content access.";
         _work = new(StopAsync, CleanupAsync); _library = create(new Router(this));
@@ -96,7 +107,8 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
         _loader.BindAuthoredControl("library-shared-filter", _ => _sharedFilter);
         _loader.BindAuthoredControl("library-generated-filter", _ => _generatedFilter);
         _search.TextChanged += (_, _) => RefreshBindings();
-        _ownerFilter.TextChanged += (_, _) => RefreshBindings(); _typeFilter.TextChanged += (_, _) => RefreshBindings();
+        _ownerFilter.SelectionChanged += (_, _) => { if (!_updatingFilters) RefreshBindings(); };
+        _typeFilter.TextChanged += (_, _) => RefreshBindings();
         _sort.SelectionChanged += (_, _) => RefreshBindings(); _pinnedFilter.SelectionChanged += (_, _) => RefreshBindings();
         _sharedFilter.SelectionChanged += (_, _) => RefreshBindings(); _generatedFilter.SelectionChanged += (_, _) => RefreshBindings();
         var loaded = _loader.TryLoad(document with { Components = [themeScope] });
@@ -104,6 +116,9 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
             throw new InvalidDataException("The canonical Home Library fragment could not be loaded.");
         _loader.WireBindings(loaded.Root); Content = loaded.Root;
         _bindings.Set("IsLibraryBrowseMode", _selectBoardFolder is null && _selectArtifact is null);
+        SizeChanged += (_, args) => ApplyLibraryWidth(args.NewSize.Width);
+        loaded.Root.ResourcesChanged += (_, _) => ApplyLibraryWidth(Bounds.Width);
+        ApplyLibraryWidth(Bounds.Width);
         RefreshBindings();
     }
     internal bool IsAlive => !_work.IsRetiring;
@@ -126,12 +141,80 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     internal Task<HomeDeepLink?> FolderSelection => _folderSelection.Task;
     internal bool IsSelectionMode => _selectArtifact is not null || _selectBoardFolder is not null;
     internal Task WhenActionsIdleAsync() => _loader.WhenActionsIdleAsync();
+    internal void SetDashboardPresentation()
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        if (_active || _initialization is not null || IsSelectionMode || _boardCreationHost is not null)
+            throw new InvalidOperationException("Choose the compact Library presentation before its first activation.");
+        _dashboardPresentation = true;
+        _query = _query with { Limit = 3 };
+        ApplyLibraryWidth(Bounds.Width);
+        RefreshBindings();
+    }
+
+    private void SelectOwnerApp(string? id)
+    {
+        if (id is not null && !_knownApps.ContainsKey(id)) _knownApps.Add(id, new(id, AppName(id)));
+        _updatingFilters = true;
+        try
+        {
+            _ownerFilter.ItemsSource = new[] { _allApps }.Concat(_knownApps.Values.OrderBy(item => item.Name, StringComparer.CurrentCultureIgnoreCase)).ToArray();
+            _ownerFilter.SelectedItem = id is null ? _allApps : _knownApps[id];
+        }
+        finally { _updatingFilters = false; }
+    }
+
+    private void RefreshOwnerChoices(IEnumerable<string> owners)
+    {
+        var selected = (_ownerFilter.SelectedItem as AppChoice)?.Id;
+        var changed = false;
+        foreach (var owner in owners.Distinct(StringComparer.Ordinal))
+            if (!_knownApps.ContainsKey(owner)) { _knownApps.Add(owner, new(owner, AppName(owner))); changed = true; }
+        if (changed) SelectOwnerApp(selected);
+    }
+
+    private static string AppName(string app) => app switch
+    {
+        "boards" => "Boards", "files" => "Files", "write" => "Write", "spaces" => "Spaces",
+        "build" => "Build", "plan" => "Plan", "present" => "Present", "data" => "Data", _ => app
+    };
+
+    // These are canonical source-app IDs from permitted references, never display-title guesses.
+    private static string AppIcon(string app) => app switch
+    {
+        "boards" => "ownerbrand:boards|boards", "files" => "ownerbrand:files|folder",
+        "write" => "ownerbrand:write|file", _ => "icon:file"
+    };
+
+    private void ApplyLibraryWidth(double physicalWidth)
+    {
+        if (_stopped || _work.IsRetiring) return;
+        var scale = Content is Control root ? CuiInterfaceScale.For(root) : _initialInterfaceScale;
+        var width = CuiInterfaceScale.LogicalWidth(physicalWidth, scale);
+        var wide = width >= 780;
+        var columns = width >= 900 ? 3 : width >= 580 ? 2 : 1;
+        _bindings.Set("LibraryWide", wide);
+        _bindings.Set("LibraryCellColumns", wide ? "2.4fr 1fr 1.8fr 1.3fr 1.4fr" : "1fr 1fr");
+        _bindings.Set("LibraryCellRows", wide ? "Auto" : "Auto Auto Auto");
+        _bindings.Set("LibraryNameSpan", wide ? 1 : 2);
+        _bindings.Set("LibraryAppColumn", wide ? 1 : 0); _bindings.Set("LibraryAppRow", wide ? 0 : 1);
+        _bindings.Set("LibraryLocationColumn", wide ? 2 : 1); _bindings.Set("LibraryLocationRow", wide ? 0 : 1);
+        _bindings.Set("LibraryAvailabilityColumn", wide ? 3 : 0); _bindings.Set("LibraryAvailabilityRow", wide ? 0 : 2);
+        _bindings.Set("LibraryDateColumn", wide ? 4 : 1); _bindings.Set("LibraryDateRow", wide ? 0 : 2);
+        _bindings.Set("LibraryCardColumns", string.Join(" ", Enumerable.Repeat("1fr", columns)));
+        _bindings.Set("LibraryScroll", !_dashboardPresentation);
+        if (_cardColumns != columns) { _cardColumns = columns; RefreshBindings(); }
+    }
     internal void InvokeOriginalSource(Action body) => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { body(); return true; });
-    internal Task ActivateAsync(CancellationToken token)
+    internal Task ActivateAsync(CancellationToken token) =>
+        ObserveActivationAsync(ActivateOriginalAsync(token), _activationObservers.Token);
+
+    /// <summary>Returns the actual child original for an encompassing owner that must join
+    /// source settlement. A departure observer is deliberately a different task contract.</summary>
+    internal Task ActivateOriginalAsync(CancellationToken token)
     {
         Dispatcher.UIThread.VerifyAccess(); _active = true;
-        var actual = _work.RunAsync(original => SearchAsync(original, token, _query.Offset), actualTask => _initialization ??= actualTask);
-        return ObserveActivationAsync(actual, _activationObservers.Token);
+        return _work.RunAsync(original => SearchAsync(original, token, _query.Offset), actualTask => _initialization ??= actualTask);
     }
     internal void SetInitialQuery(string ownerApp, string artifactType)
     {
@@ -140,7 +223,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
         ArgumentException.ThrowIfNullOrWhiteSpace(artifactType);
         if (_active || _initialization is not null || _page is not null)
             throw new InvalidOperationException("Set the initial Library filters before its first activation.");
-        _ownerFilter.Text = ownerApp;
+        SelectOwnerApp(ownerApp);
         _typeFilter.Text = artifactType;
     }
     internal void SetInitialSearch(string text, bool filesOnly)
@@ -152,7 +235,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
         if (_active || _initialization is not null || _page is not null)
             throw new InvalidOperationException("Set the initial Library search before its first activation.");
         _search.Text = text;
-        _ownerFilter.Text = filesOnly ? "files" : string.Empty;
+        SelectOwnerApp(filesOnly ? "files" : null);
         _typeFilter.Text = string.Empty;
     }
     internal void SetFolderSelectionMode(Func<HomeDeepLink, CancellationToken, Task<HomeDeepLink?>> selectCurrentFolder)
@@ -208,6 +291,12 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
             "isshared" => row.IsShared,
             "isgenerated" => row.IsGenerated,
             "target" => row.Target,
+            "appname" => row.AppName,
+            "iconsource" => row.IconSource,
+            "favouritelabel" => row.FavouriteLabel,
+            "favouriteglyph" => row.FavouriteGlyph,
+            "cardrow" => row.CardRow,
+            "cardcolumn" => row.CardColumn,
             _ => null
         };
         return value is not null;
@@ -219,6 +308,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     public bool? IsActionAvailable(string command) => IsAlive && _active && !_busy && (command switch
     {
         "SearchLibrary" or "RefreshLibrary" => true,
+        "ShowRecentLibrary" or "ShowFavouriteLibrary" or "ShowSharedLibrary" or "ToggleLibraryFilters" => !IsSelectionMode && !_dashboardPresentation,
         "OpenBoardFilesSetup" => _selectBoardFolder is not null && _source is Haven.Desktop.Services.NativeHomeFilesLibrarySource { RequiresWorkspaceSetup: true } && _openFilesSetup is not null,
         "ConfirmBoardFolder" => _selectBoardFolder is not null && _selectedBoardFolder is not null && !_folderSelection.Task.IsCompleted,
         "CancelBoardFolder" => _selectBoardFolder is not null && !_folderSelection.Task.IsCompleted,
@@ -237,6 +327,8 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     {
         Dispatcher.UIThread.VerifyAccess();
         if (IsActionAvailable(command) != true) throw new InvalidOperationException("This Library action is unavailable.");
+        if (command == "ToggleLibraryFilters")
+        { _showFilters = !_showFilters; RefreshBindings(); return ValueTask.CompletedTask; }
         return new(_work.RunAsync(async original =>
         {
             var generation = _generation;
@@ -284,6 +376,13 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
                         _folderSelection.TrySetResult(selectedLink);
                     });
                     return;
+                }
+                if (command is "ShowRecentLibrary" or "ShowFavouriteLibrary" or "ShowSharedLibrary")
+                {
+                    _pinnedFilter.SelectedIndex = command == "ShowFavouriteLibrary" ? 1 : 0;
+                    _sharedFilter.SelectedIndex = command == "ShowSharedLibrary" ? 1 : 0;
+                    _sort.SelectedIndex = 0;
+                    await SearchAsync(original, cancellationToken, 0); return;
                 }
                 if (command is "NextLibraryPage" or "PreviousLibraryPage" or "SearchLibrary" or "RefreshLibrary")
                 {
@@ -405,7 +504,10 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
             caller.ThrowIfCancellationRequested();
             if (!original.IsAcceptedPublicationCurrent) return;
             original.RunAcceptedPublicationCallback(() =>
-            { _query = query; _page = page.Succeeded ? page : null; _status = page.Message; });
+            {
+                _query = query; _page = page.Succeeded ? page : null; _status = page.Message;
+                if (page.Succeeded) RefreshOwnerChoices(page.Items.Select(item => item.OwnerApp));
+            });
         }
         catch (Exception cause) when (_source?.IsExpectedRefusal(cause) == true)
         { if (original.IsAcceptedPublicationCurrent) ClearUnavailable(cause.Message); }
@@ -420,7 +522,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     {
         Offset = offset,
         Text = Normalize(_search.Text),
-        OwnerApp = Normalize(_ownerFilter.Text),
+        OwnerApp = (_ownerFilter.SelectedItem as AppChoice)?.Id,
         ArtifactType = Normalize(_typeFilter.Text),
         Pinned = ReadFilter(_pinnedFilter.SelectedIndex),
         Shared = ReadFilter(_sharedFilter.SelectedIndex),
@@ -433,11 +535,31 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     {
         var available = _active && IsAlive && !_busy;
         var queryMatches = QueryInputsMatchCurrentPage();
-        _rows = _page?.Items.Select(item => new LibraryRow(item.OwnerApp + "/" + item.ArtifactId,
+        _rows = _page?.Items.Select((item, index) => new LibraryRow(item.OwnerApp + "/" + item.ArtifactId,
             item.DisplayName, item.OwnerApp, item.ArtifactType, item.LastModified.ToLocalTime().ToString("g"),
             item.Location, item.Owner, item.SharedBy, item.IsRecent, item.IsPinned, item.IsShared, item.IsGenerated,
-            item.OpenLink)).ToArray() ?? [];
+            item.OpenLink, AppName(item.OwnerApp), AppIcon(item.OwnerApp),
+            (item.IsPinned ? "Remove " : "Add ") + item.DisplayName + (item.IsPinned ? " from favourites" : " to favourites"),
+            item.IsPinned ? "★" : "☆", index / _cardColumns, index % _cardColumns)).ToArray() ?? [];
         _bindings.Set("LibraryRows", _rows);
+        _bindings.Set("LibraryCardRows", string.Join(" ", Enumerable.Repeat("Auto", Math.Max(1, (_rows.Length + _cardColumns - 1) / _cardColumns))));
+        _bindings.Set("IsLibraryBrowseMode", !IsSelectionMode && !_dashboardPresentation);
+        _bindings.Set("IsLibraryTable", !_dashboardPresentation);
+        _bindings.Set("IsDashboardLibrary", _dashboardPresentation);
+        // Empty conditional hosts still occupy stack gaps. Compact cards have no
+        // browse chrome; their optional source notice owns its own spacing instead.
+        _bindings.Set("LibrarySectionGap", _dashboardPresentation ? 0d : 16d);
+        _bindings.Set("LibrarySummaryMargin", _dashboardPresentation ? new Thickness(0, 0, 0, 12) : default(Thickness));
+        _bindings.Set("ShowLibraryFilters", _showFilters && !_dashboardPresentation && !IsSelectionMode);
+        _bindings.Set("LibraryFilterLabel", _showFilters ? "Fewer filters" : "More filters");
+        _bindings.Set("CanSelectLibraryView", available && !_dashboardPresentation && !IsSelectionMode);
+        _bindings.Set("IsRecentLibrary", _pinnedFilter.SelectedIndex == 0 && _sharedFilter.SelectedIndex == 0 && _sort.SelectedIndex == 0);
+        _bindings.Set("IsFavouriteLibrary", _pinnedFilter.SelectedIndex == 1 && _sharedFilter.SelectedIndex == 0);
+        _bindings.Set("IsSharedLibrary", _sharedFilter.SelectedIndex == 1 && _pinnedFilter.SelectedIndex == 0);
+        _bindings.Set("LibraryCount", _page is null ? string.Empty : _rows.Length == 0 ? "0 items" :
+            $"{_query.Offset + 1}–{_query.Offset + _rows.Length}" + (_page.HasMore ? " · more available" : $" of {_query.Offset + _rows.Length}"));
+        _bindings.Set("HasLibraryResults", _rows.Length > 0);
+        _bindings.Set("HasLibraryEmpty", _page is { Succeeded: true, Items.Count: 0 });
         _bindings.Set("IsBoardFolderSelection", _selectBoardFolder is not null);
         _bindings.Set("CanOpenBoardFilesSetup", available && _selectBoardFolder is not null && _source is Haven.Desktop.Services.NativeHomeFilesLibrarySource { RequiresWorkspaceSetup: true } && _openFilesSetup is not null);
         _bindings.Set("CanConfirmBoardFolder", available && _selectedBoardFolder is not null && !_folderSelection.Task.IsCompleted);
@@ -446,6 +568,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
         var summary = string.IsNullOrWhiteSpace(notice) ? _status : _status + " " + notice;
         if (_page is not null && !queryMatches) summary += " Search to apply the changed filters.";
         _bindings.Set("LibrarySummary", summary);
+        _bindings.Set("HasLibrarySummary", !_dashboardPresentation || _page is null || !string.IsNullOrWhiteSpace(notice) || _status != _page.Message);
         _bindings.Set("CanSearchLibrary", available);
         _bindings.Set("CanOpenHomeLibraryArtifact", available && _page?.Succeeded == true);
         _bindings.Set("CanToggleHomeLibraryPin", _selectArtifact is null && _selectBoardFolder is null && available && _page?.Succeeded == true);
@@ -460,7 +583,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
             ? $"{_query.Offset + 1}–{_query.Offset + page.Items.Count}" : "No matching authorised artifacts.");
         _loader.RefreshBindings();
     }
-    private bool IsBoardsLibraryQuery() => StringComparer.Ordinal.Equals(Normalize(_ownerFilter.Text), "files") &&
+    private bool IsBoardsLibraryQuery() => StringComparer.Ordinal.Equals((_ownerFilter.SelectedItem as AppChoice)?.Id, "files") &&
         StringComparer.OrdinalIgnoreCase.Equals(Normalize(_typeFilter.Text), "9to1 board document");
     private bool CanShowBoardCreationActions => IsBoardsLibraryQuery() && _boardCreationHost is not null;
     private bool CanCreateHomeLibraryBoard => CanShowBoardCreationActions &&
@@ -537,8 +660,17 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
     {
         CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
         _work.DemandExternalClose(); token.ThrowIfCancellationRequested();
-        if (_preparation is not null && !_preparation.IsCompletedSuccessfully) return _preparation;
-        return _preparation = _work.RunAsync(_ => Task.FromResult(true));
+        if (_preparation is null || _preparation.IsCompletedSuccessfully)
+            _preparation = PrepareCurrentLibraryAsync();
+        // Caller cancellation stops only this wait. The actual initialization, pin/open
+        // effects and their retained failures remain owned by this page and preflight.
+        return _preparation.WaitAsync(token);
+    }
+    private async Task<bool> PrepareCurrentLibraryAsync()
+    {
+        await _loader.WhenActionsIdleAsync().ConfigureAwait(false);
+        await _work.JoinAdmittedOriginalsAsync().ConfigureAwait(false);
+        return true;
     }
     internal Task CloseAndDrainAsync()
     {
@@ -554,6 +686,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
         var failures = new List<Exception>();
         async Task Join(Task task) { try { await task; } catch (Exception cause) { failures.Add(task.Exception ?? cause); } }
         await Join(_loader.WhenActionsIdleAsync());
+        if (_preparation is { } preparation) await Join(preparation);
         var disposed = false;
         try { _loader.Dispose(); disposed = true; } catch (Exception cause) { failures.Add(cause); }
         await Join(_loader.WhenActionsIdleAsync());

@@ -9,77 +9,136 @@
     <Action name="CloseSelectedTextPreview" command="9to1.Files.Preview.Close" />
     <Action name="OpenSidebarFolder" command="9to1.Files.OpenSidebarFolder" parameter="{Binding folder}" />
   </Actions>
-  <Page>
-    <Container id="files-browser-shell" Type="Grid" RowSizes="Auto 1fr Auto" Background="{Resource CuiBackgroundBrush}" AccessibleName="Files browser">
-      <Container id="files-navigation" Row="0" Type="Grid" RowSizes="Auto Auto" ColumnSizes="{Binding NavigationColumns}" MinHeight="48" Padding="12 6" CellGap="8" Background="{Resource CuiPanelBrush}">
-        <Container Type="Horizontal Stack" CellGap="2">
-          <Button id="files-back" Content="←" Action="9to1.Files.Back" Interactive="{Binding CanBack}" AccessibleName="Previous folder" Width="36" Height="32" Chromeless="True" />
-          <Button id="files-forward" Content="→" Action="9to1.Files.Forward" Interactive="{Binding CanForward}" AccessibleName="Next folder in history" Width="36" Height="32" Chromeless="True" />
-          <Button id="files-up" Content="↑" Action="9to1.Files.Up" Interactive="{Binding CanUp}" AccessibleName="Go to canonical parent folder" Width="36" Height="32" Chromeless="True" />
-          <Button id="files-refresh" Content="↻" Action="9to1.Files.Refresh" Interactive="{Binding CanNavigate}" AccessibleName="Refresh folder" Width="36" Height="32" Chromeless="True" />
+  <Page OwnsBackdrop="True">
+    <Container id="files-browser-shell" Type="Grid" RowSizes="Auto 1fr Auto" Background="{Resource CuiWorkspaceBrush}" AccessibleName="Files browser">
+      <Container id="files-navigation" Row="0" Type="Grid" RowSizes="Auto Auto" ColumnSizes="{Binding NavigationColumns}" MinHeight="48" Padding="12 6" CellGap="8" BorderColor="{Resource CuiLineBrush}" BorderWidth="0 0 0 1">
+        <Container id="files-history-controls" Type="Horizontal Stack" CellGap="2">
+          <Button id="files-back" Action="9to1.Files.Back" Interactive="{Binding CanBack}" AccessibleName="Previous folder" Width="32" Height="32" Padding="0" Chromeless="True" Background="{Resource CuiTransparentBrush}">
+            <Image id="files-back-artwork" Source="files:back" Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Button>
+          <Button id="files-forward" Action="9to1.Files.Forward" Interactive="{Binding CanForward}" AccessibleName="Next folder in history" Width="32" Height="32" Padding="0" Chromeless="True" Background="{Resource CuiTransparentBrush}">
+            <Image id="files-forward-artwork" Source="files:forward" Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Button>
+          <Button id="files-up" Action="9to1.Files.Up" Interactive="{Binding CanUp}" AccessibleName="Go to canonical parent folder" Width="32" Height="32" Padding="0" Chromeless="True" Background="{Resource CuiTransparentBrush}">
+            <Image id="files-up-artwork" Source="files:up" Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Button>
+          <Button id="files-refresh" Action="9to1.Files.Refresh" Interactive="{Binding CanNavigate}" AccessibleName="Refresh folder" Width="32" Height="32" Padding="0" Chromeless="True" Background="{Resource CuiTransparentBrush}">
+            <Image id="files-refresh-artwork" Source="files:refresh" Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Button>
         </Container>
-        <Container id="files-address" Column="1" Type="Horizontal Stack" Padding="12 6" CornerRadius="6" Background="{Resource CuiPanel2Brush}" ClipToBounds="True" AccessibleName="Current Files location">
-          <Text Text="{Binding FolderTitle}" FontWeight="SemiBold" VerticalAlignment="Center" />
+        <Container id="files-address" Column="1" Type="Horizontal Stack" Padding="12 6" CornerRadius="{Resource CuiControlRadius}" Background="{Resource CuiPanelBrush}" ClipToBounds="True" AccessibleName="Current Files location">
+          <Text id="files-current-folder-title" Text="{Binding FolderTitle}" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" />
         </Container>
         <Container id="files-search-bar" Row="{Binding SearchRow}" Column="{Binding SearchColumn}" ColumnSpan="{Binding SearchColumnSpan}" Type="Grid" ColumnSizes="1fr Auto" CellGap="4">
           <Input id="files-search-input" Type="Text" AccessibleName="Search this folder" />
           <Button id="files-search" Column="1" Content="Search" Action="9to1.Files.Search" Interactive="{Binding CanNavigate}" AccessibleName="Search canonical names in this folder" />
         </Container>
       </Container>
-      <Container id="files-content-layout" Row="1" Type="Grid" ColumnSizes="{Binding BodyColumns}" RowSizes="{Binding BodyRows}" CellGap="8" Padding="8">
-        <Container id="files-sidebar" Type="Vertical Stack" IsVisible="{Binding SidebarVisible}" Width="240" Padding="8 12" CellGap="6" VerticalScrolling="True" Background="{Resource CuiPanelBrush}" AccessibleName="Files navigation">
-          <Text Text="Locations" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" Margin="8 4" />
-          <Button id="files-home" Content="Files" Action="9to1.Files.Home" Interactive="{Binding CanNavigate}" AccessibleName="Go to Files root" HorizontalContentAlignment="Left" MinHeight="36" Chromeless="True" />
-          <Button id="files-trash" Content="Trash" Action="9to1.Files.Trash" Interactive="{Binding CanNavigate}" AccessibleName="Browse recoverable deleted items" HorizontalContentAlignment="Left" MinHeight="36" Chromeless="True" />
-          <Button id="files-drive" Content="Google Drive" Action="9to1.Files.Drive.Connect" Interactive="{Binding CanDriveConnect}" AccessibleName="Connect or open Google Drive" HorizontalContentAlignment="Left" MinHeight="36" Chromeless="True" />
-          <Button id="files-connect-server" Content="Server Drive (R2, S3)" Action="9to1.Files.Drive.Server" Interactive="{Binding CanDriveConnect}" AccessibleName="Connect a Cloudflare R2 or S3-compatible drive" HorizontalContentAlignment="Left" MinHeight="36" Chromeless="True" />
-          <Button id="files-connect-selfhosted" Content="Self-Hosted Drive (WebDAV)" Action="9to1.Files.Drive.SelfHosted" Interactive="{Binding CanDriveConnect}" AccessibleName="Connect a self-hosted WebDAV drive" HorizontalContentAlignment="Left" MinHeight="36" Chromeless="True" />
-          <Button id="files-drive-disconnect" Content="Disconnect Google Drive" Action="9to1.Files.Drive.Disconnect" IsVisible="{Binding DriveConnected}" AccessibleName="Disconnect Google Drive" HorizontalContentAlignment="Left" MinHeight="36" Chromeless="True" />
-          <Text Text="{Binding SidebarHeading}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" Margin="8 16 8 4" TextWrapping="Wrap" />
-          <Repeat Source="{Binding SidebarFolders}" As="folder" Key="{Binding folder.id}" Panel="Vertical Stack">
-            <Button Action="OpenSidebarFolder" Interactive="{Binding CanNavigate}" AccessibleName="{Binding folder.openName}" HorizontalContentAlignment="Left" MinHeight="34" Chromeless="True">
-              <Container Type="Grid" ColumnSizes="Auto 1fr" CellGap="10"><Image Source="files:folder" Width="18" Height="18" /><Text Column="1" Text="{Binding folder.name}" TextWrapping="Wrap" /></Container>
-            </Button>
-          </Repeat>
+      <Container id="files-content-layout" Row="1" Type="Grid" ColumnSizes="{Binding BodyColumns}" RowSizes="{Binding BodyRows}">
+        <Container id="files-sidebar" Type="Vertical Stack" IsVisible="{Binding SidebarVisible}" Width="{Binding SidebarWidth}" Padding="12 18" CellGap="8" VerticalScrolling="True" BorderColor="{Resource CuiLineBrush}" BorderWidth="0 0 1 0" AccessibleName="Files navigation">
+          <Container id="files-brand" Type="Horizontal Stack" CellGap="10" Padding="0 0 0 20">
+            <Image id="files-brand-artwork" Source="files:folder" Width="28" Height="28" />
+            <Text id="files-brand-name" Text="Files" IsVisible="{Binding WideSidebar}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+          </Container>
+          <Button id="files-home" Content="{Binding DeviceLabel}" Action="9to1.Files.Home" Interactive="{Binding CanNavigate}" AccessibleName="Go to Files root" HorizontalContentAlignment="{Binding SidebarButtonAlignment}" Padding="{Binding SidebarButtonPadding}" MinHeight="40" Chromeless="True" AccentRole="Primary" Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextBrush}" BorderWidth="0" Selected="{Binding DeviceSelected}" />
+          <Button id="files-trash" Content="{Binding TrashLabel}" Action="9to1.Files.Trash" Interactive="{Binding CanNavigate}" AccessibleName="Browse recoverable deleted items" HorizontalContentAlignment="{Binding SidebarButtonAlignment}" Padding="{Binding SidebarButtonPadding}" MinHeight="40" Chromeless="True" AccentRole="Primary" Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextBrush}" BorderWidth="0" Selected="{Binding TrashSelected}" />
+          <Button id="files-drive" Content="{Binding DriveLabel}" Action="9to1.Files.Drive.Connect" Interactive="{Binding CanDriveConnect}" AccessibleName="Connect or open Google Drive" HorizontalContentAlignment="{Binding SidebarButtonAlignment}" Padding="{Binding SidebarButtonPadding}" MinHeight="40" Chromeless="True" AccentRole="Primary" Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextBrush}" BorderWidth="0" Selected="{Binding DriveSelected}" />
+          <Container id="files-providers" Type="Menu" HorizontalAlignment="Stretch">
+          <Button id="files-providers-menu" Content="{Binding ProvidersLabel}" Type="Menu Item" AccessibleName="Connected and available drive providers" Padding="{Binding SidebarButtonPadding}" HorizontalContentAlignment="{Binding SidebarButtonAlignment}" MinHeight="40" Chromeless="True">
+            <Button id="files-connect-server" Content="Server Drive (R2, S3)" Action="9to1.Files.Drive.Server" Interactive="{Binding CanDriveConnect}" AccessibleName="Connect a Cloudflare R2 or S3-compatible drive" />
+            <Button id="files-connect-selfhosted" Content="Self-Hosted Drive (WebDAV)" Action="9to1.Files.Drive.SelfHosted" Interactive="{Binding CanDriveConnect}" AccessibleName="Connect a self-hosted WebDAV drive" />
+            <Button id="files-drive-disconnect" Content="Disconnect Google Drive" Action="9to1.Files.Drive.Disconnect" IsVisible="{Binding DriveConnected}" AccessibleName="Disconnect Google Drive" />
+          </Button>
+          </Container>
+          <Container id="files-current-folders" Type="Vertical Stack" CellGap="4" IsVisible="{Binding WideSidebar}">
+            <Text id="files-sidebar-heading" Text="{Binding SidebarHeading}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" Margin="4 20 4 6" TextWrapping="Wrap" />
+            <Repeat Source="{Binding SidebarFolders}" As="folder" Key="{Binding folder.id}" Panel="Vertical Stack">
+              <Button id="files-sidebar-folder" Action="OpenSidebarFolder" Interactive="{Binding CanNavigate}" AccessibleName="{Binding folder.openName}" HorizontalContentAlignment="Left" MinHeight="40" Chromeless="True" Background="{Resource CuiTransparentBrush}">
+                <Container id="files-sidebar-folder-content" Type="Grid" ColumnSizes="Auto 1fr" CellGap="10"><Image id="files-sidebar-folder-artwork" Source="files:folder-outline" Width="18" Height="18" /><Text id="files-sidebar-folder-name" Column="1" Text="{Binding folder.name}" TextWrapping="Wrap" /></Container>
+              </Button>
+            </Repeat>
+          </Container>
         </Container>
-        <Container id="files-main" Column="{Binding MainColumn}" Type="Grid" RowSizes="Auto Auto 1fr Auto" MinWidth="208" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" CornerRadius="8" ClipToBounds="True">
-          <Container id="files-command-bar" Type="Wrap" Padding="10 6" CellGap="6">
-            <Button Content="Locations" Type="Menu Item" IsVisible="{Binding CompactLayout}" AccessibleName="Files locations">
-              <Button Content="Files" Action="9to1.Files.Home" Interactive="{Binding CanNavigate}" />
-              <Button Content="Trash" Action="9to1.Files.Trash" Interactive="{Binding CanNavigate}" />
-              <Button Content="Google Drive" Action="9to1.Files.Drive.Connect" Interactive="{Binding CanDriveConnect}" />
+        <Container id="files-main" Column="{Binding MainColumn}" Type="Grid" RowSizes="Auto Auto Auto Auto 1fr Auto" MinWidth="180" ClipToBounds="True">
+          <Container id="files-command-bar" Type="Wrap" Padding="18 8" CellGap="6" BorderColor="{Resource CuiLineBrush}" BorderWidth="0 0 0 1">
+            <Button id="files-compact-locations" Content="Locations" Type="Menu Item" IsVisible="{Binding CompactLayout}" AccessibleName="Files locations">
+              <Button id="files-compact-home" Content="Files" Action="9to1.Files.Home" Interactive="{Binding CanNavigate}" />
+              <Button id="files-compact-trash" Content="Trash" Action="9to1.Files.Trash" Interactive="{Binding CanNavigate}" />
+              <Button id="files-compact-drive" Content="Google Drive" Action="9to1.Files.Drive.Connect" Interactive="{Binding CanDriveConnect}" />
             </Button>
+            <Button id="files-new" Content="New folder" AccentRole="Primary" Action="9to1.Files.Name.Show" Interactive="{Binding CanShowNameEditor}" AccessibleName="Enter a new folder name" />
             <Button id="files-open" Content="Open" Action="9to1.Files.Open" Interactive="{Binding CanOpen}" />
             <Button id="files-preview" Content="Preview" Action="PreviewSelectedText" Interactive="{Binding CanPreviewText}" AccessibleName="Read-only preview of selected text file" />
-            <Input id="files-name-input" AccessibleName="Folder or item name" PlaceholderText="Folder or item name" Type="Text" IsEnabled="{Binding CanEditItemName}" />
-            <Button id="files-create-folder" content="New folder" action="9to1.Files.CreateFolder" accessible-name="Review creating a folder in Home" Interactive="{Binding CanCreateFolder}" />
-            <Button id="files-rename" content="Rename" action="9to1.Files.Rename" accessible-name="Review renaming the selected item in Home" Interactive="{Binding CanRename}" />
-            <Button Content="New / edit" Type="Menu Item" AccessibleName="Folder and item changes">
-        <Button id="files-delete" content="Move to Trash" action="9to1.Files.Delete" accessible-name="Review moving the selected item to recoverable Trash in Home" Interactive="{Binding CanDelete}" />
-        <Button id="files-restore" content="Restore" action="9to1.Files.Restore" accessible-name="Review restoring the selected deleted item to its original folder in Home" Interactive="{Binding CanRestore}" />
-        <Button id="files-choose-move" content="Cut" action="9to1.Files.ChooseMove" accessible-name="Cut the selected item without moving it yet" Interactive="{Binding CanChooseMove}" />
-        <Button id="files-move" content="Paste (move)" action="9to1.Files.Move" accessible-name="Review pasting the original cut item into this folder in Home" Interactive="{Binding CanMove}" />
-        <Button id="files-cancel-move" content="Clear cut" action="9to1.Files.CancelMove" accessible-name="Clear the Files cut item" Interactive="{Binding CanCancelMove}" />
-        <Text text="{Binding MoveSelection}" accessible-name="Files clipboard" />
-        <Text text="{Binding PendingChange}" accessible-name="Pending Files change" />
-        <Button id="files-apply" content="Apply" action="9to1.Files.Apply" accessible-name="Apply the original Home-reviewed Files change" Interactive="{Binding CanApply}" />
-        <Button id="files-cancel-review" content="Cancel change" action="9to1.Files.CancelReview" accessible-name="Cancel the pending change before execution" Interactive="{Binding CanCancelReview}" />
-        <Button id="files-retry-audit" content="Retry audit" action="9to1.Files.RetryAudit" accessible-name="Retry Home audit without repeating the Files change" Interactive="{Binding CanRetryAudit}" />
+            <Button id="files-item-actions" Content="Actions" Type="Menu Item" AccessibleName="Selected item actions">
+              <Button id="files-rename-draft" Content="Rename…" Action="9to1.Files.Name.Rename" Interactive="{Binding CanBeginRename}" />
+              <Button id="files-delete" content="Move to Trash" action="9to1.Files.Delete" accessible-name="{Binding TrashAccessibleName}" Interactive="{Binding CanDelete}" />
+              <Button id="files-restore" content="Restore" action="9to1.Files.Restore" accessible-name="{Binding RestoreAccessibleName}" Interactive="{Binding CanRestore}" />
+              <Button id="files-choose-move" content="Cut" action="9to1.Files.ChooseMove" accessible-name="Cut the selected item without moving it yet" Interactive="{Binding CanChooseMove}" />
+              <Button id="files-move" content="Paste (move)" action="9to1.Files.Move" accessible-name="Review pasting the original cut item into this folder in Home" Interactive="{Binding CanMove}" />
+              <Button id="files-cancel-move" content="Clear cut" action="9to1.Files.CancelMove" accessible-name="Clear the Files cut item" Interactive="{Binding CanCancelMove}" />
             </Button>
-            <Input id="files-displayed-sort" Type="Select" AccessibleName="Sort names on this displayed page" />
+            <Input id="files-displayed-sort" Type="Select" Width="152" AccessibleName="Sort names on this displayed page" ToolTip="Sort names on this displayed page" />
+            <Button id="files-view-list" Content="List" Action="9to1.Files.View.List" Interactive="{Binding CanChangeView}" Selected="{Binding ListView}" AccessibleName="Show the same folder as a list" />
+            <Button id="files-view-grid" Content="Grid" Action="9to1.Files.View.Grid" Interactive="{Binding CanChangeView}" Selected="{Binding GridView}" AccessibleName="Show the same folder as a grid" />
+            <Button id="files-toggle-details" Content="{Binding DetailsToggleLabel}" Action="9to1.Files.Details.Toggle" Interactive="{Binding CanToggleDetails}" />
           </Container>
-          <Container id="files-list-header" Row="1" Type="Grid" ColumnSizes="{Binding ItemColumns}" Height="40" Padding="12 0" Background="{Resource CuiPanel2Brush}">
-            <Text Text="Name" VerticalAlignment="Center" FontWeight="SemiBold" />
-            <Text Column="1" Text="Date modified" IsVisible="{Binding WideColumns}" VerticalAlignment="Center" />
-            <Text Column="2" Text="Type" IsVisible="{Binding WideColumns}" VerticalAlignment="Center" />
-            <Text Column="3" Text="Size" IsVisible="{Binding WideColumns}" VerticalAlignment="Center" HorizontalAlignment="Right" />
+          <Container id="files-name-editor" Row="1" Type="Vertical Stack" IsVisible="{Binding NameEditorVisible}" CellGap="8" Padding="18 12" Background="{Resource CuiPanelBrush}">
+            <Text id="files-name-hint" Text="{Binding NameEditorHint}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            <Container id="files-name-editor-controls" Type="Wrap" CellGap="8">
+              <Input id="files-name-input" AccessibleName="Folder or item name" PlaceholderText="Folder or item name" Type="Text" IsEnabled="{Binding CanEditItemName}" />
+              <Button id="files-create-folder" content="Create folder" action="9to1.Files.CreateFolder" accessible-name="{Binding CreateAccessibleName}" Interactive="{Binding CanCreateFolder}" />
+              <Button id="files-rename" content="Rename" action="9to1.Files.Rename" accessible-name="{Binding RenameAccessibleName}" Interactive="{Binding CanRename}" />
+              <Button id="files-cancel-name" Content="Discard name" Action="9to1.Files.Name.Cancel" Interactive="{Binding CanCancelName}" />
+            </Container>
           </Container>
-          <Input id="files-canonical-list" Type="List" Row="2" AccessibleName="Canonical Files items" BorderWidth="0" />
-          <Button id="files-next" Row="3" Content="Load more items" Action="9to1.Files.More" Interactive="{Binding CanMore}" IsVisible="{Binding CanMore}" HorizontalAlignment="Center" />
+          <Container id="files-review-panel" Row="2" Type="Vertical Stack" IsVisible="{Binding ReviewVisible}" CellGap="8" Padding="18 12" Background="{Resource CuiPanel2Brush}" AccessibleName="Retained Files change">
+            <Text id="files-clipboard-description" text="{Binding MoveSelection}" TextWrapping="Wrap" accessible-name="Files clipboard" />
+            <Text id="files-pending-description" text="{Binding PendingChange}" TextWrapping="Wrap" accessible-name="Pending Files change" />
+            <Container id="files-review-controls" Type="Wrap" CellGap="8">
+              <Button id="files-apply" content="Apply" action="9to1.Files.Apply" accessible-name="Apply the original Home-reviewed Files change" Interactive="{Binding CanApply}" AccentRole="Primary" />
+              <Button id="files-cancel-review" content="Cancel change" action="9to1.Files.CancelReview" accessible-name="Cancel the pending change before execution" Interactive="{Binding CanCancelReview}" />
+              <Button id="files-retry-audit" content="Retry audit" action="9to1.Files.RetryAudit" accessible-name="Retry Home audit without repeating the Files change" Interactive="{Binding CanRetryAudit}" />
+            </Container>
+          </Container>
+          <Container id="files-list-header" Row="3" Type="Grid" ColumnSizes="{Binding ItemColumns}" IsVisible="{Binding ListView}" Height="40" Padding="34 0 54 0" CellGap="10" BorderColor="{Resource CuiLineBrush}" BorderWidth="0 0 0 1">
+            <Text id="files-name-heading" Text="Name" VerticalAlignment="Center" FontWeight="SemiBold" />
+            <Text id="files-modified-heading" Column="1" Text="Modified" IsVisible="{Binding WideColumns}" VerticalAlignment="Center" />
+            <Text id="files-size-heading" Column="2" Text="Size" IsVisible="{Binding WideColumns}" VerticalAlignment="Center" />
+            <Text id="files-availability-heading" Column="3" Text="Availability" IsVisible="{Binding AvailabilityHeadingVisible}" VerticalAlignment="Center" />
+          </Container>
+          <Input id="files-canonical-list" Type="List" Row="4" AccessibleName="Canonical Files items" BorderWidth="0" Margin="18 14 18 0" Background="Transparent" />
+          <Container id="files-empty-state" Row="4" Type="Vertical Stack" IsVisible="{Binding EmptyFolder}" CellGap="10" Padding="28" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Text id="files-empty-title" Text="{Binding EmptyTitle}" FontWeight="SemiBold" FontSize="18" TextWrapping="Wrap" />
+            <Text id="files-empty-message" Text="{Binding EmptyMessage}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          </Container>
+          <Container id="files-unavailable-state" Row="4" Type="Vertical Stack" IsVisible="{Binding UnavailableFolder}" CellGap="10" Padding="28" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Text id="files-unavailable-title" Text="This location is unavailable" FontWeight="SemiBold" FontSize="18" />
+            <Text id="files-unavailable-message" Text="{Binding Status}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          </Container>
+          <Container id="files-list-footer" Row="5" Type="Wrap" CellGap="14" Padding="18 10">
+            <Text id="files-item-count" Text="{Binding ItemCountLabel}" Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" />
+            <Button id="files-next" Content="Load more items" Action="9to1.Files.More" Interactive="{Binding CanMore}" IsVisible="{Binding CanMore}" />
+          </Container>
         </Container>
-        <Container id="files-details-pane" MaxHeight="{Binding DetailsMaxHeight}" Column="{Binding DetailsColumn}" Row="{Binding DetailsRow}" Width="{Binding DetailsWidth}" IsVisible="{Binding HasSelection}" Type="Vertical Stack" CellGap="12" Padding="16" VerticalScrolling="True" Background="{Resource CuiPanelBrush}" AccessibleName="Selected item details">
-          <Text Text="Details" FontSize="18" FontWeight="SemiBold" />
-          <Button id="files-technical-details" Content="{Binding TechnicalDetailsLabel}" Action="9to1.Files.TechnicalDetails" Interactive="{Binding CanShowDetails}" HorizontalAlignment="Left" />
+        <Container id="files-details-pane" MaxHeight="{Binding DetailsMaxHeight}" Column="{Binding DetailsColumn}" Row="{Binding DetailsRow}" Width="{Binding DetailsWidth}" IsVisible="{Binding DetailsShown}" Type="Grid" RowSizes="Auto Auto Auto 1fr" CellGap="{Binding DetailsGap}" Padding="{Binding DetailsPadding}" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1 0 0 0" AccessibleName="Selected item details">
+          <Container id="files-details-heading" Type="Grid" ColumnSizes="1fr Auto"><Text id="files-details-title" Text="Details" FontSize="14" FontWeight="SemiBold" /><Button id="files-details-close" Column="1" Action="9to1.Files.Details.Toggle" Interactive="{Binding CanToggleDetails}" AccessibleName="Hide selected item details" Chromeless="True" Width="28" Height="28" Padding="0" Background="{Resource CuiTransparentBrush}"><Image id="files-details-close-artwork" Source="files:close" Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" /></Button></Container>
+          <Container id="files-selected-artwork" Row="1" Type="Grid" Height="140" IsVisible="{Binding SelectedArtworkVisible}" CornerRadius="12" Background="{Resource CuiPanel2Brush}">
+            <Image id="files-selected-folder-artwork" Source="files:folder-outline" Width="64" Height="64" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding SelectedFolder}" />
+            <Text id="files-selected-file-badge" Text="{Binding SelectedBadge}" FontSize="22" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding SelectedFile}" />
+          </Container>
+          <Container id="files-selected-summary" Row="2" Type="Grid" ColumnSizes="{Binding SelectedSummaryColumns}" RowSizes="Auto Auto" CellGap="10">
+            <Container id="files-selected-description" Type="Vertical Stack" CellGap="6">
+              <Text id="files-selected-name" Text="{Binding SelectedName}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <Text id="files-selected-kind" Text="{Binding SelectedKind}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+            </Container>
+            <Button id="files-details-open" Row="{Binding SelectedOpenRow}" Column="{Binding SelectedOpenColumn}" Content="{Binding SelectedOpenLabel}" Action="9to1.Files.Open" Interactive="{Binding CanOpen}" AccentRole="Primary" HorizontalAlignment="Left" VerticalAlignment="Center" />
+          </Container>
+          <Container id="files-details-scroll" Row="3" Type="Vertical Stack" CellGap="12" VerticalScrolling="True" HorizontalScrolling="False">
+          <Text id="files-open-unavailable" Text="{Binding SelectedOpenReason}" IsVisible="{Binding SelectedOpenUnavailable}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Text id="files-selected-availability" Text="{Binding SelectedAvailability}" TextWrapping="Wrap" />
+          <Text id="files-selected-location" Text="{Binding SelectedLocation}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Text id="files-selected-details" TextWrapping="Wrap" text="{Binding SelectedDetails}" accessible-name="Selected item displayed details" />
+          <Button id="files-technical-details" Content="{Binding TechnicalDetailsLabel}" Action="9to1.Files.TechnicalDetails" Interactive="{Binding CanShowDetails}" HorizontalAlignment="Left" Chromeless="True" Background="{Resource CuiTransparentBrush}" />
         <If Condition="{Binding TextPreviewVisible}">
           <Container id="files-text-preview" Type="Vertical Stack" CellGap="6" MaxHeight="280" VerticalScrolling="True" HorizontalScrolling="False" accessible-name="Read-only plain text preview">
             <Container Type="Wrap" CellGap="8">
@@ -90,10 +149,8 @@
             <Text id="files-preview-content" text="{Binding TextPreviewContent}" TextWrapping="Wrap" accessible-name="Selected file plain text; read only" />
           </Container>
         </If>
-        <Text id="files-selected-details" TextWrapping="Wrap" text="{Binding SelectedDetails}" accessible-name="Selected item displayed details" />
         <Button id="files-review-access" content="Manage access" action="9to1.Files.Share.Get" accessible-name="Review direct access grants on the selected owned item" Interactive="{Binding CanReviewAccess}" />
-        <If Condition="{Binding SharingVisible}">
-          <Container id="files-sharing" Type="Vertical Stack" CellGap="6" MaxHeight="260" VerticalScrolling="True" HorizontalScrolling="False" accessible-name="Direct access grants">
+          <Container id="files-sharing" Type="Vertical Stack" IsVisible="{Binding SharingVisible}" CellGap="6" accessible-name="Direct access grants">
             <Text text="{Binding SharingTitle}" />
             <Text text="These are direct grants. Parent folder access may also apply. Revocation stops future access through this grant; copies already made cannot be recalled." />
             <If Condition="{Binding SharingEmpty}"><Text text="No direct grants on this item." /></If>
@@ -108,8 +165,7 @@
                 <Button content="Revoke access…" action="RevokeDisplayedGrant" Interactive="{Binding share.CanRevoke}" accessible-name="Review revoking this direct access grant in Home" />
               </Container>
             </Repeat>
-            <If Condition="{Binding ShareScopeVisible}">
-              <Container id="files-share-scope-editor" Type="Vertical Stack" CellGap="6" accessible-name="Existing recipient permission editor">
+              <Container id="files-share-scope-editor" Type="Vertical Stack" IsVisible="{Binding ShareScopeVisible}" CellGap="6" accessible-name="Existing recipient permission editor">
                 <Text text="{Binding ShareScopeRecipient}" FontWeight="SemiBold" />
                 <Text text="Direct scope only. Viewer permits metadata browsing; Editor also permits scoped renaming. Content edits use the owning app’s permissions." TextWrapping="Wrap" />
                 <Input id="files-share-scope-role" Type="Select" accessible-name="Existing recipient role" Interactive="{Binding CanEditShareScopeDraft}" />
@@ -117,16 +173,15 @@
                   <Input id="files-share-scope-expiry-switch" Type="Switch" Checked="{Binding ShareScopeExpiryEnabled, Mode=TwoWay}" Interactive="{Binding CanEditShareScopeDraft}" accessible-name="Expire this direct access grant" />
                   <Text text="Expire this access" />
                 </Container>
-                <If Condition="{Binding ShareScopeExpiryEnabled}">
+                <Container id="files-share-scope-expiry-field" Type="Vertical Stack" IsVisible="{Binding ShareScopeExpiryEnabled}">
                   <Input id="files-share-scope-expiry" Type="Text" placeholder-text="YYYY-MM-DDTHH:mm:ssZ" accessible-name="Future access expiry in UTC" Interactive="{Binding CanEditShareScopeDraft}" />
-                </If>
+                </Container>
                 <Text text="{Binding ShareScopeHint}" TextWrapping="Wrap" />
                 <Container Type="Wrap" CellGap="8">
                   <Button id="files-review-share-scope" content="Review change in Home" action="ReviewDisplayedGrantScope" Interactive="{Binding CanReviewShareScope}" />
                   <Button id="files-cancel-share-scope" content="Cancel edit" action="CancelDisplayedGrantScope" Interactive="{Binding CanCancelShareScope}" />
                 </Container>
               </Container>
-            </If>
             <Container Type="Wrap" CellGap="8">
               <Button id="files-more-access" content="More grants" action="9to1.Files.Share.More" Interactive="{Binding CanReadMoreGrants}" />
               <Button id="files-close-access" content="Close access" action="9to1.Files.Share.Close" Interactive="{Binding CanCloseAccess}" />
@@ -134,11 +189,11 @@
             </Container>
             <Text text="Adding recipients is not available with this profile yet. Existing recipients’ direct access can be reviewed, changed or revoked here. Permission edits replace that recipient’s previous direct grants on this item. Quick role changes keep the current expiry; Edit permissions can change or remove it. Inherited access may still apply. Viewer permits metadata browsing; Editor also permits scoped renaming. Document and content edits require their separate app permissions. No invitation will be sent." />
           </Container>
-        </If>
+          </Container>
         </Container>
       </Container>
-      <Container Row="2" Type="Horizontal Stack" Height="32" Padding="16 4" Background="{Resource CuiPanelBrush}" CellGap="12">
-        <Text id="files-status" Text="{Binding Status}" AccessibleName="Files operation status" VerticalAlignment="Center" />
+      <Container id="files-status-bar" Row="2" Type="Horizontal Stack" MinHeight="32" Padding="16 6" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="0 1 0 0">
+        <Text id="files-status" Text="{Binding Status}" AccessibleName="Files operation status" VerticalAlignment="Center" TextWrapping="Wrap" />
       </Container>
     </Container>
   </Page>

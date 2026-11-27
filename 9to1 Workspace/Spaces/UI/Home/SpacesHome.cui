@@ -45,6 +45,8 @@
     <Action name="NewChat" command="spaces.new-chat" parameter="{Binding selection.id}" />
     <Action name="OpenConversation" command="spaces.open-conversation" parameter="{Binding conversation.openIntent}" />
     <Action name="OpenSidebarItem" command="spaces.open-sidebar-item" parameter="{Binding item.sidebarItemId}" />
+    <Action name="OpenGroups" command="spaces.open-groups" parameter="{Binding selection.id}" />
+    <Action name="OpenSpecialists" command="spaces.open-specialists" parameter="{Binding selection.id}" />
     <Action name="ToggleSidebar" command="spaces.toggle-sidebar" />
     <Action name="ToggleSwitcher" command="spaces.toggle-space-switcher" />
     <Action name="ToggleOverflow" command="spaces.toggle-space-overflow" />
@@ -56,14 +58,14 @@
     <Action name="ReviewSidebarTask" command="spaces.tasks.review" parameter="{Binding task.openIntent}" />
   </Actions>
   <Theme Name="user_preference">
-    <Page id="spaces-page" role="main" accessible-name="Spaces">
-      <Container id="spaces-body" Type="Grid" RowSizes="1fr" ColumnSizes="1fr" Interactive="{Binding spaces.canMutate}" Background="{Resource CuiBackgroundBrush}">
-        <Container id="spaces-layout" Type="Grid" RowSizes="72 1fr" ColumnSizes="{Binding spaces.layoutColumns}" CellGap="0" Background="{Resource CuiBackgroundBrush}">
-          <Container id="space-app-header" Type="Horizontal Stack" Column="1" ColumnSpan="2" Padding="24 14" CellGap="14" Background="{Resource CuiPanelBrush}" AccessibleName="Current Space">
+    <Page OwnsBackdrop="True" Background="{Resource CuiWorkspaceBrush}" id="spaces-page" role="main" accessible-name="Spaces">
+      <Container id="spaces-body" Type="Grid" RowSizes="1fr" ColumnSizes="1fr" Interactive="{Binding spaces.canMutate}" Background="{Resource CuiWorkspaceBrush}">
+        <Container id="spaces-layout" Type="Grid" RowSizes="72 1fr" ColumnSizes="{Binding spaces.layoutColumns}" CellGap="0" Background="{Resource CuiWorkspaceBrush}">
+          <Container id="space-app-header" Type="Horizontal Stack" Column="1" ColumnSpan="2" Padding="24 14" CellGap="14" Background="{Resource CuiChromeMaterial}" AccessibleName="Current Space">
             <Image Source="{Binding selection.iconSource}" Width="32" Height="32" VerticalAlignment="Center" />
             <Text Text="{Binding selection.name}" FontSize="24" FontWeight="Bold" VerticalAlignment="Center" />
           </Container>
-          <Container id="spaces-sidebar" RowSpan="2" role="navigation" accessible-name="Spaces navigation" width="70" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" Padding="8" CellGap="8" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 1 0">
+          <Container id="spaces-sidebar" RowSpan="2" role="navigation" accessible-name="Spaces navigation" width="70" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" Padding="8" CellGap="8" Background="{Resource CuiChromeMaterial}" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 1 0">
             <!--
               The top rail control is a deliberate viewing/managing action: it opens the SAME
               canonical management presentation (the authored space-details region). It never
@@ -153,6 +155,10 @@
               the extension's stable SidebarItemId, and an element whose target this Space cannot yet
               resolve stays visible but explicitly not actionable.
             -->
+            <Container id="space-organisation-destinations" Type="Vertical Stack" CellGap="4" IsVisible="{Binding spaces.hasOrganisationDestinations}">
+              <Button id="space-chat-groups" action="OpenGroups" content="Chat Groups" accessible-name="Inspect Chat groups in this Space" Selected="{Binding spaces.groupsSelected}" AccentRole="Primary" HorizontalContentAlignment="Left" Padding="12" BorderWidth="0" CornerRadius="8" Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextSoftBrush}" />
+              <Button id="space-specialists" action="OpenSpecialists" content="Specialists" accessible-name="Inspect Specialists for this conversation" Selected="{Binding spaces.specialistsSelected}" AccentRole="Primary" HorizontalContentAlignment="Left" Padding="12" BorderWidth="0" CornerRadius="8" Background="{Resource CuiTransparentBrush}" Foreground="{Resource CuiTextSoftBrush}" />
+            </Container>
             <Repeat id="space-sidebar-items" Source="{Binding spaces.sidebarItems}" As="item" Key="{Binding item.sidebarItemId}">
               <Button id="open-space-sidebar-item" HorizontalContentAlignment="Stretch" action="OpenSidebarItem" accessible-name="{Binding item.openLabel}" Interactive="{Binding item.isActionable}" Padding="14" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
                 <Container id="space-sidebar-item-row" role="listitem" accessible-name="{Binding item.label}" Type="Horizontal Stack" CellGap="8">
@@ -243,7 +249,7 @@
                       </Container>
                     </Container>
                   </If>
-                  <Text id="space-history-notice" text="{Binding spaces.conversationHistoryNotice}" font-size="12" foreground="{Resource CuiTextSoftBrush}" accessible-name="Chat history search status" />
+                  <Text id="space-history-notice" text="{Binding spaces.conversationHistoryNotice}" font-size="12" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" accessible-name="Chat history search status" />
                 </Container>
                 <Container id="space-recent-chats-divider" Type="Vertical Stack" Height="1" Background="{Resource CuiLineBrush}" />
                 <Repeat id="space-conversations" Source="{Binding spaces.conversations}" As="conversation" Key="{Binding conversation.id}">

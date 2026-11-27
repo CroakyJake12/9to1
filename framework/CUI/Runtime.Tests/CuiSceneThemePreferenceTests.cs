@@ -316,6 +316,128 @@ public sealed class CuiSceneThemePreferenceTests
         }, CancellationToken.None);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Retained_scene_follows_selected_app_scope_without_replacing_content_or_home_preferences(bool guarded)
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            var source = new Source("Glow", "profile-a");
+            using var context = new CuiThemePreferenceContext(source);
+            using var host = new CuiSceneHost();
+            Window? window = null;
+            try
+            {
+                var scene = Scene(context, guarded) with { PresentationScope = new("Home", "app.home") };
+                await host.ShowAsync(scene).WaitAsync(Bound);
+                window = new Window { Content = host, Width = 640, Height = 360 };
+                window.Show(); window.UpdateLayout();
+                var root = host.Content;
+                var input = host.GetVisualDescendants().OfType<TextBox>().Single(control => control.Name == "draft");
+                input.Text = "This unsaved draft survives each selected app";
+                Assert.True(input.Focus()); input.SelectionStart = 5; input.SelectionEnd = 12;
+                var originalPreference = context.Current;
+                foreach (var app in new[] { new CuiScenePresentationScope("Spaces", "app.spaces"),
+                    new CuiScenePresentationScope("Build", "app.dev"), new CuiScenePresentationScope("Home", "app.home") })
+                {
+                    Assert.True(host.UpdatePresentationScope(app));
+                    window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                    var palette = CuiSurfacePaletteCatalog.For(app.Surface, CuiAppearance.Dark, CuiTheme.Glow, null, app.AppId);
+                    Assert.Equal(palette.AccentPalette.Primary.Middle, Resource<Color>(host, "CuiAccentPrimaryColor"));
+                    Assert.Equal(palette.AccentPalette.Primary.Middle, Resource<Color>(input, "CuiAccentPrimaryColor"));
+                    Assert.Same(originalPreference, context.Current);
+                    Assert.Same(root, host.Content);
+                    Assert.Equal("This unsaved draft survives each selected app", input.Text);
+                    Assert.Equal("unsaved", input.SelectedText);
+                    Assert.True(input.IsKeyboardFocusWithin);
+                }
+                // The current selected app remains the owner when Home changes the theme.
+                Assert.True(host.UpdatePresentationScope(new("Build", "app.dev")));
+                source.Change("Professional", CuiAppearance.Dark);
+                Assert.Equal(CuiSurfacePaletteCatalog.For("Build", CuiAppearance.Dark, CuiTheme.Professional, null, "app.dev").AccentPalette.Primary.Middle,
+                    Resource<Color>(input, "CuiAccentPrimaryColor"));
+                Assert.Same(root, host.Content);
+                return true;
+            }
+            finally
+            {
+                window?.Close();
+                if (guarded) await host.CloseOriginalAsync().WaitAsync(Bound);
+            }
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Reentrant_selected_app_scope_keeps_the_latest_selection_and_revoked_scene_refuses_updates()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            using var context = new CuiThemePreferenceContext(new Source("Glow", "profile-a"));
+            using var host = new CuiSceneHost();
+            var admitted = true;
+            await host.ShowAsync(Scene(context, true) with { IsPublicationCurrent = () => admitted }).WaitAsync(Bound);
+            var root = host.Content;
+            var changed = false;
+            host.ResourcesChanged += (_, _) =>
+            {
+                if (changed) return;
+                changed = true;
+                Assert.True(host.UpdatePresentationScope(new("Build", "app.dev")));
+            };
+            Assert.True(host.UpdatePresentationScope(new("Home", "app.home")));
+            Assert.True(changed);
+            var buildAccent = CuiSurfacePaletteCatalog.For("Build", CuiAppearance.Dark, CuiTheme.Glow, null, "app.dev").AccentPalette.Primary.Middle;
+            Assert.Equal(buildAccent, Resource<Color>(host, "CuiAccentPrimaryColor"));
+            Assert.Same(root, host.Content);
+            admitted = false;
+            Assert.False(host.UpdatePresentationScope(new("Spaces", "app.spaces")));
+            Assert.Equal(buildAccent, Resource<Color>(host, "CuiAccentPrimaryColor"));
+            admitted = true;
+            Assert.True(host.UpdatePresentationScope(new("Home", "app.home")));
+            var revokeDuringPublication = true;
+            host.ResourcesChanged += (_, _) =>
+            {
+                if (!revokeDuringPublication) return;
+                revokeDuringPublication = false;
+                admitted = false;
+            };
+            Assert.False(host.UpdatePresentationScope(new("Spaces", "app.spaces")));
+            admitted = true;
+            // The failed Spaces attempt may have replaced the host's provider already. The
+            // previously completed Home scope must be painted again, not skipped as a cache hit.
+            Assert.True(host.UpdatePresentationScope(new("Home", "app.home")));
+            Assert.Equal(CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Dark, CuiTheme.Glow, null, "app.home").AccentPalette.Primary.Middle,
+                Resource<Color>(host, "CuiAccentPrimaryColor"));
+            Assert.Same(root, host.Content);
+            await host.CloseOriginalAsync().WaitAsync(Bound);
+            return true;
+        }, CancellationToken.None);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Authored_scene_backdrop_owns_the_surface_in_both_retained_host_modes(bool guarded)
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            using var context = new CuiThemePreferenceContext(new Source("Glow", "profile-a"));
+            using var host = new CuiSceneHost();
+            var document = new CuiRichParser().Parse("""
+                <Page OwnsBackdrop="True" Background="{Resource CuiWorkspaceBrush}"><Text text="App content" /></Page>
+                """);
+            await host.ShowAsync(Scene(context, guarded) with { Document = document }).WaitAsync(Bound);
+            Assert.Equal(Colors.Transparent, Assert.IsAssignableFrom<ISolidColorBrush>(host.Background).Color);
+            Assert.IsType<CuiGlowFieldBrush>(Assert.IsType<CuiMaterialPanel>(host.Content).Background);
+            if (guarded) await host.CloseOriginalAsync().WaitAsync(Bound);
+            return true;
+        }, CancellationToken.None);
+    }
+
     private static CuiNativeScene Scene(CuiThemePreferenceContext context, bool guarded)
     {
         var bindings = new CuiViewModel();

@@ -8,6 +8,11 @@
     <ProjectReference Include="../NativeHost/HavenOS.Files.NativeHost.csproj" />
     <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
     <EmbeddedResource Include="../Source/Files/src/Files.App/Assets/FolderIcon.png" LogicalName="HavenOS.Files.NativeUI.Assets.FolderIcon.png" />
+    <EmbeddedResource Include="../../Browse/NativeUI/Assets/nav-back.svg" LogicalName="HavenOS.Files.NativeUI.Assets.nav-back.svg" />
+    <EmbeddedResource Include="../../Browse/NativeUI/Assets/nav-forward.svg" LogicalName="HavenOS.Files.NativeUI.Assets.nav-forward.svg" />
+    <EmbeddedResource Include="../../Browse/NativeUI/Assets/nav-reload.svg" LogicalName="HavenOS.Files.NativeUI.Assets.nav-reload.svg" />
+    <EmbeddedResource Include="../../shared/src/Haven.Desktop/Assets/folder.svg" LogicalName="HavenOS.Files.NativeUI.Assets.folder-outline.svg" />
+    <EmbeddedResource Include="../../shared/src/Haven.Desktop/Assets/close.svg" LogicalName="HavenOS.Files.NativeUI.Assets.close.svg" />
     <EmbeddedResource Include="UI/FilesDetailsRow.cui" LogicalName="HavenOS.Files.NativeUI.UI.FilesDetailsRow.cui" />
     <EmbeddedResource Include="UI/FilesBrowser.cui" LogicalName="HavenOS.Files.NativeUI.UI.FilesBrowser.cui" />
   </ItemGroup>

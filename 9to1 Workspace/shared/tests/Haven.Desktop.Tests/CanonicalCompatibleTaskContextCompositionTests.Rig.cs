@@ -18,16 +18,16 @@ namespace Haven.Desktop.Tests;
 // manual Home WRITE, separate from the still-live original Studio project READ.
 public sealed partial class CanonicalCompatibleTaskContextCompositionTests
 {
-    private static async Task Run(Func<Rig, Task> body)
+    private static async Task Run(Func<Rig, Task> body, bool includeOriginalManualOwners = false)
     {
-        var rig = new Rig(); var errors = new List<Exception>();
+        var rig = new Rig(includeOriginalManualOwners: includeOriginalManualOwners); var errors = new List<Exception>();
         try { await rig.InitializeAsync(); await body(rig); } catch (Exception cause) { errors.Add(cause); }
         await rig.JoinOriginalsAsync(errors);
         // Keep all evidence on failure or unknown cleanup. No reclamation is performed.
         if (errors.Count == 1) ExceptionDispatchInfo.Capture(errors[0]).Throw();
         if (errors.Count != 0) throw new AggregateException("Actual compatible Tasks fixture failed; retained at " + rig.Root, errors);
     }
-    private sealed partial class Rig(bool includeOriginalDen = false)
+    private sealed partial class Rig(bool includeOriginalDen = false, bool includeOriginalManualOwners = false)
     {
         internal readonly string Root = Path.Combine(Path.GetTempPath(), "actual-compatible-tasks-" + Guid.NewGuid().ToString("N"));
         private readonly CancellationTokenSource _active = new(TimeSpan.FromSeconds(60));
@@ -37,6 +37,10 @@ public sealed partial class CanonicalCompatibleTaskContextCompositionTests
         private readonly List<CanonicalProjectTaskContextCreateOwner> _allCreators = [];
         private CloudflareLocalDomainRegistration? _registration;
         private HomeCompatibleTaskContextWriteSource? _writes;
+        private HomeDeveloperProjectReadAdmissionSource? _manualReads;
+        private HomeDeveloperProjectEditAdmissionSource? _manualEdits;
+        private FilesDeveloperOriginalSourceSelection? _manualSelections;
+        private IDeveloperProjectOriginalPhysicalCaptureSource? _manualCapture;
         private Paths _paths = null!;
         internal ServiceProvider Provider = null!; internal HomeLocalDomainComposition Home = null!;
         internal CanonicalSqliteOriginalStoreOwner Store = null!;
@@ -74,11 +78,28 @@ public sealed partial class CanonicalCompatibleTaskContextCompositionTests
             _paths = new(Root); Database = new(_paths);
             NativeFilesWorkspaceService? files = null; NativeFilesWorkspaceAuthority? authority = null;
             HomeColdProjectReadReconciliation? reads = null;
+            var resolvers = new List<ICanonicalResourceAccessResolver>
+            {
+                new HomeColdProjectReadResourceResolver(() => reads ?? throw new InvalidOperationException("Actual READ owner unavailable.")),
+                new HomeCompatibleTaskContextWriteResourceResolver(() => _writes ?? throw new InvalidOperationException("Actual WRITE owner unavailable."))
+            };
+            var policies = new List<IHomeActionPolicySource>
+            { new HomeColdProjectReadActionPolicySource(), new HomeCompatibleTaskContextWriteActionPolicy() };
+            HomeDeveloperProjectReadResourceResolver? manualReadResolver = null;
+            HomeDeveloperProjectEditResourceResolver? manualEditResolver = null;
+            HomeDeveloperProjectReadActionPolicySource? manualReadPolicy = null;
+            HomeDeveloperProjectEditActionPolicySource? manualEditPolicy = null;
+            if (includeOriginalManualOwners)
+            {
+                manualReadResolver = new(() => _manualReads ?? throw new InvalidOperationException("The SAME manual Home READ owner is unavailable."));
+                manualEditResolver = new(() => _manualEdits ?? throw new InvalidOperationException("The SAME manual Home WRITE owner is unavailable."));
+                manualReadPolicy = new(); manualEditPolicy = new();
+                resolvers.Add(manualReadResolver); resolvers.Add(manualEditResolver);
+                policies.Add(manualReadPolicy); policies.Add(manualEditPolicy);
+            }
             _registration = CloudflareLocalDomainRegistration.CreateOriginal(new FileHomeCoreStateStore(Path.Combine(homeRoot, "state.json")),
                 new OperatingSystemPrincipalSource(), _paths,
-                originalResolvers: [new HomeColdProjectReadResourceResolver(() => reads ?? throw new InvalidOperationException("Actual READ owner unavailable.")),
-                    new HomeCompatibleTaskContextWriteResourceResolver(() => _writes ?? throw new InvalidOperationException("Actual WRITE owner unavailable."))],
-                originalPolicies: [new HomeColdProjectReadActionPolicySource(), new HomeCompatibleTaskContextWriteActionPolicy()],
+                originalResolvers: resolvers, originalPolicies: policies,
                 configureOriginalStores: identity =>
                 {
                     files = new(identity.StateStore, identity.Profiles);
@@ -107,9 +128,47 @@ public sealed partial class CanonicalCompatibleTaskContextCompositionTests
             var databaseDescriptor = Assert.Single(services, value => value.ServiceType == typeof(SqliteDatabase));
             services[services.IndexOf(databaseDescriptor)] = ServiceDescriptor.Singleton(Database);
             services.AddSingleton(files!); services.AddSingleton(authority!);
-            services.AddFilesNativeHost(); services.AddHavenOriginalNativeDevelopment();
+            services.AddFilesNativeHost();
+            if (includeOriginalManualOwners)
+            {
+                // Compose the maintained manual READ/WRITE and kernel owners in the SAME
+                // Home/Files graph before the factory decides which capabilities exist.
+                // Registration grants nothing; setup and process execution remain absent.
+                services.AddHavenOwnedDeveloperSourceReads(Home,
+                    provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(), manualReadResolver!, manualReadPolicy!);
+                services.AddHavenOwnedDeveloperSourceEdits(Home,
+                    provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(), manualEditResolver!, manualEditPolicy!);
+                services.AddSingleton<IDeveloperProjectOriginalPhysicalCaptureSource>(provider =>
+                    Assert.IsType<WorkspaceToolService>(provider.GetRequiredService<IWorkspaceToolService>())
+                        .CreateOriginalDeveloperCaptureSource(provider.GetRequiredService<IDeveloperProjectOriginalReadAdmissionSource>(),
+                            () => _manualSelections ?? throw new InvalidOperationException("The SAME manual Files selection owner is unavailable."),
+                            () => throw new NotSupportedException("This fixture does not admit project setup."),
+                            provider.GetRequiredService<IDeveloperProjectOriginalEditAdmissionSource>()));
+                services.AddSingleton<FilesDeveloperOriginalSourceSelection>(provider => new(
+                    provider.GetRequiredService<NativeFilesWorkspaceAuthority>(),
+                    provider.GetRequiredService<IDeveloperProjectOriginalPhysicalCaptureSource>(),
+                    provider.GetRequiredService<IDeveloperProjectOriginalReadAdmissionSource>(),
+                    provider.GetRequiredService<FileDeveloperWorkspaceStore>()));
+                services.AddSingleton<IDeveloperProjectOriginalPhysicalReadSelectionSource>(provider =>
+                    provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>());
+                services.AddSingleton<IDeveloperProjectOriginalEditScopeSource>(provider =>
+                    provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>());
+            }
+            services.AddHavenOriginalNativeDevelopment();
             services.AddHavenOwnedNativeColdProjectResources(Home);
             Provider = services.BuildServiceProvider(); ProjectReads = Provider.GetRequiredService<HomeColdProjectReadReconciliation>(); reads = ProjectReads;
+            if (includeOriginalManualOwners)
+            {
+                _manualReads = Provider.GetRequiredService<HomeDeveloperProjectReadAdmissionSource>();
+                _manualEdits = Provider.GetRequiredService<HomeDeveloperProjectEditAdmissionSource>();
+                _manualCapture = Provider.GetRequiredService<IDeveloperProjectOriginalPhysicalCaptureSource>();
+                _manualSelections = Provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>();
+                Assert.Same(_manualReads, Provider.GetRequiredService<IDeveloperProjectOriginalReadAdmissionSource>());
+                Assert.Same(_manualEdits, Provider.GetRequiredService<IWorkspaceManualEditFinalFenceValidator>());
+                Assert.Same(_manualSelections, Provider.GetRequiredService<IDeveloperProjectOriginalEditScopeSource>());
+                Assert.NotNull(Provider.GetRequiredService<DeveloperManualSourceReadOwner>());
+                Assert.NotNull(Provider.GetRequiredService<DeveloperManualSourceEditOwner>());
+            }
             Assert.Same(Database, Provider.GetRequiredService<SqliteDatabase>());
             await Keep(Database.InitializeAsync(Token));
             foreach (var file in new[] { _paths.DatabasePath, _paths.DatabasePath + "-wal", _paths.DatabasePath + "-shm" })
@@ -288,6 +347,14 @@ public sealed partial class CanonicalCompatibleTaskContextCompositionTests
             closes.Clear();
             foreach (var owner in _allWrites) try { closes.Add(Keep(owner.CloseAndDrainOriginalAsync())); } catch (Exception cause) { AddUnexpected(cause, errors); }
             foreach (var close in closes) try { await close; } catch (Exception cause) { AddUnexpected(close.Exception ?? cause, errors); }
+            foreach (Func<Task> factory in new Func<Task>[]
+            {
+                () => _manualEdits?.CloseAndDrainOriginalEditsAsync() ?? Task.CompletedTask,
+                () => _manualReads?.CloseAndDrainOriginalReadsAsync() ?? Task.CompletedTask,
+                () => _manualSelections?.CloseAndDrainOriginalSelectionsAsync() ?? Task.CompletedTask,
+                () => _manualCapture?.CloseAndDrainOriginalCapturesAsync() ?? Task.CompletedTask
+            })
+            { Task? close = null; try { close = Keep(factory()); await close; } catch (Exception cause) { AddUnexpected(close?.Exception ?? cause, errors); } }
             foreach (Func<Task> factory in new Func<Task>[] { () => LiveRead?.CloseAndDrainOriginalAsync() ?? Task.CompletedTask,
                 () => ProjectReads?.CloseAndDrainOriginalAsync() ?? Task.CompletedTask, () => Store?.CloseAndDrainAsync() ?? Task.CompletedTask })
             { Task? close = null; try { close = Keep(factory()); await close; } catch (Exception cause) { AddUnexpected(close?.Exception ?? cause, errors); } }

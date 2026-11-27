@@ -8,6 +8,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Application;
 using Haven.Desktop.Services;
 using Haven.Desktop.ViewModels;
@@ -19,7 +20,7 @@ namespace Haven.Desktop.Views.Pages.Development;
 /// <summary>Native existing-reference picker. Borrowed Home readiness and Task/Dev services
 /// remain global owners; this page owns only its original metadata/open tasks and CUI host.
 /// It creates no task, project, actor, permission, provider or Ready/frame certificate.</summary>
-public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, ICuiBindingContext,
+public sealed partial class DeveloperSavedProjectsPage : UserControl, IActivatablePage, ICuiBindingContext,
     ICuiWritableBindingContext, ICuiRepeatItemBindingContext, ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged,
     IDesktopOriginalRetirementParticipant, IDesktopOriginalRetirementJoinGuard, IAsyncDisposable
 {
@@ -117,7 +118,7 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
         _work = new(StopOriginalPresentationAsync, DetachOriginalPresentationAsync);
         retainActualPartial(this); // Original shell captures this SAME page before any host/document/publication.
         _work.DemandAdmission();
-        _host = new CuiSceneHost();
+        _host = new CuiSceneHost(DeveloperBuildCuiControls.Create());
         _work.DemandAdmission();
         Document = DeveloperLandingCuiDocument.Load();
         AutomationProperties.SetAutomationId(this, "DeveloperSavedProjects");
@@ -153,6 +154,23 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
     private bool IsCurrent(long generation)
     { lock (_gate) return _active && !_work.IsRetiring && _generation == generation && !_windowLifetime.IsCancellationRequested && !_connectionLifetime.IsCancellationRequested; }
 
+    private CuiThemePreferenceContext? _interfaceTheme;
+
+    /// <summary>Borrows the actual Home observation before this native page activates.
+    /// The scene owns its subscription; this page never owns Home preferences.</summary>
+    internal void BindInterfaceTheme(CuiThemePreferenceContext? theme)
+    {
+        if (theme is null) return;
+        lock (_gate)
+        {
+            _work.DemandAdmission();
+            if (_active) throw new InvalidOperationException("Bind the Home theme before page activation.");
+            if (_interfaceTheme is not null && !ReferenceEquals(_interfaceTheme, theme))
+                throw new InvalidOperationException("The page already borrows a different Home theme observation.");
+            _interfaceTheme = theme;
+        }
+    }
+
     public Task ActivateAsync(CancellationToken cancellationToken)
     {
         long generation; lock (_gate) { _work.DemandAdmission(); _active = true; generation = ++_generation; }
@@ -169,7 +187,7 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
             {
                 original.DemandPublication();
                 show = InvokeOriginalSource(() => _host!.ShowAsync(new("dev.saved-projects", "Dev", "Dev",
-                    Document!, this, this, _originalHomeReadiness!) { IsPublicationCurrent = () => IsCurrent(generation) }, scope.Token));
+                    Document!, this, this, _originalHomeReadiness!) { ThemePreference = _interfaceTheme, IsPublicationCurrent = () => IsCurrent(generation) }, scope.Token));
             }).GetTask());
             try { await original.AwaitAsync(dispatcher).ConfigureAwait(false); }
             catch (Exception error) { original.Capture(dispatcher, error); }
@@ -208,6 +226,8 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
                 unavailable = PublishAsync(original, () =>
                 {
                     _page = null; _manualRows = []; _metadataAvailable = false; _manualMetadataAvailable = false;
+                    _startPreferencesAvailable = false;
+                    _setupStatus = "Saved setup preferences could not be read. Your current setup choices were retained; refresh to try again.";
                     _status = "Saved projects could not be read. Refresh to try again.";
                 });
                 await original.AwaitAsync(unavailable).ConfigureAwait(false);
@@ -220,7 +240,7 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
     private async Task ReadAndPublishOriginalAsync(DesktopOriginalWorkLifetime.Original original, CancellationToken token)
     {
         long sequence; lock (_gate) sequence = ++_readSequence;
-        await PublishAsync(original, () => { _page = null; _manualRows = []; _metadataAvailable = false; _manualMetadataAvailable = false; _templateCatalogAvailable = false; _templateOptions = []; _templateReview = null; _projectPage = 0; _manualCatalogStatus = "Reading saved manual project roots…"; _status = "Reading saved projects…"; }).ConfigureAwait(false);
+        await PublishAsync(original, () => { _page = null; _manualRows = []; _metadataAvailable = false; _manualMetadataAvailable = false; _startPreferencesAvailable = false; _templateCatalogAvailable = false; _templateOptions = []; _templateReview = null; _projectPage = 0; _manualCatalogStatus = "Reading saved manual project roots…"; _status = "Reading saved projects…"; }).ConfigureAwait(false);
         var before = await ObserveOriginalHomeAsync(original, token).ConfigureAwait(false);
         if (before.State != CuiSceneAvailabilityState.Ready)
         { await PublishAsync(original, () => _status = before.Message).ConfigureAwait(false); return; }
@@ -240,8 +260,14 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
                 var choices = DeveloperSavedProjectChoices.Build(listed.Value, token);
                 if (choices.Succeeded && choices.Value is not null)
                 {
-                    manualRows = choices.Value.Select(choice => new ManualProjectItem(choice.SelectionKey, choice.Title,
-                        choice.Summary, "Manual open — no AI task or model required", choice.RootSummary, choice.Reference, true)).ToArray();
+                    manualRows = choices.Value.Select(choice =>
+                    {
+                        var root = listed.Value.Single(workspace => workspace.WorkspaceId == choice.Reference.WorkspaceId)
+                            .Roots.Single(item => item.RootId == choice.Reference.RootId);
+                        return new ManualProjectItem(choice.SelectionKey, choice.Title, choice.Summary,
+                            "Manual open — no AI task or model required", choice.RootSummary, choice.Reference, true,
+                            root.Location, root.EnvironmentId);
+                    }).ToArray();
                     manualAvailable = true; manualCoverage = $"{manualRows.Length} saved manual project/root/repository choices. Opening rechecks current source access.";
                 }
                 else manualCoverage = "Saved manual project roots are unavailable: " + choices.Error?.Message;
@@ -257,15 +283,17 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
             if (result.Succeeded && result.Value is not null)
             { templates = result.Value.ToArray(); templateAvailable = true; }
         }
+        var preferences = await ReadStartPreferencesAsync(original, token).ConfigureAwait(false);
         var after = await ObserveOriginalHomeAsync(original, token).ConfigureAwait(false);
         await PublishAsync(original, () =>
         {
             if (_readSequence != sequence) return;
             if (after.State != CuiSceneAvailabilityState.Ready) { _status = after.Message; _manualRows = []; _manualMetadataAvailable = false; _templateOptions = []; _templateCatalogAvailable = false; return; }
             _page = page; _manualRows = manualRows; _metadataAvailable = true; _manualMetadataAvailable = manualAvailable;
+            PublishStartPreferencesLocked(preferences);
             RebuildTemplateFacetsLocked(templates);
             _templateOptions = templates; _templateCatalogAvailable = templateAvailable; _manualCatalogStatus = manualCoverage;
-            if (!templates.Any(IsSelectedTemplate)) ClearTemplateSelectionLocked("Template catalogue refreshed. Select and review a current provider template.");
+            if (!templates.Any(IsSelectedTemplate) && _editingSetupDraftId is null) ClearTemplateSelectionLocked("Template catalogue refreshed. Select and review a current provider template.");
             else _templateReview = null;
             _templateReviewStatus = templateAvailable
                 ? "Select a provider template and review its exact files before creating a project."
@@ -282,6 +310,8 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
     {
         lock (_gate)
         {
+            if (TryGetStartValue(path, out value)) return true;
+            if (TryGetSetupValue(path, out value)) return true;
             value = path switch
             {
                 "Projects" => MergeProjectItems(),
@@ -344,6 +374,7 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
     /// Home admission. Filter writeback changes the visible page and withdraws hidden row keys.</summary>
     public bool TrySetValue(string path, object? value)
     {
+        if (TrySetSetupValue(path, value)) return true;
         var indexCount = path switch
         {
             "TemplateProviderIndex" => _templateProviderChoices.Length,
@@ -396,6 +427,8 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
     }
     bool ICuiRepeatItemBindingContext.TryGetItemValue(object item, string path, out object? value)
     {
+        if (TryGetStartItemValue(item, path, out value)) return true;
+        if (TryGetSetupItemValue(item, path, out value)) return true;
         value = null;
         var matched = false;
         if (item is ProjectItem projectItem)
@@ -458,6 +491,9 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
         lock (_gate)
         {
             if (!_active || _work.IsRetiring || _catalog is null || !IsCurrent(_generation)) return false;
+            if (IsStartCommand(command)) return IsStartActionAvailable(command);
+            if (IsSetupCommand(command)) return IsSetupActionAvailable(command);
+            if (_startFolderPicking) return false;
             return command switch
             {
                 "dev.references.refresh" => true,
@@ -478,6 +514,8 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
         if (IsActionAvailable(command) != true) throw new InvalidOperationException("This saved-project action is unavailable.");
+        if (IsStartCommand(command)) return DispatchStartActionAsync(command, parameter, cancellationToken);
+        if (IsSetupCommand(command)) return DispatchSetupActionAsync(command, parameter, cancellationToken);
         if (command.StartsWith("dev.templates.", StringComparison.Ordinal))
             return DispatchTemplateActionAsync(command, parameter, cancellationToken);
         if (command is "dev.references.previous-projects" or "dev.references.next-projects") return ChangeProjectPage(command);
@@ -598,13 +636,14 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
     }
     /// <summary>A manual (no-AI) saved-project row: real workspace-store identity, no Task/link.
     /// It satisfies the same typed CUI members as a Task row so the shared compiled picker renders it.</summary>
-    private sealed record ManualProjectItem(string SelectionKey, string Title, string Summary, string TaskLabel, string CheckpointLabel, DeveloperProjectReference Reference, bool CanOpen)
+    private sealed record ManualProjectItem(string SelectionKey, string Title, string Summary, string TaskLabel, string CheckpointLabel, DeveloperProjectReference Reference, bool CanOpen,
+        string Location, string Environment)
     {
-        public string OpenLabel => "Open this root manually";
+        public string OpenLabel => "Open project";
         public string OpenAccessibleName => "Open saved project " + Title + "; " + CheckpointLabel;
     }
     private sealed record ProjectDisplay(object Value, string Title, string Key, string SearchText);
-    private object[] FilteredProjectItems()
+    private ProjectDisplay[] UnfilteredProjectItems()
     {
         if (!_metadataAvailable) return [];
         var items = new List<ProjectDisplay>();
@@ -614,9 +653,16 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
         if (_manualMetadataAvailable)
             foreach (var manual in _manualRows) items.Add(new(manual, manual.Title, manual.SelectionKey,
                 manual.Title + "\n" + manual.Summary + "\n" + manual.CheckpointLabel));
+        return items.ToArray();
+    }
+    private object[] FilteredProjectItems()
+    {
+        if (_projectView == "drafts") return [];
         var query = _projectQuery.Trim();
-        return items.Where(item => query.Length == 0 || item.SearchText.Contains(query, StringComparison.OrdinalIgnoreCase))
-            .OrderBy(item => item.Title, StringComparer.OrdinalIgnoreCase).ThenBy(item => item.Key, StringComparer.Ordinal)
+        return UnfilteredProjectItems().Where(item => query.Length == 0 || item.SearchText.Contains(query, StringComparison.OrdinalIgnoreCase))
+            .Where(item => _projectView != "pinned" || _startPreferencesAvailable && IsPinnedProject(item.Value))
+            .OrderByDescending(item => _startPreferencesAvailable ? ProjectLastOpened(item.Value) : null)
+            .ThenBy(item => item.Title, StringComparer.OrdinalIgnoreCase).ThenBy(item => item.Key, StringComparer.Ordinal)
             .Select(item => item.Value).ToArray();
     }
     private object[] MergeProjectItems() => FilteredProjectItems().Skip(_projectPage * ProjectPageSize).Take(ProjectPageSize).ToArray();
@@ -624,8 +670,8 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
     private string ProjectFilterStatus()
     {
         var count = FilteredProjectItems().Length;
-        return count == 0 ? "No saved project references match this filter. Refresh coverage below distinguishes an empty list from an unavailable store."
-            : $"Showing {_projectPage * ProjectPageSize + 1}–{Math.Min((long)count, (_projectPage + 1L) * ProjectPageSize)} of {count} project/root references.";
+        return count == 0 ? "No saved projects match this filter. Project details below show whether the list is empty or unavailable."
+            : $"Showing {_projectPage * ProjectPageSize + 1}–{Math.Min((long)count, (_projectPage + 1L) * ProjectPageSize)} of {count} saved project locations.";
     }
 
     private TemplateItem[] FilteredTemplateItems()
@@ -636,8 +682,8 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
             .OrderBy(option => option.Template.DisplayName, StringComparer.OrdinalIgnoreCase)
             .ThenBy(option => option.Template.ProviderId, StringComparer.Ordinal)
             .ThenBy(option => option.Template.TemplateId, StringComparer.Ordinal)
-            .Select(option => new TemplateItem(TemplateSelectionKey(option.Template), option.Template.ProviderId,
-                option.Template.TemplateId, option.Template.DisplayName, TemplateSummary(option)))
+            .Select((option, index) => new TemplateItem(TemplateSelectionKey(option.Template), option.Template.ProviderId,
+                option.Template.TemplateId, option.Template.DisplayName, TemplateSummary(option), index))
             .ToArray();
     }
 
@@ -758,7 +804,8 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
     private string SelectedTemplateStatus()
     {
         var option = _templateOptions.SingleOrDefault(IsSelectedTemplate);
-        return option is null ? "No project template selected."
+        return option is null ? _selectedTemplateId.Length == 0 ? "No project template selected."
+                : "Saved template unavailable: " + _selectedTemplateProviderId + " / " + _selectedTemplateId + ". Choose an installed template before review."
             : option.Template.DisplayName + " · provider " + option.Template.ProviderId +
               (option.CanCreate ? " · ready" : " · required toolchain unavailable");
     }
@@ -951,7 +998,7 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
         }));
     }
 
-    private sealed record TemplateItem(string SelectionKey, string ProviderId, string TemplateId, string DisplayName, string Summary);
+    private sealed record TemplateItem(string SelectionKey, string ProviderId, string TemplateId, string DisplayName, string Summary, int Index);
     private sealed record TemplateFileReviewItem(string RelativePath, string Metadata, string Text);
     private sealed record TemplateReview(string ProviderId, string TemplateId, string ProjectName, string FolderPath,
         long InputRevision, DeveloperProjectTemplateMaterialization Materialization,

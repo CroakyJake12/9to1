@@ -463,7 +463,7 @@ public sealed partial class UnifiedHomeContentTests
             await session.InitializeAsync();
             var publishedTitles = new List<string>();
             session.StateChanged += (_, _) => publishedTitles.Add(session.Title);
-            Assert.Equal("Home", session.Title);
+            Assert.Equal("Apps", session.Title);
             var page = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(session.OriginalNativeView).OriginalContent);
             window = Show(session.OriginalNativeView);
             var gear = HomeRailButton(page, "home-settings", "Settings");
@@ -551,9 +551,9 @@ public sealed partial class UnifiedHomeContentTests
             Assert.DoesNotContain(page.GetVisualDescendants(), control => ReferenceEquals(control, settings));
             Assert.True(gear.IsFocused);
             Assert.True(SettingsCategorySelected(HomeRailButton(page, "home-apps", "9to1 Apps")));
-            Assert.Equal("Home", session.Title);
+            Assert.Equal("Apps", session.Title);
             Assert.Equal("browse://home", session.Address.Value);
-            Assert.Equal(new[] { "Theme and accent preferences", "Layout", "Appearance", "Theme and accent preferences", "Home" },
+            Assert.Equal(new[] { "Theme and accent preferences", "Layout", "Appearance", "Theme and accent preferences", "Apps" },
                 publishedTitles);
 
             PressSettingsKey(window, PhysicalKey.Enter);
@@ -1779,7 +1779,7 @@ public sealed partial class UnifiedHomeContentTests
             choice => Equals(choice["Name"], name))["Target"]!;
 
     [AvaloniaFact]
-    public async Task Authored_Events_rail_uses_canonical_source_and_retains_its_destination_between_sections()
+    public async Task Compatible_Events_action_uses_canonical_source_and_retains_its_destination_between_sections()
     {
         var testToken = TestContext.Current.CancellationToken;
         using var lifetime = new CancellationTokenSource();
@@ -1796,8 +1796,8 @@ public sealed partial class UnifiedHomeContentTests
             await session.InitializeAsync();
             var page = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(session.OriginalNativeView).OriginalContent);
             window = Show(session.OriginalNativeView);
-            var rail = page.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "home-events");
-            rail.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.DoesNotContain(page.GetVisualDescendants().OfType<Button>(), button => button.Name == "home-events");
+            await page.DispatchAsync("home.events", null);
             await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
             SettleFixtureLayout(window);
             Assert.NotNull(destination);
@@ -1806,6 +1806,8 @@ public sealed partial class UnifiedHomeContentTests
             Assert.Equal(activity.Event, observed);
             Assert.True(activity.Reads > 0);
             Assert.Equal(0, navigations);
+            Assert.Equal("Events", session.Title);
+            Assert.Equal("browse://home", session.Address.Value);
             var row = Assert.Single(destination.GetVisualDescendants().OfType<Button>(), button =>
                 CuiRuntimeIdentity.GetStableId(button) is { } identity &&
                 identity.Contains("id:home-events-rows|key:", StringComparison.Ordinal) &&
@@ -1818,7 +1820,10 @@ public sealed partial class UnifiedHomeContentTests
             Assert.False(open.IsEnabled);
             Assert.DoesNotContain(destination.GetVisualDescendants(), control => control is ListBox);
             await page.DispatchAsync("home.apps", null);
+            Assert.Equal("Apps", session.Title);
             await page.DispatchAsync("home.events", null);
+            Assert.Equal("Events", session.Title);
+            Assert.Equal("browse://home", session.Address.Value);
             SettleFixtureLayout(window);
             Assert.Same(destination, Assert.Single(page.GetVisualDescendants().OfType<HomeEventsDestinationPage>()));
             Assert.Equal(activity.Event.EventId, destination.SelectedEventId);
@@ -2360,6 +2365,8 @@ public sealed partial class UnifiedHomeContentTests
                 chrome.ObserveOriginalAppContent(admitted.SelectedTabId));
             Assert.NotNull(session);
             Assert.Equal("browse://home/models", session!.Address.Value);
+            Assert.Equal("Discover", session.Title);
+            Assert.Equal("Discover", tab.Title);
             var page = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(session.OriginalNativeView).OriginalContent);
             window = Show(session.OriginalNativeView);
             Assert.NotNull(discover);
@@ -2858,16 +2865,18 @@ public sealed partial class UnifiedHomeContentTests
             var main = page.GetVisualDescendants().OfType<Control>().Single(item => item.Name == "home-main");
             var sideOrigin = sidebar.TranslatePoint(default, window)!.Value;
             var mainOrigin = main.TranslatePoint(default, window)!.Value;
-            // No Assistants owner is composed in this fixture. Existing destinations keep one scroll column.
+            // Unavailable owners remain named and disabled; every destination keeps one scroll column.
             var nav = Assert.IsType<CuiContainerControl>(page.GetVisualDescendants().OfType<Control>()
                 .Single(item => item.Name == "home-rail-nav"));
             var footer = Assert.IsType<CuiContainerControl>(page.GetVisualDescendants().OfType<Control>()
                 .Single(item => item.Name == "home-rail-footer"));
             var scroll = Assert.IsType<ScrollViewer>(nav.Child);
             var buttons = nav.AuthoredChildren.OfType<Button>().Where(button => button.IsEffectivelyVisible && button.IsAttachedToVisualTree()).ToArray();
-            Assert.Equal(7, buttons.Length);
-            Assert.Equal(new[] { "home-dashboard", "home-newtab", "home-library", "home-events", "home-apps", "home-models", "home-mesh" },
+            Assert.Equal(9, buttons.Length);
+            Assert.Equal(new[] { "home-explore", "home-dashboard", "home-newtab", "home-library", "home-assistants", "home-specialists", "home-apps", "home-models", "home-mesh" },
                 buttons.Select(button => button.Name));
+            Assert.All(buttons.Where(button => button.Name is "home-explore" or "home-assistants" or "home-specialists"),
+                button => Assert.False(button.IsEffectivelyEnabled));
             Assert.Equal(new[] { "home-account", "home-settings" }, footer.AuthoredChildren.OfType<Button>().Select(button => button.Name));
             var settings = HomeRailButton(page, "home-settings", "Settings");
             var brand = HomeRailButton(page, "home-brand", "Home");
@@ -2875,7 +2884,7 @@ public sealed partial class UnifiedHomeContentTests
             var groupHeadings = nav.GetVisualDescendants().OfType<TextBlock>()
                 .Where(text => text.Name is "home-rail-explore" or "home-rail-workspace" or "home-rail-discover")
                 .Select(text => text.Text);
-            if (width >= 840) Assert.Equal(new[] { "Explore", "Workspace", "Discover" }, groupHeadings);
+            if (width > 750) Assert.Equal(new[] { "Workspace", "Discover" }, groupHeadings);
             else Assert.Empty(groupHeadings);
             Assert.Equal(global::Avalonia.Layout.Orientation.Vertical, Assert.IsType<StackPanel>(nav.Layout).Orientation);
             Assert.True(sideOrigin.X + sidebar.Bounds.Width <= mainOrigin.X + .5);
@@ -2890,7 +2899,7 @@ public sealed partial class UnifiedHomeContentTests
                 var label = Assert.IsType<string>(AutomationProperties.GetName(button));
                 var visibleLabels = button.GetVisualDescendants().OfType<TextBlock>()
                     .Where(text => text.IsEffectivelyVisible && text.Text == label);
-                if (width >= 840)
+                if (width > 750)
                     Assert.True(Assert.Single(visibleLabels).Bounds.Width > 0);
                 else
                     Assert.Empty(visibleLabels);
@@ -2914,7 +2923,7 @@ public sealed partial class UnifiedHomeContentTests
                 Assert.Equal(settingsOrigin, settings.TranslatePoint(default, window)!.Value);
             }
             var appRegion = Assert.Single(page.GetVisualDescendants().OfType<Control>(),
-                item => item.Name == "home-apps-results");
+                item => item.Name == "home-apps-body");
             Assert.True(appRegion.Bounds.Width >= 150 && appRegion.Bounds.Height >= 180);
             var selectedId = chrome.State.SelectedTabId;
             scroll.Offset = default; Layout();
@@ -3212,13 +3221,14 @@ public sealed partial class UnifiedHomeContentTests
         window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); return window;
     }
 
-    private sealed class Registry : IModeRegistry
+    private sealed class Registry(IReadOnlyList<ModeDefinition>? modes = null) : IModeRegistry
     {
+        private readonly IReadOnlyList<ModeDefinition> _modes = modes ?? BuiltInModeSeed.Modes;
         internal int Reads;
         public Task<IReadOnlyList<ModeDefinition>> GetModesAsync(CancellationToken token)
-        { token.ThrowIfCancellationRequested(); Reads++; return Task.FromResult(BuiltInModeSeed.Modes); }
-        public Task<ModeDefinition?> GetModeByIdAsync(Guid id, CancellationToken token) => Task.FromResult(BuiltInModeSeed.Modes.SingleOrDefault(mode => mode.Id == id));
-        public Task<ModeDefinition?> GetModeByKeyAsync(string key, CancellationToken token) => Task.FromResult(BuiltInModeSeed.Modes.SingleOrDefault(mode => mode.Key == key));
+        { token.ThrowIfCancellationRequested(); Reads++; return Task.FromResult(_modes); }
+        public Task<ModeDefinition?> GetModeByIdAsync(Guid id, CancellationToken token) => Task.FromResult(_modes.SingleOrDefault(mode => mode.Id == id));
+        public Task<ModeDefinition?> GetModeByKeyAsync(string key, CancellationToken token) => Task.FromResult(_modes.SingleOrDefault(mode => mode.Key == key));
         public Task UpsertModeAsync(ModeDefinition mode, CancellationToken token) => throw new NotSupportedException();
         public Task<IReadOnlyList<ModeVersion>> GetVersionsAsync(Guid id, CancellationToken token) => throw new NotSupportedException();
         public Task AddVersionAsync(ModeVersion version, CancellationToken token) => throw new NotSupportedException();

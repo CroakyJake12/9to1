@@ -49,12 +49,27 @@ public sealed class HomeCuiSurface : ICuiBindingContext, INotifyPropertyChanged
     public HomeRoute CurrentRoute { get => _currentRoute; private set { _currentRoute = value; Notify(nameof(CurrentRoute)); Notify(nameof(IsDashboard)); Notify(nameof(IsLibrary)); Notify(nameof(IsEvents)); } }
     public HomeNavigationState? Navigation { get; private set; }
     public HomeDashboardLayout? Layout { get => _layout; private set { _layout = value; Notify(nameof(Layout)); Notify(nameof(AllowAIGeneratedTiles)); Notify(nameof(AllowAIReorder)); } }
-    public HomeLibraryPage? LibraryPage { get => _libraryPage; private set { _libraryPage = value; Notify(nameof(LibrarySummary)); Notify(nameof(LibraryItems)); } }
+    public HomeLibraryPage? LibraryPage { get => _libraryPage; private set { _libraryPage = value; Notify(nameof(LibrarySummary)); Notify(nameof(LibraryItems)); Notify(nameof(LibraryRows)); } }
     public HomeEventsPage? EventsPage { get => _eventsPage; private set { _eventsPage = value; Notify(nameof(EventsSummary)); Notify(nameof(EventItems)); } }
     public string NavigationStatus { get => _navigationStatus; private set { _navigationStatus = value; Notify(nameof(NavigationStatus)); } }
     public string LibrarySearchText { get; set; } = string.Empty;
     public string LibrarySort { get; set; } = "recent";
     public IReadOnlyList<HomeArtifactReference> LibraryItems => LibraryPage?.Items ?? [];
+    /// <summary>Read-only presentation of the existing permission-filtered references.
+    /// Native hosts still supply their own action admission and exact owning-app router.</summary>
+    public object[] LibraryRows => (LibraryPage is { Succeeded: true } ? LibraryItems : Array.Empty<HomeArtifactReference>()).Select(item => (object)new Dictionary<string, object?>
+    {
+        ["Key"] = item.OwnerApp + "/" + item.ArtifactId, ["DisplayName"] = item.DisplayName,
+        ["OwnerApp"] = item.OwnerApp, ["ArtifactType"] = item.ArtifactType,
+        ["AppName"] = item.OwnerApp switch { "boards" => "Boards", "files" => "Files", "write" => "Write", _ => item.OwnerApp },
+        ["Location"] = item.Location, ["Owner"] = item.Owner, ["SharedBy"] = item.SharedBy,
+        ["LastModified"] = item.LastModified.ToLocalTime().ToString("g"), ["IsPinned"] = item.IsPinned,
+        ["IsRecent"] = item.IsRecent, ["IsShared"] = item.IsShared, ["IsGenerated"] = item.IsGenerated,
+        ["IconSource"] = "icon:file", ["FavouriteGlyph"] = item.IsPinned ? "★" : "☆",
+        ["FavouriteLabel"] = (item.IsPinned ? "Remove " : "Add ") + item.DisplayName +
+            (item.IsPinned ? " from favourites" : " to favourites"),
+        ["Target"] = item.OpenLink
+    }).ToArray();
     public IReadOnlyList<HomeActivityEvent> EventItems => EventsPage?.Items ?? [];
     public HomeLibrarySelection? SelectedLibraryItem { get; private set; }
     public HomeEventSelection? SelectedEventObject { get; private set; }
@@ -212,7 +227,7 @@ public sealed class HomeCuiSurface : ICuiBindingContext, INotifyPropertyChanged
             nameof(DashboardTilesSummary) => DashboardTilesSummary,
             nameof(RuntimeSummary) => RuntimeSummary, nameof(OperationStatus) => OperationStatus,
             nameof(NavigationStatus) => NavigationStatus, nameof(LibrarySummary) => LibrarySummary,
-            nameof(LibraryItems) => LibraryItems, nameof(EventsSummary) => EventsSummary,
+            nameof(LibraryItems) => LibraryItems, nameof(LibraryRows) => LibraryRows, nameof(EventsSummary) => EventsSummary,
             nameof(EventItems) => EventItems, nameof(LibraryItemsSummary) => LibraryItemsSummary,
             nameof(EventItemsSummary) => EventItemsSummary, nameof(LibrarySearchText) => LibrarySearchText,
             nameof(LibrarySort) => LibrarySort, _ => null,

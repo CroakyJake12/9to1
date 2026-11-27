@@ -119,7 +119,7 @@ public class CuiToAvaloniaPipelineTests
             "transforms.cui");
 
         Assert.True(result.Success, string.Join("; ", result.Errors));
-        var text = Assert.IsType<TextBlock>(Assert.Single(Assert.IsType<Panel>(result.Root).Children));
+        var text = Assert.IsType<TextBlock>(Assert.Single(Assert.IsAssignableFrom<Panel>(result.Root).Children));
         Assert.True(text.IsVisible);
         var transform = Assert.IsType<Avalonia.Media.TransformGroup>(text.RenderTransform);
         Assert.Contains(transform.Children, child => child is Avalonia.Media.ScaleTransform { ScaleX: 2, ScaleY: 2 });
@@ -152,8 +152,8 @@ public class CuiToAvaloniaPipelineTests
 
         Assert.True(linearResult.Success, string.Join("; ", linearResult.Errors));
         Assert.True(radialResult.Success, string.Join("; ", radialResult.Errors));
-        var linear = Assert.IsType<Avalonia.Media.LinearGradientBrush>(Assert.IsType<Panel>(linearResult.Root).Background);
-        var radial = Assert.IsType<Avalonia.Media.RadialGradientBrush>(Assert.IsType<Panel>(radialResult.Root).Background);
+        var linear = Assert.IsType<Avalonia.Media.LinearGradientBrush>(Assert.IsAssignableFrom<Panel>(linearResult.Root).Background);
+        var radial = Assert.IsType<Avalonia.Media.RadialGradientBrush>(Assert.IsAssignableFrom<Panel>(radialResult.Root).Background);
         Assert.Equal(new[] { 0.1, 0.2, 0.7 }, linear.GradientStops.Select(stop => stop.Offset));
         Assert.Equal(new[] { 0d, 0.5, 1d }, radial.GradientStops.Select(stop => stop.Offset));
     }
@@ -165,7 +165,7 @@ public class CuiToAvaloniaPipelineTests
         var backdropResult = CuiHeadlessRenderer.Render("<Page Background='Blur(0.5)'>Behind</Page>", "backdrop.cui");
 
         Assert.True(effectResult.Success, string.Join("; ", effectResult.Errors));
-        var text = Assert.IsType<TextBlock>(Assert.Single(Assert.IsType<Panel>(effectResult.Root).Children));
+        var text = Assert.IsType<TextBlock>(Assert.Single(Assert.IsAssignableFrom<Panel>(effectResult.Root).Children));
         Assert.Equal(16, Assert.IsType<Avalonia.Media.BlurEffect>(text.Effect).Radius);
         Assert.False(backdropResult.Success);
         Assert.Contains(backdropResult.Errors, error => error.Contains("CUIR032", StringComparison.Ordinal));
@@ -179,9 +179,9 @@ public class CuiToAvaloniaPipelineTests
             "layers.cui");
 
         Assert.True(result.Success, string.Join("; ", result.Errors));
-        var page = Assert.IsType<Panel>(result.Root);
+        var page = Assert.IsAssignableFrom<Panel>(result.Root);
         Assert.Equal(-2, page.Children[0].ZIndex);
-        var layer = Assert.IsType<Panel>(page.Children[1]);
+        var layer = Assert.IsAssignableFrom<Panel>(page.Children[1]);
         Assert.Equal(4, layer.ZIndex);
         Assert.Equal(4, Assert.IsType<TextBlock>(Assert.Single(layer.Children)).ZIndex);
         Assert.Equal(7, page.Children[2].ZIndex);
@@ -297,7 +297,7 @@ public class CuiToAvaloniaPipelineTests
             """);
 
         Assert.True(result.Success, string.Join("; ", result.Errors));
-        var page = Assert.IsType<Panel>(result.Root);
+        var page = Assert.IsAssignableFrom<Panel>(result.Root);
         var stack = Assert.IsType<CuiContainerControl>(Assert.Single(page.Children));
         Assert.Equal(Avalonia.Layout.Orientation.Vertical, Assert.IsType<StackPanel>(stack.Layout).Orientation);
         Assert.IsType<TextBlock>(stack.AuthoredChildren[0]);
@@ -392,7 +392,7 @@ public class CuiToAvaloniaPipelineTests
             """);
 
         Assert.Empty(diagnostics);
-        var page = Assert.IsType<Panel>(root);
+        var page = Assert.IsAssignableFrom<Panel>(root);
         var input = Assert.IsType<TextBox>(page.Children[0]);
         var label = Assert.IsType<TextBlock>(page.Children[1]);
         Assert.Equal("Before", input.Text);
@@ -451,7 +451,7 @@ public class CuiToAvaloniaPipelineTests
             </Cui>
             """);
         Assert.Empty(firstDiagnostics);
-        Assert.Equal("First document", Assert.IsType<TextBlock>(Assert.Single(Assert.IsType<Panel>(first).Children)).Text);
+        Assert.Equal("First document", Assert.IsType<TextBlock>(Assert.Single(Assert.IsAssignableFrom<Panel>(first).Children)).Text);
 
         var (second, secondDiagnostics) = loader.LoadMarkup("""
             <Cui><Page><Text text="{Resource local-title}" /></Page></Cui>
@@ -485,7 +485,7 @@ public class CuiToAvaloniaPipelineTests
             """);
 
         Assert.Empty(diagnostics);
-        var page = Assert.IsType<Panel>(root);
+        var page = Assert.IsAssignableFrom<Panel>(root);
         var host = Assert.IsType<ContentControl>(Assert.Single(page.Children));
         var initialBranch = Assert.IsType<Panel>(host.Content);
         Assert.Equal("Sign in", Assert.IsType<TextBlock>(Assert.Single(initialBranch.Children)).Text);
@@ -515,7 +515,7 @@ public class CuiToAvaloniaPipelineTests
                 """);
             Assert.Empty(diagnostics);
             loader.WireBindings(root!);
-            Assert.IsType<Button>(Assert.Single(Assert.IsType<Panel>(root).Children))
+            Assert.IsType<Button>(Assert.Single(Assert.IsAssignableFrom<Panel>(root).Children))
                 .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
 
             Assert.Equal("chat.save", dispatcher.Command);
@@ -535,7 +535,7 @@ public class CuiToAvaloniaPipelineTests
 
         Assert.DoesNotContain(initialDiagnostics, diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error);
         Assert.True(surface.TryApply(initial, out var applyDiagnostics), string.Join("; ", applyDiagnostics));
-        var firstRoot = Assert.IsType<Panel>(host.Content);
+        var firstRoot = Assert.IsAssignableFrom<Panel>(host.Content);
         var firstInput = Assert.IsType<TextBox>(Assert.Single(firstRoot.Children));
         firstInput.Text = "draft kept during refresh";
 
@@ -547,7 +547,7 @@ public class CuiToAvaloniaPipelineTests
         var replacement = parser.Parse(
             "<Page id='surface'><Input id='composer' type='Text' text='new server value' /></Page>", "surface-next.cui");
         Assert.True(surface.TryApply(replacement, out applyDiagnostics), string.Join("; ", applyDiagnostics));
-        var replacementRoot = Assert.IsType<Panel>(host.Content);
+        var replacementRoot = Assert.IsAssignableFrom<Panel>(host.Content);
         var replacementInput = Assert.IsType<TextBox>(Assert.Single(replacementRoot.Children));
         Assert.NotSame(firstRoot, replacementRoot);
         Assert.Equal("draft kept during refresh", replacementInput.Text);

@@ -16,6 +16,7 @@ internal sealed partial class ChatHavenScene
         internal IChatComposerTaskActions? TaskActions { get; set; }
         internal Func<object?>? ActionContextIdentity { get; set; }
         public object? ActionIdentity => ActionContextIdentity?.Invoke();
+        public IChatComposerConversationActions? ConversationActions { get; internal set; }
         internal IChatComposerVoiceActions? VoiceActions { get; set; }
         internal Func<(Guid ConversationId, ModelDescriptor? Model)>? VoiceTarget { get; set; }
         public bool CanEnterVoice => VoiceTarget?.Invoke() is { Model: { } model } target &&

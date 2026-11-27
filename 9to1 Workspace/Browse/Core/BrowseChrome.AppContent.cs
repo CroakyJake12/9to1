@@ -88,7 +88,7 @@ public sealed partial class BrowseChrome
         && ((address.Authority is "home" or "newtab" && address.ResourceSegments.Count == 0)
             || BrowseOmniboxSearchRoute.TryParse(address, out _, out _)
             || (address.Authority == "home" && address.ResourceSegments.SequenceEqual(new[] { "library", "boards" }, StringComparer.Ordinal))
-            || ((address.Authority == "home" && address.ResourceSegments is ["settings", _] ||
+            || ((address.Authority == "home" && address.ResourceSegments is ["settings", _] or ["hubs"] or ["hubs", "customise"] or ["explore"] or ["specialists"] ||
                  address.Authority == "newtab" && address.ResourceSegments is ["customise"]) &&
                 _internalContentFactory?.RecognizesNestedCanvas(address) == true)
             || (address.Authority == "home" && address.ResourceSegments.Count == 1

@@ -7,6 +7,7 @@ using Avalonia.Threading;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Application;
 using HavenOS.Files;
 using HavenOS.Files.NativeHost;
@@ -23,6 +24,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     private readonly FilesCompatibilityPackageOpenCoordinator? _packages;
     private readonly AuthenticatedResourceActor _originalActor;
     private readonly ICuiSceneReadiness _readiness;
+    private readonly CuiThemePreferenceContext? _interfaceTheme;
     private readonly CancellationTokenSource _lifetime;
     private readonly CancellationToken _originalHostLifetime;
     private CancellationTokenRegistration _originalHostRetirement;
@@ -95,8 +97,8 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     private bool _showTechnicalDetails;
     private readonly ComboBox _sort = new()
     {
-        ItemsSource = new[] { "Name: A–Z (page)", "Name: Z–A (page)" },
-        SelectedIndex = 0, Width = 260
+        ItemsSource = new[] { "Name A–Z", "Name Z–A" },
+        SelectedIndex = 0, Width = 152
     };
     private CuiSceneHost? _scene;
     private FilesNativeBrowserPage? _page;
@@ -116,18 +118,25 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     public new event PropertyChangedEventHandler? PropertyChanged;
 
     public FilesNativeBrowserSurface(FilesNativeBrowserService browser, FilesCompatibilityPackageOpenCoordinator? packages,
-        AuthenticatedResourceActor originalActor, ICuiSceneReadiness readiness, CancellationToken hostLifetime)
+        AuthenticatedResourceActor originalActor, ICuiSceneReadiness readiness, CancellationToken hostLifetime,
+        CuiThemePreferenceContext? interfaceTheme = null, IFilesNativeBoardOpenHost? boards = null)
     {
         _browser = browser; _packages = packages; _originalActor = originalActor; _readiness = readiness;
+        _boards = boards;
+        _interfaceTheme = interfaceTheme; // Borrowed from the original host; this surface never disposes it.
         ArgumentNullException.ThrowIfNull(originalActor);
         _originalHostLifetime = hostLifetime;
         _lifetime = CancellationTokenSource.CreateLinkedTokenSource(hostLifetime);
         _search.Width = double.NaN;
         _sort.Width = 160;
+        InitializeFilesPresentation();
         _items.ContainerPrepared += (_, args) =>
         {
             if (args.Container is ListBoxItem row)
+            {
                 row.HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
+                PrepareFileItemContainer(row);
+            }
         };
         _items.ItemTemplate = new FuncDataTemplate<HostedItemMetadata>((item, _) => BuildDetailsRow(item));
         SizeChanged += (_, _) => Changed();
@@ -241,7 +250,8 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
             var page = await _browser.ListAsync(_originalActor, token: linked.Token);
             await _browser.RevalidateAsync(page, _originalActor, linked.Token);
             _scene = CreateOriginalCanonicalSceneHost();
-            var available = await _scene.ShowAsync(new("files", "Files", "Browser", LoadDocument(), this, this, _readiness), linked.Token);
+            var available = await _scene.ShowAsync(new("files", "Files", "Files", LoadDocument(), this, this, _readiness)
+                { ThemePreference = _interfaceTheme }, linked.Token);
             if (available.State != CuiSceneAvailabilityState.Ready) throw new UnauthorizedAccessException(available.Message);
             await _browser.RevalidateAsync(page, _originalActor, linked.Token);
             var current = await _browser.CaptureOriginalPageReadCheckAsync(page, _originalActor,
@@ -304,25 +314,9 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
 
     public bool TryGetValue(string path, out object? value)
     {
-        if (TryGetDriveValue(path, out value) || TryGetFolderTabsValue(path, out value) || TryGetSharingValue(path, out value) || TryGetTextPreviewValue(path, out value)) return true;
+        if (TryGetPresentationValue(path, out value) || TryGetDriveValue(path, out value) || TryGetFolderTabsValue(path, out value) || TryGetSharingValue(path, out value) || TryGetTextPreviewValue(path, out value)) return true;
         value = path switch
         {
-            "NavigationColumns" => Bounds.Width < 540 ? "Auto 1fr" : "Auto 1fr 260",
-            "SearchRow" => Bounds.Width < 540 ? 1 : 0,
-            "SearchColumn" => Bounds.Width < 540 ? 0 : 2,
-            "SearchColumnSpan" => Bounds.Width < 540 ? 2 : 1,
-            "CompactLayout" => Bounds.Width < 641,
-            "SidebarVisible" => Bounds.Width >= 641,
-            "BodyColumns" => Bounds.Width < 641 ? "1fr" : Bounds.Width < 1120 ? "240 1fr" : "240 1fr Auto",
-            "BodyRows" => Bounds.Width < 1120 ? "1fr Auto" : "1fr",
-            "MainColumn" => Bounds.Width < 641 ? 0 : 1,
-            "DetailsColumn" => Bounds.Width < 641 ? 0 : Bounds.Width < 1120 ? 1 : 2,
-            "DetailsRow" => Bounds.Width < 1120 ? 1 : 0,
-            "DetailsWidth" => Bounds.Width < 1120 ? Math.Max(208, Bounds.Width - (Bounds.Width < 641 ? 16 : 264)) : 280,
-            "DetailsMaxHeight" => Bounds.Width < 1120 ? 260 : Math.Max(260, Bounds.Height),
-            "HasSelection" => _items.SelectedItem is HostedItemMetadata selected && _page?.Items.Any(item => ReferenceEquals(item, selected)) == true,
-            "WideColumns" => Bounds.Width >= 900,
-            "ItemColumns" => Bounds.Width >= 900 ? "1fr 150 100 90" : "1fr 0 0 0",
             "SidebarHeading" => "Folders in " + (_page?.FolderTitle ?? "Files"),
             "SidebarFolders" => _page is { IsTrash: false } sidebarPage ? sidebarPage.Items.Where(item => item.Kind == HostedItemKind.Folder).ToArray() : Array.Empty<HostedItemMetadata>(),
             "FolderTitle" => _page?.FolderTitle ?? "Files",
@@ -355,7 +349,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
             "PendingChange" => _page is null ? "" : _pendingMutation?.Description ?? "",
             _ => null
         };
-        return path is "NavigationColumns" or "SearchRow" or "SearchColumn" or "SearchColumnSpan" or "CompactLayout" or "SidebarVisible" or "BodyColumns" or "BodyRows" or "MainColumn" or "DetailsColumn" or "DetailsRow" or "DetailsWidth" or "DetailsMaxHeight" or "HasSelection" or "WideColumns" or "ItemColumns" or "SidebarHeading" or "SidebarFolders" or "SelectedDetails" or "FolderTitle" or "Status" or "CanNavigate" or "CanUp" or "CanBack" or "CanForward" or "CanMore" or "CanOpen"
+        return path is "SidebarHeading" or "SidebarFolders" or "SelectedDetails" or "FolderTitle" or "Status" or "CanNavigate" or "CanUp" or "CanBack" or "CanForward" or "CanMore" or "CanOpen"
             or "CanEditItemName" or "CanCreateFolder" or "CanRename" or "CanDelete" or "CanRestore" or "CanApply" or "CanCancelReview" or "CanRetryAudit" or "PendingChange"
             or "CanChooseMove" or "CanMove" or "CanCancelMove" or "MoveSelection" or "CanShowDetails" or "TechnicalDetailsLabel";
     }
@@ -367,8 +361,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
                 _items.SelectedItem is not HostedItemMetadata selected ||
                 !_page.Items.Any(item => ReferenceEquals(item, selected))) return "Select an item to view its displayed details.";
             var size = selected.SizeBytes is { } bytes ? $"{bytes:N0} bytes" : "Not reported";
-            var details = $"{selected.Name}\n{selected.Kind} · {size} · {selected.Availability}\n" +
-                $"Owner: You · {(selected.IsShared ? "Shared" : "Private")}\nCreated: {selected.CreatedAt.ToLocalTime():g}\n" +
+            var details = $"Size: {size}\n{(selected.IsShared ? "Shared item" : "Private item")}\nCreated: {selected.CreatedAt.ToLocalTime():g}\n" +
                 $"{(_page.IsTrash ? "Deleted" : "Modified")}: {selected.ModifiedAt.ToLocalTime():g}";
             return !_showTechnicalDetails ? details : details + $"\nIdentity: {selected.Id}\nLocation: {selected.LocationId}\n" +
                 $"Parent: {selected.ParentId?.ToString() ?? "Root"}\nOwner principal: {selected.OwnerPrincipalId}\n" +
@@ -377,9 +370,13 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     }
     private bool Available => !_closing && !_disposed && !_busy && !_lifetime.IsCancellationRequested && _scene is not null;
     private bool CanOpenSelection => _page is { IsTrash: false } && _items.SelectedItem is HostedItemMetadata selected &&
-        (selected.Kind == HostedItemKind.Folder || CanOpenTextSelection || selected.Kind == HostedItemKind.File && _packages is not null &&
-         Path.GetExtension(selected.Name).ToLowerInvariant() is ".exe" or ".msi" or ".apk");
-    public bool? IsActionAvailable(string command) => IsDriveCommand(command) ? DriveActionAvailable(command)
+        (selected.Kind == HostedItemKind.Folder ||
+         (FilesNativeBrowserService.IsBoardDocumentCandidate(selected)
+             ? CanOpenBoardSelection
+             : CanOpenTextSelection || selected.Kind == HostedItemKind.File && _packages is not null &&
+                 Path.GetExtension(selected.Name).ToLowerInvariant() is ".exe" or ".msi" or ".apk"));
+    public bool? IsActionAvailable(string command) => IsPresentationCommand(command) ? PresentationActionAvailable(command)
+        : IsDriveCommand(command) ? DriveActionAvailable(command)
         : InDrive ? DriveInPageActionAvailable(command)
         : IsFolderTabCommand(command) ? FolderTabActionAvailable(command)
         : IsSharingCommand(command) ? SharingActionAvailable(command) : command switch
@@ -417,6 +414,11 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     };
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (IsPresentationCommand(command))
+        {
+            if (parameter is not null) throw new ArgumentException("Files presentation commands retain the current selection.");
+            return new(TrackOriginalAsync(() => InvokePresentationAsync(command, cancellationToken)));
+        }
         if (InDrive || IsDriveCommand(command))
             return new(TrackOriginalAsync(() => InvokeDriveAsync(command, parameter, cancellationToken)));
         if (command == "9to1.Files.OpenSidebarFolder")
@@ -442,7 +444,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     }
 
     private Task InvokeAsync(string command, CancellationToken token)
-        => TrackOriginalAsync(() => InvokeOriginalAsync(command, token));
+        => TrackOriginalAsync(settlement => InvokeOriginalAsync(command, token, settlement));
 
     private async Task InvokeFromNativeEventAsync(string command)
     {
@@ -455,12 +457,13 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         }
     }
 
-    private async Task InvokeOriginalAsync(string command, CancellationToken token)
+    private async Task InvokeOriginalAsync(string command, CancellationToken token, Task originalSettlement)
     {
         Dispatcher.UIThread.VerifyAccess();
         if (IsActionAvailable(command) != true) return;
         var originalPage = _page;
         var originalSelection = _items.SelectedItem as HostedItemMetadata;
+        var originalSelectionEpoch = _selectionEpoch;
         var originalHistoryIndex = _historyIndex;
         var originalSearch = _search.Text ?? "";
         var originalName = _editName.Text ?? "";
@@ -487,7 +490,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
             if (command == "9to1.Files.Preview")
             { await PreviewOriginalTextAsync(originalPage!, originalSelection!, linked.Token); return; }
             if (command == "9to1.Files.TechnicalDetails")
-            { _showTechnicalDetails = !_showTechnicalDetails; return; }
+            { _detailsVisible = true; _showTechnicalDetails = !_showTechnicalDetails; return; }
             if (command == "9to1.Files.ChooseMove")
             {
                 SetCutSource(new(originalPage!, originalSelection!, DateTimeOffset.UtcNow + CutLifetime));
@@ -554,6 +557,8 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
                 { destination = (selected.Id.Value, selected.Name, false); appendHistory = true; _query = ""; _search.Text = ""; RequireRetainedPage(); }
                 else
                 {
+                    if (FilesNativeBrowserService.IsBoardDocumentCandidate(selected))
+                    { await OpenBoardOriginalAsync(originalPage!, selected, originalSelectionEpoch, originalSettlement, linked.Token); return; }
                     var packageSelection = _packages is not null && Path.GetExtension(selected.Name).ToLowerInvariant() is ".exe" or ".msi" or ".apk";
                     if (!packageSelection && FilesNativeBrowserService.IsTextPreviewCandidate(selected))
                     { await PreviewOriginalTextAsync(originalPage!, selected, linked.Token); return; }
@@ -714,6 +719,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         _sharingPage = null;
         WithdrawFolderTabsOnRetirement();
         _page = null; _originalPageCurrent = null; _items.SelectedItem = null; _items.ItemsSource = null;
+        RetireFileItemPresentation();
         RetireUnrepresentedDetailsRows();
         _query = ""; _search.Text = ""; _localRenameDraft = null; _editName.Text = "";
         if (!preserveCut) SetCutSource(null);
@@ -741,17 +747,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     }
     private void Changed()
     {
-        var wideRows = Bounds.Width >= 900;
-        if (OriginalAlive() && _detailsRowsWide != wideRows)
-        {
-            _detailsRowsWide = wideRows;
-            foreach (var row in _detailsRowLoaders.ToArray())
-            {
-                row.Value.Set("Columns", wideRows ? "1fr 150 100 90" : "1fr 0 0 0");
-                row.Value.Set("ShowMetadata", wideRows);
-                row.Key.RefreshBindings();
-            }
-        }
+        UpdateFilesPresentation();
         WithdrawChangedOriginalTextPreview();
         // Refused-state withdrawal remains observable after retirement. A live publication
         // rechecks its original lifetime after each synchronous native notification.
@@ -801,13 +797,17 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     // Publish each SAME original operation before it can enter a callback or await I/O.
     // Settled successful tasks are pruned; original failures remain until the owner drains them.
     private Task TrackOriginalAsync(Func<Task> operation)
+        => TrackOriginalAsync(_ => operation());
+
+    private Task TrackOriginalAsync(Func<Task, Task> operation)
     {
         Dispatcher.UIThread.VerifyAccess();
         lock (_originalTasksSync)
         {
             ObjectDisposedException.ThrowIf(_closing || _disposed, this);
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            var original = RunOriginalAsync(start.Task, operation);
+            Task? original = null;
+            original = RunOriginalAsync(start.Task, () => operation(original!));
             _originalTasks.RemoveWhere(row => row.IsCompletedSuccessfully);
             _originalTasks.Add(original);
             start.SetResult();
@@ -894,7 +894,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     private Avalonia.Media.Imaging.Bitmap? _folderIcon;
     private Avalonia.Media.IImage? ResolveFilesImage(string source, Control target)
     {
-        if (source != "files:folder") return null;
+        if (source != "files:folder") return FilesNativeNavigationIcons.Resolve(source, target);
         if (_folderIcon is null)
         {
             using var stream = typeof(FilesNativeBrowserSurface).Assembly.GetManifestResourceStream("HavenOS.Files.NativeUI.Assets.FolderIcon.png")
@@ -918,7 +918,6 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
             _detailsRowItems.Remove(row.Key); _detailsRowLoaders.Remove(row.Key);
         }
     }
-    private bool _detailsRowsWide;
     private static readonly string[][] RowContextMenuCommands = [["Open", "9to1.Files.Open"], ["Preview", "9to1.Files.Preview"],
         ["Rename", "9to1.Files.Rename"], ["Cut", "9to1.Files.ChooseMove"], ["Move to Trash", "9to1.Files.Delete"], ["Restore", "9to1.Files.Restore"],
         ["Manage access", "9to1.Files.Share.Get"], ["Technical details", "9to1.Files.TechnicalDetails"]];
@@ -953,6 +952,18 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
             foreach (var (menuItem, pair) in context.Items.OfType<MenuItem>().Zip(RowContextMenuCommands))
                 menuItem.IsEnabled = CanInvokeRowMenu(pair[1]);
         };
+        context.Closed += (_, _) =>
+        {
+            var original = captured;
+            captured = null;
+            // A dismissed menu returns to its same current row. Invoked commands clear
+            // captured before dispatch, so Rename keeps its actual editor focus and
+            // navigation can never be pulled back to the menu's former container.
+            if (original is not { } target || !Available || target.SelectionEpoch != _selectionEpoch ||
+                !ReferenceEquals(_page, target.Page) || !ReferenceEquals(_items.SelectedItem, target.Row) ||
+                !ReferenceEquals(_items.ItemFromContainer(container), target.Row)) return;
+            RunOriginalNativeMutation(() => container.Focus());
+        };
         return context;
     }
 
@@ -970,14 +981,18 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         var registry = new CuiControlRegistry();
         registry.RegisterImageSourceResolver(ResolveFilesImage);
         var loader = new CuiControlLoader(registry);
+        loader.SetSurface("Files", "files");
+        if (_interfaceTheme is { } theme) loader.SetThemePreferenceContext(theme);
         var values = new CuiViewModel();
-        values.Set("Columns", Bounds.Width >= 900 ? "1fr 150 100 90" : "1fr 0 0 0");
-        values.Set("ShowMetadata", Bounds.Width >= 900);
         values.Set("IsFolder", item.Kind == HostedItemKind.Folder);
+        values.Set("IsFile", item.Kind != HostedItemKind.Folder);
+        values.Set("FileBadge", FileBadge(item));
         values.Set("Name", item.Name);
         values.Set("Modified", item.ModifiedAt.ToLocalTime().ToString("g"));
         values.Set("Kind", item.Kind == HostedItemKind.Folder ? "File folder" : string.IsNullOrEmpty(Path.GetExtension(item.Name)) ? item.Kind.ToString() : Path.GetExtension(item.Name).TrimStart('.').ToUpperInvariant() + " file");
         values.Set("Size", item.SizeBytes is { } bytes ? $"{bytes:N0} B" : "—");
+        values.Set("Availability", AvailabilityLabel(item.Availability));
+        ApplyFileRowPresentation(values);
         loader.SetBindingContext(values);
         var loaded = loader.TryLoad(document);
         if (loaded.Root is null || parser.Diagnostics.Diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error) ||

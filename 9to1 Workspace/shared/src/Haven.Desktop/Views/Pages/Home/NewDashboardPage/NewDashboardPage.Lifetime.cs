@@ -78,6 +78,8 @@ public sealed partial class NewDashboardPage
         var hasDraft = await Dispatcher.UIThread.InvokeAsync(() => _homeEditors.Any(editor => editor.IsOpen)
             || _dashboardAssistantBusy || !string.IsNullOrWhiteSpace(_dashboardAssistantInput?.Text));
         if (hasDraft) return false;
+        var library = await Dispatcher.UIThread.InvokeAsync(() => _briefingLibraryPage);
+        if (library is not null && !await library.TryPrepareToCloseAsync(cancellationToken).ConfigureAwait(false)) return false;
         Task[] writes; lock (_homeWrites) writes = _homeWrites.ToArray();
         try { await Task.WhenAll(writes).WaitAsync(cancellationToken).ConfigureAwait(false); }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
@@ -94,11 +96,19 @@ public sealed partial class NewDashboardPage
             _disposed = true;
             Deactivate();
             foreach (var editor in _homeEditors.ToArray()) editor.Hide();
+            // Begin the child's own cancellation on its UI owner now and retain its
+            // full settlement. Starting only during cleanup could leave a cooperative
+            // child read uncancelled while the parent waited for that same read.
+            if (_briefingLibraryPage is { } library) _briefingLibraryClose ??= library.CloseAndDrainAsync();
         });
     }
 
     private async Task DetachHomeWorkAsync()
     {
+        // The Dashboard's admitted source reads have now settled. Join the exact child
+        // Library before disposing its host; its real source/action failure remains a veto.
+        if (_briefingLibraryPage is { } library)
+            await (_briefingLibraryClose ??= library.CloseAndDrainAsync()).ConfigureAwait(false);
         Task? actions = null;
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
@@ -113,6 +123,7 @@ public sealed partial class NewDashboardPage
             _modelRefreshCancellation?.Dispose();
             _modelBrowser?.Dispose();
             _widgetCanvas.Dispose();
+            _briefingLibraryHost.Child = null;
             Content = null;
         });
     }

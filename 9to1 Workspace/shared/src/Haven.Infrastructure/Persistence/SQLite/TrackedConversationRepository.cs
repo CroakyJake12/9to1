@@ -95,7 +95,7 @@ public sealed partial class UsageTrackingConversationRepository(
     public IConversationBranchInvocation BindInvocation(Guid conversationId, Guid branchId) =>
         new TrackedBranchInvocation(this, inner.BindInvocation(conversationId, branchId));
 
-    private sealed class TrackedBranchInvocation(UsageTrackingConversationRepository owner, IConversationBranchInvocation original) : IConversationBranchInvocation
+    private sealed partial class TrackedBranchInvocation(UsageTrackingConversationRepository owner, IConversationBranchInvocation original) : IConversationBranchInvocation
     {
         private readonly SemaphoreSlim _operations = new(1, 1);
         private int _closed;

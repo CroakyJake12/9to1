@@ -633,9 +633,8 @@ public sealed partial class ChatSessionService(
             : message.Role == MessageRole.User && branchAttachmentIds is { Count: > 0 }
                 ? originalBranch.AddUserMessageWithAttachmentsAsync(message, branchAttachmentIds, cancellationToken)
                 : originalBranch.AddMessageAsync(message, cancellationToken);
-        Task<IReadOnlyList<ChatMessage>> ReadOriginalHistoryAsync() => originalBranch is null
-            ? conversations.GetContextMessagesAsync(conversation.Id, cancellationToken)
-            : originalBranch.GetContextMessagesAsync(cancellationToken);
+        Task<ConversationPromptContext> ReadOriginalContextAsync() =>
+            ReadOriginalPromptContextAsync(conversation, originalBranch, generationOptions, canonicalIntent, cancellationToken);
         generationOptions = ConstrainTemporaryPersistentMemory(conversation, generationOptions);
         DemandOriginalPersistentMemoryRequest(generationOptions, ordinaryOriginal, originalCustody);
         DemandOriginalAttachmentInput(generationOptions, ordinaryOriginal, originalCustody);
@@ -1183,17 +1182,18 @@ public sealed partial class ChatSessionService(
 
         execution.Update(ChatExecutionStage.LoadingContext,
             originalSpacePolicy?.Snapshot.CapturedContext?.Notice ?? "Loading Context");
-        var history = await (ordinaryOriginal is null ? ReadOriginalHistoryAsync()
-            : ordinaryOriginal.Read(ReadOriginalHistoryAsync, cancellationToken)).ConfigureAwait(false);
+        var originalPromptContext = await (ordinaryOriginal is null ? ReadOriginalContextAsync()
+            : ordinaryOriginal.Read(ReadOriginalContextAsync, cancellationToken)).ConfigureAwait(false);
 
         var contextBudget = (int)Math.Clamp(
             (long)(generationOptions?.ContextLimit ?? 32768) * 4L,
             8_000L,
             131_072L);
-        // Old unqualified conversation material is retained in persistence but is not promoted
-        // into a newly closed corpus. The explicit current user prompt is still included below.
-        var selectedHistory = originalSpacePolicy?.Snapshot.Policy.Context.SourceOnly == true
-            ? Array.Empty<ChatMessage>() : history;
+        // Read branch history and its replacements from the SAME original source. Configured
+        // Space context may replace opaque page strings, but cannot discard ordinary history.
+        // Source-only intentionally excludes both old raw history and its summaries.
+        var selectedContext = SelectOriginalPromptContext(originalPromptContext, contextBudget,
+            originalSpacePolicy?.Snapshot.Policy.Context.SourceOnly == true, canonicalIntent);
         var userMessageDerivation = await DeriveOriginalSpaceUserMessageAsync(originalSpacePolicy, conversation,
             userMessage, ordinaryOriginal, originalCustody, cancellationToken).ConfigureAwait(false);
         if (userMessageDerivation is not null)
@@ -1216,7 +1216,7 @@ public sealed partial class ChatSessionService(
                     ["trace"] = System.Text.Json.JsonSerializer.Serialize(userMessageDerivation.Trace)
                 }));
         }
-        var contextMessages = ChatContextWindow.Build(selectedHistory, contextBudget);
+        var contextMessages = ChatContextWindow.Build(selectedContext.Messages, selectedContext.MessageBudget);
         var requestMessages = contextMessages
             .Where(message => message.Role is MessageRole.User or MessageRole.Assistant)
             .Select(message => new OllamaMessage(
@@ -1240,8 +1240,12 @@ public sealed partial class ChatSessionService(
             modelPlan.HasRuntime(ToolRuntimeKind.Workspace) ? workspaceRoot : null,
             projectContext, effectiveProjectInstructions, registeredContext, computerPass is not null, personalityDirective,
             providerDefaultsDirective);
+        if (selectedContext.Summary.Length != 0) system += "\n\n" + selectedContext.Summary;
         var contributingHistoryIds = contextMessages.Select(message => message.Id).ToHashSet();
-        var originalSelectedHistory = Array.AsReadOnly(history.Where(message => contributingHistoryIds.Contains(message.Id)).ToArray());
+        // Keep real stored flags in the canonical inventory; the false flags above affect only
+        // prompt-window inclusion and never rewrite persisted source observations.
+        var originalSelectedHistory = Array.AsReadOnly(originalPromptContext.OriginalMessages
+            .Where(message => contributingHistoryIds.Contains(message.Id)).ToArray());
 
         async ValueTask<TaskRunContextInventory> CaptureInventoryAsync(CancellationToken token)
         {
