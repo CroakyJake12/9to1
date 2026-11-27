@@ -2530,12 +2530,14 @@ public sealed partial class CuiControlLoader : IDisposable
         };
         _scopeChangedHandlers.Add(scope, handler);
         scope.PropertyChanged += handler;
+        scope.StartObservingItem();
     }
 
     private void UnsubscribeScope(RepeatItemScope scope)
     {
         if (_scopeChangedHandlers.Remove(scope, out var handler))
             scope.PropertyChanged -= handler;
+        scope.StopObservingItem();
     }
 
     private void ClearRepeatSubscriptions()
@@ -4859,6 +4861,7 @@ public sealed partial class CuiControlLoader : IDisposable
         private readonly ICuiBindingContext? _parent;
         private object? _item;
         private INotifyPropertyChanged? _observableItem;
+        private bool _observingItem;
 
         public RepeatItemScope(CuiControlLoader owner, string itemName, object? item, ICuiBindingContext? parent)
         {
@@ -4871,13 +4874,32 @@ public sealed partial class CuiControlLoader : IDisposable
         public string ItemName { get; }
         public event PropertyChangedEventHandler? PropertyChanged;
 
+        // Key/template probes use the same binding context but own no live row. Only a
+        // registered row observes its item, otherwise every reconciliation leaves a new
+        // event handler retaining the loader and its entire scene through the source item.
+        public void StartObservingItem()
+        {
+            if (_observingItem) return;
+            _observingItem = true;
+            if (_observableItem is not null)
+                _observableItem.PropertyChanged += OnItemPropertyChanged;
+        }
+
+        public void StopObservingItem()
+        {
+            if (!_observingItem) return;
+            _observingItem = false;
+            if (_observableItem is not null)
+                _observableItem.PropertyChanged -= OnItemPropertyChanged;
+        }
+
         public void Update(object? item)
         {
-            if (_observableItem is not null)
+            if (_observingItem && _observableItem is not null)
                 _observableItem.PropertyChanged -= OnItemPropertyChanged;
             _item = item;
             _observableItem = item as INotifyPropertyChanged;
-            if (_observableItem is not null)
+            if (_observingItem && _observableItem is not null)
                 _observableItem.PropertyChanged += OnItemPropertyChanged;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
         }
