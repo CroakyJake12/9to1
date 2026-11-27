@@ -11,7 +11,7 @@ public sealed partial class SpacesHomePage
     private bool _sidebarAutoCollapsed;
     private bool _sidebarResizePending;
 
-    private string ResponsiveSidebarColumns => _controller.State.SidebarCollapsed
+    private string ResponsiveSidebarColumns => WorkspaceOwnsContextualNavigation || _controller.State.SidebarCollapsed
         ? "60 0 1fr" : _sidebarViewportWidth < 1000 ? "60 210 1fr" : "60 232 1fr";
 
     private static int SidebarWidthBand(double width) => width < 750 ? 0 : width < 1000 ? 1 : 2;

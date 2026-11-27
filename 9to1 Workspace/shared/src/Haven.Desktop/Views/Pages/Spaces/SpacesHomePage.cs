@@ -10,6 +10,9 @@ using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Services;
 using Haven.Desktop.ViewModels;
+#if !ANDROID
+using Haven.Desktop.Views.Pages.Assistants;
+#endif
 using HavenOS.Apps.Spaces;
 using HavenOS.Apps.Spaces.Home;
 
@@ -248,9 +251,14 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
 
     public bool TryGetValue(string path, out object? value)
     {
-        if (TryGetTaskSidebarValue(path, out value)) return true;
+        if (path is "spaces.sidebarExpanded" or "spaces.sidebarCollapsed")
+        {
+            lock (_gate)
+                if (WorkspaceOwnsContextualNavigation) { value = false; return true; }
+        }
         if (path == "spaces.layoutColumns")
         { lock (_gate) value = ResponsiveSidebarColumns; return true; }
+        if (TryGetTaskSidebarValue(path, out value)) return true;
         if (path == "spaces.hasOrganisationDestinations")
         { value = _workspaceCommandHost is not null && _controller.State.Selection is { } selection && SupportsOrganisationDestinations(selection.Id); return true; }
         if (path is "spaces.groupsSelected" or "spaces.specialistsSelected")
@@ -602,6 +610,20 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
     internal Control? SpaceWorkspaceContent
     {
         get { lock (_gate) return _spaceWorkspace?.Content as Control; }
+    }
+
+    // The actual Assistant workspace owns its own conversation navigation even when
+    // opened from Chat/Tasks. Management temporarily reveals the unchanged Space preference.
+    private bool WorkspaceOwnsContextualNavigation
+    {
+        get
+        {
+#if !ANDROID
+            return !_controller.State.IsManaging && _spaceWorkspace?.Content is NativeAssistantsDesktopPage;
+#else
+            return false;
+#endif
+        }
     }
 
     /// <summary>
