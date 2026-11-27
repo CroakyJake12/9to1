@@ -105,8 +105,23 @@ public sealed partial class FilesNativeBrowserSurface
             await originals.AwaitAsync(originals.Invoke(() => RevalidateOriginalOwnerAsync(linked.Token)));
             await originals.AwaitAsync(originals.Invoke(() => RequireReadyAsync(linked.Token)));
             RequireOriginalAlive(linked.Token);
-            if (!TryGetOriginalLocation(out var actualStore, out var actualFolder, out _) || actualStore != store || actualFolder != parent ||
-                !TryGetOriginalTextPreviewLocation(out var actualFile, out var actualRevision, out _) || actualFile != file || actualRevision != revision)
+            var currentLocation = TryGetOriginalLocation(out var actualStore, out var actualFolder, out _) &&
+                actualStore == store && actualFolder == parent;
+            var successfulPreview = TryGetOriginalTextPreviewLocation(out var actualFile, out var actualRevision, out _) &&
+                actualFile == file && actualRevision == revision;
+            // An issued read can truthfully report unavailable/unsupported content without faulting.
+            // Keep that SAME selection's notice and folder location; it is never a successful preview
+            // identity or a content grant. Genuine source/authority/cleanup failures still propagate.
+            var refusedPreview = _textPreview is { Succeeded: false, Text: "", IsTruncated: false } refused &&
+                refused.Code is ("PreviewUnavailable" or "PreviewTooLarge" or "UnsupportedPreview" or
+                    "UnsupportedEncoding" or "UnsupportedBinary") &&
+                ReferenceEquals(_page, selected.Page) && ReferenceEquals(_textPreviewPage, selected.Page) &&
+                ReferenceEquals(_items.SelectedItem, selected.Row) && ReferenceEquals(_textPreviewRow, selected.Row) &&
+                selected.Page.Items.Any(item => ReferenceEquals(item, selected.Row)) &&
+                selected.Row.Id.Value == file && selected.Row.CurrentRevisionId?.Value == revision &&
+                refused.FileId == file && Guid.TryParseExact(refused.Revision, "N", out var refusedRevision) &&
+                refusedRevision == revision;
+            if (!currentLocation || !(successfulPreview || refusedPreview))
                 throw new NotSupportedException(_textPreview?.Message ?? "This file has no current supported text preview.");
         });
     }

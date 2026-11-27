@@ -1217,6 +1217,95 @@ public sealed partial class FilesNativeBrowserMutationTests
         finally { await view.CloseAndDrainAsync(); window.Close(); }
     }
 
+    [AvaloniaFact]
+    public async Task Restored_local_source_without_immutable_content_keeps_unavailable_notice_folder_and_clean_close()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var actor = h.Workspace.Actor;
+        var folder = (await h.Workspace.Directories.ResolveProfileAsync(Guid.Parse(actor.ProfileId), "write", token)).Value!;
+        var sourcePath = Path.Combine(folder.DirectoryPath, "local-source.cs");
+        var bytes = Encoding.UTF8.GetBytes("// Existing local source is not an immutable uploaded revision.\n");
+        await File.WriteAllBytesAsync(sourcePath, bytes, token);
+        var parent = (await h.Workspace.Provider.GetAsync(h.Parent, token)).Value!;
+        var source = new FilesOriginalLocalDeveloperSource(HostedItemId.New(), h.Parent, "local-source.cs", "text/plain",
+            new(Guid.NewGuid()), actor.ActorId, DateTimeOffset.UtcNow, bytes.Length, Convert.ToHexString(SHA256.HashData(bytes)));
+        var authority = h.Graph.GetRequiredService<NativeFilesWorkspaceAuthority>();
+        var commit = await authority.CaptureCommitAuthorityAsync(actor, h.Workspace.Provider, () => true, token);
+        Assert.True((await h.Workspace.Provider.RegisterOriginalLocalDeveloperFileAsync(source,
+            [new(h.Parent, parent.CurrentRevisionId)], h.Workspace.Configuration.StoreId, commit, token)).IsSuccess);
+        var content = (await h.Workspace.Provider.GetCurrentArtifactContentForOriginalStoreAsync(
+            h.Workspace.Configuration.StoreId, source.FileId, source.RevisionId, token)).Value!;
+        Assert.Null(content.UploadAnchorFolderId); Assert.Null(content.ProviderContentReference);
+        var drivePath = Path.Combine(h.Workspace.Configuration.RootDirectory, ".9to1-files", "drive.json");
+        var originalDrive = await File.ReadAllBytesAsync(drivePath, token);
+        var originalHome = await File.ReadAllBytesAsync(Path.Combine(h.Root, "home.json"), token);
+        var view = new FilesNativeBrowserSurface(h.Browser, null, actor,
+            new OriginalPreviewFixtureReadiness(h), CancellationToken.None);
+        var window = new Window { Content = view, Width = 1060, Height = 800 }; window.Show();
+        try
+        {
+            // This real source is registered as current metadata without publishing immutable bytes.
+            // Restoration must retain the producer's refusal, never read the mutable local file.
+            var opening = view.OpenOriginalTextPreviewLocationAsync(h.Workspace.Configuration.StoreId, h.Parent.Value,
+                source.FileId.Value, source.RevisionId.Value, token);
+            await opening; window.UpdateLayout();
+            Assert.True(opening.IsCompletedSuccessfully); Assert.True(view.OriginalPublicationIsAlive);
+            Assert.True(view.TryGetOriginalLocation(out var store, out var parentId, out _));
+            Assert.Equal(h.Workspace.Configuration.StoreId, store); Assert.Equal(h.Parent.Value, parentId);
+            Assert.False(view.TryGetOriginalTextPreviewLocation(out _, out _, out _));
+            Assert.True(Assert.IsType<bool>(ReadNativeValue(view, "TextPreviewVisible")));
+            Assert.Equal("local-source.cs", Assert.IsType<string>(ReadNativeValue(view, "TextPreviewTitle")));
+            Assert.Equal("", Assert.IsType<string>(ReadNativeValue(view, "TextPreviewContent")));
+            const string notice = "This file has no supported existing local content materialisation.";
+            Assert.Equal(notice, Assert.IsType<string>(ReadNativeValue(view, "TextPreviewMessage")));
+            Assert.Equal(notice, Assert.Single(view.GetVisualDescendants().OfType<TextBlock>(),
+                control => control.Name == "files-preview-message").Text);
+            Assert.True(view.CanPrepareOriginalClose());
+            var close = view.CloseAndDrainAsync(); Assert.Same(close, view.CloseAndDrainAsync()); await close;
+            Assert.True(close.IsCompletedSuccessfully); Assert.False(view.OriginalPublicationIsAlive);
+            Assert.Equal(originalDrive, await File.ReadAllBytesAsync(drivePath, token));
+            Assert.Equal(originalHome, await File.ReadAllBytesAsync(Path.Combine(h.Root, "home.json"), token));
+            Assert.Equal(bytes, await File.ReadAllBytesAsync(sourcePath, token));
+        }
+        finally { await view.CloseAndDrainAsync(); window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Restored_uploaded_preview_preserves_actual_missing_file_failure_in_original_close()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var actor = h.Workspace.Actor;
+        var file = await CreatePresentationFileAsync(h, "missing-preview.txt", token);
+        var row = (await h.Workspace.Provider.GetAsync(file, token)).Value!;
+        var folder = (await h.Workspace.Directories.ResolveProfileAsync(Guid.Parse(actor.ProfileId), "write", token)).Value!;
+        var path = Path.Combine(folder.DirectoryPath, row.Name); File.Delete(path);
+        var drivePath = Path.Combine(h.Workspace.Configuration.RootDirectory, ".9to1-files", "drive.json");
+        var originalDrive = await File.ReadAllBytesAsync(drivePath, token);
+        var originalHome = await File.ReadAllBytesAsync(Path.Combine(h.Root, "home.json"), token);
+        var view = new FilesNativeBrowserSurface(h.Browser, null, actor,
+            new OriginalPreviewFixtureReadiness(h), CancellationToken.None);
+        var window = new Window { Content = view }; window.Show();
+        try
+        {
+            var opening = view.OpenOriginalTextPreviewLocationAsync(h.Workspace.Configuration.StoreId, h.Parent.Value,
+                file.Value, row.CurrentRevisionId!.Value.Value, token);
+            var failure = await Record.ExceptionAsync(() => opening); Assert.NotNull(failure);
+            var original = Assert.Single(new AggregateException(failure).Flatten().InnerExceptions.OfType<FileNotFoundException>().Distinct());
+            Assert.Equal(path, original.FileName); Assert.True(opening.IsFaulted);
+            Assert.False(view.OriginalPublicationIsAlive); Assert.False(view.TryGetOriginalTextPreviewLocation(out _, out _, out _));
+            var close = view.CloseAndDrainAsync(); Assert.Same(close, view.CloseAndDrainAsync());
+            var closeFailure = await Record.ExceptionAsync(() => close); Assert.NotNull(closeFailure);
+            Assert.True(close.IsFaulted);
+            Assert.Contains(new AggregateException(closeFailure).Flatten().InnerExceptions, cause => ReferenceEquals(cause, original));
+            Assert.Equal(originalDrive, await File.ReadAllBytesAsync(drivePath, token));
+            Assert.Equal(originalHome, await File.ReadAllBytesAsync(Path.Combine(h.Root, "home.json"), token));
+            Assert.False(File.Exists(path));
+        }
+        finally { _ = await Record.ExceptionAsync(() => view.CloseAndDrainAsync()); window.Close(); }
+    }
+
     // Real component dependencies; this is not an installed-peer, full Home-runtime or platform
     // qualification. Ready is derived from the same actual state/profile/Files/receipt graph.
     private sealed class OriginalPreviewFixtureReadiness(Harness h) : ICuiSceneReadiness
