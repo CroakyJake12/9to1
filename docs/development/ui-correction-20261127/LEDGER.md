@@ -50,6 +50,25 @@ Unicode-title save/reopen round-trip (source fixed + unit-compiled), Build name+
 creation, model settings A256 layout, notifications A treatment, Glow/Professional matrix,
 tab-overflow hit areas at 1280×720.
 
+## UI-04 recent-chat compaction (committed slice pending — working tree, 2026-11-27 PM)
+
+Compact navigation on the Spaces sidebar per A046 while keeping the real owner commands:
+`SpacesHome.cui` drops the standing Search button and the always-visible instruction line; the
+query input now runs `spaces.search-conversations` through the authored CUI **Enter SubmitAction**
+(`{Binding Event}` → `CuiInputSubmitRequest`, fenced against the live query revision inside the
+existing handler); Clear only renders when a query is typed (`spaces.conversationQueryActive`);
+the status text only renders for real states (`spaces.conversationNoticeVisible`) — typing drafts,
+results no longer print "Showing the 20/50 …" counts (heading flips Recent chats ↔ Title matches).
+Fallback bindings added in `SpacesHomeCuiBindings.cs`. Typing still performs **no** implicit
+history read (owner design and assertion preserved).
+Tests: `SpacesConversationRouteTests`/`SpacesSavedTitleSearchTests`/`SpacesHistoryAuthorityTests`
+56 total — 47 pass; the 9 failures are each present in the stored baseline set
+(`/tmp/opencode/spaces-failures-baseline.txt`, fixture disposal/thread-affinity family) —
+`logs/test-spaces-submit-search-2.log`. Three call sites now press the real Enter gesture
+(`SubmitSearch` helper) instead of the removed button; the intent-parameter path remains
+(for `ClearConversationSearch` and direct dispatch).
+Native qualification of the compact sidebar and Enter behaviour queued.
+
 ## UI-06 state (2026-11-27, this session)
 
 Implemented against the real owners. `_manualFolderPath` stays the canonical final child;
@@ -80,7 +99,7 @@ bindings → now 2/2 PASS (`logs/test-dev-cui-docs-2.log`).
 | UI-01 shared popup lifecycle + containment | P0 | **native pass** (picker set) | outside/toggle/Escape verified on installed candidate; composer emoji/Attach/Options popups still to walk |
 | UI-02 persistent navigation/action state | P0 | source+compile; native n/a this session | refusal text now self-clears on accepted navigation or page-idle; original hang condition not present on the live copy (not visible 09:12Z+) |
 | UI-03 Spaces route identity | P0 | slices native-passed | definition body behind explicit settings (above); route-by-route headers/groups/specialists walk + A046 auto-entry remain (auto-open variant tried & reverted — see commit note) |
-| UI-04 Spaces conversation/context/readable state | P0 | title source fixed+native-render pending | context shelf, model-row separation, recovery grouping still open; verbose recent-chat search block observed again post-fix |
+| UI-04 Spaces conversation/context/readable state | P0 | title fixed; recent-chat compaction tests pass vs baseline | context shelf (attach/inspect/remove), model-row separation, recovery grouping still open; verbose search block now compact (see section above) |
 | UI-05 Specialists presentation | P1 | pending | A050 cards |
 | UI-06 Build creation contract | P0 | **source + tests pass**; native pending | name + parent → derived child, one chained Check-and-create action; see UI-06 state above |
 | UI-07 Build starting points/drafts/open | P1 | pending | A286/A108/A124 |

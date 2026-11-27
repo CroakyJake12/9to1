@@ -93,6 +93,8 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
             "spaces.conversationHistoryHeading" => "Recent chats",
             "spaces.conversationHistoryNotice" => "Chat title search is unavailable in this host.",
             "spaces.conversationHistoryEmpty" => "No chats yet",
+            "spaces.conversationQueryActive" => false,
+            "spaces.conversationNoticeVisible" => true,
             // Custom sidebar elements come from the extensions actually attached to the selected Space.
             // The domain surface has no extension authority, so it truthfully reports none rather than
             // inventing rows; the owning native surface serves the real projection.

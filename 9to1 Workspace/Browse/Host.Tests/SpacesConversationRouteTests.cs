@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text.Json.Nodes;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Haven.Application;
@@ -1099,10 +1100,9 @@ public sealed class SpacesSavedTitleSearchTests
         await (rig.Page.LatestOriginalMutation ?? throw new InvalidOperationException("CUI did not issue a typed query update.")).WaitAsync(SearchBound);
         Assert.Equal("revision", Value(rig.Page, "spaces.conversationQuery"));
         Assert.Empty(calls); // Typing does not perform an implicit history request.
-        var searchButton = rig.Page.GetVisualDescendants().OfType<Button>()
-            .Single(button => AutomationProperties.GetAutomationId(button) == "space-history-search-button");
-        Assert.Equal("Search saved chat titles in this Space", AutomationProperties.GetName(searchButton));
-        await SearchAsync(rig.Page);
+        // UI-04: no standing Search button; the authored Enter SubmitAction runs the search.
+        Assert.DoesNotContain(rig.Page.GetVisualDescendants().OfType<Button>(), b => AutomationProperties.GetAutomationId(b) == "space-history-search-button");
+        await SubmitSearch(rig.Page).WaitAsync(SearchBound);
         Assert.Equal((rig.SpaceA.Id, "revision"), Assert.Single(calls));
         Assert.Equal(match, Assert.Single(Rows(rig.Page)));
         Assert.Same(owner, rig.Page.SpaceWorkspaceContent);
@@ -1252,6 +1252,20 @@ public sealed class SpacesSavedTitleSearchTests
     private static Task SetQueryAsync(SpacesHomePage page, string query) => page.DispatchAsync("spaces.set-conversation-query", query).AsTask();
     private static Task SearchAsync(SpacesHomePage page) => page.DispatchAsync("spaces.search-conversations", Intent(page)).AsTask();
 
+    /// <summary>UI-04: the compact saved-chat search runs through the authored SubmitAction on
+    /// the query input, so tests press the real Enter key gesture on that TextBox.</summary>
+    private static Task SubmitSearch(SpacesHomePage page)
+    {
+        Dispatcher.UIThread.RunJobs();
+        var input = Assert.Single(page.GetVisualDescendants().OfType<TextBox>(),
+            box => AutomationProperties.GetAutomationId(box) == "space-history-query");
+        input.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter, Source = input });
+        Dispatcher.UIThread.RunJobs();
+        var host = (CakeOS.Cui.Runtime.CuiSceneHost)typeof(SpacesHomePage).GetField("_host", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page)!;
+        var show = (Task<CakeOS.Cui.Runtime.CuiSceneAvailability>)typeof(SpacesHomePage).GetField("_exactOriginalShow", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page)!;
+        return host.CaptureOriginalActionSettlement(show);
+    }
+
     private sealed class SearchRig : IAsyncDisposable
     {
         private SearchRig(SpacesHomePage page, Window window, SpaceDefinition a, SpaceDefinition b, HistoryRow recent)
@@ -1334,7 +1348,7 @@ public sealed class SpacesHistoryAuthorityTests
         {
             if (phase == "before") Revoke();
             await owner.Page.DispatchAsync("spaces.set-conversation-query", "Needle");
-            read = Click(owner.Page, "space-history-search-button"); // Actual authored CUI action settlement.
+            read = SubmitSearch(owner.Page); // Actual authored CUI submit-action settlement.
             if (phase != "before") { await entered.Task.WaitAsync(Limit); Revoke(); release.TrySetResult(); }
             await read.WaitAsync(Limit);
             Assert.Empty(Rows(owner.Page));
@@ -1560,7 +1574,7 @@ public sealed class SpacesHistoryAuthorityTests
         try
         {
             await owner.Page.DispatchAsync("spaces.set-conversation-query", "Needle");
-            search = Click(owner.Page, "space-history-search-button");
+            search = SubmitSearch(owner.Page);
             await entered.Task.WaitAsync(Limit);
             Assert.Equal(1, owner.Rig.TitleReads); // Earlier canonical query validation actually completed.
             owner.Rig.Home!.Runtime.ReportServiceState("permissions.trust", HomeServiceLifecycleState.Unavailable, false, "Revoked during final UI admission");
@@ -1586,12 +1600,27 @@ public sealed class SpacesHistoryAuthorityTests
     { Assert.True(page.TryGetValue(path, out var value)); return value; }
     private static IReadOnlyList<HistoryRow> Rows(SpacesHomePage page) => Assert.IsAssignableFrom<IReadOnlyList<HistoryRow>>(Value(page, "spaces.conversations"));
     private static async Task Search(SpacesHomePage page)
-    { await page.DispatchAsync("spaces.set-conversation-query", "Needle"); await Click(page, "space-history-search-button").WaitAsync(Limit); }
+    { await page.DispatchAsync("spaces.set-conversation-query", "Needle"); await SubmitSearch(page).WaitAsync(Limit); }
     private static Task Click(SpacesHomePage page, string id)
     {
         Dispatcher.UIThread.RunJobs();
         var button = Assert.Single(page.GetVisualDescendants().OfType<Button>(), b => AutomationProperties.GetAutomationId(b) == id);
         button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Dispatcher.UIThread.RunJobs();
+        var host = (CakeOS.Cui.Runtime.CuiSceneHost)typeof(SpacesHomePage).GetField("_host", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page)!;
+        var show = (Task<CakeOS.Cui.Runtime.CuiSceneAvailability>)typeof(SpacesHomePage).GetField("_exactOriginalShow", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page)!;
+        return host.CaptureOriginalActionSettlement(show);
+    }
+
+    /// <summary>UI-04: the compact saved-chat search runs through the authored SubmitAction on
+    /// the query input, so tests press the real Enter key gesture on that TextBox.</summary>
+    private static Task SubmitSearch(SpacesHomePage page)
+    {
+        Dispatcher.UIThread.RunJobs();
+        var input = Assert.Single(page.GetVisualDescendants().OfType<TextBox>(),
+            box => AutomationProperties.GetAutomationId(box) == "space-history-query");
+        var args = new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter, Source = input };
+        input.RaiseEvent(args);
         Dispatcher.UIThread.RunJobs();
         var host = (CakeOS.Cui.Runtime.CuiSceneHost)typeof(SpacesHomePage).GetField("_host", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page)!;
         var show = (Task<CakeOS.Cui.Runtime.CuiSceneAvailability>)typeof(SpacesHomePage).GetField("_exactOriginalShow", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page)!;

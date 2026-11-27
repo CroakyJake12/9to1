@@ -25,7 +25,7 @@
         (CuiNativeHost maps it to the bundled assets), not a per-document override.
   -->
   <Actions>
-    <Action name="SearchConversationTitles" command="spaces.search-conversations" parameter="{Binding spaces.conversationSearchIntent}" />
+    <Action name="SearchConversationTitles" command="spaces.search-conversations" parameter="{Binding Event}" />
     <Action name="ClearConversationSearch" command="spaces.clear-conversation-search" parameter="{Binding spaces.conversationSearchIntent}" />
     <Action name="SelectRow" command="spaces.select" parameter="{Binding space.id}" />
     <Action name="RenameRow" command="spaces.rename" parameter="{Binding space.id}" />
@@ -241,15 +241,12 @@
                 <Container id="space-recent-chats-heading-row" Type="Vertical Stack" Padding="8">
                   <Text id="space-recent-chats-heading" text="{Binding spaces.conversationHistoryHeading}" font-size="14" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
                   <If Condition="{Binding spaces.canSearchConversations}">
-                    <Container id="space-history-search" Type="Vertical Stack" CellGap="6" accessible-name="Find saved chats in this Space">
-                      <Input id="space-history-query" Type="Text" Value="{Binding spaces.conversationQuery, mode=TwoWay}" placeholdertext="Find chat titles in this Space" accessible-name="Find saved chat titles in this Space" />
-                      <Container Type="Horizontal Stack" CellGap="6">
-                        <Button id="space-history-search-button" action="SearchConversationTitles" content="Search" accessible-name="Search saved chat titles in this Space" />
-                        <Button id="space-history-clear-button" action="ClearConversationSearch" content="Clear" accessible-name="Clear chat search and show recent chats" />
-                      </Container>
+                    <Container id="space-history-search" Type="Grid" ColumnSizes="1fr Auto" CellGap="6" accessible-name="Find saved chats in this Space">
+                      <Input id="space-history-query" Type="Text" Value="{Binding spaces.conversationQuery, mode=TwoWay}" SubmitAction="SearchConversationTitles" placeholdertext="Find chat titles in this Space" accessible-name="Find saved chat titles in this Space" />
+                      <Button Column="1" id="space-history-clear-button" action="ClearConversationSearch" content="Clear" accessible-name="Clear chat search and show recent chats" IsVisible="{Binding spaces.conversationQueryActive}" />
                     </Container>
                   </If>
-                  <Text id="space-history-notice" text="{Binding spaces.conversationHistoryNotice}" font-size="12" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" accessible-name="Chat history search status" />
+                  <Text id="space-history-notice" text="{Binding spaces.conversationHistoryNotice}" font-size="12" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" accessible-name="Chat history search status" IsVisible="{Binding spaces.conversationNoticeVisible}" />
                 </Container>
                 <Container id="space-recent-chats-divider" Type="Vertical Stack" Height="1" Background="{Resource CuiLineBrush}" />
                 <Repeat id="space-conversations" Source="{Binding spaces.conversations}" As="conversation" Key="{Binding conversation.id}">

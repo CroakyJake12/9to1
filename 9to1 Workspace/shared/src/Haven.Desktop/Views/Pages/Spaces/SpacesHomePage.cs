@@ -277,6 +277,11 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
                     "spaces.conversationHistoryNotice" => _conversationSearchProvider is null
                         ? "Chat title search is unavailable in this host." : _conversationHistoryNotice,
                     "spaces.conversationHistoryEmpty" => _conversationHistoryEmpty,
+                    // UI-04 compact recent-chat navigation: the search row and its status text
+                    // only claim space when they carry an actual state.
+                    "spaces.conversationQueryActive" => _conversationQuery.Length > 0,
+                    "spaces.conversationNoticeVisible" => !string.IsNullOrWhiteSpace(
+                        _conversationSearchProvider is null ? "Chat title search is unavailable in this host." : _conversationHistoryNotice),
                     _ => null
                 };
                 if (value is not null || path == "spaces.conversationSearchIntent") return true;
@@ -512,7 +517,8 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
                     _conversationQueryRevision++;
                     _conversationReadSequence++; // A late read for earlier text cannot publish.
                     ClearConversationProjection();
-                    _conversationHistoryNotice = "Press Search to find saved chat titles in this Space.";
+                    // UI-04: typing only drafts the query; Enter runs it. No standing instruction.
+                    _conversationHistoryNotice = string.Empty;
                     _conversationHistoryEmpty = "Search has not run for this text.";
                 }
                 await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
@@ -523,6 +529,11 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
                 lock (_gate)
                 {
                     SynchronizeConversationScope();
+                    // UI-04: Enter in the compact search input dispatches the CUI submit event
+                    // rather than a pre-built intent. The two-way text binding has already
+                    // published the typed query, so fence against the live revision here.
+                    if (parameter is CuiInputSubmitRequest && _conversationScopeId is { } submitScope)
+                        parameter = new ConversationSearchIntent(submitScope, _conversationQuery, _conversationQueryRevision);
                     if (parameter is not ConversationSearchIntent intent || intent.SpaceId != _conversationScopeId ||
                         intent.Revision != _conversationQueryRevision ||
                         !string.Equals(intent.Query, _conversationQuery, StringComparison.Ordinal))
@@ -733,9 +744,9 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
                         if (admitted)
                         {
                             _conversations = rows;
-                            _conversationHistoryNotice = query.Length == 0
-                                ? "Showing the 20 most recent saved chats."
-                                : "Showing up to 50 newest saved-title matches in this Space.";
+                            // UI-04: the heading ("Recent chats"/"Title matches") and the row list
+                            // already describe what is shown; a standing count line is not kept.
+                            _conversationHistoryNotice = string.Empty;
                             _conversationHistoryEmpty = query.Length == 0 ? "No chats yet" : "No saved chat titles match this search.";
                         }
                         else
