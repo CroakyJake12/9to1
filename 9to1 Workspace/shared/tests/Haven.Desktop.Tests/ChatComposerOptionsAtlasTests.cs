@@ -447,8 +447,11 @@ public sealed class ChatComposerOptionsAtlasTests
             {
                 using var frame = Window.CaptureRenderedFrame(); Assert.NotNull(frame);
                 var outside = new Point(4, 4);
-                var origin = panel.TranslatePoint(default, Window); Assert.NotNull(origin);
-                Assert.False(new Rect(origin.Value, panel.Bounds.Size).Contains(outside));
+                // The panel may belong to a separate native PopupRoot. Screen conversion
+                // preserves the actual roots and their scaling without assuming a common ancestor.
+                var topLeft = Window.PointToClient(panel.PointToScreen(default));
+                var bottomRight = Window.PointToClient(panel.PointToScreen(new Point(panel.Bounds.Width, panel.Bounds.Height)));
+                Assert.False(new Rect(topLeft, bottomRight).Contains(outside));
                 Window.MouseMove(outside);
                 Window.MouseDown(outside, MouseButton.Left); Window.MouseUp(outside, MouseButton.Left);
             }
