@@ -68,3 +68,66 @@ The live SQLite migration preserved2,586 archived runs, added only `runs_created
 - A further rail-entry defect was confirmed against V5 IX-SPACES-011/014: the existing retained-page dictionary was written but never read. Repeated rail entry incorrectly created a fresh conversation. A three-file repair is assigned to restore only the exact eligible live page/identity/draft and retain explicit New Chat as the new-conversation action. Separate five-file Assistant navigation work will add one retained 218px wide list/230px compact drawer, preserving the optional Workspace and original focus/identity owners.
 - Follow-up live endpoint evidence during guarded SDK work: status median **3.276ms**, maximum **11.459ms**; inference capabilities median **17.003ms**, maximum **17.884ms**, five HTTP200 samples each at 12:47 GMT. These remain endpoint timings, not whole-app interaction latency. See private `live-endpoints-followup.json`.
 - Stopped partial-response persistence remains unimplemented on the source-owned ordinary Chat path. Correct implementation needs the source buffer and exact branch handle retained through a finite durable finalization phase before the original task ledger is sealed, followed by a distinct interrupted terminal event after cleanup. A UI catch/save or generic late writer would not establish this. The existing 12,000 MiB independent Build admission floor also remains unmet; no inference reconfiguration or guard reduction is authorised by a successful UI build.
+
+
+## Final checkpoint — 27 November 2026, 14:57 GMT
+
+**Verified source and prepared replacement; native activation and full independence remain pending.** The product source is `a163b7c6d15720a071077080adfae72501741bed`. All original Qwen work is preserved. The closing documentation commit changes only this ledger and the feature inventory; the immutable replacement remains bound to the tested product revision.
+
+### Owner correction and performance scope
+
+Jacob clarified that 9to1 deliberately supports keeping the model always resident, while other applications remain responsive. This work therefore targets 9to1's unnecessary UI and data-access work. No model was unloaded, inference service restarted, or residency configuration changed. Compiler memory-guard interruptions are separate build constraints and do not establish the cause of interactive lag.
+
+The integrated work removes repeated-item subscription retention, the Browser's global layout-time tree scan, unnecessary sidebar history/extension refreshes, full transcript copies for retained chronological order, and excessive scroll layout/paint invalidation. The scene host no longer invalidates the whole scene on every ordinary pointer move or exit; captured-pointer fallback and actual element hover invalidation remain. Five real Skia tests cover 80 retained rows and 64 same-target moves without additional repaint/measure/subscription counts, hover transitions, a custom captured drawer, and text selection.
+
+Assistant prompt edits now update the prompt and action-availability projection without rebuilding unrelated Assistant, history, model, resource, configuration or attachment rows. Eighteen owning tests preserve collection/row identities and validate actual action states, archived/disabled notices, repeated values and stale-row refusal after a real replacement.
+
+The chronological runs index retained all 2,586 runs. The last live follow-up measured status median 3.276ms and inference-capabilities median 17.003ms, with five successful HTTP200 samples each. These are endpoint timings, not a measurement of complete UI latency. The successor has not yet been activated on the existing profile, so the user's observed lag is not claimed resolved.
+
+### Atlas and retained capabilities
+
+Spaces uses the supplied effective Atlas v5 geometry: 60px rail, 232px sidebar (210px below 1,000px, collapsed below 750px), 66px header and bounded transcript/composer width. Returning through the rail restores the exact eligible retained workspace, identity and draft; New Chat remains the explicit creation action. Management is explicit. The single Options surface and actual Attach/formatting dismissal preserve draft, focus and transactional permission Save semantics.
+
+Assistant Home, identity, contextual navigation and optional Workspace are integrated. The 218px navigation lane and 360px Workspace lane have one canonical owner. Initial attachment discovers the retained authored/content tree before native templates expose visual descendants, without restoring a permanent layout scan. Route changes at unchanged width reconcile the lanes. Disposal joins navigation ownership before child CUI teardown. Compact Task layout retains a positive transcript viewport even with a long draft and three attachments. Actual Task steering, queueing and return through the same Home remain covered.
+
+Expected unavailable local Files previews no longer become retained shutdown faults after valid same-owner reads. Genuine I/O faults remain authoritative. Ordinary Chat completion is bound to its exact accepted branch, input and turn. The Build programme catalogue no longer truncates after 200 entries. These repairs preserve capabilities and saved-agent compatibility; they do not justify deleting unclassified older interfaces.
+
+### Final focused verification
+
+All rows below identify the same unchanged source `a163b7c6d15720a071077080adfae72501741bed`, with no skipped cases. This is **82 focused checks across three cohorts**, not the full repository suite.
+
+| Cohort | Result | Retained evidence |
+| --- | --- | --- |
+| Assistant navigation, viewport and prompt projection | 28/28 passed | `nineteenth-checks-results.json`, `assistant-navigation-prompt-19.log` |
+| Actual Skia pointer, Assistant first-use/history/Task/reopen and four appearance captures | 13/13 passed | `twenty-fifth-checks-results.json`, `desktop-pointer-assistant-25.log` |
+| Spaces retained routes and presentation | 41/41 passed | `twenty-fifth-checks-results.json`, `spaces-retained-route-25.log` |
+
+The Desktop cohort produced 32 actual rendered frames, eight in each of Bright, SuperBright, Dark and SuperDark, with original action/view/process joins. The coordinator visually inspected the wide SuperDark Assistant Home and compact SuperBright conversation captures. The fixture uses an explicitly fictional persisted Assistant identity. These are headless native-control renders, not live-PC acceptance or real-model execution.
+
+Earlier failures and guard refusals remain retained. Fixture corrections select the actual authored ordinary-action controls and the real 17px Work identity heading, and accept both mutable and immutable solid brushes; exact expected colours, contrast checks, source ownership and frame counts remain. The initial zero-width lane and close-registration failure were repaired in production, not waived in tests.
+
+Only the SDK child environment was adjusted: the 28-case run used `DOTNET_GCHeapCount=2`; the final Desktop/Spaces runs and publication used `DOTNET_GCHeapCount=1` and `DOTNET_GCConserveMemory=7`. The normal 1,100 MiB guard, full production references and source checks remained. No persistent app or inference configuration was changed.
+
+### Immutable replacement and recovery
+
+- Build: `atlas-a163b7c6d1-20261127-145503`; normal self-contained Linux x64 Release publication passed in 44.8s, guard result OK, exit 0, minimum available memory 1,749 MiB, unchanged 1,100 MiB floor.
+- Runtime: `/home/jacob/.local/share/9to1-development/runtimes/atlas-a163b7c6d1-20261127-145503`; frozen and prepared, **not launched**.
+- Build receipt: `/home/jacob/.local/share/9to1-development/receipts/atlas-a163b7c6d1-20261127-145503-receipt.json`; SHA-256 `1b2fd1b60a39821f7d3d1fa7de35d930c8e45994d4ef4a41744e40aa398e73bc`.
+- Prepared manifest: `/home/jacob/.local/state/9to1-live-preview/approved-atlas-a163b7c6d1-20261127-145503.json`; SHA-256 `2812fe02756b3f7c01fcdc9bcb1dcfd50ad1671952f6f411bac4d08da0738143`.
+- Private authoritative final candidate record: `final-prepared-candidate.json` under the takeover evidence root. The earlier `ed6f8ab305` candidate remains available but lacks the final pointer/prompt/navigation work.
+- Existing managed run remains `9fed7058-c2e0-4d9b-a57c-e2cac5578ea7` at `5dd10543601360f299b8f431f0b48db74bbc757c`. Its original close failed on the old Files preview faults. The replacement repairs the source but cannot retroactively complete that old process's retained close.
+- Refreshed saved-profile backup: `/home/jacob/.local/share/9to1-development/backups/atlas-before-recovery-20261127-132123`; 294 files, 108,283,195 bytes, 57 SQLite online backups with successful quick checks; manifest SHA-256 `4e7574de62a153be97263c16872bfebf624fe8905424d07cde11022590ff3169`. This preserves persisted data, not unsaved process memory.
+
+The Force quit question was unanswered. Do not infer approval from the owner's residency clarification. No Force quit, process kill, competing native launch or fabricated close/recovery receipt has occurred. `docs/development/live-preview.md` requires respecting the refused original close. After explicit owner approval, use the actual Force quit UI, verify the original process and guardian are terminal with the genuine exit receipt, bind a truthful failed-run review to the exact new manifest, and use the documented `recover-failed` workflow. Then inspect the existing profile and complete a genuine normal managed close/reload.
+
+### Open acceptance work
+
+1. Native activation, actual existing-profile interaction latency, visual review and subsequent normal close/reload.
+2. Remaining Atlas Assistant shared Attach categories, formatting, emoji and Options/permissions integration; specialist Create/Configure routing; fuller selection formatting and Temporary personalisation.
+3. Atlas presentation styles (Automatic, Chat, Agentic Chat, Worker and Design) are distinct from execution modes and native visual/text response settings. Do not relabel the latter as proof of the former or alter permissions to imitate presentation.
+4. Automatic Assistant check-ins/scheduled work remain unsupported. Saved-agent migration remains a data-preserving capability.
+5. Durable interrupted partial ordinary Chat responses remain unimplemented. Exact branch ownership does not supply partial-response finalization or an immutable prompt-history watermark.
+6. Full RT-026 compaction strategies, incremental candidate journal, audit, late-event reconciliation and revision-safe activation remain incomplete.
+7. Independent Build requires a genuine resident-model coding, verification, review, integration and recovery cycle. The completed workflow qualification uses a labelled scripted CPU fixture. Its existing 12,000 MiB available-memory and 70 GiB disk admission requirements remain unchanged and separate from UI lag and the SDK guard.
+
+No full Atlas parity, complete legacy-interface removal, full-suite pass or independent-development readiness is claimed. Stop new development at this checkpoint before 15:00 London; retain the prepared candidate and await the concrete native recovery choice. Continue only within the owner's subsequent authorisation.
