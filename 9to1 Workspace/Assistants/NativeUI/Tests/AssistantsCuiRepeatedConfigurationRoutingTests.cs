@@ -202,8 +202,13 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
                 Assert.Empty(diagnostics);
                 var root = Assert.IsAssignableFrom<Control>(tree);
                 loader.WireBindings(root);
-                using var keyboard = new AssistantWorkspaceKeyboard(root, bindings);
-                window.Content = root; window.Show();
+                // Match the native scene's retained ContentControl root before its template exists.
+                var workHost = new ContentControl { Content = root };
+                using var keyboard = new AssistantWorkspaceKeyboard(workHost, bindings);
+                var workLayout = Assert.Single(root.GetVisualDescendants().OfType<CuiContainerControl>(), c => c.Name == "assistant-work-layout");
+                Assert.True(CuiPropertyPresentation.TryGetExisting(workLayout, out var initialLayoutProperties));
+                Assert.Equal(CuiPropertyLevel.Overlay, initialLayoutProperties!.Resolve("ColumnSizes").Level);
+                window.Content = workHost; window.Show();
                 Button? Visible(string name) => root.GetVisualDescendants().OfType<Button>()
                     .SingleOrDefault(b => b.Name == name && b.IsEffectivelyVisible);
                 async Task Layout()
@@ -224,7 +229,6 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
                         origin.Y + control.Bounds.Height <= window.ClientSize.Height + 1);
                 }
                 await Layout();
-                var workLayout = Assert.Single(root.GetVisualDescendants().OfType<CuiContainerControl>(), c => c.Name == "assistant-work-layout");
                 var workGrid = Assert.IsType<Grid>(workLayout.Layout);
                 Assert.Equal(0, workGrid.ColumnDefinitions[0].ActualWidth);
                 // The real surface mounts Work while Home is selected, then opens it later at

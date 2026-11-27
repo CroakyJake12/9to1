@@ -73,7 +73,8 @@ public sealed partial class AssistantOriginalMemoryTests
                 await ClickCanonicalCaptureControl(window, surface, "assistant-save-draft", () => !surface.HasUnsavedChanges);
                 await ClickCanonicalCaptureControl(window, surface, "new-conversation", () =>
                     controller.Snapshot.ConversationBinding is { } opened && opened.Conversation.Id != binding.Conversation.Id &&
-                    surface.Bindings.TryGetValue("HasTaskProgress", out var shown) && shown is false);
+                    surface.Bindings.TryGetValue("HasTaskProgress", out var shown) && shown is false &&
+                    surface.Bindings.IsActionAvailable("assistants.open") == true);
                 Assert.False(surface.Bindings.TryGetItemValue(actualRow, "Summary", out _));
                 Assert.True(surface.Bindings.TryGetValue("HasTaskProgress", out var progress)); Assert.False(Assert.IsType<bool>(progress));
                 // Reopen the saved conversation in the SAME actual authenticated

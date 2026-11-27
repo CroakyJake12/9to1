@@ -228,7 +228,25 @@ internal sealed class AssistantWorkspaceKeyboard : IDisposable
     }
 
     private T? Find<T>(string id) where T : Control =>
-        _work.GetVisualDescendants().OfType<T>().FirstOrDefault(control => control.Name == id);
+        RetainedContent(_work).OfType<T>().FirstOrDefault(control => control.Name == id);
+
+    private static IEnumerable<Control> RetainedContent(Control root)
+    {
+        yield return root;
+        // Match the CUI loader's authored/content ownership. A scene host already owns its
+        // root before its ContentControl template exposes native visual descendants.
+        IEnumerable<Control> children = root switch
+        {
+            CuiContainerControl container => container.AuthoredChildren,
+            ContentControl { Content: Control child } => [child],
+            Decorator { Child: Control child } => [child],
+            Panel panel => panel.Children,
+            ItemsControl items => items.Items.OfType<Control>(),
+            _ => []
+        };
+        foreach (var child in children)
+            foreach (var descendant in RetainedContent(child)) yield return descendant;
+    }
 
     public void Dispose()
     {
