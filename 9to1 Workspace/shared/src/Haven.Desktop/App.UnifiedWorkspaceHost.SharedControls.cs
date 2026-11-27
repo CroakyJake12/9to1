@@ -233,6 +233,14 @@ public sealed partial class App
                 }
                 shellLoader.WireBindings(loaded.Root);
                 loaded.Root.AddHandler(KeyDownEvent, OnSharedPanelKeyDown, RoutingStrategies.Tunnel);
+                // Root-popover lifecycle: the compact model picker closes on an outside press
+                // through the same retirement owner as Close. The authored backdrop stays
+                // passive for full decision panels (their own explicit Close/Esc semantics).
+                if (FindNamedContainerRecursive(loaded.Root, SharedBackdropId) is { } sharedBackdrop)
+                    HavenSharedPanelBackdropDismissal.Wire(sharedBackdrop,
+                        () => IsCurrent && _shellBindings is { HasOpenPanel: true, ModelPicker: { IsSettingsOpen: false } },
+                        () => FindNamedContainerRecursive(loaded.Root, SharedPanelFrameId),
+                        () => { if (IsCurrent && _shellBindings is { HasOpenPanel: true }) HideSharedPanel(); });
                 var sceneHost = FindNamedContainer(loaded.Root, SharedSceneHostId);
                 if (sceneHost is null)
                 {
@@ -258,6 +266,8 @@ public sealed partial class App
 
         private const string SharedSceneHostId = "shared-scene-host";
         private const string SharedPanelHostId = "shared-panel-host";
+        private const string SharedBackdropId = "shared-shell-backdrop";
+        private const string SharedPanelFrameId = "shared-panel-frame";
 
         /// <summary>Truthful degradation when the authored shell cannot be mounted: the scene
         /// is shown directly and shared panels remain unavailable. No raw reparse fallback.</summary>

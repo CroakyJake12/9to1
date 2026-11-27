@@ -243,7 +243,7 @@ public sealed partial class WritePage : UserControl, IDisposable, IAsyncDisposab
                 _documentIndex = IndexOfDocument(document.Id);
                 UpdatePosition();
                 Publish(() => _route.SetStatus(_dirty ? "Newer changes remain unsaved. Save them before closing."
-                    : $"Saved locally at {result.SavedAt.LocalDateTime:t} Â· v{result.Version}"));
+                    : $"Saved locally at {result.SavedAt.LocalDateTime:t} · v{result.Version}"));
             }
             Publish(() => _bus.Fire("Write.Saved"));
             return Document is { } remaining && remaining.Id == document.Id && !_dirty
@@ -1034,7 +1034,7 @@ public sealed partial class WritePage : UserControl, IDisposable, IAsyncDisposab
         Document.UpdatedAt = DateTimeOffset.UtcNow;
         ++_editGeneration;
         _dirty = true;
-        Publish(() => _route.SetStatus("Unsaved changes Â· autosave is on"));
+        Publish(() => _route.SetStatus("Unsaved changes · autosave is on"));
     }
 
 
@@ -1161,7 +1161,7 @@ public sealed partial class WritePage : UserControl, IDisposable, IAsyncDisposab
         Publish(() => _route.SetStatus(
             loaded.Recovery.HasUnsavedRecovery
                 ? "Recovered the last valid local version. Review it, then save to confirm recovery."
-                : "Saved locally Â· autosave is on"));
+                : "Saved locally · autosave is on"));
         Publish(() => _bus.Fire("Write.Document.Opened"));
     }
 
@@ -1189,7 +1189,7 @@ public sealed partial class WritePage : UserControl, IDisposable, IAsyncDisposab
 
         Publish(() => _route.DocumentPositionText.Content = _documents.Count == 0
             ? "Local document"
-            : $"{_documentIndex + 1} of {_documents.Count} Â· v{Document.Version}");
+            : $"{_documentIndex + 1} of {_documents.Count} · v{Document.Version}");
     }
 
     private Task RunBusyAsync(Func<Task> action, string description) =>

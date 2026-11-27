@@ -1348,7 +1348,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         // ready empty mount before its real input is wired.
         await AwaitChatOriginalAsync(_scene.ComposerInitialization);
         await AwaitChatOriginalAsync(_scene.HeaderInitialization);
-        await AwaitChatOriginalAsync(SetStatusAsync("Connecting to local modelsâ€¦"));
+        await AwaitChatOriginalAsync(SetStatusAsync("Connecting to local models…"));
         await AwaitChatOriginalAsync(RefreshModelsAsync());
     }
 
@@ -1606,7 +1606,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         var now = DateTimeOffset.UtcNow;
         if (_messages.Count == 0)
         {
-            var title = instruction.Length > 56 ? instruction[..53] + "â€¦" : instruction;
+            var title = instruction.Length > 56 ? instruction[..53] + "…" : instruction;
             _conversation = _conversation with { Title = title, UpdatedAt = now };
             originalConversation = _conversation;
         }
@@ -1945,7 +1945,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         var now = DateTimeOffset.UtcNow;
         if (_messages.Count == 0)
         {
-            var title = instruction.Length > 56 ? instruction[..53] + "â€¦" : instruction;
+            var title = instruction.Length > 56 ? instruction[..53] + "…" : instruction;
             _conversation = _conversation with { Title = title, UpdatedAt = now };
         }
         UpsertMessage(new ChatMessage(Guid.NewGuid(), _conversation.Id, MessageRole.User, instruction, null, null, null, now));
@@ -2216,7 +2216,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             : new GenUiChatDirectiveParseResult(message.Content, [], null, false);
         var display = directive.DisplayContent;
         if (message.Role == MessageRole.Assistant && string.IsNullOrWhiteSpace(display) && directive.HasDirective && directive.Requests.Count == 0)
-            display = "Generating interactive contentâ€¦";
+            display = "Generating interactive content…";
         var thinking = string.Empty;
         if (_thinkingContent.TryGetValue(message.Id, out var content) && !string.IsNullOrWhiteSpace(content))
         {
@@ -2226,7 +2226,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                 var end = _thinkingEndTick.TryGetValue(message.Id, out var completed) ? completed : Environment.TickCount64;
                 elapsed = Math.Max(0, (end - start) / 1000);
             }
-            thinking = (elapsed > 0 ? $"Thought for {elapsed} seconds\n" : "Thinkingâ€¦\n") + content;
+            thinking = (elapsed > 0 ? $"Thought for {elapsed} seconds\n" : "Thinking…\n") + content;
         }
         var isStreaming = _streamingMessages.Contains(message.Id);
         if (message.Role == MessageRole.Assistant && _thinkingStartTick.TryGetValue(message.Id, out var responseStart))
@@ -2254,7 +2254,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         var generated = new List<HavenElement>();
         if (_streamingMessages.Contains(message.Id) && directive.Requests.Count == 0 && (directive.HasDirective || ShouldExpectGeneratedSurface(message)))
         {
-            var preview = new Text { Content = "Preparing interactive contentâ€¦" };
+            var preview = new Text { Content = "Preparing interactive content…" };
             preview.SetValue(HavenProperties.Foreground, "TextSoft");
             generated.Add(preview);
         }

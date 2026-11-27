@@ -80,11 +80,17 @@ public sealed partial class BrowseNativeUiTests
             Assert.Equal(0, Assert.IsAssignableFrom<ISolidColorBrush>(backdrop.Background).Color.A);
             var modelName = picker.Root!.GetVisualDescendants().OfType<TextBlock>()
                 .Single(control => control.Name == "compact-model-picker-selection");
-            Assert.Equal("Explicit catalogue layout fixture", modelName.Text);
+            // The fixture state declares HasUnsavedChanges: true; since f07c06ca6 the compact
+            // projection truthfully prefixes the pending draft marker before the model name.
+            Assert.Equal("Pending: Explicit catalogue layout fixture", modelName.Text);
             Assert.True(modelName.IsEffectivelyVisible);
             var more = NamedButton("compact-model-picker-edit");
             Assert.DoesNotContain(picker.Root!.GetVisualDescendants().OfType<Button>(), button =>
                 button.Name == "save-model-route" && button.IsEffectivelyVisible);
+            // The compact panel is a bounded scroll body (420 max): since f07c06ca6 the pending
+            // draft rows can place More settings below the fold, so its contract is scroll-to-
+            // reachable inside the same bounded viewport — never clipped outside it.
+            more.BringIntoView(); Pump();
             AssertInside(more, viewport);
             Capture("compact-model-picker");
             await Click(more);
@@ -126,6 +132,41 @@ public sealed partial class BrowseNativeUiTests
             Assert.False(bindings.HasOpenPanel); Assert.Equal(2, bindings.CloseCommands);
             Assert.Same(originalState, surface.State);
             Assert.True(surface.State.HasUnsavedChanges);
+
+            // Root-popover dismissal through native pointer input using the SAME shared
+            // backdrop behaviour the production host wires: with the compact view open, a blank
+            // press outside the panel retires it through the ClosePanel owner; a press inside
+            // the panel never dismisses; the full decision view is not a root popover, so a
+            // blank press cannot retire it.
+            HavenSharedPanelBackdropDismissal.Wire(backdrop,
+                () => bindings.HasOpenPanel && bindings.IsRootPopoverOpen, () => frame,
+                () => { if (bindings.HasOpenPanel) bindings.CloseSharedPanelViaBackdrop(); });
+            await bindings.DispatchAsync("ShowCompactPicker", null);
+            bindings.HasOpenPanel = true; Pump();
+            var blank = new Point(12, window.Bounds.Height / 2);
+            var closesBefore = bindings.CloseCommands;
+            window.MouseDown(blank, MouseButton.Left); window.MouseUp(blank, MouseButton.Left);
+            await shellLoader.WhenActionsIdleAsync(); Pump();
+            var blankChain = string.Join(" > ", (window.InputHitTest(blank) as Visual)?
+                .GetSelfAndVisualAncestors().Select(v => v.GetType().Name +
+                    (string.IsNullOrEmpty(v.Name) ? "" : ":" + v.Name)) ?? new[] { "null" });
+            Assert.True(!bindings.HasOpenPanel,
+                $"outside press did not dismiss; chain={blankChain}; backdropVisible={backdrop.IsEffectivelyVisible}; backdropBounds={backdrop.Bounds}; frameBounds={frame.Bounds}");
+            Assert.Equal(closesBefore + 1, bindings.CloseCommands);
+            Assert.Same(originalState, surface.State);
+
+            bindings.HasOpenPanel = true; Pump();
+            var insideFrame = frame.TranslatePoint(new Point(frame.Bounds.Width / 2, 4), window)!.Value;
+            window.MouseDown(insideFrame, MouseButton.Left); window.MouseUp(insideFrame, MouseButton.Left);
+            await shellLoader.WhenActionsIdleAsync(); Pump();
+            Assert.True(bindings.HasOpenPanel);
+            Assert.Equal(closesBefore + 1, bindings.CloseCommands);
+
+            await bindings.DispatchAsync("ShowModelSettings", null); Pump();
+            window.MouseDown(blank, MouseButton.Left); window.MouseUp(blank, MouseButton.Left);
+            await shellLoader.WhenActionsIdleAsync(); Pump();
+            Assert.True(bindings.HasOpenPanel);
+            Assert.Equal(closesBefore + 1, bindings.CloseCommands);
         }
         finally { window.Close(); }
 
@@ -169,6 +210,9 @@ public sealed partial class BrowseNativeUiTests
             get => _hasOpenPanel;
             set { _hasOpenPanel = value; PropertyChanged?.Invoke(this, new(nameof(HasOpenPanel))); }
         }
+        public bool IsRootPopoverOpen => IsCompactModelPicker;
+        public void CloseSharedPanelViaBackdrop() =>
+            DispatchAsync("9to1.Haven.ClosePanel", null).AsTask().GetAwaiter().GetResult();
         public int CloseCommands { get; private set; }
         public event PropertyChangedEventHandler? PropertyChanged;
         public bool TryGetValue(string path, out object? value)

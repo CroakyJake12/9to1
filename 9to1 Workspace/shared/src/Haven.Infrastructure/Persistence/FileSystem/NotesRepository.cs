@@ -1085,7 +1085,7 @@ public sealed partial class NotesRepository(
     {
         var start = Math.Max(0, offset - 70);
         var end = Math.Min(text.Length, offset + length + 110);
-        return (start > 0 ? "â€¦" : string.Empty) + text[start..end].ReplaceLineEndings(" ") + (end < text.Length ? "â€¦" : string.Empty);
+        return (start > 0 ? "…" : string.Empty) + text[start..end].ReplaceLineEndings(" ") + (end < text.Length ? "…" : string.Empty);
     }
 
     /// <summary>

@@ -423,8 +423,8 @@ public sealed partial class BoardsWorkspaceService
 
     private static string LiveTitle(BoardsLiveComponent component) => component.Source.Availability switch
     {
-        BoardsLiveAvailability.Stale => component.Title + " ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· stale",
-        BoardsLiveAvailability.Unavailable => component.Title + " ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· unavailable",
+        BoardsLiveAvailability.Stale => component.Title + " · stale",
+        BoardsLiveAvailability.Unavailable => component.Title + " · unavailable",
         _ => component.Title
     };
 

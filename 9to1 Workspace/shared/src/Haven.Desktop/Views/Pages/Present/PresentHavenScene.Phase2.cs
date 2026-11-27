@@ -93,7 +93,7 @@ internal sealed partial class PresentHavenScene
         SlideNavigator.SlideReorderRequested += (fromIndex, toIndex) => SlideReorderRequested?.Invoke(fromIndex, toIndex);
         SlidePane.Add(SlideNavigator);
 
-        InspectorPane.Add(Caption("Objects Â· Shift-click on the slide for multi-select"));
+        InspectorPane.Add(Caption("Objects · Shift-click on the slide for multi-select"));
         ObjectNavigator = new Container { Name = "Present.Objects.Navigator", Layout = HavenLayout.Vertical };
         ObjectNavigator.SetValue(HavenProperties.Width, HavenLength.Percent(100));
         ObjectNavigator.SetValue(HavenProperties.Gap, HavenLength.Px(5));
@@ -116,9 +116,9 @@ internal sealed partial class PresentHavenScene
 
         TransformToolbar = NewToolbar("Present.Transform.Toolbar", 0);
         var left = NewButton("Present.Object.Left", "â†");
-        var right = NewButton("Present.Object.Right", "â†’");
-        var up = NewButton("Present.Object.Up", "â†‘");
-        var down = NewButton("Present.Object.Down", "â†“");
+        var right = NewButton("Present.Object.Right", "→");
+        var up = NewButton("Present.Object.Up", "↑");
+        var down = NewButton("Present.Object.Down", "↓");
         var grow = NewButton("Present.Object.Grow", "Grow");
         var shrink = NewButton("Present.Object.Shrink", "Shrink");
         var rotateLeft = NewButton("Present.Object.RotateLeft", "Rotate âˆ’15Â°");
@@ -209,9 +209,9 @@ internal sealed partial class PresentHavenScene
             var label = element.Kind switch
             {
                 PresentElementKind.Text => string.IsNullOrWhiteSpace(element.Text) ? "Text box" : TrimLabel(element.Text),
-                PresentElementKind.Image => "Image Â· " + TrimLabel(element.AlternativeText),
-                PresentElementKind.Media => "Media Â· " + TrimLabel(element.AlternativeText),
-                PresentElementKind.Shape => "Shape Â· " + (string.IsNullOrWhiteSpace(element.ShapeType) ? "rect" : element.ShapeType),
+                PresentElementKind.Image => "Image · " + TrimLabel(element.AlternativeText),
+                PresentElementKind.Media => "Media · " + TrimLabel(element.AlternativeText),
+                PresentElementKind.Shape => "Shape · " + (string.IsNullOrWhiteSpace(element.ShapeType) ? "rect" : element.ShapeType),
                 PresentElementKind.Group => "Group",
                 PresentElementKind.GenUi => "Interactive 9to1 UI",
                 _ => element.Kind.ToString()
@@ -228,10 +228,10 @@ internal sealed partial class PresentHavenScene
         var selectedDescription = selectedElements.Length == 0
             ? "No object selected"
             : selectedElements.Length == 1
-                ? $"1 selected Â· {selectedElements[0].Kind} Â· x {selectedElements[0].X:0.###}, y {selectedElements[0].Y:0.###}, {selectedElements[0].Width:0.###} Ã— {selectedElements[0].Height:0.###} Â· {selectedElements[0].RotationDegrees:0.#}Â°"
+                ? $"1 selected · {selectedElements[0].Kind} · x {selectedElements[0].X:0.###}, y {selectedElements[0].Y:0.###}, {selectedElements[0].Width:0.###} Ã— {selectedElements[0].Height:0.###} · {selectedElements[0].RotationDegrees:0.#}Â°"
                 : $"{selectedElements.Length} objects selected";
         InspectorText.Content =
-            $"{document.SlideSize.WidthInches:0.##} Ã— {document.SlideSize.HeightInches:0.##} in Â· {document.Theme.Name} Â· {selectedDescription} Â· transition {slide.Transition.Kind} Â· {slide.Animations.Count} animation cue(s)";
+            $"{document.SlideSize.WidthInches:0.##} Ã— {document.SlideSize.HeightInches:0.##} in · {document.Theme.Name} · {selectedDescription} · transition {slide.Transition.Kind} · {slide.Animations.Count} animation cue(s)";
     }
 
     public void SetPhase2Busy(bool busy)

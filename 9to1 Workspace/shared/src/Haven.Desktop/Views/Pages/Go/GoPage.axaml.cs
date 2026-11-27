@@ -344,7 +344,7 @@ public sealed partial class GoPage : UserControl, IDisposable, IAsyncDisposable,
         if (_attachments.Capabilities.Count > 0) parts.Add("Capabilities: " + string.Join(", ", _attachments.Capabilities.Select(item => item.Name)));
         if (_activeInstructions.Count > 0) parts.Add("Instructions: " + string.Join(", ", _activeInstructions.Select(item => item.Name)));
         if (_attachments.Files.Count > 0) parts.Add("Files: " + string.Join(", ", _attachments.Files.Select(Path.GetFileName)));
-        _route.SetAttachmentStatus(string.Join("  â€¢  ", parts));
+        _route.SetAttachmentStatus(string.Join("  •  ", parts));
     }
 
     private void RefreshResponseState() =>

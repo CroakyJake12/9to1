@@ -1083,9 +1083,9 @@ public sealed partial class ConversationProductionRepository(
     {
         const int radius = 90;
         var index = content.IndexOf(query, StringComparison.OrdinalIgnoreCase);
-        if (index < 0) return content.Length <= radius * 2 ? content : content[..(radius * 2)] + "â€¦";
+        if (index < 0) return content.Length <= radius * 2 ? content : content[..(radius * 2)] + "…";
         var start = Math.Max(0, index - radius);
         var length = Math.Min(content.Length - start, query.Length + radius * 2);
-        return (start > 0 ? "â€¦" : string.Empty) + content.Substring(start, length) + (start + length < content.Length ? "â€¦" : string.Empty);
+        return (start > 0 ? "…" : string.Empty) + content.Substring(start, length) + (start + length < content.Length ? "…" : string.Empty);
     }
 }

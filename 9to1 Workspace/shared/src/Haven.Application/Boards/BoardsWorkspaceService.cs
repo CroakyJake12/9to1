@@ -395,9 +395,9 @@ public sealed partial class BoardsWorkspaceService(INotesRepository repository, 
 
         var lines = component.Kind switch
         {
-            BoardsLiveComponentKind.Poll => component.Items.Select(i => $"{i.Text} ÃƒÂ¢Ã¢â‚¬ÂÃ‚Â¬ÃƒÆ’Ã¢â€šÂ¬ {i.Votes} votes"),
+            BoardsLiveComponentKind.Poll => component.Items.Select(i => $"{i.Text}: {i.Votes} votes"),
             BoardsLiveComponentKind.Status => component.Items.Select(i => $"{i.Text}: {i.Status}"),
-            _ => component.Items.Select(i => $"ÃƒÆ’Ã¢â‚¬ÂÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã‚Â³ {i.Text}")
+            _ => component.Items.Select(i => $"{i.Text}")
         };
         block.Kind = NotesBlockKind.Paragraph;
         block.List = null;

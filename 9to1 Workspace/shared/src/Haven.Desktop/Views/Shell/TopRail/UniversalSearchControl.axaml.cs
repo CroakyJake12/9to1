@@ -151,7 +151,7 @@ public sealed partial class UniversalSearchControl : UserControl
         });
         var detail = item.IsEnabled || string.IsNullOrWhiteSpace(item.DisabledReason)
             ? item.Detail
-            : $"{item.Detail} Â· {item.DisabledReason}";
+            : $"{item.Detail} · {item.DisabledReason}";
         var copy = new StackPanel
         {
             Spacing = 1,
@@ -172,7 +172,7 @@ public sealed partial class UniversalSearchControl : UserControl
                 Padding = new Thickness(10, 4),
                 Child = new TextBlock
                 {
-                    Text = item.IsEnabled ? item.KindLabel : $"{item.KindLabel} Â· unavailable",
+                    Text = item.IsEnabled ? item.KindLabel : $"{item.KindLabel} · unavailable",
                     FontSize = 10,
                     FontWeight = FontWeight.Bold
                 }

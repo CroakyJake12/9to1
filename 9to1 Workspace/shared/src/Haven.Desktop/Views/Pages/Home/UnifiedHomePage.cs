@@ -878,16 +878,62 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         var accepted = false;
         original.RunAcceptedPublicationCallback(() => accepted = _queue(
             new(_request.TabId, address, newTab ?? _request.Address.Authority == "home"), settlement));
-        if (!accepted && original.IsAcceptedPublicationCurrent)
+        if (accepted)
+        {
+            // Navigation genuinely proceeded: an earlier refusal text is now stale feedback.
+            ClearNavigationRetryFeedback();
+            return true;
+        }
+        if (original.IsAcceptedPublicationCurrent)
         {
             // A false receipt acquired no navigation work (for example a second
             // click while Browse is busy). Keep this page usable for retry; real
             // callback exceptions still propagate through the retained work owner.
-            const string retry = "The browser cannot open this destination right now. Finish the current browser action, then try again.";
-            Set(_status, "Text", retry);
-            if (_section == "apps") UpdateAppsState(retry);
+            ShowNavigationRetryFeedback();
         }
         return accepted;
+    }
+
+    private const string NavigationRetryFeedback =
+        "The browser cannot open this destination right now. Finish the current browser action, then try again.";
+
+    /// <summary>Rises with each refusal/acceptance so an idle re-probe from a retired refusal
+    /// can never clear newer feedback.</summary>
+    private long _navigationFeedbackGeneration;
+
+    private void ShowNavigationRetryFeedback()
+    {
+        var stamp = ++_navigationFeedbackGeneration;
+        Set(_status, "Text", NavigationRetryFeedback);
+        if (_section == "apps") UpdateAppsState(NavigationRetryFeedback);
+        // The refusal belongs to the browser action that was running at press time, not to
+        // this page forever. Once this page's own actions are quiet again, replace the text
+        // if nothing newer owns it, so a settled condition leaves no orphaned blocker. A
+        // still-blocked retry simply shows the refusal again with a fresh probe.
+        _ = ClearNavigationRetryWhenIdleAsync(stamp);
+        async Task ClearNavigationRetryWhenIdleAsync(long owned)
+        {
+            try { await WhenActionsIdleAsync().ConfigureAwait(false); }
+            catch { return; } // Owner retirement already took the surface down.
+            if (owned != Volatile.Read(ref _navigationFeedbackGeneration) || !IsAlive) return;
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (owned != Volatile.Read(ref _navigationFeedbackGeneration) || !IsAlive) return;
+                if (string.Equals(_status.Text, NavigationRetryFeedback, StringComparison.Ordinal))
+                    Set(_status, "Text", string.Empty);
+                if (_section == "apps" && string.Equals(_appsState.Status, NavigationRetryFeedback, StringComparison.Ordinal))
+                    UpdateAppsState();
+            });
+        }
+    }
+
+    private void ClearNavigationRetryFeedback()
+    {
+        ++_navigationFeedbackGeneration;
+        if (string.Equals(_status.Text, NavigationRetryFeedback, StringComparison.Ordinal))
+            Set(_status, "Text", string.Empty);
+        if (_section == "apps" && string.Equals(_appsState.Status, NavigationRetryFeedback, StringComparison.Ordinal))
+            UpdateAppsState();
     }
 
     internal Task<bool> TryPrepareToCloseAsync(CancellationToken token)

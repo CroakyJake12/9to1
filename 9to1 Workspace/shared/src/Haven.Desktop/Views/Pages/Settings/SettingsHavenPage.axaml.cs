@@ -267,7 +267,7 @@ public sealed partial class SettingsHavenPage : UserControl, IDisposable
         var name = AccentColourCatalog.Name(AccentColourCatalog.Colours[index]);
         _preferences.ApplyAccentOverride(true, name);
         for (var position = 0; position < _route.AccentSwatchButtons.Count; position++)
-            _route.AccentSwatchButtons[position].Content = position == index ? "âœ“" : string.Empty;
+            _route.AccentSwatchButtons[position].Content = position == index ? "✓" : string.Empty;
         SyncAccentSelectionLabel();
         _route.SetStatus($"Accent colour changed to {name}.");
         _bus.Fire("Settings.Personalisation.AccentChanged");
@@ -452,8 +452,8 @@ public sealed partial class SettingsHavenPage : UserControl, IDisposable
         {
             _extensionSources = await _extensionManager.GetSourcesAsync(_lifetime.Token);
             _installedExtensions = await _extensionManager.GetInstalledAsync(_lifetime.Token);
-            _route.SetExtensionSources(_extensionSources.Select(source => $"{source.DisplayName} Â· {source.UpdateMode}").ToArray(), _route.ExtensionSourceSelect.SelectedIndex);
-            _route.SetInstalledExtensions(_installedExtensions.Select(package => $"{PackageTypeLabel(package.Manifest.PackageType)} Â· {package.Manifest.DisplayName} Â· {package.Manifest.Version}").ToArray(), _route.InstalledExtensionSelect.SelectedIndex);
+            _route.SetExtensionSources(_extensionSources.Select(source => $"{source.DisplayName} · {source.UpdateMode}").ToArray(), _route.ExtensionSourceSelect.SelectedIndex);
+            _route.SetInstalledExtensions(_installedExtensions.Select(package => $"{PackageTypeLabel(package.Manifest.PackageType)} · {package.Manifest.DisplayName} · {package.Manifest.Version}").ToArray(), _route.InstalledExtensionSelect.SelectedIndex);
             ShowSelectedInstalledExtension();
             _route.ExtensionStatusText.Content = $"{_extensionSources.Count} source(s), {_installedExtensions.Count} installed package(s).";
         }
@@ -496,7 +496,7 @@ public sealed partial class SettingsHavenPage : UserControl, IDisposable
             _availableExtensions = await _extensionManager.RefreshAsync(source.Id, _lifetime.Token);
             _permissionReviewPackageId = null;
             _route.ExtensionInstallButton.Content = "Review permissions";
-            _route.SetAvailableExtensions(_availableExtensions.Select(package => $"{PackageTypeLabel(package.Manifest.PackageType)} Â· {package.Manifest.DisplayName} Â· {package.Manifest.Version} Â· {package.State}").ToArray(), 0);
+            _route.SetAvailableExtensions(_availableExtensions.Select(package => $"{PackageTypeLabel(package.Manifest.PackageType)} · {package.Manifest.DisplayName} · {package.Manifest.Version} · {package.State}").ToArray(), 0);
             ShowSelectedAvailableExtension();
             await RefreshExtensionsAsync();
             _route.ExtensionStatusText.Content = $"Discovered {_availableExtensions.Count} validated package(s) from {source.DisplayName}.";
@@ -522,7 +522,7 @@ public sealed partial class SettingsHavenPage : UserControl, IDisposable
             return;
         }
         var manifest = package.Manifest;
-        _route.AvailableExtensionDetails.Content = $"{PackageTypeLabel(manifest.PackageType)} Â· {manifest.DisplayName} {manifest.Version}\n{manifest.Description}\nAuthor: {manifest.Author} Â· Publisher: {manifest.Publisher}\nHaven compatibility: {manifest.HavenVersionRange}\nSource package: {manifest.PackagePath}\nRequested permissions: {PermissionLabel(manifest.RequestedPermissions)}\nCapabilities: {manifest.Capabilities.Count} Â· Skills: {manifest.Skills.Count}\nState: {package.State}";
+        _route.AvailableExtensionDetails.Content = $"{PackageTypeLabel(manifest.PackageType)} · {manifest.DisplayName} {manifest.Version}\n{manifest.Description}\nAuthor: {manifest.Author} · Publisher: {manifest.Publisher}\nHaven compatibility: {manifest.HavenVersionRange}\nSource package: {manifest.PackagePath}\nRequested permissions: {PermissionLabel(manifest.RequestedPermissions)}\nCapabilities: {manifest.Capabilities.Count} · Skills: {manifest.Skills.Count}\nState: {package.State}";
         if (_permissionReviewPackageId != manifest.PackageId) _route.ExtensionInstallButton.Content = "Review permissions";
     }
 
@@ -556,7 +556,7 @@ public sealed partial class SettingsHavenPage : UserControl, IDisposable
             _route.InstalledExtensionDetails.Content = "No installed packages.";
             return;
         }
-        _route.InstalledExtensionDetails.Content = $"{PackageTypeLabel(package.Manifest.PackageType)} Â· {package.Manifest.DisplayName} {package.Manifest.Version}\n{package.Manifest.Description}\nPublisher: {package.Manifest.Publisher}\nGranted permissions: {PermissionLabel(package.GrantedPermissions)}\nEnabled: {package.IsEnabled} Â· State: {package.State}\nSource ID: {package.SourceId}\nLocal modifications: {package.HasLocalModifications}";
+        _route.InstalledExtensionDetails.Content = $"{PackageTypeLabel(package.Manifest.PackageType)} · {package.Manifest.DisplayName} {package.Manifest.Version}\n{package.Manifest.Description}\nPublisher: {package.Manifest.Publisher}\nGranted permissions: {PermissionLabel(package.GrantedPermissions)}\nEnabled: {package.IsEnabled} · State: {package.State}\nSource ID: {package.SourceId}\nLocal modifications: {package.HasLocalModifications}";
         _route.ExtensionToggleButton.Content = package.IsEnabled ? "Disable" : "Enable";
         if (_uninstallConfirmationId != package.Id) _route.ExtensionUninstallButton.Content = "Uninstall";
     }
@@ -620,7 +620,7 @@ public sealed partial class SettingsHavenPage : UserControl, IDisposable
             ShowSelectedApi();
             ShowSelectedTask();
             if (errors.Count > 0)
-                _route.SetLearningFeedback($"Background Learning loaded partially — {string.Join(" Â· ", errors)}");
+                _route.SetLearningFeedback($"Background Learning loaded partially — {string.Join(" · ", errors)}");
         }
         catch (OperationCanceledException) when (_lifetime.IsCancellationRequested)
         {

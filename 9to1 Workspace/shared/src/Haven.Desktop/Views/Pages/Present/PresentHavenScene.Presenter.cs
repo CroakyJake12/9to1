@@ -93,7 +93,7 @@ internal sealed partial class PresentHavenScene
         PresenterCanvas.SetSlide(document, playbackSlide, Array.Empty<Guid>());
         var totalAnimations = frame.Slide.Animations.Count;
         var transition = frame.Slide.Transition;
-        PresenterStatus.Content = $"Slide {frame.SlideNumber} of {frame.SlideCount} Â· {(int)frame.Elapsed.TotalMinutes:00}:{frame.Elapsed.Seconds:00} Â· reveal {frame.AnimationStep}/{totalAnimations} Â· {transition.Kind} {transition.DurationSeconds:0.##}s";
+        PresenterStatus.Content = $"Slide {frame.SlideNumber} of {frame.SlideCount} · {(int)frame.Elapsed.TotalMinutes:00}:{frame.Elapsed.Seconds:00} · reveal {frame.AnimationStep}/{totalAnimations} · {transition.Kind} {transition.DurationSeconds:0.##}s";
         PresenterNotes.Content = string.IsNullOrWhiteSpace(frame.SpeakerNotes) ? "No speaker notes" : frame.SpeakerNotes;
         PresenterPreviousButton.SetValue(HavenProperties.Enabled, frame.SlideNumber > 1);
         PresenterAdvanceButton.Content = frame.SlideNumber == frame.SlideCount && frame.AnimationStep >= totalAnimations ? "End" : "Advance";
