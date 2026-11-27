@@ -7,7 +7,7 @@
     </Container>
     <Container Name="MessageBody" Layout="Vertical" Width="100%" Gap="10px">
       <Text Name="Thinking" Content="{{THINKING}}" FontSize="12" FontWeight="500" Foreground="TextSecondary" Visibility="{{THINKINGVISIBILITY}}" />
-      <Markdown Name="Body" Content="{{CONTENT}}" />
+      <Markdown Name="Body" Content="{{CONTENT}}" FontSize="15" FontWeight="550" />
       <Container Name="GeneratedContent" Layout="Vertical" Gap="10px" />
       <Container Name="ActivitySummary" Layout="Wrap" Gap="8px" Visibility="Collapsed">
         <Button Name="ActivityToggle" Variant="Ghost" IconKey="chevron-down" Content="Activity"

@@ -115,7 +115,7 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
             "spaces.isManaging" => snapshot.IsManaging,
             "spaces.showWorkspace" => false,
             "spaces.showSummary" => true,
-            "spaces.layoutColumns" => snapshot.SidebarCollapsed ? "70 0 1fr" : "70 280 1fr",
+            "spaces.layoutColumns" => snapshot.SidebarCollapsed ? "60 0 1fr" : "60 232 1fr",
             "spaces.query" => snapshot.Query,
             "spaces.builtIns" => snapshot.BuiltIns,
             "spaces.customSpaces" => snapshot.CustomSpaces,

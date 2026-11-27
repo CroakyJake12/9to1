@@ -279,6 +279,40 @@ public sealed class SpacesConversationRouteTests
     }
 
     [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Ordinary_spaces_entry_opens_an_unsaved_conversation_inside_the_retained_shell(bool customSpace)
+    {
+        using var rig = new Rig(withHome: true, allowConversationWrites: true);
+        SpacesBrowseAppContentSession? session = null;
+        try
+        {
+            var spaceId = customSpace
+                ? (await rig.Spaces.CreateAsync("Atlas entry fixture")).Id
+                : SpaceRegistry.ChatSpaceId;
+            await rig.Home!.StartOriginalAsync().WaitAsync(Bound);
+            var actor = await rig.Home.Profiles.GetCurrentAsync(CancellationToken.None);
+            Assert.NotNull(actor);
+            session = rig.Session(customSpace ? $"9to1://spaces/selected/{spaceId:D}" : "9to1://spaces",
+                profileId: actor.ProfileId);
+            await session.InitializeAsync().WaitAsync(Bound);
+            var shell = Assert.IsType<SpacesHomePage>(
+                Assert.IsType<ContentControl>(session.OriginalNativeView).Content);
+            var chat = Assert.IsType<NewChatPage>(shell.SpaceWorkspaceContent);
+            Assert.Equal(spaceId, chat.CurrentConversation.SpaceId);
+            Assert.False(shell.Controller.State.IsManaging);
+            Assert.False(chat.HasSavedConversationRoute);
+            Assert.Equal(0, rig.ConversationWrites);
+            Assert.Equal($"9to1://spaces/selected/{spaceId:D}", session.Address.Value);
+        }
+        finally
+        {
+            try { if (session is not null) await CloseSettledRouteAsync(session); }
+            finally { await rig.Home!.CloseAndDrainAsync().WaitAsync(Bound); }
+        }
+    }
+
+    [AvaloniaTheory]
     [InlineData("9to1://spaces")]
     [InlineData("9to1://spaces/chat")]
     [InlineData("9to1://spaces/selected/acacacac-acac-acac-acac-acacacacacac")]

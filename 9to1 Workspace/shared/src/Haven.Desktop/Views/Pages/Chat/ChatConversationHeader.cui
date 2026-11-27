@@ -9,10 +9,10 @@
   <Container id="chat-conversation-header" Type="Vertical Stack" OwnsBackdrop="True" Background="{Resource CuiTransparentBrush}" CellGap="8">
     <Container id="chat-conversation-heading" Type="Grid" ColumnSizes="{Binding Header.Columns}" RowSizes="{Binding Header.Rows}" CellGap="8">
       <Container id="chat-conversation-identity" Type="Vertical Stack" CellGap="2" VerticalAlignment="Center">
-        <Text id="chat-conversation-title" Text="{Binding Header.Title}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" AccessibleName="Conversation title" />
-        <Text id="chat-conversation-model" Text="{Binding Header.Model}" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" AccessibleName="Selected model for future messages" />
+        <Text id="chat-conversation-title" Text="{Binding Header.Title}" FontSize="20" FontWeight="750" TextWrapping="Wrap" AccessibleName="Conversation title" />
+        <Text id="chat-conversation-model" Text="{Binding Header.Model}" FontSize="13" FontWeight="600" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" AccessibleName="Selected model for future messages" />
       </Container>
-      <Container id="chat-conversation-controls" Type="Wrap" Column="{Binding Header.ControlsColumn}" Row="{Binding Header.ControlsRow}" CellGap="6" VerticalAlignment="Center">
+      <Container id="chat-conversation-controls" Type="Wrap" Column="{Binding Header.ControlsColumn}" Row="{Binding Header.ControlsRow}" CellGap="8" VerticalAlignment="Center">
         <Container id="chat-conversation-temporary-group" Type="Horizontal Stack" CellGap="8" VerticalAlignment="Center" IsVisible="{Binding Header.TemporaryAvailable}">
           <Text id="chat-conversation-temporary-label" Text="Temporary" FontSize="12" FontWeight="SemiBold" Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" />
           <Input id="chat-conversation-temporary" Type="Switch" Content="Temporary" Checked="{Binding Header.Temporary}" Action="Temporary" IsVisible="{Binding Header.TemporaryAvailable}" Interactive="{Binding Header.CanToggleTemporary}" AccessibleName="{Binding Header.TemporaryAccessibleName}" Tooltip="Temporary Chat changes only after its owning conversation accepts the request" />

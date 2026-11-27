@@ -812,17 +812,17 @@ internal sealed partial class ChatHavenScene : IDisposable
     {
         const string markup = """
             <Page Name="ChatRoot" Layout="Overlay" Background="Transparent">
-              <Container Name="Workspace" Layout="Grid" Width="100%" Height="100%" Rows="Auto 1fr Auto" Padding="10px 16px 6px 16px" Gap="10px">
-                <NativeHost Name="ConversationHeaderHost" Row="0" Width="100%" MinHeight="42px" />
+              <Container Name="Workspace" Layout="Grid" Width="100%" Height="100%" Rows="Auto 1fr Auto" Padding="10px 20px 10px 20px" Gap="12px">
+                <NativeHost Name="ConversationHeaderHost" Row="0" Width="100%" MinHeight="52px" />
                 <Container Name="ConversationBody" Row="1" RowSpan="2" Layout="Overlay" Background="Surface" Radius="16px" />
-                <Container Name="ConversationViewport" Row="1" Layout="Overlay" Width="100%" Margin="16px 20px 0px 20px" Overflow="Scroll" Clip="true">
+                <Container Name="ConversationViewport" Row="1" Layout="Overlay" Width="100%" Margin="24px 24px 0px 24px" Overflow="Scroll" Clip="true">
                   <Container Name="EmptyState" Layout="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" Gap="10px">
                     <Text Content="How can I help?" Level="H1" HorizontalAlignment="Center" />
                     <Text Content="Start a conversation or attach context below." FontSize="13" Foreground="TextSecondary" HorizontalAlignment="Center" />
                   </Container>
-                  <DynamicUIRuntime Name="Messages" Width="100%" MaxWidth="900px" HorizontalAlignment="Center" />
+                  <DynamicUIRuntime Name="Messages" Width="100%" MaxWidth="820px" HorizontalAlignment="Center" />
                 </Container>
-                <Container Name="Footer" Row="2" Layout="Vertical" Width="100%" MaxWidth="900px" Margin="0px 20px 10px 20px" HorizontalAlignment="Center" Gap="7px">
+                <Container Name="Footer" Row="2" Layout="Vertical" Width="100%" MaxWidth="820px" Margin="0px 24px 16px 24px" HorizontalAlignment="Center" Gap="7px">
                   <Container Name="ContextCard" Layout="Vertical" Width="100%" HorizontalAlignment="Center" Gap="6px" Padding="12px 14px" Visibility="Collapsed">
                     <Container Name="ContextHeaderRow" Layout="Horizontal" Width="100%" Gap="8px">
                       <Button Name="ContextToggle" Variant="Ghost" Content="Show context" MinHeight="30px" />

@@ -238,6 +238,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 page.Controller.StateChanged += _stateChangedHandlerSpaces;
                 if (TryParseSelectedSpace(_request.Address, out var selectedSpaceId))
                     await page.Controller.SelectSpaceAsync(selectedSpaceId, token);
+                var openInitialWorkspace = false;
                 // Saved Chat routes carry a canonical ConversationId, including the
                 // existing legacy workspace migration. Restore it before publishing
                 // a generic Spaces location over the saved target.
@@ -248,12 +249,33 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                     UpdateAddress(page.Controller.State.Selection?.Id);
                     SetRootContent(page);
                     _routeEpoch++;
+                    openInitialWorkspace = true;
                     if (page.Controller.State.Selection?.Id == SpaceRegistry.StudySpaceId)
                         await OpenStudyWorkspaceAsync(Haven.Desktop.Views.Pages.Study.StudyWorkspaceRoute.Overview, null, token);
                 }
                 _page = _root;
                 _published = true;
                 await TryRestoreRequestedOrganisationAsync(token);
+                // An ordinary Spaces location is a workspace entry, never its management form.
+                // Do this after genuine Home/route admission, and only when no explicit saved,
+                // Study, Assistant, builder, task or organisation route already owns the mount.
+                // The existing factory creates an unsaved draft; no message or inference is sent.
+                var segments = _request.Address.ResourceSegments;
+                var ordinaryLocation = segments.Count == 0 ||
+                    (segments.Count == 1 && segments[0] == "chat") ||
+                    (segments.Count == 2 && segments[0] == "selected" && TryParseSelectedSpace(_request.Address, out _));
+                if (openInitialWorkspace && ordinaryLocation && page.SpaceWorkspaceContent is null &&
+                    page.Controller.State.Selection is { } initialSelection &&
+                    (!TryParseSelectedSpace(_request.Address, out var requestedSpace) || requestedSpace == initialSelection.Id))
+                {
+#if !ANDROID
+                    if (initialSelection.Id == SpaceRegistry.AgentSpaceId)
+                        await OpenAssistantOnUiAsync(null, null, _routeEpoch, token);
+                    else
+#endif
+                    if (initialSelection.Id != SpaceRegistry.StudySpaceId)
+                        await NewConversationOnUiAsync(initialSelection.Id, token, refreshHistory: false);
+                }
                 // The bootstrap publication guard is now set, so the selected Space's real recent
                 // history can be read for the FINAL restored selection through the canonical provider
                 // (ReadSpaceConversationsAsync). This is the genuine initial read: it runs at the
@@ -1407,7 +1429,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
 
     /// <summary>Starts a new conversation inside the selected Space from the contextual sidebar.
     /// It never creates another Space and never reuses an existing conversation.</summary>
-    private async Task NewConversationOnUiAsync(Guid spaceId, CancellationToken token)
+    private async Task NewConversationOnUiAsync(Guid spaceId, CancellationToken token, bool refreshHistory = true)
     {
         Dispatcher.UIThread.VerifyAccess();
         token.ThrowIfCancellationRequested();
@@ -1446,7 +1468,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 published = true;
             }
             PublishStateChanged();
-            await RefreshSpacesConversationsAsync(token);
+            if (refreshHistory) await RefreshSpacesConversationsAsync(token);
         }
         finally
         {
