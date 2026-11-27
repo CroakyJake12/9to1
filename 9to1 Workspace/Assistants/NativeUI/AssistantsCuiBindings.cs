@@ -276,7 +276,7 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
                 accepted = true; Refresh();
             }
             else if (path == "Prompt" && value is string prompt)
-            { _prompt = prompt; accepted = true; Refresh(); PromptChanged?.Invoke(); }
+            { _prompt = prompt; accepted = true; RefreshPromptProjection(); PromptChanged?.Invoke(); }
             else if (_draft is not null && !_snapshot.IsSaving && value is string text)
             { accepted = _draft.TrySetText(path, text); if (accepted) Refresh(); }
             else if (_draft is not null && !_snapshot.IsSaving && value is bool choice)
@@ -485,6 +485,24 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
         Set("AssistantWorkspaceToggleLabel", open ? "Close workspace" : "Workspace");
     }
 
+    // Editing the draft changes only composer scalars. Keep unrelated source-issued rows
+    // intact instead of sorting/reprojecting their Repeats on every character.
+    private void RefreshPromptProjection()
+    {
+        var usable = !_unavailable && Current && !_snapshot.IsRetiring;
+        Set("Prompt", _prompt);
+        RefreshPromptActions(usable);
+        RefreshConversationAvailability(usable);
+        // The identity owner's archived/disabled guidance has the same final precedence
+        // as a full snapshot refresh.
+        RefreshIdentityAvailability();
+    }
+
+    private void RefreshPromptActions(bool usable)
+    {
+        Set("CanSend", usable && CanSend); Set("CanStartTask", usable && CanStartTask); Set("CanSteer", usable && CanSteer);
+    }
+
     private void Refresh()
     {
         RefreshTaskProgress();
@@ -620,7 +638,7 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
         Set("CanStopReply", usable && CanStopOriginalReply);
         Set("ShowStopReply", _streaming && _originalChatStopObservation is not null);
         Set("ReplyStopStatus", _replyStopStatus); Set("HasReplyStopStatus", _replyStopStatus.Length != 0);
-        Set("CanSend", usable && CanSend); Set("CanStartTask", usable && CanStartTask); Set("CanSteer", usable && CanSteer);
+        RefreshPromptActions(usable);
         Set("CanSaveDraft", usable && _snapshot.ConversationBinding is not null && !Busy);
         Set("SendLabel", _streaming ? "Responding…" : "Send");
         RefreshConversationAvailability(usable);
