@@ -80,7 +80,8 @@ public sealed partial class AssistantOriginalMemoryTests
                     Assert.Equal(identity, binding.Definition.Identity); Assert.Same(binding, surface.CurrentConversationBinding);
                     Assert.Empty(controller.Snapshot.Conversation!.Messages);
                     await CaptureActualCanonicalScene(window, "assistants-conversation", "assistant-workspace-toggle", evidence, identity, conversationId,
-                        "Actual canonical empty Chat conversation; model provider is deliberately unavailable. No fabricated messages or success.");
+                        "Actual canonical empty Chat conversation; model provider is deliberately unavailable. No fabricated messages or success.",
+                        expectedIdentityHeading: fictionalName);
                 });
                 // The SAME view/controller/management actions have all joined before this
                 // process/source reopen; source identity and conversation survive real IO.
@@ -93,7 +94,8 @@ public sealed partial class AssistantOriginalMemoryTests
                     Assert.Equal(conversationId, controller.Snapshot.ConversationBinding.Conversation.Id);
                     Assert.Empty(controller.Snapshot.Conversation!.Messages);
                     await CaptureActualCanonicalScene(window, "assistants-conversation-reopened", "assistant-workspace-toggle", evidence, identity, conversationId,
-                        "SAME actual persisted identity/conversation after source close and reopen; no new model or Task work.");
+                        "SAME actual persisted identity/conversation after source close and reopen; no new model or Task work.",
+                        expectedIdentityHeading: fictionalName);
                 });
             }); // The SAME process Memory/WRITE/SQLite/Den/Home sources have independently joined.
             var directory = Environment.GetEnvironmentVariable("HAVEN_VISUAL_CAPTURE_DIR");
@@ -116,7 +118,7 @@ public sealed partial class AssistantOriginalMemoryTests
     }
 
     private static async Task CaptureActualCanonicalScene(Window window, string name, string normalActionId, List<object> evidence,
-        AssistantIdentity? identity, Guid? conversationId, string observation)
+        AssistantIdentity? identity, Guid? conversationId, string observation, string? expectedIdentityHeading = null)
     {
         var appearance = CakeOS.Cui.Themes.CuiThemeScopeApplier.DetectAppearance().ToString();
         foreach (var (width, height) in new[] { (1320, 960), (430, 860) })
@@ -124,20 +126,36 @@ public sealed partial class AssistantOriginalMemoryTests
             window.Width = width; window.Height = height;
             await FlushNativeMemoryUi(window);
             await CaptureActualCanonicalFrame(window, name + "-" + appearance + "-" + width + "x" + height,
-                normalActionId, evidence, identity, conversationId, observation, width, height, appearance);
+                normalActionId, evidence, identity, conversationId, observation, width, height, appearance, expectedIdentityHeading);
         }
         window.Width = 1320; window.Height = 960;
         await FlushNativeMemoryUi(window);
     }
 
     private static async Task CaptureActualCanonicalFrame(Window window, string name, string normalActionId, List<object> evidence,
-        AssistantIdentity? identity, Guid? conversationId, string observation, int expectedWidth, int expectedHeight, string appearance)
+        AssistantIdentity? identity, Guid? conversationId, string observation, int expectedWidth, int expectedHeight, string appearance,
+        string? expectedIdentityHeading)
     {
         window.UpdateLayout();
         // Exercise actual production styles, including their legacy dynamic
         // resources; setting only the host Foreground did not style its labels.
-        var heading = window.GetVisualDescendants().OfType<TextBlock>().First(text =>
-            text.IsEffectivelyVisible && text.FontSize >= 20 && !string.IsNullOrWhiteSpace(text.Text));
+        TextBlock heading;
+        if (expectedIdentityHeading is not null)
+        {
+            // The canonical Work heading is its authored 17px identity, not a
+            // large welcome/configuration title or an inactive project chooser.
+            var identityBar = Assert.Single(window.GetVisualDescendants().OfType<Control>(), control =>
+                CuiRuntimeIdentity.GetStableId(control) == "id:assistant-identity-bar" ||
+                CuiRuntimeIdentity.GetStableId(control)?.EndsWith("/id:assistant-identity-bar", StringComparison.Ordinal) == true);
+            Assert.True(identityBar.IsEffectivelyVisible);
+            heading = Assert.Single(identityBar.GetVisualDescendants().OfType<TextBlock>(), text =>
+                text.IsEffectivelyVisible && string.Equals(text.Text, expectedIdentityHeading, StringComparison.Ordinal));
+        }
+        else
+        {
+            heading = window.GetVisualDescendants().OfType<TextBlock>().First(text =>
+                text.IsEffectivelyVisible && text.FontSize >= 20 && !string.IsNullOrWhiteSpace(text.Text));
+        }
         var headingHost = heading.GetVisualAncestors().OfType<CuiSceneHost>().First();
         var hasScopedText = headingHost.Resources.TryGetResource("CuiTextBrush", headingHost.ActualThemeVariant, out var scopedTextResource);
         // Preserve actual resource/binding evidence before the unchanged style assertion.
