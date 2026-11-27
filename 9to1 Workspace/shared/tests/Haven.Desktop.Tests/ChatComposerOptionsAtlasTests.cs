@@ -461,28 +461,40 @@ public sealed class ChatComposerOptionsAtlasTests
             var choice = Assert.Single(choices, item => Id(item) == choiceId);
             var top = Assert.IsAssignableFrom<TopLevel>(TopLevel.GetTopLevel(choice));
             top.UpdateLayout();
-            // Native pointer hit testing must address the rendered submenu, not a queued
-            // headless composition update. Render in every run; writing evidence is optional.
-            using var frame = top.CaptureRenderedFrame(); Assert.NotNull(frame);
-            if (captureName is not null && Environment.GetEnvironmentVariable("HAVEN_VISUAL_CAPTURE_DIR") is { Length: > 0 } directory)
+            // TestAppBuilder selects Skia for capture runs and simplified drawing otherwise.
+            // Qualify real pointer targets with the actual renderer; the ordinary behavioural
+            // run exercises the same native menu through keyboard input instead.
+            var directory = Environment.GetEnvironmentVariable("HAVEN_VISUAL_CAPTURE_DIR");
+            using var frame = top.CaptureRenderedFrame();
+            if (!string.IsNullOrWhiteSpace(directory)) Assert.NotNull(frame);
+            if (frame is not null && captureName is not null && !string.IsNullOrWhiteSpace(directory))
             {
                 Directory.CreateDirectory(directory); frame.Save(Path.Combine(directory, captureName + ".png"));
             }
-            var origin = choice.TranslatePoint(default, top); Assert.NotNull(origin);
-            var point = origin.Value + new Vector(choice.Bounds.Width / 2, choice.Bounds.Height / 2);
             Assert.True(choice.IsEffectivelyEnabled);
-            var hit = top.InputHitTest(point) as Visual;
-            Assert.True(ReferenceEquals(hit, choice) || hit is not null && choice.IsVisualAncestorOf(hit),
-                $"The actual menu choice must own its pointer target: point={point}, choice={choice.Bounds}, top={top.Bounds}, hit={hit?.GetType().Name}.");
             var clicks = 0;
             EventHandler<RoutedEventArgs> clicked = (_, args) => { if (ReferenceEquals(args.Source, choice)) clicks++; };
             choice.Click += clicked;
             try
             {
-                top.MouseMove(point);
-                top.MouseDown(point, MouseButton.Left); top.MouseUp(point, MouseButton.Left);
+                if (frame is null)
+                {
+                    Assert.True(choice.Focus());
+                    top.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
+                    top.KeyRelease(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
+                }
+                else
+                {
+                    var origin = choice.TranslatePoint(default, top); Assert.NotNull(origin);
+                    var point = origin.Value + new Vector(choice.Bounds.Width / 2, choice.Bounds.Height / 2);
+                    var hit = top.InputHitTest(point) as Visual;
+                    Assert.True(ReferenceEquals(hit, choice) || hit is not null && choice.IsVisualAncestorOf(hit),
+                        $"The actual menu choice must own its pointer target: point={point}, choice={choice.Bounds}, top={top.Bounds}, hit={hit?.GetType().Name}.");
+                    top.MouseMove(point);
+                    top.MouseDown(point, MouseButton.Left); top.MouseUp(point, MouseButton.Left);
+                }
                 await SettleAsync(); // The caller retains and joins the original loader action.
-                Assert.True(clicks == 1, $"The actual native pointer journey must invoke the current choice once: clicks={clicks}, submenuOpen={menu.IsSubMenuOpen}, enabled={choice.IsEffectivelyEnabled}.");
+                Assert.True(clicks == 1, $"The actual native input journey must invoke the current choice once: clicks={clicks}, submenuOpen={menu.IsSubMenuOpen}, enabled={choice.IsEffectivelyEnabled}.");
             }
             finally { choice.Click -= clicked; }
         }
