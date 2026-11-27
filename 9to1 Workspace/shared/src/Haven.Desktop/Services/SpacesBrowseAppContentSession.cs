@@ -723,9 +723,8 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         if (spaceId is not { } registeredSpaceId || registeredSpaceId == Guid.Empty)
             throw new InvalidOperationException("The Space action has no registered Space to scope its conversation.");
         var key = registeredSpaceId;
-        // Opening/selecting a Space is an explicit new-chat action. Prior chats stay owned
-        // with their identities and drafts; only explicit history/restore or management return
-        // may reopen them. Reusing the last page here would silently undo that navigation intent.
+        // Rail navigation restores this session's last eligible workspace. Only the
+        // separate New Chat command deliberately replaces it with another conversation.
         var actualSpace = await _services.GetRequiredService<SpaceRegistry>().ReadExistingAsync(registeredSpaceId, token)
             ?? throw new SpacesWorkspaceActionRefusal("The selected Space is unavailable.");
         if (actualSpace.IsArchived) throw new SpacesWorkspaceActionRefusal("The selected Space is archived.");
@@ -737,6 +736,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             await OpenStudyWorkspaceAsync(Haven.Desktop.Views.Pages.Study.StudyWorkspaceRoute.Overview, null, token);
             return;
         }
+        if (await TryRestoreRetainedSpaceChatAsync(actualSpace, token)) return;
         var page = await CreateFreshSpaceChatAsync(actualSpace, token);
         _ownedChats.Add(page);
         var published = false;
@@ -775,6 +775,91 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 await page.DisposeAsync();
                 _ownedChats.Remove(page);
             }
+        }
+    }
+
+    private async Task<bool> TryRestoreRetainedSpaceChatAsync(SpaceDefinition space, CancellationToken token)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        var cacheKey = space.Id;
+        if (!_chatsBySpace.TryGetValue(cacheKey, out var page))
+        {
+            // Legacy saved general chats have no SpaceId, but remain the same Chat workspace.
+            if (space.Id != SpaceRegistry.ChatSpaceId || !_chatsBySpace.TryGetValue(Guid.Empty, out page)) return false;
+            cacheKey = Guid.Empty;
+        }
+        var conversation = page.CurrentConversation;
+        bool BelongsToSpace(Conversation row) => !row.IsArchived &&
+            (row.SpaceId == space.Id || space.Id == SpaceRegistry.ChatSpaceId && row.SpaceId is null) &&
+            (space.Kind == SpaceKind.Tasks
+                ? row.Mode == HavenMode.Tasks && row.Kind == ConversationKind.Task
+                : row.Mode == HavenMode.Chat && row.Kind == ConversationKind.Chat);
+        bool IsRetainedPageCurrent() => conversation.Id != Guid.Empty && _ownedChats.Contains(page) && page.CanRestoreWorkspace &&
+            _chatsBySpace.TryGetValue(cacheKey, out var retained) && ReferenceEquals(retained, page) &&
+            page.ConversationId == conversation.Id && page.CurrentConversation.SpaceId == conversation.SpaceId &&
+            page.CurrentConversation.IsTemporary == conversation.IsTemporary && BelongsToSpace(page.CurrentConversation);
+        var homePage = _spacesPage;
+        var selection = homePage?.Controller.State.Selection;
+        var outgoing = _chatPage;
+        var epoch = _routeEpoch;
+        void DemandNavigationCurrent()
+        {
+            token.ThrowIfCancellationRequested(); DemandAlive();
+            if (!IsPublicationCurrent || !ReferenceEquals(_spacesPage, homePage) || selection?.Id != space.Id ||
+                !ReferenceEquals(homePage?.Controller.State.Selection, selection) || _routeEpoch != epoch ||
+                !ReferenceEquals(_chatPage, outgoing))
+                throw new SpacesWorkspaceActionRefusal("The selected workspace changed before it could be restored.");
+        }
+        var conversations = _services.GetRequiredService<IConversationRepository>();
+        async Task<bool> IsStoredTargetEligibleAsync()
+        {
+            // Unsaved and Temporary work belongs to this retained page; no database row is
+            // fabricated, and ordinary navigation must not turn it into a different draft.
+            if (!page.HasSavedConversationRoute) return true;
+            var row = await conversations.GetAsync(conversation.Id, token);
+            DemandNavigationCurrent();
+            return row is not null && row.Id == conversation.Id && !row.IsTemporary &&
+                row.SpaceId == conversation.SpaceId && BelongsToSpace(row);
+        }
+        try
+        {
+            DemandNavigationCurrent();
+            var authority = await ReadHistoryHomeAuthorityAsync(token);
+            DemandNavigationCurrent();
+            var eligible = IsRetainedPageCurrent() && await IsStoredTargetEligibleAsync();
+            if (eligible && outgoing is not null && !ReferenceEquals(outgoing, page))
+                await outgoing.PrepareWorkspaceNavigationAsync();
+            DemandNavigationCurrent();
+            var currentSpace = await _services.GetRequiredService<SpaceRegistry>().ReadExistingAsync(space.Id, token);
+            DemandNavigationCurrent();
+            if (currentSpace is null || currentSpace.IsArchived || currentSpace.Revision != space.Revision)
+                throw new SpacesWorkspaceActionRefusal("The selected Space changed before its workspace could be restored.");
+            eligible = eligible && IsRetainedPageCurrent() && await IsStoredTargetEligibleAsync();
+            var finalAuthority = await ReadHistoryHomeAuthorityAsync(token);
+            Dispatcher.UIThread.VerifyAccess();
+            DemandNavigationCurrent();
+            if (finalAuthority != authority)
+                throw new SpacesHistoryAuthorityRefusal("Home authority changed before restoring the workspace.");
+            if (!eligible || !IsRetainedPageCurrent()) return false;
+            lock (_gate)
+            {
+                DemandNavigationCurrent();
+                var home = _services.GetRequiredService<HomeNativeWindowsComposition>();
+                DemandHistoryServicesCurrent(home);
+                if (home.Runtime.Current.Revision != authority.ServicesRevision)
+                    throw new SpacesHistoryAuthorityRefusal("Home services changed before restoring the workspace.");
+                PublishChatPage(page);
+                _chatsBySpace[space.Id] = page;
+                ObserveConversationRoute(page);
+            }
+            PublishStateChanged();
+            await RefreshSpacesConversationsAsync(token);
+            return true;
+        }
+        catch (SpacesHistoryAuthorityRefusal denial)
+        {
+            _spacesPage?.RefuseConversationHistoryAccess();
+            throw new SpacesWorkspaceActionRefusal(denial.Message);
         }
     }
 
