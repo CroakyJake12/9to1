@@ -103,9 +103,7 @@ public sealed class ChatComposerOptionsAtlasTests
             Assert.Same(settings, rig.View.OptionsPopup!.PlacementTarget);
             Assert.True(Find<Control>(panel, "options-permission-fields").IsEffectivelyVisible);
             await rig.ClickAsync(Choice(panel, "All actions"));
-            rig.Window.MouseDown(new Point(4, 4), MouseButton.Left);
-            rig.Window.MouseUp(new Point(4, 4), MouseButton.Left);
-            await rig.SettleAsync();
+            await rig.DismissOptionsAsync();
             Assert.Null(rig.View.OptionsPopup);
             Assert.Same(settings, rig.Window.FocusManager?.GetFocusedElement());
             Assert.Equal(0, source.ActionModeWrites);
@@ -439,6 +437,30 @@ public sealed class ChatComposerOptionsAtlasTests
             button.BringIntoView(); await SettleAsync();
             Assert.True(button.IsEffectivelyEnabled);
             button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await View.CaptureOriginalActionSettlement().WaitAsync(TimeSpan.FromSeconds(10), _token);
+            await SettleAsync();
+        }
+        internal async Task DismissOptionsAsync()
+        {
+            var panel = Panel;
+            if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("HAVEN_VISUAL_CAPTURE_DIR")))
+            {
+                using var frame = Window.CaptureRenderedFrame(); Assert.NotNull(frame);
+                var outside = new Point(4, 4);
+                var origin = panel.TranslatePoint(default, Window); Assert.NotNull(origin);
+                Assert.False(new Rect(origin.Value, panel.Bounds.Size).Contains(outside));
+                Window.MouseMove(outside);
+                Window.MouseDown(outside, MouseButton.Left); Window.MouseUp(outside, MouseButton.Left);
+            }
+            else
+            {
+                // Simplified drawing has no material hit geometry. Exercise the real keyboard
+                // dismissal here; the Skia run above separately requires actual outside-click dismissal.
+                Assert.True(Find<Button>(panel, "options-close").Focus());
+                var top = Assert.IsAssignableFrom<TopLevel>(TopLevel.GetTopLevel(panel));
+                top.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.Escape, null);
+                top.KeyRelease(Key.Escape, RawInputModifiers.None, PhysicalKey.Escape, null);
+            }
             await View.CaptureOriginalActionSettlement().WaitAsync(TimeSpan.FromSeconds(10), _token);
             await SettleAsync();
         }
