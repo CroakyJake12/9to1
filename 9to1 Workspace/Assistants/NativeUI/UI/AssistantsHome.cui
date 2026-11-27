@@ -5,7 +5,7 @@
     <Action name="OpenRecentWork" command="assistants.work.open" parameter="{Binding work}" />
   </Actions>
   <Page id="assistants-home-page" AccessibleName="Your Assistants" Background="{Resource CuiWorkspaceBrush}">
-    <Container id="assistants-home-scroll" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" Padding="24" CellGap="24">
+    <Container id="assistants-home-scroll" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" Padding="16,24" CellGap="24">
       <Container id="assistants-home-content" Type="Vertical Stack" MaxWidth="1120" HorizontalAlignment="Stretch" CellGap="24">
         <Container Type="Vertical Stack" CellGap="10">
           <Text Text="Your collaborators" FontSize="12" FontWeight="SemiBold" Foreground="{Resource CuiTextSoftBrush}" />
@@ -21,25 +21,27 @@
         <If Condition="{Binding HasAssistants}">
           <Container Type="Vertical Stack" CellGap="14">
             <Text FontSize="18" FontWeight="Bold">Your Assistants</Text>
-            <Repeat Source="{Binding Assistants}" As="assistant" Key="{Binding assistant.Id}" Panel="Wrap">
-              <Container id="assistant-home-card" Type="Grid" Width="288" MinHeight="224" RowSizes="Auto 1fr Auto" Padding="18" Margin="0,0,12,12" CellGap="16" Background="{Resource CuiPanelBrush}" CornerRadius="18">
-                <Container Type="Grid" ColumnSizes="44 1fr" CellGap="12">
-                  <Object Type="AssistantAvatar" Text="{Binding assistant.AvatarKey}" Width="44" Height="44" HorizontalAlignment="Left" AccessibleName="{Binding assistant.AvatarLabel}" />
-                  <Container Type="Vertical Stack" Column="1" CellGap="5" VerticalAlignment="Center">
-                    <Text Text="{Binding assistant.Name}" FontSize="19" FontWeight="Bold" TextWrapping="Wrap" />
-                    <Text Text="{Binding assistant.ActivityLabel}" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" AccessibleName="Assistant activity" Foreground="{Resource CuiTextSoftBrush}" />
+            <Container Type="Wrap">
+              <Repeat Source="{Binding Assistants}" As="assistant" Key="{Binding assistant.Id}">
+                <Container id="assistant-home-card" Type="Grid" Width="288" MinHeight="224" RowSizes="Auto 1fr Auto" Padding="18" Margin="0,0,12,12" CellGap="16" Background="{Resource CuiPanelBrush}" CornerRadius="18">
+                  <Container Type="Grid" ColumnSizes="44 1fr" CellGap="12">
+                    <Object Type="AssistantAvatar" Text="{Binding assistant.AvatarKey}" Width="44" Height="44" HorizontalAlignment="Left" AccessibleName="{Binding assistant.AvatarLabel}" />
+                    <Container Type="Vertical Stack" Column="1" CellGap="5" VerticalAlignment="Center">
+                      <Text Text="{Binding assistant.Name}" FontSize="19" FontWeight="Bold" TextWrapping="Wrap" />
+                      <Text Text="{Binding assistant.ActivityLabel}" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" AccessibleName="Assistant activity" Foreground="{Resource CuiTextSoftBrush}" />
+                    </Container>
+                  </Container>
+                  <Text Row="1" Text="{Binding assistant.Description}" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                  <Container Row="2" Type="Grid" ColumnSizes="1fr Auto" CellGap="12" Padding="10" Background="{Resource CuiWorkspaceBrush}" CornerRadius="12">
+                    <Container Type="Grid" ColumnSizes="22 1fr" CellGap="8" VerticalAlignment="Center">
+                      <Object Type="AssistantAvatar" Text="{Binding assistant.AvatarKey}" Width="22" Height="22" AccessibleName="{Binding assistant.AvatarLabel}" />
+                      <Text Column="1" Text="Main" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </Container>
+                    <Button Column="1" action="OpenAssistant" AccessibleName="Open this Assistant" Interactive="{Binding assistant.CanOpen}" Padding="10,7" AccentRole="Primary">Open</Button>
                   </Container>
                 </Container>
-                <Text Row="1" Text="{Binding assistant.Description}" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
-                <Container Row="2" Type="Grid" ColumnSizes="1fr Auto" CellGap="12" Padding="10" Background="{Resource CuiWorkspaceBrush}" CornerRadius="12">
-                  <Container Type="Grid" ColumnSizes="22 1fr" CellGap="8" VerticalAlignment="Center">
-                    <Object Type="AssistantAvatar" Text="{Binding assistant.AvatarKey}" Width="22" Height="22" AccessibleName="{Binding assistant.AvatarLabel}" />
-                    <Text Column="1" Text="Main" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
-                  </Container>
-                  <Button Column="1" action="OpenAssistant" AccessibleName="Open this Assistant" Interactive="{Binding assistant.CanOpen}" Padding="10,7" AccentRole="Primary">Open</Button>
-                </Container>
-              </Container>
-            </Repeat>
+              </Repeat>
+            </Container>
           </Container>
         </If>
         <Else>
