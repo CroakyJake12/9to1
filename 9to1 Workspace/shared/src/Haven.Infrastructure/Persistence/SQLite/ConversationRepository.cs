@@ -16,7 +16,7 @@ namespace Haven.Infrastructure;
 /// <summary>
 /// Represents conversation repository and keeps its related state and behavior together.
 /// </summary>
-public sealed partial class ConversationRepository(ISqliteConnectionFactory factory) : IConversationRepository, IConversationCreateOnlyRepository, IConversationBranchBoundRepository, ISpaceConversationSearch, ITemporaryChatSaveRepository
+public sealed partial class ConversationRepository(ISqliteConnectionFactory factory) : IConversationRepository, IConversationCreateOnlyRepository, IConversationCurrentBranchBoundRepository, ISpaceConversationSearch, ITemporaryChatSaveRepository
 {
     /// <summary>
     /// Retrieves recent async for the current operation.
@@ -175,7 +175,8 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
     }
 
     private static async Task<IReadOnlyList<ChatMessage>> ReadBranchMessagesAsync(SqliteConnection connection,
-        SqliteTransaction? transaction, Guid conversationId, Guid? branchId, bool includeCompacted, CancellationToken cancellationToken)
+        SqliteTransaction? transaction, Guid conversationId, Guid? branchId, bool includeCompacted, CancellationToken cancellationToken,
+        Guid? exactMessageId = null)
     {
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
@@ -207,9 +208,11 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
               FROM conversation_branch_messages bm
               JOIN messages m ON m.id=bm.message_id
              WHERE bm.branch_id=$branchId {(includeCompacted ? string.Empty : "AND m.is_compacted=0")}
+               {(exactMessageId is null ? string.Empty : "AND m.id=$exactMessageId")}
              ORDER BY bm.sequence;
             """;
         command.Parameters.AddWithValue("$branchId", branchId.Value.ToString());
+        if (exactMessageId is { } messageId) command.Parameters.AddWithValue("$exactMessageId", messageId.ToString());
         return await ReadMessagesFromReaderAsync(command, cancellationToken).ConfigureAwait(false);
     }
 
@@ -282,20 +285,21 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
     public Task AddMessageAsync(ChatMessage message, CancellationToken cancellationToken) =>
         AddMessageCoreAsync(message, null, false, cancellationToken);
 
-    private async Task AddMessageCoreAsync(ChatMessage message, Guid? boundBranchId, bool requireCurrentBranch, CancellationToken cancellationToken,
-        IReadOnlyList<Guid>? attachmentIds = null)
+    private async Task<BranchMessageWriteReceipt> AddMessageCoreAsync(ChatMessage message, Guid? boundBranchId, bool requireCurrentBranch, CancellationToken cancellationToken,
+        IReadOnlyList<Guid>? attachmentIds = null, bool createOnly = false, AdmittedBranchInput? originalInput = null)
     {
         await ConversationProductionSchema.EnsureAsync(factory, cancellationToken).ConfigureAwait(false);
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-        await AddMessageWithinTransactionAsync(connection, transaction, message, boundBranchId, requireCurrentBranch,
-            cancellationToken, attachmentIds).ConfigureAwait(false);
+        var receipt = await AddMessageWithinTransactionAsync(connection, transaction, message, boundBranchId, requireCurrentBranch,
+            cancellationToken, attachmentIds, createOnly, originalInput).ConfigureAwait(false);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return receipt;
     }
 
-    private static async Task AddMessageWithinTransactionAsync(SqliteConnection connection, SqliteTransaction transaction,
+    private static async Task<BranchMessageWriteReceipt> AddMessageWithinTransactionAsync(SqliteConnection connection, SqliteTransaction transaction,
         ChatMessage message, Guid? boundBranchId, bool requireCurrentBranch, CancellationToken cancellationToken,
-        IReadOnlyList<Guid>? attachmentIds = null)
+        IReadOnlyList<Guid>? attachmentIds = null, bool createOnly = false, AdmittedBranchInput? originalInput = null)
     {
         if (boundBranchId is { } expected)
         {
@@ -315,7 +319,7 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
                 INSERT OR REPLACE INTO messages(id, conversation_id, role, content, agent_name, model_name, metadata_json, created_at,is_compacted)
                 VALUES($id,$conversationId,$role,$content,$agentName,$modelName,$metadataJson,$createdAt,$isCompacted);
                 """;
-            if (boundBranchId is not null)
+            if (boundBranchId is not null || createOnly)
                 command.CommandText = command.CommandText.Replace("INSERT OR REPLACE", "INSERT", StringComparison.Ordinal);
             command.Parameters.AddWithValue("$id", message.Id.ToString());
             command.Parameters.AddWithValue("$conversationId", message.ConversationId.ToString());
@@ -355,7 +359,7 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
             version.Parameters.AddWithValue("$createdAt", message.CreatedAt.ToString("O"));
             await version.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
-        await UpdateTurnsForMessageAsync(connection, transaction, branchId, message, cancellationToken).ConfigureAwait(false);
+        var turnId = await UpdateTurnsForMessageAsync(connection, transaction, branchId, message, cancellationToken, originalInput).ConfigureAwait(false);
         foreach (var attachmentId in (attachmentIds ?? []).Distinct())
         {
             await using var attachment = connection.CreateCommand();
@@ -373,6 +377,7 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
             if (await attachment.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
                 throw new InvalidOperationException("A submitted attachment is no longer pending on the original conversation branch.");
         }
+        return new(branchId, turnId);
     }
 
     /// <summary>
@@ -565,51 +570,72 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
     }
 
     /// <summary>
-    /// Performs update turns for message asynchronously so I/O does not block the caller's thread.
+    /// Inserts one user turn and returns its durable identity inside the owning transaction.
     /// </summary>
-    private static async Task UpdateTurnsForMessageAsync(
+    private static async Task<Guid> InsertUserTurnAsync(SqliteConnection connection, SqliteTransaction transaction,
+        Guid branchId, ChatMessage message, CancellationToken cancellationToken)
+    {
+        var turnId = Guid.NewGuid();
+        await using var insert = connection.CreateCommand();
+        insert.Transaction = transaction;
+        insert.CommandText = """
+            INSERT INTO conversation_turns(id,conversation_id,branch_id,sequence,user_message_id,assistant_message_id,created_at)
+            VALUES($id,$conversationId,$branchId,
+                (SELECT COALESCE(MAX(sequence),0)+1 FROM conversation_turns WHERE branch_id=$branchId),
+                $messageId,NULL,$createdAt);
+            """;
+        insert.Parameters.AddWithValue("$id", turnId.ToString());
+        insert.Parameters.AddWithValue("$conversationId", message.ConversationId.ToString());
+        insert.Parameters.AddWithValue("$branchId", branchId.ToString());
+        insert.Parameters.AddWithValue("$messageId", message.Id.ToString());
+        insert.Parameters.AddWithValue("$createdAt", message.CreatedAt.ToString("O"));
+        await insert.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        return turnId;
+    }
+
+    private static async Task<Guid?> UpdateTurnsForMessageAsync(
         SqliteConnection connection,
         SqliteTransaction transaction,
         Guid branchId,
         ChatMessage message,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        AdmittedBranchInput? originalInput = null)
     {
         if (message.Role == MessageRole.User)
+            return await InsertUserTurnAsync(connection, transaction, branchId, message, cancellationToken).ConfigureAwait(false);
+        if (message.Role != MessageRole.Assistant) return null;
+
+        if (originalInput is not null)
         {
-            var next = 1;
-            await using (var sequence = connection.CreateCommand())
-            {
-                sequence.Transaction = transaction;
-                sequence.CommandText = "SELECT COALESCE(MAX(sequence),0)+1 FROM conversation_turns WHERE branch_id=$branchId;";
-                sequence.Parameters.AddWithValue("$branchId", branchId.ToString());
-                next = Convert.ToInt32(await sequence.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false), System.Globalization.CultureInfo.InvariantCulture);
-            }
-            await using var insert = connection.CreateCommand();
-            insert.Transaction = transaction;
-            insert.CommandText = """
-                INSERT INTO conversation_turns(id,conversation_id,branch_id,sequence,user_message_id,assistant_message_id,created_at)
-                VALUES($id,$conversationId,$branchId,$sequence,$messageId,NULL,$createdAt);
-                """;
-            insert.Parameters.AddWithValue("$id", Guid.NewGuid().ToString());
-            insert.Parameters.AddWithValue("$conversationId", message.ConversationId.ToString());
-            insert.Parameters.AddWithValue("$branchId", branchId.ToString());
-            insert.Parameters.AddWithValue("$sequence", next);
-            insert.Parameters.AddWithValue("$messageId", message.Id.ToString());
-            insert.Parameters.AddWithValue("$createdAt", message.CreatedAt.ToString("O"));
-            await insert.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            // A different tab may append another input or select another branch. Neither may
+            // redirect this response, and an edit/removal of the accepted input must refuse it.
+            var actualInput = await ReadBranchMessagesAsync(connection, transaction, message.ConversationId,
+                branchId, true, cancellationToken, originalInput.Message.Id).ConfigureAwait(false);
+            if (actualInput.Count != 1 || actualInput[0] != originalInput.Message)
+                throw new InvalidOperationException("The original accepted input no longer matches this branch.");
         }
-        else if (message.Role == MessageRole.Assistant)
+        await using var update = connection.CreateCommand();
+        update.Transaction = transaction;
+        update.CommandText = originalInput is null ? """
+            UPDATE conversation_turns SET assistant_message_id=$messageId
+             WHERE id=(SELECT id FROM conversation_turns WHERE branch_id=$branchId AND assistant_message_id IS NULL ORDER BY sequence DESC LIMIT 1);
+            """ : """
+            UPDATE conversation_turns SET assistant_message_id=$messageId
+             WHERE id=$turnId AND conversation_id=$conversationId AND branch_id=$branchId
+               AND user_message_id=$userMessageId AND assistant_message_id IS NULL;
+            """;
+        update.Parameters.AddWithValue("$messageId", message.Id.ToString());
+        update.Parameters.AddWithValue("$branchId", branchId.ToString());
+        if (originalInput is not null)
         {
-            await using var update = connection.CreateCommand();
-            update.Transaction = transaction;
-            update.CommandText = """
-                UPDATE conversation_turns SET assistant_message_id=$messageId
-                 WHERE id=(SELECT id FROM conversation_turns WHERE branch_id=$branchId AND assistant_message_id IS NULL ORDER BY sequence DESC LIMIT 1);
-                """;
-            update.Parameters.AddWithValue("$messageId", message.Id.ToString());
-            update.Parameters.AddWithValue("$branchId", branchId.ToString());
-            await update.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            update.Parameters.AddWithValue("$turnId", originalInput.TurnId.ToString());
+            update.Parameters.AddWithValue("$conversationId", message.ConversationId.ToString());
+            update.Parameters.AddWithValue("$userMessageId", originalInput.Message.Id.ToString());
         }
+        var affected = await update.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        if (originalInput is not null && affected != 1)
+            throw new InvalidOperationException("The original accepted turn is no longer unanswered on this branch.");
+        return originalInput?.TurnId;
     }
 
     /// <summary>

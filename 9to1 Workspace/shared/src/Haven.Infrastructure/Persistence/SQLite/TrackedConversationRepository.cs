@@ -23,7 +23,7 @@ public sealed partial class UsageTrackingConversationRepository(
     IModelUsageRepository usageRepository,
     IProviderConfigurationStore configurations,
     IProviderPricingService pricingService,
-    ProviderUsageCaptureBuffer usageCapture) : IConversationRepository, IConversationCreateOnlyRepository, IConversationBranchBoundRepository, ISpaceConversationSearch, ITemporaryChatSaveRepository
+    ProviderUsageCaptureBuffer usageCapture) : IConversationRepository, IConversationCreateOnlyRepository, IConversationCurrentBranchBoundRepository, ISpaceConversationSearch, ITemporaryChatSaveRepository
 {
     /// <summary>
     /// Stores turn started locally so this component can preserve the dependency, cache, or state between member calls.
@@ -94,6 +94,9 @@ public sealed partial class UsageTrackingConversationRepository(
 
     public IConversationBranchInvocation BindInvocation(Guid conversationId, Guid branchId) =>
         new TrackedBranchInvocation(this, inner.BindInvocation(conversationId, branchId));
+
+    public IConversationBranchInvocation BindCurrentInvocation(Guid conversationId) =>
+        new TrackedBranchInvocation(this, inner.BindCurrentInvocation(conversationId));
 
     private sealed partial class TrackedBranchInvocation(UsageTrackingConversationRepository owner, IConversationBranchInvocation original) : IConversationBranchInvocation
     {

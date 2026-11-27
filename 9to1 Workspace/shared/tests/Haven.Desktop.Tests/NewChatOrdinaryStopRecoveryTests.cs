@@ -10,6 +10,7 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Haven.Desktop.Services;
 using Haven.Infrastructure;
+using Haven.Infrastructure.Tests;
 using Avalonia.Headless.XUnit;
 using Haven.Application;
 using Haven.Core;
@@ -20,6 +21,77 @@ namespace Haven.Desktop.Tests;
 
 public sealed partial class ChatCloudPermissionCallerTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Ordinary_original_sqlite_response_keeps_its_committed_branch_and_input_turn(bool switchBranch)
+    {
+        var token = TestContext.Current.CancellationToken;
+        using var database = await CompactionTestDatabase.CreateAsync(token);
+        await using var rig = new Rig(temporary: false);
+        var model = OrdinaryStopModel(rig);
+        rig.Client.AvailableModels = [model];
+        var conversation = rig.Conversation with { Mode = HavenMode.Chat, Kind = ConversationKind.Chat };
+        var service = new ChatSessionService(database.Conversations, rig.Client, new CapabilityPreflightService(), new Safety(),
+            new WorkspaceToolRuntime(rig.Workspace), new ComputerToolRuntime(new Computer()));
+        ChatMessage? accepted = null;
+        ConversationBranch? admittedBranch = null;
+        ConversationBranch? selectedBranch = null;
+        ChatMessage? concurrentInput = null;
+        OllamaChatRequest? originalRequest = null;
+        var callbacks = 0;
+        var moves = 0;
+        rig.Client.OrdinaryProviderBody = async (request, actualToken) =>
+        {
+            if (++moves != 1)
+            {
+                Assert.Same(originalRequest, request);
+                return false;
+            }
+            originalRequest = request;
+            Assert.NotNull(accepted);
+            Assert.NotNull(admittedBranch);
+            // The same real provider request is already admitted. Another actor now changes
+            // selection or appends a later turn while its original response is in flight.
+            selectedBranch = switchBranch
+                ? await database.Production.CreateBranchAsync(conversation.Id, admittedBranch!.Id, accepted!.Id,
+                    "Concurrent selection", ConversationBranchReason.Manual, actualToken)
+                : admittedBranch;
+            concurrentInput = new(Guid.NewGuid(), conversation.Id, MessageRole.User, "Another actor's input",
+                null, null, null, DateTimeOffset.UtcNow);
+            await database.Conversations.AddMessageAsync(concurrentInput, actualToken);
+            return true;
+        };
+        var events = new List<ChatStreamEvent>();
+        await foreach (var item in service.SendWithCommittedInputFromOriginalAsync(action => action(), conversation,
+            "Original accepted input", model, EffortLevel.Medium, [], "Haven", "", DuoMode.Solo,
+            null, null, null, null, token, userInputCommitted: async (input, actualToken) =>
+            {
+                callbacks++;
+                accepted = input;
+                Assert.Equal(input, Assert.Single(await database.Conversations.GetMessagesAsync(conversation.Id, actualToken)));
+                admittedBranch = await database.Production.GetCurrentBranchAsync(conversation.Id, actualToken);
+            }))
+            events.Add(item);
+
+        Assert.Equal(1, callbacks);
+        Assert.Equal(2, moves);
+        Assert.Equal(1, rig.Client.StreamDisposals);
+        var completed = Assert.Single(events, item => item.Kind == ChatStreamEventKind.AssistantCompleted).Message!;
+        var originalTurn = Assert.Single(await database.Production.GetTurnsAsync(conversation.Id, admittedBranch!.Id, token),
+            turn => turn.UserMessageId == accepted!.Id);
+        Assert.Equal(completed.Id, originalTurn.AssistantMessageId);
+        var otherTurn = Assert.Single(await database.Production.GetTurnsAsync(conversation.Id, selectedBranch!.Id, token),
+            turn => turn.UserMessageId == concurrentInput!.Id);
+        Assert.Null(otherTurn.AssistantMessageId);
+        Assert.Equal(selectedBranch.Id, (await database.Production.GetCurrentBranchAsync(conversation.Id, token))!.Id);
+        if (switchBranch)
+            Assert.DoesNotContain(await database.Conversations.GetMessagesAsync(conversation.Id, token), item => item.Id == completed.Id);
+        else
+            Assert.Equal([accepted!.Id, concurrentInput!.Id, completed.Id],
+                (await database.Conversations.GetMessagesAsync(conversation.Id, token)).Select(item => item.Id));
+    }
+
     [AvaloniaFact]
     public async Task Ordinary_native_chat_stop_drains_only_after_cleanup_without_replaying_or_losing_the_next_draft()
     {

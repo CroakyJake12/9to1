@@ -625,7 +625,10 @@ public sealed partial class ChatSessionService(
             ? (conversations as IConversationBranchBoundRepository
                 ?? throw new InvalidOperationException("The original conversation repository cannot bind a branch invocation."))
                 .BindInvocation(conversation.Id, branchId)
-            : null;
+            : ordinaryOriginal is not null && !canonicalIntent && !conversation.IsTemporary &&
+                conversations is IConversationCurrentBranchBoundRepository currentBranches
+                ? currentBranches.BindCurrentInvocation(conversation.Id)
+                : null;
         if (existingUserInput is not null && (originalBranch is null || existingUserInput.ConversationId != conversation.Id || existingUserInput.Role != MessageRole.User))
             throw new InvalidOperationException("Regeneration requires the original persisted branch input.");
         Task WriteOriginalMessageAsync(ChatMessage message) => originalBranch is null
@@ -842,7 +845,14 @@ public sealed partial class ChatSessionService(
 
         var now = DateTimeOffset.UtcNow;
         if (existingUserInput is not null)
-            await originalBranch!.AdmitExistingUserInputAsync(existingUserInput, cancellationToken).ConfigureAwait(false);
+        {
+            // Admission may restore the exact unanswered turn after an explicit regeneration.
+            // Keep its real database acknowledgement in the same original durable-write ledger.
+            var admission = ordinaryOriginal is null
+                ? originalBranch!.AdmitExistingUserInputAsync(existingUserInput, cancellationToken)
+                : ordinaryOriginal.Write(() => originalBranch!.AdmitExistingUserInputAsync(existingUserInput, cancellationToken));
+            await admission.ConfigureAwait(false);
+        }
         var resumedInput = existingUserInput ?? (originalCustody?.OriginalColdContinuation is { } coldContinuation
             ? coldContinuation.Entry.Capsule.AcceptedUserMessage
             : originalCustody?.OriginalUnstartedContinuation is { } continuation
