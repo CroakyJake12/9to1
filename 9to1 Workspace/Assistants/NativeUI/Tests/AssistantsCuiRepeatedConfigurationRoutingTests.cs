@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Text.Json;
+using Avalonia.Automation;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
@@ -404,16 +406,29 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
             var calls = new List<(string Command, object? Parameter)>(); var bindings = Bindings(calls);
             var definition = Definition(); bindings.ApplySnapshot(AssistantsWorkspaceSnapshot.Empty with
             { Revision = 1, SelectedAssistant = definition, Assistants = [definition] });
-            bindings.BeginProjectSelection(false); bindings.SetProjectCatalogue(Page("First observed project"));
+            bindings.ShowWork(); bindings.BeginProjectSelection(false); bindings.SetProjectCatalogue(Page("First observed project"));
             var old = Assert.Single(Rows(bindings, "ProjectChoices"));
-            var registry = AssistantsNativeCuiSurface.CreateAvatarRegistry(); registry.RegisterObjectRenderer("AssistantConversation", _ => new Panel());
+            using var conversationLoader = new CuiControlLoader();
+            conversationLoader.RegisterObjectRenderer("AssistantMessage", _ => new CuiMarkdownView());
+            conversationLoader.SetBindingContext(bindings); conversationLoader.SetActionDispatcher(bindings);
+            var (conversationTree, conversationDiagnostics) = conversationLoader.LoadMarkup(AssistantsCuiScenes.ReadSource(AssistantsCuiScene.Conversation));
+            Assert.Empty(conversationDiagnostics);
+            var conversation = Assert.IsAssignableFrom<Control>(conversationTree); conversationLoader.WireBindings(conversation);
+            var registry = AssistantsNativeCuiSurface.CreateAvatarRegistry(); registry.RegisterObjectRenderer("AssistantConversation", _ => conversation);
             using var loader = new CuiControlLoader(registry); loader.SetBindingContext(bindings); loader.SetActionDispatcher(bindings);
             var window = new Window { Width = 1000, Height = 800 };
             try
             {
                 var (tree, diagnostics) = loader.LoadMarkup(AssistantsCuiScenes.ReadSource(AssistantsCuiScene.Work));
                 Assert.Empty(diagnostics); var root = Assert.IsAssignableFrom<Control>(tree); loader.WireBindings(root);
+                using var keyboard = new AssistantWorkspaceKeyboard(root, bindings);
                 window.Content = root; window.Show(); window.UpdateLayout();
+                Assert.Null(bindings.VisibleWorkspaceIdentity);
+                var chooser = Assert.Single(root.GetVisualDescendants().OfType<CuiContainerControl>(), control => control.Name == "assistant-project-selection");
+                Assert.True(chooser.IsEffectivelyVisible);
+                var query = Assert.Single(root.GetVisualDescendants().OfType<TextBox>(), control => control.Name == "project-title-search");
+                Assert.True(query.IsEffectivelyVisible); Assert.True(query.Focus());
+                Assert.Null(bindings.VisibleWorkspaceIdentity); // The real chooser does not require opening Workspace.
                 var firstButton = Assert.Single(root.GetVisualDescendants().OfType<Button>(), button => button.Tag as string == "ChooseOriginalProject");
                 var originalId = CuiRuntimeIdentity.GetStableId(firstButton); Assert.Equal("First observed project", firstButton.Content);
                 var currentPage = Page("Fresh current project"); bindings.SetProjectCatalogue(currentPage);
@@ -421,7 +436,7 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
                 var currentButton = Assert.Single(root.GetVisualDescendants().OfType<Button>(), button => button.Tag as string == "ChooseOriginalProject");
                 Assert.Same(firstButton, currentButton); Assert.Equal(originalId, CuiRuntimeIdentity.GetStableId(currentButton));
                 Assert.Equal("Fresh current project", currentButton.Content);
-                currentButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await loader.WhenActionsIdleAsync();
+                currentButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await conversationLoader.WhenActionsIdleAsync();
                 var actual = Assert.Single(calls); Assert.Equal("assistants.project.choose", actual.Command); Assert.Same(currentRow, actual.Parameter);
                 Assert.Same(currentPage.Candidates[0], bindings.DemandOriginalProjectCandidate(actual.Parameter));
                 Assert.False(bindings.TryGetItemValue(old, "Title", out _));
@@ -429,10 +444,149 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
                 Assert.Single(calls); // The stale object is refused before acquiring a product command.
                 bindings.Revoke(); Assert.False(bindings.TryGetItemValue(currentRow, "Id", out _));
             }
-            finally { loader.Dispose(); await loader.WhenActionsIdleAsync(); window.Close(); }
+            finally
+            {
+                loader.Dispose(); conversationLoader.Dispose();
+                await loader.WhenActionsIdleAsync(); await conversationLoader.WhenActionsIdleAsync(); window.Close();
+            }
             return true;
         }, lifetime.Token);
         Assert.True(completed);
+    }
+
+    [Theory]
+    [InlineData(940, 660)]
+    [InlineData(500, 650)]
+    [InlineData(360, 640)]
+    public async Task Task_composer_with_long_draft_and_attachments_keeps_workspace_model_and_remove_actions_in_the_viewport(double width, double height)
+    {
+        using var lifetime = new CancellationTokenSource();
+        await using var native = HeadlessUnitTestSession.StartNew(typeof(AssistantsTestApplication));
+        Assert.True(await native.Dispatch<bool>(async () =>
+        {
+            var calls = new List<(string Command, object? Parameter)>();
+            var bindings = Bindings(calls);
+            var definition = Definition() with { Configuration = new AssistantConfiguration
+                { Name = "Model review", Model = new("fixture", "missing-saved-model") } };
+            AssistantModelChoice Model(string name) => new(new ModelDescriptor(name, 1, "family", "parameters", "quantization",
+                new HashSet<ToolCapability>(), DateTimeOffset.UnixEpoch), "fixture");
+            var choices = new[] { Model("first-local-model"), Model("second-local-model") };
+            var now = DateTimeOffset.UtcNow; var conversationId = Guid.NewGuid();
+            var draft = "Keep this viewport draft\n" + string.Join("\n", Enumerable.Repeat("Long Task draft retained through viewport changes.", 30));
+            var savedConversation = new Conversation(conversationId, HavenMode.Chat, ConversationKind.Task,
+                "Typed Task viewport", null, null, false, false, now, now);
+            var attachments = Enumerable.Range(1, 3).Select(index => new MessageAttachment(Guid.NewGuid(), conversationId,
+                null, null, $"Current attachment {index} with a deliberately long descriptive saved filename.txt", "", "text/plain",
+                MessageAttachmentKind.PlainText, 1200, new string('a', 64), AttachmentProcessingState.Ready,
+                AttachmentAnalysisMethod.TextExtracted, new string((char)('a' + index), 1200), "{}", now, now)).ToArray();
+            var data = new AssistantConversationData(savedConversation, [], attachments, [],
+                new(conversationId, null, draft, JsonSerializer.Serialize(attachments.Select(value => value.Id)), now), null);
+            var actualBinding = new AssistantConversationBinding(new object(), definition, "display-session", 1, savedConversation);
+            // These are actual typed presentation rows, not an invented Home attachment-import grant.
+            bindings.ShowWork();
+            bindings.ApplySnapshot(AssistantsWorkspaceSnapshot.Empty with
+            { Revision = 1, SelectedAssistant = definition, Assistants = [definition], Models = choices,
+                ConversationBinding = actualBinding, Conversation = data });
+            bindings.SetMessages([]);
+            Assert.Null(bindings.SelectedModel); // The missing saved preference is not silently replaced.
+            using var conversationLoader = new CuiControlLoader();
+            conversationLoader.RegisterObjectRenderer("AssistantMessage", _ => new CuiMarkdownView());
+            conversationLoader.SetBindingContext(bindings); conversationLoader.SetActionDispatcher(bindings);
+            var (conversationTree, conversationDiagnostics) = conversationLoader.LoadMarkup(AssistantsCuiScenes.ReadSource(AssistantsCuiScene.Conversation));
+            Assert.Empty(conversationDiagnostics);
+            var conversation = Assert.IsAssignableFrom<Control>(conversationTree); conversationLoader.WireBindings(conversation);
+            var registry = AssistantsNativeCuiSurface.CreateAvatarRegistry();
+            registry.RegisterObjectRenderer("AssistantConversation", _ => conversation);
+            using var loader = new CuiControlLoader(registry); loader.SetBindingContext(bindings); loader.SetActionDispatcher(bindings);
+            var window = new Window { Width = width, Height = height };
+            try
+            {
+                var (tree, diagnostics) = loader.LoadMarkup(AssistantsCuiScenes.ReadSource(AssistantsCuiScene.Work));
+                Assert.Empty(diagnostics); var root = Assert.IsAssignableFrom<Control>(tree); loader.WireBindings(root);
+                using var keyboard = new AssistantWorkspaceKeyboard(root, bindings);
+                window.Content = root; window.Show();
+                async Task Layout()
+                {
+                    await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+                    await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+                }
+                Button Button(string id) => Assert.Single(root.GetVisualDescendants().OfType<Button>(), value => value.Name == id);
+                void InViewport(Control control)
+                {
+                    Assert.True(control.IsEffectivelyVisible);
+                    var origin = control.TranslatePoint(default, window) ?? throw new InvalidOperationException("Detached model control.");
+                    Assert.True(control.Bounds.Width > 0 && control.Bounds.Height > 0);
+                    Assert.True(origin.X >= 0 && origin.Y >= 0 && origin.X + control.Bounds.Width <= window.ClientSize.Width + 1 &&
+                        origin.Y + control.Bounds.Height <= window.ClientSize.Height + 1, "The model choice path must fit the current viewport.");
+                }
+                await Layout();
+                var input = Assert.Single(conversation.GetVisualDescendants().OfType<TextBox>(), value => value.Name == "conversation-draft");
+                Assert.Equal(draft, input.Text); Assert.True(input.Focus());
+                input.CaretIndex = 18; input.SelectionStart = 10; input.SelectionEnd = 18;
+                var footer = Assert.Single(conversation.GetVisualDescendants().OfType<CuiContainerControl>(), value => value.Name == "assistant-composer-footer");
+                var transcript = Assert.Single(conversation.GetVisualDescendants().OfType<CuiContainerControl>(), value => value.Name == "assistant-transcript-scroll");
+                var scroll = Assert.Single(transcript.GetVisualDescendants().OfType<ScrollViewer>(), value =>
+                    ReferenceEquals(value.GetVisualAncestors().OfType<CuiContainerControl>().FirstOrDefault(), transcript));
+                InViewport(footer); InViewport(input);
+                Assert.True(input.Bounds.Height <= 112);
+                var editorScroll = Assert.Single(input.GetVisualDescendants().OfType<ScrollViewer>());
+                Assert.True(editorScroll.Viewport.Height > 0 && editorScroll.Extent.Height > editorScroll.Viewport.Height,
+                    "The retained multiline editor must scroll its long draft within the composer cap.");
+                Assert.True(scroll.Viewport.Height > 0 && double.IsFinite(scroll.Viewport.Height),
+                    "Task controls, a long draft and attachment chips must leave a positive transcript viewport.");
+                Assert.True(scroll.Extent.Height > scroll.Viewport.Height);
+                var footerBounds = new Rect(footer.TranslatePoint(default, window)!.Value, footer.Bounds.Size);
+                scroll.ScrollToEnd(); await Layout(); Assert.True(scroll.Offset.Y > 0);
+                Assert.Equal(footerBounds, new Rect(footer.TranslatePoint(default, window)!.Value, footer.Bounds.Size));
+                foreach (var id in new[] { "assistant-start-task", "assistant-steer", "assistant-queue", "assistant-stop",
+                    "assistant-save-draft", "conversation-refresh-models", "conversation-model-settings", "new-conversation" }) InViewport(Button(id));
+                foreach (var name in new[] { "Selected model", "Model availability help" })
+                    InViewport(Assert.Single(conversation.GetVisualDescendants().OfType<TextBlock>(), value =>
+                        value.IsEffectivelyVisible && AutomationProperties.GetName(value) == name));
+                var removeButtons = footer.GetVisualDescendants().OfType<Button>().Where(value => value.Tag as string == "DetachAttachment").ToArray();
+                Assert.Equal(attachments.Length, removeButtons.Length);
+                foreach (var attachment in attachments)
+                {
+                    var label = Assert.Single(footer.GetVisualDescendants().OfType<TextBlock>(), value =>
+                        AutomationProperties.GetName(value) == attachment.OriginalName);
+                    Assert.Equal(attachment.OriginalName, ToolTip.GetTip(label));
+                    Assert.Contains(transcript.GetVisualDescendants().OfType<TextBlock>(), value => value.Text == attachment.ExtractedText);
+                }
+                var toggle = Button("assistant-workspace-toggle"); InViewport(toggle);
+                Assert.True(toggle.Focus());
+                toggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await loader.WhenActionsIdleAsync(); await Layout();
+                var close = Button("assistant-workspace-close"); InViewport(close); Assert.True(close.IsFocused);
+                var buttons = root.GetVisualDescendants().OfType<Button>().Where(value => value.IsEffectivelyVisible && value.Tag as string == "ChooseModel").ToArray();
+                Assert.Equal(2, buttons.Length); Assert.All(buttons, InViewport);
+                var rows = Rows(bindings, "Models");
+                buttons[1].RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await loader.WhenActionsIdleAsync();
+                var dispatched = Assert.Single(calls);
+                Assert.Equal("assistants.model.choose", dispatched.Command); Assert.Same(rows[1], dispatched.Parameter);
+                Assert.Same(choices[1], Assert.IsType<AssistantsCuiBindings.ModelRow>(dispatched.Parameter).Original);
+                Assert.Null(bindings.SelectedModel); // This projection fixture records routing; it invents no model-owner result.
+                close.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await loader.WhenActionsIdleAsync(); await Layout();
+                Assert.Null(bindings.VisibleWorkspaceIdentity); InViewport(toggle); Assert.True(toggle.IsFocused);
+                Assert.Same(window, TopLevel.GetTopLevel(conversation)); Assert.Single(calls);
+                Assert.Same(input, Assert.Single(conversation.GetVisualDescendants().OfType<TextBox>(), value => value.Name == "conversation-draft"));
+                Assert.Equal(draft, input.Text); Assert.Equal(draft, bindings.Prompt); Assert.Equal("viewport", input.SelectedText);
+                Assert.Equal(10, input.SelectionStart); Assert.Equal(18, input.SelectionEnd);
+                Assert.Equal(footerBounds, new Rect(footer.TranslatePoint(default, window)!.Value, footer.Bounds.Size));
+                var currentAttachments = Rows(bindings, "DraftAttachments");
+                removeButtons[^1].BringIntoView(); await Layout(); InViewport(removeButtons[^1]);
+                removeButtons[^1].RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await conversationLoader.WhenActionsIdleAsync();
+                Assert.Equal(2, calls.Count); Assert.Equal("assistants.attachment.detach", calls[1].Command);
+                Assert.Same(currentAttachments[^1], calls[1].Parameter);
+                Assert.Same(attachments[^1], Assert.IsType<AssistantsCuiBindings.AttachmentRow>(calls[1].Parameter).Original);
+                Assert.Equal(draft, input.Text); Assert.Equal("viewport", input.SelectedText);
+                Assert.Equal(footerBounds, new Rect(footer.TranslatePoint(default, window)!.Value, footer.Bounds.Size));
+            }
+            finally
+            {
+                loader.Dispose(); conversationLoader.Dispose();
+                await loader.WhenActionsIdleAsync(); await conversationLoader.WhenActionsIdleAsync(); window.Close();
+            }
+            return true;
+        }, lifetime.Token));
     }
 
     [Fact]

@@ -7,9 +7,9 @@
     <Action name="OpenAssistant" command="assistants.open" parameter="{Binding assistant}" />
     <Action name="ToggleConversationArchive" command="assistants.conversation.archive.toggle" parameter="{Binding conversation}" />
     <Action name="OpenConversation" command="assistants.conversation.open" parameter="{Binding conversation}" />
-    <Action name="ChooseOriginalProject" command="assistants.project.choose" parameter="{Binding project}" />
     <Action name="ResumeCompatiblePending" command="assistants.project.pending.resume" parameter="{Binding pending}" />
     <Action name="OpenWork" command="assistants.work.open" parameter="{Binding work}" />
+    <Action name="ChooseModel" command="assistants.model.choose" parameter="{Binding model}" />
   </Actions>
   <Page id="assistant-work-page" AccessibleName="Assistant conversation and work" Background="{Resource CuiWorkspaceBrush}">
     <Container id="assistant-work-layout" Type="Grid" ColumnSizes="1fr Auto">
@@ -25,76 +25,9 @@
           </Container>
           <Button id="assistant-workspace-toggle" Column="2" action="ToggleAssistantWorkspace" Interactive="{Binding CanToggleAssistantWorkspace}" Text="{Binding AssistantWorkspaceToggleLabel}" Padding="10,8" VerticalAlignment="Center" />
         </Container>
-        <Container id="assistant-conversation-scroll" Row="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" Padding="20,24" CellGap="16">
-          <Container id="assistant-conversation-content" Type="Vertical Stack" MaxWidth="760" HorizontalAlignment="Stretch" CellGap="16">
-            <Button id="new-conversation" action="assistants.conversation.new" Interactive="{Binding CanNewConversation}" HorizontalAlignment="Right" Padding="10,7" Chromeless="True">New conversation</Button>
-            <Object id="assistant-conversation" Type="AssistantConversation" MinHeight="280" AccessibleName="Assistant conversation" />
-            <Container Type="Vertical Stack" AccessibleName="Current Task progress" CellGap="8" Padding="16" Background="{Resource CuiPanelBrush}" CornerRadius="14" Active="{Binding HasTaskProgress}">
-              <Text Text="Current Task" FontSize="18" FontWeight="SemiBold" />
-              <Text Text="{Binding TaskObjective}" FontWeight="SemiBold" TextWrapping="Wrap" />
-              <Text Text="{Binding TaskExecutionStatus}" TextWrapping="Wrap" />
-              <Text Text="{Binding TaskCurrentActivity}" TextWrapping="Wrap" />
-              <Text Text="{Binding TaskFollowUpResult}" TextWrapping="Wrap" AccessibleName="Task instruction result" Active="{Binding HasTaskFollowUpResult}" />
-              <Text Text="Checkpoints" FontWeight="SemiBold" />
-              <Text Text="{Binding TaskCheckpointStatus}" TextWrapping="Wrap" />
-              <Text Text="{Binding TaskAcceptanceStatus}" TextWrapping="Wrap" />
-              <Text Text="{Binding TaskRecoveryStatus}" TextWrapping="Wrap" AccessibleName="Task recovery status" />
-              <Container Type="Vertical Stack" AccessibleName="Saved Task recovery" CellGap="6" Active="{Binding HasColdTaskRecovery}">
-                <Text Text="Continue saved work" FontWeight="SemiBold" />
-                <Text Text="{Binding ColdTaskRecoveryReason}" TextWrapping="Wrap" />
-                <Container Orientation="Horizontal" Type="Wrap">
-                  <Button id="assistant-cold-task-review" action="assistants.task.recovery.review" Margin="0,0,8,8" Interactive="{Binding CanReviewColdTaskRecovery}">Review recovery</Button>
-                  <Button id="assistant-cold-task-resume" action="assistants.task.recovery.resume" Margin="0,0,8,8" Interactive="{Binding CanResumeColdTaskRecovery}">Resume saved Task</Button>
-                </Container>
-              </Container>
-              <Container Type="Vertical Stack" CellGap="6" Active="{Binding HasTaskPlan}">
-                <Text Text="Plan" FontWeight="SemiBold" />
-                <Repeat Source="{Binding TaskPlanRows}" As="step" Key="{Binding step.Id}">
-                  <Container Type="Vertical Stack" CellGap="3">
-                    <Text Text="{Binding step.Summary}" TextWrapping="Wrap" />
-                    <Text Text="{Binding step.Status}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-                  </Container>
-                </Repeat>
-              </Container>
-              <Container Type="Vertical Stack" CellGap="6" Active="{Binding HasTaskSteers}">
-                <Text Text="Steering" FontWeight="SemiBold" />
-                <Repeat Source="{Binding TaskSteerRows}" As="steer" Key="{Binding steer.Id}">
-                  <Container Type="Vertical Stack" CellGap="3">
-                    <Text Text="{Binding steer.Summary}" TextWrapping="Wrap" />
-                    <Text Text="{Binding steer.Status}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-                  </Container>
-                </Repeat>
-              </Container>
-              <Container Type="Vertical Stack" CellGap="6" Active="{Binding HasTaskQueue}">
-                <Text Text="Queued next" FontWeight="SemiBold" />
-                <Repeat Source="{Binding TaskQueueRows}" As="followup" Key="{Binding followup.Id}">
-                  <Container Type="Vertical Stack" CellGap="3">
-                    <Text Text="{Binding followup.Summary}" TextWrapping="Wrap" />
-                    <Text Text="{Binding followup.Status}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-                  </Container>
-                </Repeat>
-              </Container>
-            </Container>
-            <Container Type="Vertical Stack" CellGap="10" Active="{Binding ShowProjectSelection}">
-              <Text Text="{Binding ProjectSelectionTitle}" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap" />
-              <Text Text="Choose a project to continue working on it or open it in Dev." TextWrapping="Wrap" />
-              <Text Text="{Binding ProjectSelectionStatus}" TextWrapping="Wrap" AccessibleName="Canonical project selection status" />
-              <Input id="project-title-search" Type="Text" PlaceholderText="Search saved project titles" AccessibleName="Search saved project titles" Value="{Binding ProjectSearchText, Mode=TwoWay}" Interactive="{Binding CanSearchProjects}" />
-              <Button action="assistants.project.search" Interactive="{Binding CanSearchProjects}">Search saved projects</Button>
-              <Repeat Source="{Binding ProjectChoices}" As="project" Key="{Binding project.Id}">
-                <Button action="ChooseOriginalProject" Text="{Binding project.Title}" Margin="0,0,0,6" Interactive="{Binding CanChooseProject}" />
-              </Repeat>
-              <Text Text="{Binding ProjectSelectionMore}" TextWrapping="Wrap" />
-              <Container Type="Vertical Stack" Active="{Binding HasPendingProjectCreation}" CellGap="6">
-                <Text Text="{Binding PendingProjectCreationTitle}" FontWeight="SemiBold" />
-                <Text Text="Your earlier project creation is saved. Try again to check its progress without creating another task." TextWrapping="Wrap" />
-                <Button id="retry-original-project-task" action="assistants.project.retry" Interactive="{Binding CanRetryProjectCreation}">Retry original project Task</Button>
-              </Container>
-              <Button action="assistants.project.older" Interactive="{Binding CanReadOlderProjects}">Older saved projects</Button>
-              <Button action="assistants.project.refresh" Interactive="{Binding CanRefreshProjects}">Refresh newest matching projects</Button>
-              <Button action="assistants.project.cancel" Interactive="{Binding CanCloseProjectSelection}">Cancel project selection</Button>
-            </Container>
-          </Container>
+        <Container id="assistant-conversation-content" Row="1" Type="Grid" RowSizes="Auto 1fr" MaxWidth="792" HorizontalAlignment="Stretch" Padding="16,10,16,12" CellGap="8">
+          <Button id="new-conversation" action="assistants.conversation.new" Interactive="{Binding CanNewConversation}" HorizontalAlignment="Right" Padding="10,7" Chromeless="True" Row="0">New conversation</Button>
+          <Object id="assistant-conversation" Type="AssistantConversation" AccessibleName="Assistant conversation" Row="1" />
         </Container>
         <Container Row="2" Type="Vertical Stack" Padding="16,0,16,10" CellGap="4">
           <Text Text="{Binding Status}" FontSize="12" TextWrapping="Wrap" AccessibleName="Assistant work status" Foreground="{Resource CuiTextSoftBrush}" />
@@ -108,6 +41,14 @@
             <Text FontSize="18" FontWeight="SemiBold">Workspace</Text>
             <Button id="assistant-workspace-close" action="CloseAssistantWorkspace">Close workspace</Button>
             <Button id="assistant-workspace-to-navigation" action="OpenAssistantNavigation" Active="{Binding ShowAssistantNavigationToggle}" Interactive="{Binding CanOpenAssistantNavigation}">Show assistants</Button>
+          </Container>
+          <Container id="assistant-workspace-models" Type="Vertical Stack" AccessibleName="Available conversation models" CellGap="8" Active="{Binding HasModels}">
+            <Text Text="Available models" FontSize="14" FontWeight="SemiBold" />
+            <Container Type="Wrap" VerticalScrolling="True" HorizontalScrolling="False" MaxHeight="160" CellGap="6" Active="{Binding HasModels}">
+              <Repeat Source="{Binding Models}" As="model" Key="{Binding model.Id}">
+                <Button action="ChooseModel" Text="{Binding model.Label}" Interactive="{Binding CanChooseModel}" Padding="10,7" CornerRadius="12" FontSize="12" FontWeight="SemiBold" />
+              </Repeat>
+            </Container>
           </Container>
           <Text Text="{Binding SelectedAssistantDescription}" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
           <Text Text="{Binding SelectedAssistantActivity}" FontSize="12" TextWrapping="Wrap" AccessibleName="Assistant activity" Foreground="{Resource CuiTextSoftBrush}" />
