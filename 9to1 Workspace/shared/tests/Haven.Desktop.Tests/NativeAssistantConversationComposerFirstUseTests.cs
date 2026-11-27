@@ -86,6 +86,17 @@ public sealed partial class AssistantOriginalMemoryTests
         {
             window.Width = 1320; window.Height = 960;
             await OpenActualSavedMemoryConversation(surface, binding.Definition.Identity, binding.Conversation.Id, window);
+            // Opening the Assistant acquires its protected Main before this helper reopens the seeded Chat.
+            var before = controller.Snapshot.Conversations.ToArray();
+            var seeded = Assert.Single(before, row => row.ConversationId == binding.Conversation.Id);
+            Assert.False(seeded.IsMain); Assert.True(seeded.IsOrdinarySecondary); Assert.False(seeded.IsArchived);
+            var main = Assert.Single(before, row => row.IsMain);
+            Assert.NotEqual(binding.Conversation.Id, main.ConversationId);
+            Assert.False(main.IsArchived); Assert.False(main.IsOrdinarySecondary); Assert.Null(main.CanonicalTask);
+            var beforeIds = before.Select(row => row.ConversationId).ToHashSet();
+            Assert.Equal(new[] { binding.Conversation.Id, main.ConversationId }.OrderBy(id => id),
+                before.Select(row => row.ConversationId).OrderBy(id => id));
+            Assert.Equal(binding.Conversation.Id, controller.Snapshot.ConversationBinding!.Conversation.Id);
             await ClickCanonicalCaptureControl(window, surface, "assistant-new-task", () =>
                 controller.Snapshot.Conversation?.Conversation.Kind == ConversationKind.Task && !controller.Snapshot.IsLoading);
             Assert.True(AssertOriginalComposer(window).IsEnabled);
@@ -95,7 +106,17 @@ public sealed partial class AssistantOriginalMemoryTests
             var actualConversation = controller.Snapshot.Conversation!;
             Assert.Null(actualConversation.CanonicalTask);
             Assert.Empty(controller.Snapshot.Models); Assert.Empty(actualConversation.Messages);
-            Assert.Equal(2, controller.Snapshot.Conversations.Count);
+            var after = controller.Snapshot.Conversations.ToArray();
+            var added = Assert.Single(after, row => !beforeIds.Contains(row.ConversationId));
+            Assert.Equal(actualConversation.Conversation.Id, added.ConversationId);
+            Assert.Equal(added.ConversationId, controller.Snapshot.ConversationBinding!.Conversation.Id);
+            Assert.Equal(binding.Definition.Identity, controller.Snapshot.ConversationBinding.Definition.Identity);
+            Assert.False(added.IsMain); Assert.False(added.IsOrdinarySecondary); Assert.False(added.IsArchived); Assert.Null(added.CanonicalTask);
+            Assert.Equal(beforeIds.Append(added.ConversationId).OrderBy(id => id), after.Select(row => row.ConversationId).OrderBy(id => id));
+            var retainedMain = Assert.Single(after, row => row.IsMain);
+            Assert.Equal(main.ConversationId, retainedMain.ConversationId); Assert.False(retainedMain.IsArchived); Assert.False(retainedMain.IsOrdinarySecondary);
+            var retainedSeed = Assert.Single(after, row => row.ConversationId == binding.Conversation.Id);
+            Assert.False(retainedSeed.IsMain); Assert.True(retainedSeed.IsOrdinarySecondary); Assert.False(retainedSeed.IsArchived);
             var input = AssertOriginalComposer(window);
             var draft = "Keep this viewport task draft\n" + string.Join("\n", Enumerable.Repeat("A long Task instruction remains editable and saved.", 30));
             input.Text = draft; Assert.True(input.Focus());

@@ -510,7 +510,7 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
                     await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
                     await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
                 }
-                Button Button(string id) => Assert.Single(root.GetVisualDescendants().OfType<Button>(), value => value.Name == id);
+                Button FindButton(string id) => Assert.Single(root.GetVisualDescendants().OfType<Button>(), value => value.Name == id);
                 void InViewport(Control control)
                 {
                     Assert.True(control.IsEffectivelyVisible);
@@ -539,7 +539,7 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
                 scroll.ScrollToEnd(); await Layout(); Assert.True(scroll.Offset.Y > 0);
                 Assert.Equal(footerBounds, new Rect(footer.TranslatePoint(default, window)!.Value, footer.Bounds.Size));
                 foreach (var id in new[] { "assistant-start-task", "assistant-steer", "assistant-queue", "assistant-stop",
-                    "assistant-save-draft", "conversation-refresh-models", "conversation-model-settings", "new-conversation" }) InViewport(Button(id));
+                    "assistant-save-draft", "conversation-refresh-models", "conversation-model-settings", "new-conversation" }) InViewport(FindButton(id));
                 foreach (var name in new[] { "Selected model", "Model availability help" })
                     InViewport(Assert.Single(conversation.GetVisualDescendants().OfType<TextBlock>(), value =>
                         value.IsEffectivelyVisible && AutomationProperties.GetName(value) == name));
@@ -552,10 +552,10 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
                     Assert.Equal(attachment.OriginalName, ToolTip.GetTip(label));
                     Assert.Contains(transcript.GetVisualDescendants().OfType<TextBlock>(), value => value.Text == attachment.ExtractedText);
                 }
-                var toggle = Button("assistant-workspace-toggle"); InViewport(toggle);
+                var toggle = FindButton("assistant-workspace-toggle"); InViewport(toggle);
                 Assert.True(toggle.Focus());
                 toggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await loader.WhenActionsIdleAsync(); await Layout();
-                var close = Button("assistant-workspace-close"); InViewport(close); Assert.True(close.IsFocused);
+                var close = FindButton("assistant-workspace-close"); InViewport(close); Assert.True(close.IsFocused);
                 var buttons = root.GetVisualDescendants().OfType<Button>().Where(value => value.IsEffectivelyVisible && value.Tag as string == "ChooseModel").ToArray();
                 Assert.Equal(2, buttons.Length); Assert.All(buttons, InViewport);
                 var rows = Rows(bindings, "Models");
