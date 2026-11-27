@@ -61,7 +61,7 @@
     <Page OwnsBackdrop="True" Background="{Resource CuiWorkspaceBrush}" id="spaces-page" role="main" accessible-name="Spaces">
       <Container id="spaces-body" Type="Grid" RowSizes="1fr" ColumnSizes="1fr" Interactive="{Binding spaces.canMutate}" Background="{Resource CuiWorkspaceBrush}">
         <Container id="spaces-layout" Type="Grid" RowSizes="66 1fr" ColumnSizes="{Binding spaces.layoutColumns}" CellGap="0" Background="{Resource CuiWorkspaceBrush}">
-          <Container id="space-app-header" Type="Horizontal Stack" Column="1" ColumnSpan="2" Padding="18 12" CellGap="12" Background="{Resource CuiChromeMaterial}" AccessibleName="Current Space">
+          <Container id="space-app-header" Type="Horizontal Stack" Column="1" IsVisible="{Binding spaces.sidebarExpanded}" Padding="18 12" CellGap="12" Background="{Resource CuiChromeMaterial}" AccessibleName="Current Space">
             <Image Source="{Binding selection.iconSource}" Width="28" Height="28" VerticalAlignment="Center" />
             <Text Text="{Binding selection.name}" FontSize="22" FontWeight="750" VerticalAlignment="Center" />
           </Container>
@@ -275,8 +275,8 @@
             and the workspace, including its chat/history sidebar, stay on screen together. The
             summary returns when the workspace retires; nothing here invents a second navigation.
           -->
-          <Container id="space-app-content" Row="1" accessible-name="Space workspace" Type="Overlay" Column="2" IsVisible="{Binding spaces.showWorkspace}" Background="{Resource CuiWorkspaceBrush}" CornerRadius="12" />
-          <Container id="space-details" Row="1" accessible-name="Selected Space" Column="2" Type="Vertical Stack" Padding="28" VerticalScrolling="True" HorizontalScrolling="False" CellGap="14" IsVisible="{Binding spaces.showSummary}">
+          <Container id="space-app-content" Row="0" RowSpan="2" accessible-name="Space workspace" Type="Overlay" Column="2" IsVisible="{Binding spaces.showWorkspace}" Background="{Resource CuiWorkspaceBrush}" CornerRadius="12" />
+          <Container id="space-details" Row="0" RowSpan="2" accessible-name="Selected Space" Column="2" Type="Vertical Stack" Padding="28" VerticalScrolling="True" HorizontalScrolling="False" CellGap="14" IsVisible="{Binding spaces.showSummary}">
             <Text id="spaces-heading" text="Manage Spaces" font-size="24" font-weight="750" IsVisible="{Binding spaces.isManaging}" foreground="{Resource CuiTextBrush}" />
             <!-- While the manager is open over a mounted Space workspace, an explicit Return restores
                  the SAME mounted workspace/chat instance; it never detaches or changes the chat. -->

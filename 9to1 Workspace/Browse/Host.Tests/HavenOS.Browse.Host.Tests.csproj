@@ -21,6 +21,7 @@
     <Compile Include="OverlayChatInitializationTests.cs" />
     <Compile Include="AutomationRunContinuationPersistenceTests.cs" />
     <Compile Include="SpacesConversationRouteTests.cs" />
+    <Compile Include="SpacesResponsiveSidebarTests.cs" />
     <Compile Include="SpacesOrganisationRouteTests.cs" />
     <Compile Include="SpacesQueuedNavigationSupersessionTests.cs" />
     <Compile Include="SpacesSidebarContributionRouteTests.cs" />

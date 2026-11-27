@@ -178,6 +178,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
                 var dispatcher = Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     original.DemandPublication();
+                    ApplyResponsiveSidebarWidth(Bounds.Width);
                     var show = InvokeOriginalSource(() => _host.ShowAsync(new("spaces.home", "Spaces", "Spaces",
                         Document, this, this, _readiness) { ThemePreference = _interfaceTheme, IsPublicationCurrent = () => IsCurrent(generation) }, scope.Token));
                     _exactOriginalShow = show;
@@ -223,6 +224,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         lock (_gate)
         {
             if (!_active || _work.IsRetiring) return;
+            if (!state.SidebarCollapsed) _sidebarAutoCollapsed = false;
             SynchronizeConversationScope();
             generation = _generation;
             _ = RunHomeOriginal(async original =>
@@ -235,8 +237,11 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         }
     }
 
-    private void OnBindingsPropertyChanged(object? sender, PropertyChangedEventArgs args) =>
+    private void OnBindingsPropertyChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        ReconcilePendingSidebarResize();
         PropertyChanged?.Invoke(this, args);
+    }
 
     private bool IsCurrent(long generation)
     { lock (_gate) return !_work.IsRetiring && _active && _generation == generation; }
@@ -244,6 +249,8 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
     public bool TryGetValue(string path, out object? value)
     {
         if (TryGetTaskSidebarValue(path, out value)) return true;
+        if (path == "spaces.layoutColumns")
+        { lock (_gate) value = ResponsiveSidebarColumns; return true; }
         if (path == "spaces.hasOrganisationDestinations")
         { value = _workspaceCommandHost is not null && _controller.State.Selection is { } selection && SupportsOrganisationDestinations(selection.Id); return true; }
         if (path is "spaces.groupsSelected" or "spaces.specialistsSelected")
@@ -488,6 +495,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
                 await original.AwaitAsync(InvokeOriginalSource(() => sidebarHost("spaces.open-sidebar-item", parameter, token, sidebarSettlement))).ConfigureAwait(false);
                 break;
             case "spaces.toggle-sidebar":
+                lock (_gate) _sidebarAutoCollapsed = false;
                 InvokeOriginalSource(_controller.ToggleSidebar);
                 break;
             case "spaces.toggle-space-switcher":
