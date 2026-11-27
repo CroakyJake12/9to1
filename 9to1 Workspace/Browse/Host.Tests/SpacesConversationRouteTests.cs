@@ -588,9 +588,19 @@ public sealed class SpacesConversationRouteTests
             await session.InitializeAsync().WaitAsync(Bound);
             var spaces = Assert.IsType<SpacesHomePage>(Assert.IsType<ContentControl>(session.OriginalNativeView).Content);
             var temporary = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
-            await temporary.SetTemporaryAsync(true).WaitAsync(Bound);
-            Assert.True(temporary.IsTemporary);
             var id = temporary.ConversationId;
+            var temporaryChecks = 0;
+            rig.EnsureMayAct = (conversationId, operation, token) =>
+            {
+                Assert.Equal(id, conversationId);
+                Assert.Equal("chat.temporary-toggle", operation);
+                token.ThrowIfCancellationRequested();
+                Assert.Equal(1, ++temporaryChecks);
+                return Task.CompletedTask;
+            };
+            await temporary.SetTemporaryAsync(true).WaitAsync(Bound);
+            Assert.Equal(1, temporaryChecks);
+            Assert.True(temporary.IsTemporary);
             temporary.SetDraft("Only this Temporary workspace owns this draft");
             var other = await rig.Spaces.CreateAsync("Another Space");
             await spaces.DispatchAsync("spaces.select", other.Id).AsTask().WaitAsync(Bound);
@@ -605,6 +615,7 @@ public sealed class SpacesConversationRouteTests
             Assert.Equal("Only this Temporary workspace owns this draft", temporary.ComposerInput.Text);
             Assert.DoesNotContain(id, rig.Written.Keys);
             Assert.Equal(modelReads, rig.ModelReads);
+            Assert.Equal(1, temporaryChecks);
         }
         finally
         {
@@ -769,10 +780,10 @@ public sealed class SpacesConversationRouteTests
             Assert.Equal(0, rig.ConversationWrites);
             Assert.Equal($"9to1://spaces/chat/{original.Id:D}", session.Address.Value);
 
-            // A fresh chat replaces the published route while the prior owned page stays alive.
+            // Explicit New Chat replaces the published route; ordinary Space Open refocuses it.
             // Retaining that old control's text proves live-page preservation only, not a saved
             // draft or restart guarantee; the existing canonical draft suites own those checks.
-            await spaces.DispatchAsync("spaces.open", SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
+            await spaces.DispatchAsync("spaces.new-chat", SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
             await session.OriginalQueuedNavigation!.WaitAsync(Bound);
             var current = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
             Assert.NotSame(chat, current);
@@ -1037,14 +1048,34 @@ public sealed class SpacesConversationRouteTests
             Assert.False(second.HasSavedConversationRoute);
             Assert.Empty(rig.Written); // Neither blank identity belongs in saved history.
 
-            // Ordinary Space Open exits management only after publishing the new unsaved chat.
-            // The departing non-empty draft commits through the real SQLite repository first.
+            // Ordinary Space Open exits management by restoring the same live workspace.
+            // Refocusing an unsaved draft does not replace it or create a saved history row.
             var secondId = second.ConversationId;
             second.SetDraft("Prior chat draft retained across manager navigation");
-            var writesBeforeFreshOpen = rig.ConversationWrites;
+            var writesBeforeRefocus = rig.ConversationWrites;
+            var modelsBeforeRefocus = rig.ModelReads;
             await spaces.DispatchAsync("spaces.manage", null).AsTask().WaitAsync(Bound);
             Assert.True(spaces.Controller.State.IsManaging);
             await spaces.DispatchAsync("spaces.open", SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
+            Assert.False(spaces.Controller.State.IsManaging);
+            var restored = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            Assert.Same(second, restored);
+            Assert.Equal(secondId, restored.ConversationId);
+            Assert.Equal(SpaceRegistry.ChatSpaceId, restored.CurrentConversation.SpaceId);
+            Assert.Equal("Prior chat draft retained across manager navigation", RouteScene(restored).Input.Text);
+            Assert.False(restored.HasSavedConversationRoute);
+            Assert.DoesNotContain(secondId, rig.Written.Keys);
+            Assert.Equal(writesBeforeRefocus, rig.ConversationWrites);
+            Assert.Equal(modelsBeforeRefocus, rig.ModelReads);
+            Assert.Same(spaces, root.Content);
+
+            // Explicit New Chat still checkpoints the departing non-empty draft through the
+            // real SQLite repository and reveals a distinct new owner after leaving management.
+            var writesBeforeFreshOpen = rig.ConversationWrites;
+            await spaces.DispatchAsync("spaces.manage", null).AsTask().WaitAsync(Bound);
+            Assert.True(spaces.Controller.State.IsManaging);
+            await spaces.DispatchAsync("spaces.new-chat", SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
             await session.OriginalQueuedNavigation!.WaitAsync(Bound);
             Assert.False(spaces.Controller.State.IsManaging);
             var third = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
@@ -1311,6 +1342,7 @@ public sealed class SpacesConversationRouteTests
         internal int TitleReads, RowReads, SpaceHistoryReads;
         internal readonly ChatMessage SavedMessage;
         internal int ConversationWrites, ModelReads;
+        internal Func<Guid, string, CancellationToken, Task>? EnsureMayAct;
         private readonly ServiceProvider _services;
         private readonly SqliteDatabase _storage;
         private readonly ConversationRepository? _persistedConversations;
@@ -1366,8 +1398,14 @@ public sealed class SpacesConversationRouteTests
                 ? Models((CancellationToken)args![0]!) : throw Unexpected(name));
             // Keep raw transport distinct: accidental raw discovery/chat is an unexpected I/O call.
             var ollama = Proxy<IOllamaClient>((name, _) => throw Unexpected("Raw Ollama: " + name));
-            var safety = Proxy<IConversationSafetyService>((name, args) => name == "GetSnapshotAsync"
-                ? Task.FromResult(new ConversationSafetySnapshot((Guid)args![0]!, 0, ConversationSafetyState.Active, null, 0)) : throw Unexpected(name));
+            var safety = Proxy<IConversationSafetyService>((name, args) => name switch
+            {
+                "GetSnapshotAsync" => Task.FromResult(new ConversationSafetySnapshot((Guid)args![0]!, 0, ConversationSafetyState.Active, null, 0)),
+                // Only a test with an explicit original-operation assertion may admit this call.
+                "EnsureMayActAsync" => EnsureMayAct?.Invoke((Guid)args![0]!, (string)args[1]!, (CancellationToken)args[2]!)
+                    ?? throw Unexpected(name),
+                _ => throw Unexpected(name)
+            });
             var instances = new GenUiInstanceStore();
             var services = new ServiceCollection().AddSingleton(new HavenEventBus()).AddSingleton(conversations)
                 .AddSingleton<IProviderModelClient>(routed).AddSingleton<IOllamaClient>(ollama)
