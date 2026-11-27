@@ -25,6 +25,7 @@ internal sealed class AssistantWorkspaceKeyboard : IDisposable
     private Control? _main, _backdrop, _activeOverlay;
     private bool _arranging, _arrangePosted, _disposed;
     private const string BackdropOwner = "Assistant workspace compact backdrop";
+    private const string LayoutOwner = "Assistant responsive work layout";
     private IDisposable? _coveredConversation;
     private int _focusGeneration;
 
@@ -96,21 +97,30 @@ internal sealed class AssistantWorkspaceKeyboard : IDisposable
             var compactNavigation = width > 0 && width <= NavigationCompactWidth;
             _bindings.SetAssistantWorkCompact(compactNavigation);
 
-            var navigationOpen = navigation.IsVisible && _bindings.IsAssistantNavigationOpen;
-            var workspaceOpen = pane.IsVisible && _bindings.VisibleWorkspaceIdentity is not null;
+            var navigationOpen = _bindings.IsAssistantNavigationOpen;
+            var navigationDocked = !compactNavigation && _bindings.HasAssistantWorkRoute;
+            var workspaceOpen = _bindings.VisibleWorkspaceIdentity is not null && !navigationOpen;
             var workspaceSplit = workspaceOpen && width >= WorkspaceSplitMinWidth;
             var workspaceOverlay = workspaceOpen && !workspaceSplit;
-            var centreWidth = Math.Max(0, width - (!compactNavigation && navigation.IsVisible ? NavigationWidth : 0));
+            var centreWidth = Math.Max(0, width - (navigationDocked ? NavigationWidth : 0));
             _activeOverlay = navigationOpen ? navigation : workspaceOverlay ? pane : null;
+            var navigationFocusWillHide = focused is not null &&
+                (compactNavigation && !navigationOpen && focusedInNavigation || !compactNavigation &&
+                    (focusedNavigationToggle || focused.Name is "assistant-navigation-close" or "assistant-navigation-home" or "assistant-navigation-to-workspace"));
 
             // Both panels and the composer remain mounted. Only the compact navigation drawer
             // replaces Workspace; the wide navigation stays available beside a Workspace overlay.
+            // Responsive placement is a CUI overlay, so authored Column values cannot restore a stale Auto lane.
+            // Fixed side lanes keep the centre stable while retained panels are measured, hidden or republished.
+            CuiLayoutProperties.SetLiteral(_layout, "ColumnSizes",
+                FormattableString.Invariant($"{(navigationDocked ? NavigationWidth : 0)} 1fr {(workspaceSplit ? PaneWidth : 0)}"),
+                CuiPropertyLevel.Overlay, LayoutOwner);
+            CuiLayoutProperties.SetLiteral(navigation, "Column", compactNavigation ? "1" : "0", CuiPropertyLevel.Overlay, LayoutOwner);
+            CuiLayoutProperties.SetLiteral(pane, "Column", workspaceSplit ? "2" : "1", CuiPropertyLevel.Overlay, LayoutOwner);
             navigation.HorizontalAlignment = compactNavigation ? HorizontalAlignment.Left : HorizontalAlignment.Stretch;
             navigation.Width = compactNavigation ? Math.Max(0, Math.Min(CompactNavigationWidth, width - BackdropTargetWidth)) : NavigationWidth;
-            Grid.SetColumn(navigation, compactNavigation ? 1 : 0);
             pane.HorizontalAlignment = workspaceOverlay ? HorizontalAlignment.Right : HorizontalAlignment.Stretch;
             pane.Width = workspaceOverlay ? Math.Max(0, Math.Min(PaneWidth, centreWidth - BackdropTargetWidth)) : PaneWidth;
-            Grid.SetColumn(pane, workspaceSplit ? 2 : 1);
             if (navigationOpen) KeyboardNavigation.SetTabNavigation(navigation, KeyboardNavigationMode.Cycle);
             else navigation.ClearValue(KeyboardNavigation.TabNavigationProperty);
             if (workspaceOverlay) KeyboardNavigation.SetTabNavigation(pane, KeyboardNavigationMode.Cycle);
@@ -128,8 +138,9 @@ internal sealed class AssistantWorkspaceKeyboard : IDisposable
             if (_bindings.WorkRouteIdentity is not { } identity) return;
             if (previousOverlay is null && _activeOverlay is not null && focusedInMain)
                 ScheduleDisclosureFocus(identity, navigationOpen ? WorkFocus.NavigationClose : WorkFocus.WorkspaceClose);
-            else if ((focusedInNavigation || focusedNavigationToggle) && focused is not null &&
-                (!focused.IsEffectivelyVisible || !focused.IsEffectivelyEnabled))
+            // Visibility can settle after its native focus is cleared. Use the captured focus and intended
+            // mode, rather than observing IsEffectivelyVisible again after publishing the new disclosure.
+            else if (navigationFocusWillHide)
                 ScheduleDisclosureFocus(identity, navigationOpen ? WorkFocus.NavigationClose : workspaceOverlay ? WorkFocus.WorkspaceClose :
                     compactNavigation ? WorkFocus.NavigationToggle : WorkFocus.Home);
             else if (ReferenceEquals(previousOverlay, navigation) && !navigation.IsVisible && focused is null)
@@ -223,6 +234,11 @@ internal sealed class AssistantWorkspaceKeyboard : IDisposable
             _navigation.PropertyChanged -= OnPaneChanged;
             _navigation.ClearValue(KeyboardNavigation.TabNavigationProperty);
         }
+        if (_layout is not null && CuiPropertyPresentation.TryGetExisting(_layout, out var layoutProperties))
+            layoutProperties?.Remove("ColumnSizes", CuiPropertyLevel.Overlay, LayoutOwner);
+        foreach (var panel in new[] { _navigation, _pane })
+            if (panel is not null && CuiPropertyPresentation.TryGetExisting(panel, out var panelProperties))
+                panelProperties?.Remove("Column", CuiPropertyLevel.Overlay, LayoutOwner);
         _activeOverlay = null;
         _coveredConversation?.Dispose();
         _coveredConversation = null;

@@ -12,7 +12,7 @@
     <Action name="ChooseModel" command="assistants.model.choose" parameter="{Binding model}" />
   </Actions>
   <Page id="assistant-work-page" AccessibleName="Assistant conversation and work" Background="{Resource CuiWorkspaceBrush}">
-    <Container id="assistant-work-layout" Type="Grid" ColumnSizes="Auto 1fr Auto">
+    <Container id="assistant-work-layout" Type="Grid" ColumnSizes="0 1fr 0">
       <Container id="assistant-navigation" Column="0" Type="Grid" RowSizes="Auto 1fr Auto" Padding="12,0,12,14" Background="{Resource CuiPanelBrush}" AccessibleName="Assistant navigation" Layer="2" Active="{Binding ShowAssistantNavigation}">
         <Container Row="0" Type="Grid" ColumnSizes="1fr Auto" MinHeight="62" CellGap="6">
           <Button id="work-home" action="assistants.home" Active="{Binding ShowAssistantHomeShortcut}" Interactive="{Binding CanOpenAssistantHome}" AccessibleName="All assistants" Padding="0" Chromeless="True" HorizontalContentAlignment="Left" FontSize="18" FontWeight="Bold">Assistants</Button>

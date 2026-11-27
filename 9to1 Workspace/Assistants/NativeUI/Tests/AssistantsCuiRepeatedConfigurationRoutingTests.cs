@@ -71,14 +71,18 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
                 var pane = Assert.Single(root.GetVisualDescendants().OfType<CuiContainerControl>(), c => c.Name == "assistant-work-pane");
                 var primary = Assert.Single(root.GetVisualDescendants().OfType<CuiContainerControl>(), c => c.Name == "assistant-work-main");
                 var navigation = Assert.Single(root.GetVisualDescendants().OfType<CuiContainerControl>(), c => c.Name == "assistant-navigation");
-                Assert.Equal(2, Grid.GetColumn(pane));
+                var layout = Assert.Single(root.GetVisualDescendants().OfType<CuiContainerControl>(), c => c.Name == "assistant-work-layout");
+                var grid = Assert.IsType<Grid>(layout.Layout);
+                AssertOwnedWorkColumn(pane, 2);
+                Assert.Equal(218, grid.ColumnDefinitions[0].ActualWidth); Assert.Equal(360, grid.ColumnDefinitions[2].ActualWidth);
                 Assert.Equal(218, navigation.Bounds.Width);
                 Assert.True(primary.Bounds.Width >= 460);
                 Assert.True(primary.IsEffectivelyEnabled);
 
                 window.Width = 940;
                 await Layout();
-                Assert.Equal(1, Grid.GetColumn(pane));
+                AssertOwnedWorkColumn(pane, 1);
+                Assert.Equal(218, grid.ColumnDefinitions[0].ActualWidth); Assert.Equal(0, grid.ColumnDefinitions[2].ActualWidth);
                 Assert.True(navigation.IsEffectivelyVisible); Assert.Equal(218, navigation.Bounds.Width);
                 Assert.True(navigation.IsEffectivelyEnabled); Assert.False(bindings.IsAssistantNavigationOpen);
                 Assert.False(primary.IsEffectivelyEnabled); Assert.True(close.IsFocused);
@@ -90,8 +94,10 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
 
                 window.Width = 500;
                 await Layout();
-                Assert.Equal(1, Grid.GetColumn(pane));
+                AssertOwnedWorkColumn(pane, 1);
                 Assert.Equal(360, pane.Bounds.Width); Assert.False(navigation.IsEffectivelyVisible);
+                Assert.Equal(0, grid.ColumnDefinitions[0].ActualWidth); Assert.Equal(0, grid.ColumnDefinitions[2].ActualWidth);
+                Assert.Equal(window.ClientSize.Width, primary.Bounds.Width);
                 Assert.False(primary.IsEffectivelyEnabled); Assert.False(primary.IsHitTestVisible);
                 Assert.Same(window, TopLevel.GetTopLevel(composer));
                 Assert.True(close.IsFocused); // The previously focused wide navigation is now hidden.
@@ -135,7 +141,7 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
                 await loader.WhenActionsIdleAsync(); await Layout();
                 window.Width = 1038;
                 await Layout();
-                Assert.Equal(2, Grid.GetColumn(pane)); Assert.True(primary.IsEffectivelyEnabled);
+                AssertOwnedWorkColumn(pane, 2); Assert.True(primary.IsEffectivelyEnabled);
                 Assert.True(close.IsFocused); Assert.Equal("Unsent draft", composer.Text);
 
                 window.Width = 500; await Layout(); Assert.False(primary.IsEffectivelyEnabled);
@@ -243,7 +249,7 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
                 Assert.False(Assert.IsType<bool>(otherProperties!.Resolve("Selected").Value));
                 Assert.True(selected.IsEffectivelyEnabled); // Opening this selected Assistant still routes to its protected Main.
                 Assert.Equal(other.Configuration.Name, ToolTip.GetTip(otherButton));
-                Assert.Equal(218, navigation.Bounds.Width); Assert.Equal(0, Grid.GetColumn(navigation));
+                Assert.Equal(218, navigation.Bounds.Width); AssertOwnedWorkColumn(navigation, 0);
                 Assert.False(bindings.IsAssistantNavigationOpen); Assert.Null(bindings.VisibleWorkspaceIdentity);
                 Assert.Null(Visible("assistant-navigation-toggle")); Assert.Null(Visible("assistant-navigation-close"));
                 Assert.Null(Visible("assistant-navigation-to-workspace")); Assert.Null(Visible("assistant-navigation-home"));
@@ -256,11 +262,14 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
 
                 Assert.True(selected.Focus()); window.Width = 750; await Layout();
                 Assert.False(navigation.IsEffectivelyVisible);
-                Assert.True(Visible("assistant-navigation-toggle")!.IsFocused); Retained();
+                Assert.True(Visible("assistant-navigation-toggle")!.IsFocused,
+                    $"The compact Assistants toggle must regain focus; actual={(window.FocusManager?.GetFocusedElement() as Control)?.Name ?? "none"}.");
+                Assert.Equal(window.ClientSize.Width, primary.Bounds.Width); Retained();
                 window.Width = 360; window.Height = 640; await Layout();
                 await Click("assistant-navigation-toggle");
                 Assert.Same(navigation, Assert.Single(root.GetVisualDescendants().OfType<CuiContainerControl>(), c => c.Name == "assistant-navigation"));
-                Assert.Equal(230, navigation.Bounds.Width); Assert.Equal(1, Grid.GetColumn(navigation));
+                Assert.Equal(230, navigation.Bounds.Width); AssertOwnedWorkColumn(navigation, 1);
+                Assert.Equal(window.ClientSize.Width, primary.Bounds.Width);
                 Assert.True(bindings.IsAssistantNavigationOpen); Assert.Null(bindings.VisibleWorkspaceIdentity);
                 Assert.False(primary.IsEffectivelyEnabled); Assert.False(primary.IsHitTestVisible);
                 var close = Assert.IsType<Button>(Visible("assistant-navigation-close")); Assert.True(close.IsFocused); InViewport(close);
@@ -733,6 +742,15 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
         var old = Assert.Single(Rows(bindings, "ConfigurationCapabilityRows")); Assert.True(bindings.TryGetItemValue(old, "Id", out _));
         Assert.True(bindings.TrySetValue("DraftMemoryEnabled", true));
         Assert.Empty(Rows(bindings, "ConfigurationCapabilityRows")); Assert.False(bindings.TryGetItemValue(old, "Id", out _));
+    }
+
+    private static void AssertOwnedWorkColumn(Control control, int expected)
+    {
+        Assert.Equal(expected, Grid.GetColumn(control));
+        Assert.True(CuiPropertyPresentation.TryGetExisting(control, out var properties));
+        var column = properties!.Resolve("Column");
+        Assert.Equal(expected, Assert.IsType<int>(column.Value));
+        Assert.Equal(CuiPropertyLevel.Overlay, column.Level);
     }
 
     private static AssistantsCuiBindings Bindings(List<(string Command, object? Parameter)> calls) =>
