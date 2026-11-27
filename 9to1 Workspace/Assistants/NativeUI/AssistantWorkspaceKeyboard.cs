@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -36,6 +37,7 @@ internal sealed class AssistantWorkspaceKeyboard : IDisposable
         _work.AttachedToVisualTree += OnAttached;
         WireLayout();
         _bindings.WorkDisclosureChanged += OnDisclosureChanged;
+        _bindings.PropertyChanged += OnBindingsChanged;
     }
 
     private void OnAttached(object? sender, VisualTreeAttachmentEventArgs e)
@@ -72,6 +74,17 @@ internal sealed class AssistantWorkspaceKeyboard : IDisposable
             _arrangePosted = false;
             ArrangeWorkspace();
         }, DispatcherPriority.Input);
+    }
+
+    private void OnBindingsChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        // Work is retained while Home/configuration is visible. A route/identity publication
+        // must establish its lanes before the first interaction, even without a size change.
+        if (e.PropertyName is "ShowWork" or "WorkspaceAssistantIdentity")
+        {
+            WireLayout();
+            ArrangeWorkspace();
+        }
     }
 
     private void OnPaneChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
@@ -250,5 +263,6 @@ internal sealed class AssistantWorkspaceKeyboard : IDisposable
                 properties?.Remove("Active", CuiPropertyLevel.Overlay, BackdropOwner);
         }
         _bindings.WorkDisclosureChanged -= OnDisclosureChanged;
+        _bindings.PropertyChanged -= OnBindingsChanged;
     }
 }

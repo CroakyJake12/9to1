@@ -760,6 +760,14 @@ public sealed partial class AssistantsNativeCuiSurface : UserControl, IDisposabl
         catch (Exception failure) { Add(failure); }
         if (controllerClose is not null) await JoinAsync(controllerClose);
         ThrowFailures(); // Actual failed/unknown controller or source keeps its native diagnostic tree.
+        // Retire layout observers before CUI removes native presentation fences. Those removals
+        // can raise visibility changes; no observer may recreate a projection during scene close.
+        var retireWorkspace = Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            using var physical = EnterPhysical();
+            _workspaceKeyboard?.Dispose(); _workspaceKeyboard = null;
+        }).GetTask();
+        await JoinAsync(retireWorkspace); ThrowFailures();
         // Original child hosts settle before their containing Work/Shell trees are released.
         // A failed child keeps its actual containing native tree and custody here.
         for (var index = 0; index < _scenes.Count; index++)
@@ -776,7 +784,6 @@ public sealed partial class AssistantsNativeCuiSurface : UserControl, IDisposabl
         {
             using var physical = EnterPhysical();
             _controller.StateChanged -= OnStateChanged;
-            _workspaceKeyboard?.Dispose(); _workspaceKeyboard = null;
             Content = null;
             _binding = null; _conversation.Clear(); _projectTarget = null; _originalProjectChoice = null; _projectSubmission = null; _projectSubmissionTarget = null;
             _hostRetirement.Dispose(); _viewCancellation.Dispose();

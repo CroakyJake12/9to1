@@ -183,7 +183,7 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
                 new(savedConversation.Id, null, draft, "[]", now), null);
             var snapshot = AssistantsWorkspaceSnapshot.Empty with
             { Revision = 1, SelectedAssistant = assistant, Assistants = catalogue, ConversationBinding = actualBinding, Conversation = data };
-            bindings.ShowWork(); bindings.ApplySnapshot(snapshot); bindings.SetMessages([]);
+            bindings.ShowHome(); bindings.ApplySnapshot(snapshot); bindings.SetMessages([]);
             using var conversationLoader = new CuiControlLoader();
             conversationLoader.RegisterObjectRenderer("AssistantMessage", _ => new CuiMarkdownView());
             conversationLoader.SetBindingContext(bindings); conversationLoader.SetActionDispatcher(bindings);
@@ -223,7 +223,17 @@ public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
                     Assert.True(origin.X >= 0 && origin.Y >= 0 && origin.X + control.Bounds.Width <= window.ClientSize.Width + 1 &&
                         origin.Y + control.Bounds.Height <= window.ClientSize.Height + 1);
                 }
-                await Layout(); Assert.True(composer.Focus());
+                await Layout();
+                var workLayout = Assert.Single(root.GetVisualDescendants().OfType<CuiContainerControl>(), c => c.Name == "assistant-work-layout");
+                var workGrid = Assert.IsType<Grid>(workLayout.Layout);
+                Assert.Equal(0, workGrid.ColumnDefinitions[0].ActualWidth);
+                // The real surface mounts Work while Home is selected, then opens it later at
+                // the same width. Its first frame must already reserve the canonical nav lane.
+                bindings.ShowWork();
+                Assert.Equal(218, workGrid.ColumnDefinitions[0].Width.Value);
+                await Layout();
+                Assert.Equal(218, workGrid.ColumnDefinitions[0].ActualWidth);
+                Assert.True(composer.Focus());
                 composer.CaretIndex = 24; composer.SelectionStart = 12; composer.SelectionEnd = 24;
                 var caret = composer.CaretIndex;
                 void Retained()
