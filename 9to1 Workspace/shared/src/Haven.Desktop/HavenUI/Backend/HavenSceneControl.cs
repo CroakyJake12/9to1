@@ -308,7 +308,10 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
             e.Pointer.Type == PointerType.Touch ? HavenPointerKind.Touch : e.Pointer.Type == PointerType.Pen ? HavenPointerKind.Pen : HavenPointerKind.Mouse,
             ToHavenModifiers(e.KeyModifiers));
         UpdatePointerCursor(p);
-        InvalidateScene();
+        // Hover/state changes invalidate through the retained element subscription. An idle
+        // pointer sample with the same visual state needs no whole-scene repaint. Keep the
+        // legacy fallback while this host owns a captured gesture, including custom canvases.
+        if (ReferenceEquals(e.Pointer.Captured, this)) InvalidateScene();
     }
 
     private HavenCursor? _pointerCursor;
@@ -342,7 +345,7 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
     {
         base.OnPointerExited(e);
         _input?.PointerExited();
-        InvalidateScene();
+        if (ReferenceEquals(e.Pointer.Captured, this)) InvalidateScene();
     }
 
     protected override void OnPointerPressed(PointerPressedEventArgs e)
