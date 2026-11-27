@@ -15,12 +15,15 @@ internal sealed class AssistantWorkspaceKeyboard : IDisposable
 {
     private readonly Control _work;
     private readonly AssistantsCuiBindings _bindings;
-    private const double SplitMinWidth = 820;
+    private const double NavigationCompactWidth = 750;
+    private const double NavigationWidth = 218;
+    private const double CompactNavigationWidth = 230;
+    private const double WorkspaceSplitMinWidth = 1038; // 218px navigation + 360px Workspace + 460px conversation.
     private const double PaneWidth = 360;
     private const double BackdropTargetWidth = 48;
-    private CuiContainerControl? _layout, _pane;
-    private Control? _main, _backdrop;
-    private bool _compactOpen, _arrangePosted, _disposed;
+    private CuiContainerControl? _layout, _pane, _navigation;
+    private Control? _main, _backdrop, _activeOverlay;
+    private bool _arranging, _arrangePosted, _disposed;
     private const string BackdropOwner = "Assistant workspace compact backdrop";
     private IDisposable? _coveredConversation;
     private int _focusGeneration;
@@ -45,13 +48,15 @@ internal sealed class AssistantWorkspaceKeyboard : IDisposable
         if (_layout is not null ||
             Find<CuiContainerControl>("assistant-work-layout") is not { Layout: Grid } layout ||
             layout.AuthoredChildren.OfType<CuiContainerControl>().FirstOrDefault(c => c.Name == "assistant-work-pane") is not { } pane ||
+            layout.AuthoredChildren.OfType<CuiContainerControl>().FirstOrDefault(c => c.Name == "assistant-navigation") is not { } navigation ||
             layout.AuthoredChildren.FirstOrDefault(c => c.Name == "assistant-work-main") is not { } main ||
             layout.AuthoredChildren.FirstOrDefault(c => c.Name == "assistant-workspace-backdrop") is not { } backdrop) return;
 
-        _layout = layout; _pane = pane; _main = main; _backdrop = backdrop;
+        _layout = layout; _pane = pane; _navigation = navigation; _main = main; _backdrop = backdrop;
         backdrop.Tapped += OnBackdropTapped;
         layout.SizeChanged += OnLayoutSizeChanged;
         pane.PropertyChanged += OnPaneChanged;
+        navigation.PropertyChanged += OnPaneChanged;
         ArrangeWorkspace();
     }
 
@@ -75,43 +80,67 @@ internal sealed class AssistantWorkspaceKeyboard : IDisposable
 
     private void ArrangeWorkspace()
     {
-        if (_disposed || _layout?.Layout is not Grid || _main is not { } main || _pane is not { } pane ||
-            _backdrop is not { } backdrop) return;
+        if (_disposed || _arranging || _layout?.Layout is not Grid || _main is not { } main || _pane is not { } pane ||
+            _navigation is not { } navigation || _backdrop is not { } backdrop) return;
 
-        var width = _layout.Bounds.Width;
-        var narrow = width > 0 && width < SplitMinWidth;
-        _bindings.SetAssistantWorkCompact(narrow);
-        var navigation = _bindings.IsAssistantNavigationOpen;
-        var open = pane.IsVisible && (navigation || _bindings.VisibleWorkspaceIdentity is not null);
-        var split = open && !narrow;
-        var compact = open && narrow;
-        var focusWasInMain = compact && !_compactOpen && main.IsKeyboardFocusWithin;
-        _compactOpen = compact;
-
-        // Changes presentation only: keep the same mounted composer, draft, pane and authored actions.
-        // The retained conversation is visible through the scrim but is not pointer- or keyboard-active.
-        if (compact)
-            KeyboardNavigation.SetTabNavigation(pane, KeyboardNavigationMode.Cycle);
-        else
-            pane.ClearValue(KeyboardNavigation.TabNavigationProperty);
-        pane.HorizontalAlignment = compact ? HorizontalAlignment.Right : HorizontalAlignment.Stretch;
-        pane.Width = compact ? Math.Max(0, Math.Min(PaneWidth, _layout.Bounds.Width - BackdropTargetWidth)) : PaneWidth;
-        Grid.SetColumn(pane, split ? 1 : 0);
-        if (compact)
-            _coveredConversation ??= CuiLifecycleProperties.RestrictInteraction(main);
-        else
+        _arranging = true;
+        try
         {
-            _coveredConversation?.Dispose();
-            _coveredConversation = null;
+            var focused = TopLevel.GetTopLevel(_work)?.FocusManager?.GetFocusedElement() as Control;
+            var focusedInNavigation = focused is not null &&
+                (ReferenceEquals(focused, navigation) || focused.GetVisualAncestors().Contains(navigation));
+            var focusedNavigationToggle = ReferenceEquals(focused, Find<Button>("assistant-navigation-toggle"));
+            var focusedInMain = main.IsKeyboardFocusWithin;
+            var previousOverlay = _activeOverlay;
+            var width = _layout.Bounds.Width;
+            var compactNavigation = width > 0 && width <= NavigationCompactWidth;
+            _bindings.SetAssistantWorkCompact(compactNavigation);
+
+            var navigationOpen = navigation.IsVisible && _bindings.IsAssistantNavigationOpen;
+            var workspaceOpen = pane.IsVisible && _bindings.VisibleWorkspaceIdentity is not null;
+            var workspaceSplit = workspaceOpen && width >= WorkspaceSplitMinWidth;
+            var workspaceOverlay = workspaceOpen && !workspaceSplit;
+            var centreWidth = Math.Max(0, width - (!compactNavigation && navigation.IsVisible ? NavigationWidth : 0));
+            _activeOverlay = navigationOpen ? navigation : workspaceOverlay ? pane : null;
+
+            // Both panels and the composer remain mounted. Only the compact navigation drawer
+            // replaces Workspace; the wide navigation stays available beside a Workspace overlay.
+            navigation.HorizontalAlignment = compactNavigation ? HorizontalAlignment.Left : HorizontalAlignment.Stretch;
+            navigation.Width = compactNavigation ? Math.Max(0, Math.Min(CompactNavigationWidth, width - BackdropTargetWidth)) : NavigationWidth;
+            Grid.SetColumn(navigation, compactNavigation ? 1 : 0);
+            pane.HorizontalAlignment = workspaceOverlay ? HorizontalAlignment.Right : HorizontalAlignment.Stretch;
+            pane.Width = workspaceOverlay ? Math.Max(0, Math.Min(PaneWidth, centreWidth - BackdropTargetWidth)) : PaneWidth;
+            Grid.SetColumn(pane, workspaceSplit ? 2 : 1);
+            if (navigationOpen) KeyboardNavigation.SetTabNavigation(navigation, KeyboardNavigationMode.Cycle);
+            else navigation.ClearValue(KeyboardNavigation.TabNavigationProperty);
+            if (workspaceOverlay) KeyboardNavigation.SetTabNavigation(pane, KeyboardNavigationMode.Cycle);
+            else pane.ClearValue(KeyboardNavigation.TabNavigationProperty);
+
+            if (_activeOverlay is not null)
+                _coveredConversation ??= CuiLifecycleProperties.RestrictInteraction(main);
+            else
+            {
+                _coveredConversation?.Dispose();
+                _coveredConversation = null;
+            }
+            CuiLifecycleProperties.SetLiteral(backdrop, "Active", _activeOverlay is not null ? "True" : "False", CuiPropertyLevel.Overlay, BackdropOwner);
+
+            if (_bindings.WorkRouteIdentity is not { } identity) return;
+            if (previousOverlay is null && _activeOverlay is not null && focusedInMain)
+                ScheduleDisclosureFocus(identity, navigationOpen ? WorkFocus.NavigationClose : WorkFocus.WorkspaceClose);
+            else if ((focusedInNavigation || focusedNavigationToggle) && focused is not null &&
+                (!focused.IsEffectivelyVisible || !focused.IsEffectivelyEnabled))
+                ScheduleDisclosureFocus(identity, navigationOpen ? WorkFocus.NavigationClose : workspaceOverlay ? WorkFocus.WorkspaceClose :
+                    compactNavigation ? WorkFocus.NavigationToggle : WorkFocus.Home);
+            else if (ReferenceEquals(previousOverlay, navigation) && !navigation.IsVisible && focused is null)
+                ScheduleDisclosureFocus(identity, workspaceOverlay ? WorkFocus.WorkspaceClose : WorkFocus.NavigationToggle);
         }
-        CuiLifecycleProperties.SetLiteral(backdrop, "Active", compact ? "True" : "False", CuiPropertyLevel.Overlay, BackdropOwner);
-        if (focusWasInMain && _bindings.WorkRouteIdentity is { } identity)
-            ScheduleDisclosureFocus(identity, navigation ? WorkFocus.NavigationClose : WorkFocus.WorkspaceClose);
+        finally { _arranging = false; }
     }
 
     private void OnBackdropTapped(object? sender, TappedEventArgs e)
     {
-        if (e.Handled || !_compactOpen || !ReferenceEquals(sender, _backdrop) ||
+        if (e.Handled || _activeOverlay is null || !ReferenceEquals(sender, _backdrop) ||
             _bindings.WorkRouteIdentity is not { } identity) return;
 
         e.Handled = CloseActivePane(identity);
@@ -184,7 +213,17 @@ internal sealed class AssistantWorkspaceKeyboard : IDisposable
         _work.KeyDown -= OnWorkKeyDown;
         _work.AttachedToVisualTree -= OnAttached;
         if (_layout is not null) _layout.SizeChanged -= OnLayoutSizeChanged;
-        if (_pane is not null) _pane.PropertyChanged -= OnPaneChanged;
+        if (_pane is not null)
+        {
+            _pane.PropertyChanged -= OnPaneChanged;
+            _pane.ClearValue(KeyboardNavigation.TabNavigationProperty);
+        }
+        if (_navigation is not null)
+        {
+            _navigation.PropertyChanged -= OnPaneChanged;
+            _navigation.ClearValue(KeyboardNavigation.TabNavigationProperty);
+        }
+        _activeOverlay = null;
         _coveredConversation?.Dispose();
         _coveredConversation = null;
         if (_backdrop is not null)

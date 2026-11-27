@@ -430,24 +430,30 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
         _compactNavigationIdentity == identity;
     internal AssistantIdentity? VisibleWorkspaceIdentity => WorkRouteIdentity is { } identity &&
         _openAssistantWorkspaces.Contains(identity) ? identity : null;
-    internal AssistantIdentity? WorkRouteIdentity => _route == "work" && Current && !_unavailable && !_snapshot.IsRetiring
-        ? _snapshot.SelectedAssistant?.Identity : null;
+    internal bool HasAssistantWorkRoute => _route == "work" && Current && !_unavailable && !_snapshot.IsRetiring;
+    internal AssistantIdentity? WorkRouteIdentity => HasAssistantWorkRoute ? _snapshot.SelectedAssistant?.Identity : null;
 
     internal void SetAssistantWorkCompact(bool compact)
     {
         if (_compactWork == compact) return;
-        var closing = IsAssistantNavigationOpen && !compact ? WorkRouteIdentity : null;
         _compactWork = compact;
         if (!compact) _compactNavigationIdentity = null;
+        // The retained native layout restores focus only if the old focused control becomes hidden.
         PublishAssistantWorkspace();
-        if (closing is not null) WorkDisclosureChanged?.Invoke(closing, AssistantWorkFocus.Home);
     }
 
     internal void DismissAssistantNavigationAfterOpen()
     {
-        if (_compactNavigationIdentity is null) return;
-        _compactNavigationIdentity = null;
-        PublishAssistantWorkspace();
+        if (_compactNavigationIdentity is not null)
+        {
+            _compactNavigationIdentity = null;
+            PublishAssistantWorkspace();
+        }
+        // A successful original open may first publish a null selection, which already hides the drawer.
+        // Restore focus for the newly acknowledged identity through the same disclosure owner.
+        if (_compactWork && WorkRouteIdentity is { } identity)
+            WorkDisclosureChanged?.Invoke(identity, VisibleWorkspaceIdentity is not null
+                ? AssistantWorkFocus.WorkspaceClose : AssistantWorkFocus.NavigationToggle);
     }
 
     private void PublishAssistantWorkspace()
@@ -463,11 +469,19 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
         Set("CanOpenAssistantHome", IsActionAvailable("assistants.home") == true);
         Set("ShowAssistantNavigationToggle", _compactWork && canToggle);
         Set("ShowAssistantHomeShortcut", !_compactWork);
+        // The left list persists on wide layouts; only an explicitly open compact drawer replaces Workspace.
         // Publish the old panel inactive before publishing the replacement active.
-        if (navigation) Set("ShowAssistantWorkspace", false);
-        Set("ShowAssistantNavigation", navigation);
-        if (!navigation) Set("ShowAssistantWorkspace", open);
-        Set("ShowAssistantWorkPane", open || navigation);
+        if (navigation)
+        {
+            Set("ShowAssistantWorkspace", false);
+            Set("ShowAssistantWorkPane", false);
+        }
+        Set("ShowAssistantNavigation", HasAssistantWorkRoute && (!_compactWork || navigation));
+        if (!navigation)
+        {
+            Set("ShowAssistantWorkspace", open);
+            Set("ShowAssistantWorkPane", open);
+        }
         Set("AssistantWorkspaceToggleLabel", open ? "Close workspace" : "Workspace");
     }
 

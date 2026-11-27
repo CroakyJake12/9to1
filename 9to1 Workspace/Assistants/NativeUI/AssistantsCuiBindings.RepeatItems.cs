@@ -32,9 +32,10 @@ public sealed partial class AssistantsCuiBindings
                     "AvatarLabel" => row.AvatarLabel,
                     "ActivityLabel" => row.ActivityLabel,
                     "CanOpen" => row.CanOpen,
+                    "IsSelected" => row.Identity == _snapshot.SelectedAssistant?.Identity,
                     _ => null
                 };
-                return path is "Id" or "Name" or "Description" or "AvatarKey" or "AvatarLabel" or "ActivityLabel" or "CanOpen";
+                return path is "Id" or "Name" or "Description" or "AvatarKey" or "AvatarLabel" or "ActivityLabel" or "CanOpen" or "IsSelected";
             case ConversationRow row when ContainsOriginalRow(row, "RecentConversations", "SelectedConversations"):
                 value = path switch
                 {

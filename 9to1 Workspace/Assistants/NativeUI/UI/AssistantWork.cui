@@ -12,11 +12,31 @@
     <Action name="ChooseModel" command="assistants.model.choose" parameter="{Binding model}" />
   </Actions>
   <Page id="assistant-work-page" AccessibleName="Assistant conversation and work" Background="{Resource CuiWorkspaceBrush}">
-    <Container id="assistant-work-layout" Type="Grid" ColumnSizes="1fr Auto">
-      <Container id="assistant-work-main" Type="Grid" RowSizes="Auto 1fr Auto">
+    <Container id="assistant-work-layout" Type="Grid" ColumnSizes="Auto 1fr Auto">
+      <Container id="assistant-navigation" Column="0" Type="Grid" RowSizes="Auto 1fr Auto" Padding="12,0,12,14" Background="{Resource CuiPanelBrush}" AccessibleName="Assistant navigation" Layer="2" Active="{Binding ShowAssistantNavigation}">
+        <Container Row="0" Type="Grid" ColumnSizes="1fr Auto" MinHeight="62" CellGap="6">
+          <Button id="work-home" action="assistants.home" Active="{Binding ShowAssistantHomeShortcut}" Interactive="{Binding CanOpenAssistantHome}" AccessibleName="All assistants" Padding="0" Chromeless="True" HorizontalContentAlignment="Left" FontSize="18" FontWeight="Bold">Assistants</Button>
+          <Text Text="Assistants" Active="{Binding ShowAssistantNavigationToggle}" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" />
+          <Button id="assistant-navigation-close" Column="1" action="CloseAssistantNavigation" Active="{Binding ShowAssistantNavigationToggle}" AccessibleName="Close assistants" Padding="8,6" Chromeless="True">Close</Button>
+        </Container>
+        <Container id="assistant-navigation-list" Row="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" MinHeight="0" CellGap="4" AccessibleName="Your Assistants">
+          <Repeat Source="{Binding Assistants}" As="assistant" Key="{Binding assistant.Id}">
+            <Button action="OpenAssistant" AccessibleName="{Binding assistant.Name}" AccessibleDescription="{Binding assistant.ActivityLabel}" Tooltip="{Binding assistant.Name}" Interactive="{Binding assistant.CanOpen}" Selected="{Binding assistant.IsSelected}" HorizontalContentAlignment="Stretch" Padding="10,7" MinHeight="44" CornerRadius="12" Margin="0,3" FontSize="13" FontWeight="SemiBold">
+              <Container Type="Grid" ColumnSizes="29 1fr" CellGap="10">
+                <Object Type="AssistantAvatar" Text="{Binding assistant.AvatarKey}" Width="29" Height="29" AccessibleName="{Binding assistant.AvatarLabel}" />
+                <Text Column="1" Text="{Binding assistant.Name}" FontSize="13" FontWeight="SemiBold" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+              </Container>
+            </Button>
+          </Repeat>
+        </Container>
+        <Container Row="2" Type="Vertical Stack" CellGap="6" Active="{Binding ShowAssistantNavigationToggle}">
+          <Button id="assistant-navigation-to-workspace" action="ToggleAssistantWorkspace" Interactive="{Binding CanToggleAssistantWorkspace}">Show workspace</Button>
+          <Button id="assistant-navigation-home" action="assistants.home" Interactive="{Binding CanOpenAssistantHome}">All assistants</Button>
+        </Container>
+      </Container>
+      <Container id="assistant-work-main" Column="1" Type="Grid" RowSizes="Auto 1fr Auto" Layer="0">
         <Container id="assistant-identity-bar" Row="0" Type="Grid" ColumnSizes="Auto 1fr Auto" MinHeight="62" Padding="16,12" CellGap="12" Background="{Resource CuiPanelBrush}">
           <Container Type="Wrap" CellGap="6" VerticalAlignment="Center" AccessibleName="Assistant actions">
-            <Button id="work-home" action="assistants.home" Active="{Binding ShowAssistantHomeShortcut}" Interactive="{Binding CanOpenAssistantHome}" AccessibleName="All assistants" Padding="10,7" Chromeless="True">Back</Button>
             <Button id="assistant-navigation-toggle" action="OpenAssistantNavigation" Active="{Binding ShowAssistantNavigationToggle}" Interactive="{Binding CanOpenAssistantNavigation}" AccessibleName="Show assistants" Padding="10,7" Chromeless="True">Assistants</Button>
           </Container>
           <Container Column="1" Type="Grid" AccessibleName="Assistant identity" ColumnSizes="34 1fr" CellGap="10" VerticalAlignment="Center">
@@ -34,8 +54,8 @@
           <Text Text="{Binding Error}" FontSize="13" TextWrapping="Wrap" AccessibleName="Assistant work error" Active="{Binding HasError}" />
         </Container>
       </Container>
-      <Container id="assistant-workspace-backdrop" Type="Vertical Stack" Active="False" Background="#80000000" />
-      <Container id="assistant-work-pane" Type="Vertical Stack" VerticalScrolling="True" Padding="20" Background="{Resource CuiPanelBrush}" AccessibleName="Assistant side pane" CellGap="12" Active="{Binding ShowAssistantWorkPane}">
+      <Container id="assistant-workspace-backdrop" Column="1" Type="Vertical Stack" Active="False" Background="#80000000" Layer="1" />
+      <Container id="assistant-work-pane" Column="2" Layer="2" Type="Vertical Stack" VerticalScrolling="True" Padding="20" Background="{Resource CuiPanelBrush}" AccessibleName="Assistant side pane" CellGap="12" Active="{Binding ShowAssistantWorkPane}">
         <Container id="assistant-workspace" Type="Vertical Stack" AccessibleName="Assistant workspace" CellGap="12" Active="{Binding ShowAssistantWorkspace}">
           <Container Type="Wrap" CellGap="8">
             <Text FontSize="18" FontWeight="SemiBold">Workspace</Text>
@@ -109,23 +129,6 @@
             <Button id="assistant-restore" action="assistants.restore" Margin="0,0,8,8" Interactive="{Binding CanRestore}" Active="{Binding ShowRestoreAssistant}">Restore Assistant</Button>
             <Button action="assistants.delete.review" Margin="0,0,8,8" Interactive="{Binding CanDelete}">Delete…</Button>
           </Container>
-        </Container>
-        <Container id="assistant-navigation" Type="Vertical Stack" AccessibleName="Assistant navigation" CellGap="12" Active="{Binding ShowAssistantNavigation}">
-          <Container Type="Wrap" CellGap="8">
-            <Text FontSize="18" FontWeight="SemiBold">Assistants</Text>
-            <Button id="assistant-navigation-close" action="CloseAssistantNavigation">Close assistants</Button>
-            <Button id="assistant-navigation-to-workspace" action="ToggleAssistantWorkspace" Interactive="{Binding CanToggleAssistantWorkspace}">Show workspace</Button>
-          </Container>
-          <Repeat Source="{Binding Assistants}" As="assistant" Key="{Binding assistant.Id}">
-            <Container Type="Grid" ColumnSizes="32 1fr" CellGap="10" Padding="8" Margin="0,0,0,6">
-              <Object Type="AssistantAvatar" Text="{Binding assistant.AvatarKey}" Width="32" Height="32" AccessibleName="{Binding assistant.AvatarLabel}" />
-              <Container Column="1" Type="Vertical Stack" CellGap="4">
-                <Button action="OpenAssistant" Text="{Binding assistant.Name}" AccessibleName="{Binding assistant.Name}" Interactive="{Binding assistant.CanOpen}" HorizontalAlignment="Left" Padding="0" Chromeless="True" FontWeight="SemiBold" />
-                <Text Text="{Binding assistant.ActivityLabel}" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" />
-              </Container>
-            </Container>
-          </Repeat>
-          <Button id="assistant-navigation-home" action="assistants.home" Interactive="{Binding CanOpenAssistantHome}">All assistants</Button>
         </Container>
       </Container>
     </Container>
