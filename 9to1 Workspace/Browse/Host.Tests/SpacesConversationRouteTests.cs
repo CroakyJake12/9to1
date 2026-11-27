@@ -954,6 +954,162 @@ public sealed class SpacesConversationRouteTests
         if (failures.Count > 1) throw new AggregateException("Spaces manager navigation and independent cleanup failed.", failures);
     }
 
+    [AvaloniaFact]
+    public Task Initial_sidebar_publication_reads_history_and_extension_contributions_once() =>
+        WithSidebarReadSessionAsync((rig, _, page, extensionReads) =>
+        {
+            Assert.Equal(1, Volatile.Read(ref rig.SpaceHistoryReads));
+            Assert.Equal(1, extensionReads());
+            var history = Assert.Single(SidebarHistory(page));
+            Assert.Equal(rig.Row!.Id, history.Id);
+            Assert.True(history.IsCurrent);
+            var contribution = Assert.Single(SidebarContributions(page));
+            Assert.Equal("initial-tool", contribution.SidebarItemId);
+            Assert.Equal("sidebar.read-test", contribution.OwnerPackageId);
+            Assert.True(contribution.IsActionable);
+            return Task.CompletedTask;
+        });
+
+    [AvaloniaFact]
+    public Task Presentation_only_states_retain_history_and_issue_no_sidebar_reads() =>
+        WithSidebarReadSessionAsync(async (rig, session, page, extensionReads) =>
+        {
+            var selection = page.Controller.State.Selection;
+            var history = SidebarHistory(page);
+            var contributions = SidebarContributions(page);
+            var intent = IssuedHistoryTarget(page, rig.Row!.Id);
+            var mounted = page.SpaceWorkspaceContent;
+            var address = session.Address;
+            Action[] presentationChanges =
+            [
+                page.Controller.ToggleSidebar, page.Controller.ToggleSidebar,
+                page.Controller.ToggleSpaceSwitcher, page.Controller.ToggleSpaceSwitcher,
+                page.Controller.ToggleSpaceOverflow, page.Controller.ToggleSpaceOverflow,
+                page.Controller.ToggleManage, page.Controller.CloseManage,
+                () => page.Controller.SetQuery("Sidebar"), () => page.Controller.SetQuery(""),
+                () => page.Controller.SetRenameDraft("Unapplied name"), () => page.Controller.SetRenameDraft("")
+            ];
+            foreach (var change in presentationChanges)
+            {
+                change();
+                await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.SystemIdle);
+            }
+            // Let pool work from a regression in the notification path reach the dispatcher.
+            await Task.Delay(50);
+            await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.SystemIdle);
+
+            Assert.Same(selection, page.Controller.State.Selection);
+            Assert.Equal(1, Volatile.Read(ref rig.SpaceHistoryReads));
+            Assert.Equal(1, extensionReads());
+            Assert.Same(history, SidebarHistory(page));
+            Assert.Same(contributions, SidebarContributions(page));
+            Assert.Same(intent, IssuedHistoryTarget(page, rig.Row.Id));
+            Assert.Same(mounted, page.SpaceWorkspaceContent);
+            Assert.Equal(address, session.Address);
+            Assert.Equal(0, rig.ConversationWrites);
+        });
+
+    [AvaloniaFact]
+    public Task New_selection_snapshot_of_same_space_refreshes_both_sidebar_sources_once() =>
+        WithSidebarReadSessionAsync(async (rig, _, page, extensionReads) =>
+        {
+            var initialSelection = page.Controller.State.Selection;
+            var initialContributions = SidebarContributions(page);
+            var added = rig.Row! with { Id = Guid.NewGuid(), Title = "Newly saved conversation" };
+            rig.Written.Add(added.Id, added);
+            var published = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            System.ComponentModel.PropertyChangedEventHandler changed = (_, _) =>
+            {
+                if (SidebarHistory(page).Any(row => row.Id == added.Id) && extensionReads() == 2 &&
+                    !ReferenceEquals(initialContributions, SidebarContributions(page)))
+                    published.TrySetResult();
+            };
+            page.PropertyChanged += changed;
+            try
+            {
+                await page.Controller.LoadAsync().WaitAsync(Bound);
+                await published.Task.WaitAsync(Bound);
+                Assert.NotSame(initialSelection, page.Controller.State.Selection);
+                Assert.Equal(initialSelection!.Id, page.Controller.State.Selection!.Id);
+                Assert.Equal(2, Volatile.Read(ref rig.SpaceHistoryReads));
+                Assert.Equal(2, extensionReads());
+                Assert.Contains(SidebarHistory(page), row => row.Id == added.Id);
+
+                // Explicit history refresh still reads the canonical store without a selection change.
+                await page.RefreshConversationsAsync().WaitAsync(Bound);
+                Assert.Equal(3, Volatile.Read(ref rig.SpaceHistoryReads));
+                Assert.Equal(2, extensionReads());
+            }
+            finally { page.PropertyChanged -= changed; }
+        });
+
+    private static IReadOnlyList<HistoryRow> SidebarHistory(SpacesHomePage page)
+    {
+        Assert.True(page.TryGetValue("spaces.conversations", out var rows));
+        return Assert.IsAssignableFrom<IReadOnlyList<HistoryRow>>(rows);
+    }
+
+    private static IReadOnlyList<SpacesHomeSidebarRow> SidebarContributions(SpacesHomePage page)
+    {
+        Assert.True(page.TryGetValue("spaces.sidebarItems", out var rows));
+        return Assert.IsAssignableFrom<IReadOnlyList<SpacesHomeSidebarRow>>(rows);
+    }
+
+    private static async Task WithSidebarReadSessionAsync(
+        Func<Rig, SpacesBrowseAppContentSession, SpacesHomePage, Func<int>, Task> verify)
+    {
+        var manifest = new ExtensionPackageManifest("sidebar.read-test", "/extensions/sidebar.read-test", "Sidebar reads",
+            ExtensionPackageType.Plugin, "1.0.0", ">=1.0.0", "Sidebar read fixture", "9to1", "9to1",
+            null, null, ExtensionPermission.None, [], [], [], null)
+        {
+            SidebarContributions = [new ExtensionSidebarContribution("initial-tool", "Initial tool", "tool",
+                ExtensionSidebarTargetKind.Page, "https://example.com/tool")]
+        };
+        IReadOnlyList<InstalledExtensionPackage> packages =
+        [
+            new(Guid.NewGuid(), Guid.NewGuid(), manifest, "/extensions/sidebar.read-test",
+                ExtensionPermission.None, ExtensionInstallState.Installed, true, false, "sha256:fixture",
+                DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch)
+        ];
+        var extensionReads = 0;
+        using var rig = new Rig(withHome: true, getInstalledAsync: token =>
+        {
+            token.ThrowIfCancellationRequested();
+            Interlocked.Increment(ref extensionReads);
+            return Task.FromResult(packages);
+        });
+        var failures = new List<Exception>();
+        SpacesBrowseAppContentSession? session = null;
+        try
+        {
+            var space = await rig.Spaces.CreateAsync("Sidebar read fixture");
+            await rig.Spaces.UpdateAsync(space with
+            {
+                CapabilityBindings = [new SpaceCapabilityBinding(manifest.PackageId, SpaceCapabilityKind.Plugin,
+                    SpaceCapabilityOverride.Inherit)]
+            }, CancellationToken.None);
+            rig.Row = rig.Row! with { SpaceId = space.Id };
+            await rig.Home!.StartOriginalAsync().WaitAsync(Bound);
+            var actor = await rig.Home.Profiles.GetCurrentAsync(CancellationToken.None);
+            Assert.NotNull(actor);
+            session = rig.Session($"9to1://spaces/selected/{space.Id:D}/chat/{rig.Row.Id:D}",
+                profileId: actor.ProfileId, queueNavigation: (_, _) => true);
+            await session.InitializeAsync().WaitAsync(Bound);
+            var page = Assert.IsType<SpacesHomePage>(Assert.IsType<ContentControl>(session.OriginalNativeView).Content);
+            await verify(rig, session, page, () => Volatile.Read(ref extensionReads));
+        }
+        catch (Exception failure) { failures.Add(failure); }
+        finally
+        {
+            try { if (session is not null) await CloseSettledRouteAsync(session); }
+            catch (Exception failure) { failures.Add(failure); }
+            try { await rig.Home!.CloseAndDrainAsync().WaitAsync(Bound); }
+            catch (Exception failure) { failures.Add(failure); }
+        }
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1) throw new AggregateException("Sidebar read projection and independent cleanup failed.", failures);
+    }
+
     internal static SpacesHomePage.ConversationOpenIntent IssuedHistoryTarget(SpacesHomePage page, Guid id)
     {
         Assert.True(page.TryGetValue("spaces.conversations", out var projection));
@@ -986,7 +1142,7 @@ public sealed class SpacesConversationRouteTests
         internal Func<Guid, Task<IReadOnlyList<ChatMessage>>>? ReadMessages;
         internal Func<Guid, CancellationToken, Task<Conversation?>>? ReadConversation;
         internal Func<Guid, string, int, CancellationToken, Task<IReadOnlyList<Conversation>>>? FindTitles;
-        internal int TitleReads, RowReads;
+        internal int TitleReads, RowReads, SpaceHistoryReads;
         internal readonly ChatMessage SavedMessage;
         internal int ConversationWrites, ModelReads;
         private readonly ServiceProvider _services;
@@ -1027,11 +1183,7 @@ public sealed class SpacesConversationRouteTests
                 "FindSavedTitlesBySpaceAsync" => FindOriginalTitlesAsync((Guid)args![0]!, (string)args[1]!, (int)args[2]!, (CancellationToken)args[3]!),
                 // The contextual Space sidebar reads the selected Space's own conversations. The
                 // fixture still controls all I/O: a row only appears under the Space it names.
-                "GetBySpaceAsync" => _persistedConversations?.GetBySpaceAsync((Guid)args![0]!, (int)args[1]!, (CancellationToken)args[2]!)
-                    ?? Task.FromResult<IReadOnlyList<Conversation>>(
-                        Written.Values.Where(row => row.SpaceId == (Guid)args![0]!).Concat(
-                            Row is { } scoped && scoped.SpaceId == (Guid)args![0]! && !Written.ContainsKey(scoped.Id)
-                                ? [scoped] : Array.Empty<Conversation>()).ToArray()),
+                "GetBySpaceAsync" => ReadOriginalSpaceHistoryAsync((Guid)args![0]!, (int)args[1]!, (CancellationToken)args[2]!),
                 "GetMessagesAsync" => ReadMessages?.Invoke((Guid)args![0]!)
                     ?? _persistedConversations?.GetMessagesAsync((Guid)args![0]!, (CancellationToken)args[1]!)
                     ?? Task.FromResult<IReadOnlyList<ChatMessage>>([SavedMessage with { ConversationId = (Guid)args![0]! }]),
@@ -1115,6 +1267,15 @@ public sealed class SpacesConversationRouteTests
             var draft = await _drafts.GetDraftAsync(conversationId, branch.Id, CancellationToken.None);
             Assert.NotNull(draft);
             return draft;
+        }
+        private Task<IReadOnlyList<Conversation>> ReadOriginalSpaceHistoryAsync(Guid spaceId, int limit, CancellationToken token)
+        {
+            Interlocked.Increment(ref SpaceHistoryReads);
+            return _persistedConversations?.GetBySpaceAsync(spaceId, limit, token)
+                ?? Task.FromResult<IReadOnlyList<Conversation>>(
+                    Written.Values.Where(row => row.SpaceId == spaceId).Concat(
+                        Row is { } scoped && scoped.SpaceId == spaceId && !Written.ContainsKey(scoped.Id)
+                            ? [scoped] : Array.Empty<Conversation>()).ToArray());
         }
         private Task<Conversation?> ReadOriginalRowAsync(Guid id, CancellationToken token)
         {

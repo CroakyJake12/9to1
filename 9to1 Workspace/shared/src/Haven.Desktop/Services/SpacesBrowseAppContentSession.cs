@@ -82,6 +82,8 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     private readonly ContentControl _root = new();
     private SpacesHomePage? _spacesPage;
     private Action<SpacesHomeViewState>? _stateChangedHandlerSpaces;
+    private SpacesHomeSelection? _observedSidebarSelection;
+    private bool _sidebarSelectionObservationStarted;
     private NewChatPage? _chatPage;
     // Published only after the UI owner actually installs this exact Chat page.
     // Controller notifications may arrive on a pool thread; they consume this
@@ -283,7 +285,17 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 // cancellation / failure custody), and it never waits for a later presentation toggle,
                 // a detached fire-and-forget read, a forced manager open or a second repository. It
                 // reads the current controller selection, which after restore is the restored Space.
+                lock (_gate)
+                {
+                    token.ThrowIfCancellationRequested();
+                    DemandAlive();
+                    _observedSidebarSelection = page.Controller.State.Selection;
+                    _sidebarSelectionObservationStarted = true;
+                }
                 await RefreshSpacesConversationsAsync(token);
+                // Extension contributions belong to the same admitted initial selection. Join their
+                // first read here so a later presentation toggle never has to initialize the sidebar.
+                await page.RefreshSidebarItemsAsync(token);
             }
             catch (Exception initializationFailure)
             {
@@ -522,15 +534,19 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             }
             return;
         }
+        bool selectionChanged;
         lock (_gate)
         {
             if (_closing || !_published || !ReferenceEquals(_spacesPage?.Controller.State, state)) return;
             UpdateAddress(state.Selection?.Id);
+            // A new snapshot of the same Space still changes the history authority context.
+            // Presentation-only states retain the exact selection and need no store reads.
+            selectionChanged = _sidebarSelectionObservationStarted &&
+                !ReferenceEquals(_observedSidebarSelection, state.Selection);
+            if (selectionChanged) _observedSidebarSelection = state.Selection;
         }
         PublishStateChanged();
-        // The contextual sidebar follows the selected Space, so its recent conversations are
-        // re-read from the real store whenever the selection publishes.
-        ObserveSpacesSelectionChange();
+        if (selectionChanged) ObserveSpacesSelectionChange();
     }
 
     private void UpdateAddress(Guid? selectedSpaceId)
