@@ -22,11 +22,14 @@ public sealed class Markdown : Container
     private static readonly Regex TaskList = new("^\\s*[-*+]\\s+\\[([ xX])\\]\\s+(.+)$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
     private static readonly Regex BulletList = new("^\\s*[-*+]\\s+(.+)$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
     private string _content = string.Empty;
+    private readonly List<Text> _bodyParagraphs = [];
 
     public Markdown()
     {
         Layout = HavenLayout.Vertical;
         SetValue(HavenProperties.Gap, HavenLength.Px(8), HavenValueSource.Default);
+        SetValue(HavenProperties.FontSize, 14d, HavenValueSource.Default);
+        SetValue(HavenProperties.FontWeight, 500, HavenValueSource.Default);
         Accessibility.Role = HavenAccessibleRole.Group;
     }
 
@@ -51,10 +54,24 @@ public sealed class Markdown : Container
         [],
         "Block markdown expands into canonical 9to1 elements; code actions are semantic events rather than platform controls.");
 
+    protected internal override HavenInvalidationKinds ClassifyValueChange(HavenProperty property)
+    {
+        if (ReferenceEquals(property, HavenProperties.FontSize) || ReferenceEquals(property, HavenProperties.FontWeight))
+        {
+            // Generated paragraphs own their typography explicitly, just as other Markdown blocks
+            // do. Project the effective owner value without rebuilding content or its code actions.
+            foreach (var paragraph in _bodyParagraphs.ToArray())
+                if (ReferenceEquals(paragraph.Parent, this))
+                    paragraph.SetValue(property, GetValue(property), HavenValueSource.Explicit);
+        }
+        return base.ClassifyValueChange(property);
+    }
+
     private void Rebuild()
     {
         Update(() =>
         {
+            _bodyParagraphs.Clear();
             foreach (var child in Children.ToArray()) Remove(child);
             var text = _content.ReplaceLineEndings("\n");
             if (text.Length == 0) return;
@@ -140,7 +157,10 @@ public sealed class Markdown : Container
     private void FlushParagraph(List<string> paragraph)
     {
         if (paragraph.Count == 0) return;
-        Add(TextBlock(FlattenInline(string.Join("\n", paragraph)), 14, 500));
+        var text = TextBlock(FlattenInline(string.Join("\n", paragraph)),
+            GetValue(HavenProperties.FontSize), GetValue(HavenProperties.FontWeight));
+        _bodyParagraphs.Add(text);
+        Add(text);
         paragraph.Clear();
     }
 
