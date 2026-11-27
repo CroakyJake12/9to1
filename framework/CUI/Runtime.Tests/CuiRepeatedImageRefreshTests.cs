@@ -170,14 +170,19 @@ public sealed class CuiRepeatedImageRefreshTests
             model.Set("Visible", true);
             using var loader = new CuiControlLoader();
             loader.SetBindingContext(model);
-            var loaded = loader.LoadMarkup("<Container><If Condition=\"{Binding Visible}\">" +
+            var loaded = loader.LoadMarkup("<Container Type=\"Vertical Stack\"><If Condition=\"{Binding Visible}\">" +
                 ObservableRowsMarkup + "</If></Container>");
             Assert.Empty(loaded.Diagnostics);
             loader.WireBindings(loaded.Root!);
             Assert.Equal(1, item.ObserverCount);
 
             if (retirement == "conditional") model.Set("Visible", false);
-            else if (retirement == "reload") loader.LoadMarkup("<Container><Text Text=\"Replacement scene\" /></Container>");
+            else if (retirement == "reload")
+            {
+                var replacement = loader.LoadMarkup("<Container Type=\"Vertical Stack\"><Text Text=\"Replacement scene\" /></Container>");
+                Assert.Empty(replacement.Diagnostics);
+                Assert.NotNull(replacement.Root);
+            }
             else loader.Dispose();
 
             Assert.Equal(0, item.ObserverCount);
@@ -197,7 +202,9 @@ public sealed class CuiRepeatedImageRefreshTests
             model.Set("Rows", new[] { first, second });
             using var loader = new CuiControlLoader();
             loader.SetBindingContext(model);
-            Assert.ThrowsAny<Exception>(() => loader.LoadMarkup(ObservableRowsMarkup));
+            var refused = loader.LoadMarkup(ObservableRowsMarkup);
+            Assert.Null(refused.Root);
+            Assert.Contains(refused.Diagnostics, diagnostic => diagnostic.Code == "CUIR052");
             Assert.Equal(0, first.ObserverCount);
             Assert.Equal(0, second.ObserverCount);
         }, CancellationToken.None);
