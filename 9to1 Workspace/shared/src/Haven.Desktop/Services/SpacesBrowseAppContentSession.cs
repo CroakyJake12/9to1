@@ -517,6 +517,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             lock (_gate)
             {
                 if (_closing || !_published) return;
+                _commands.RemoveAll(task => task.IsCompletedSuccessfully);
                 _commands.Add(Dispatcher.UIThread.InvokeAsync(() => OnSpacesStateChanged(state)).GetTask());
             }
             return;
