@@ -249,6 +249,20 @@ public sealed class DeveloperProgrammeCatalog
         if (!_isStructuredManifest)
             return _fallbackRecords.TryGetValue(moduleId, out var list) ? list.Take(maxRecords).ToArray() : [];
 
+        var result = new List<DeveloperProgrammeRecord>();
+        foreach (var rid in EnumerateStructuredRecordIds(moduleId, includeControlBindings))
+        {
+            var rec = TryReadRecord(rid);
+            if (rec is not null)
+                result.Add(rec);
+            if (result.Count >= maxRecords)
+                break;
+        }
+        return result;
+    }
+
+    private IEnumerable<string> EnumerateStructuredRecordIds(string moduleId, bool includeControlBindings)
+    {
         var modPath = SafeChildPath(_rootDirectory, _moduleFiles[moduleId]);
         var modObj = JsonNode.Parse(File.ReadAllText(modPath)) as JsonObject
             ?? throw new InvalidDataException($"Invalid module file: {modPath}");
@@ -271,7 +285,6 @@ public sealed class DeveloperProgrammeCatalog
             }
         }
 
-        var result = new List<DeveloperProgrammeRecord>();
         foreach (var rid in rowIds)
         {
             if (_excludedPendingOwner.Contains(rid))
@@ -279,13 +292,8 @@ public sealed class DeveloperProgrammeCatalog
             if (!includeControlBindings && _recordKinds.TryGetValue(rid, out var kind)
                 && kind.Equals("control-binding", StringComparison.OrdinalIgnoreCase))
                 continue;
-            var rec = TryReadRecord(rid);
-            if (rec is not null)
-                result.Add(rec);
-            if (result.Count >= maxRecords)
-                break;
+            yield return rid;
         }
-        return result;
     }
 
     public DeveloperProgrammeRecord? TryReadRecord(string recordId)
@@ -355,10 +363,14 @@ public sealed class DeveloperProgrammeCatalog
         {
             var modId = ordered[(Math.Max(0, startModuleCursor) + offset) % ordered.Count];
             var module = _modules[modId];
-            var records = GetModuleRecords(modId, includeControlBindings: false, maxRecords: 200);
+            // A bounded display preview cannot establish that an entire module is covered.
+            // Traverse the complete source order lazily, stopping at the first eligible record.
+            IEnumerable<DeveloperProgrammeRecord?> records = _isStructuredManifest
+                ? EnumerateStructuredRecordIds(modId, includeControlBindings: false).Select(TryReadRecord)
+                : _fallbackRecords.GetValueOrDefault(modId, []);
             foreach (var rec in records)
             {
-                if (rec.IsExcludedProposal) continue;
+                if (rec is null || rec.IsExcludedProposal) continue;
                 if (completedRecordIds.Contains(rec.RecordId) || blockedRecordIds.Contains(rec.RecordId)) continue;
                 if (rec.ProgressState is "VERIFIED_ACCEPTED" or "PENDING_OWNER_NOT_APPROVED") continue;
                 return (module, rec);

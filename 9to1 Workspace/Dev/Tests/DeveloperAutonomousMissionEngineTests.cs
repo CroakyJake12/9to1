@@ -40,6 +40,77 @@ public sealed class DeveloperAutonomousMissionEngineTests
         finally { temp.Delete(true); }
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Programme_catalog_selects_beyond_preview_while_preserving_eligibility_and_order(bool legacyRows)
+    {
+        var temp = Directory.CreateTempSubdirectory("9to1-prog-large-");
+        try
+        {
+            WriteLargeProgramme(temp.FullName, legacyRows);
+            var catalog = DeveloperProgrammeCatalog.Load(temp.FullName);
+            var completed = Enumerable.Range(1, 100).Select(i => $"REQ-{i:D3}").ToHashSet(StringComparer.Ordinal);
+            var blocked = Enumerable.Range(101, 100).Select(i => $"REQ-{i:D3}").ToHashSet(StringComparer.Ordinal);
+
+            // The public list remains a bounded preview, while task selection must examine
+            // later records after all two hundred displayed records have already been covered.
+            var preview = catalog.GetModuleRecords("Q21", maxRecords: 200);
+            Assert.Equal(200, preview.Count);
+            Assert.Equal("REQ-200", preview[^1].RecordId);
+            var first = catalog.SelectNextUncoveredRequirement(completed, blocked, preferredOwner: "flash");
+            Assert.NotNull(first);
+            Assert.Equal("Q21", first!.Value.Module.ModuleId);
+            Assert.Equal("REQ-201", first!.Value.Record.RecordId);
+
+            // Another owner's higher-ranked module and an explicit cursor keep their existing order.
+            var other = catalog.SelectNextUncoveredRequirement(completed, blocked);
+            Assert.NotNull(other);
+            Assert.Equal("REQ-OTHER", other!.Value.Record.RecordId);
+            var cursor = catalog.SelectNextUncoveredRequirement(completed, blocked, startModuleCursor: 1);
+            Assert.NotNull(cursor);
+            Assert.Equal("REQ-201", cursor!.Value.Record.RecordId);
+
+            completed.Add("REQ-201");
+            var second = catalog.SelectNextUncoveredRequirement(completed, blocked, preferredOwner: "flash");
+            Assert.NotNull(second);
+            Assert.Equal("REQ-202", second!.Value.Record.RecordId);
+            blocked.Add("REQ-202");
+            // Unapproved proposals, control bindings and both ineligible progress states are
+            // not converted into runnable work merely because the preview has been exhausted.
+            Assert.Null(catalog.SelectNextUncoveredRequirement(completed, blocked, preferredOwner: "flash"));
+            Assert.True(catalog.IsExcludedProposal("P1"));
+        }
+        finally { temp.Delete(true); }
+    }
+
+    [Fact]
+    public void Programme_catalog_fallback_selects_later_uncovered_records_before_declaring_completion()
+    {
+        var temp = Directory.CreateTempSubdirectory("9to1-prog-fallback-large-");
+        try
+        {
+            File.WriteAllLines(Path.Combine(temp.FullName, "requirements.md"),
+                Enumerable.Range(1, 202).Select(i => $"DEV-LARGE-{i:D3} — Requirement {i}"));
+            var catalog = DeveloperProgrammeCatalog.Load(temp.FullName);
+            Assert.False(catalog.IsStructuredManifest);
+            var completed = Enumerable.Range(1, 100).Select(i => $"DEV-LARGE-{i:D3}").ToHashSet(StringComparer.Ordinal);
+            var blocked = Enumerable.Range(101, 100).Select(i => $"DEV-LARGE-{i:D3}").ToHashSet(StringComparer.Ordinal);
+            Assert.Equal(200, catalog.GetModuleRecords("DEV-LARGE", maxRecords: 200).Count);
+
+            var first = catalog.SelectNextUncoveredRequirement(completed, blocked);
+            Assert.NotNull(first);
+            Assert.Equal("DEV-LARGE-201", first!.Value.Record.RecordId);
+            completed.Add(first!.Value.Record.RecordId);
+            var second = catalog.SelectNextUncoveredRequirement(completed, blocked);
+            Assert.NotNull(second);
+            Assert.Equal("DEV-LARGE-202", second!.Value.Record.RecordId);
+            blocked.Add(second!.Value.Record.RecordId);
+            Assert.Null(catalog.SelectNextUncoveredRequirement(completed, blocked));
+        }
+        finally { temp.Delete(true); }
+    }
+
     [Fact]
     public void Programme_catalog_loads_live_implementation_programme_v1_when_present()
     {
@@ -529,6 +600,46 @@ public sealed class DeveloperAutonomousMissionEngineTests
         await DeveloperAutonomousWorkspaceTools.RunGitAsync(repoDir, ["add", "-A"]);
         await DeveloperAutonomousWorkspaceTools.RunGitAsync(repoDir,
             ["-c", "user.name=Test", "-c", "user.email=test@local", "-c", "commit.gpgsign=false", "commit", "-m", "initial"]);
+    }
+
+    private static void WriteLargeProgramme(string dir, bool legacyRows)
+    {
+        Directory.CreateDirectory(Path.Combine(dir, "modules"));
+        Directory.CreateDirectory(Path.Combine(dir, "records"));
+        var rows = Enumerable.Range(1, 200).Select(i => $"REQ-{i:D3}")
+            .Concat(["P1", "CONTROL", "REQ-VERIFIED", "REQ-PENDING", "REQ-201", "REQ-202"]).ToArray();
+        var records = new Dictionary<string, object>(StringComparer.Ordinal);
+        foreach (var id in rows.Append("REQ-OTHER"))
+        {
+            var kind = id switch { "P1" => "proposal", "CONTROL" => "control-binding", _ => "requirement" };
+            records[id] = new { ticket = id == "REQ-OTHER" ? "Q22" : "Q21", kind, file = $"records/{id}.json" };
+            File.WriteAllText(Path.Combine(dir, "records", id + ".json"),
+                JsonSerializer.Serialize(new { kind, source_action = "Requirement " + id }));
+        }
+        File.WriteAllText(Path.Combine(dir, "manifest.json"), JsonSerializer.Serialize(new
+        {
+            excluded_pending_owner = new[] { "P1" },
+            modules = new Dictionary<string, object>
+            {
+                ["Q21"] = new { owner = "flash", rank = 1, count = rows.Length, file = "modules/Q21.json" },
+                ["Q22"] = new { owner = "gpt", rank = 0, count = 1, file = "modules/Q22.json" }
+            },
+            records
+        }));
+        File.WriteAllText(Path.Combine(dir, "modules", "Q21.json"),
+            JsonSerializer.Serialize(legacyRows
+                ? (object)new { original_queue_ticket = new { row_ids = rows } }
+                : new { rows }));
+        File.WriteAllText(Path.Combine(dir, "modules", "Q22.json"),
+            JsonSerializer.Serialize(new { rows = new[] { "REQ-OTHER" } }));
+        File.WriteAllText(Path.Combine(dir, "progress.json"), JsonSerializer.Serialize(new
+        {
+            records = new Dictionary<string, object>
+            {
+                ["REQ-VERIFIED"] = new { state = "VERIFIED_ACCEPTED" },
+                ["REQ-PENDING"] = new { state = "PENDING_OWNER_NOT_APPROVED" }
+            }
+        }));
     }
 
     private static void WriteSampleProgramme(string dir)
