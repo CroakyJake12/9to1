@@ -1279,8 +1279,12 @@ public sealed partial class FilesNativeBrowserMutationTests
         var actor = h.Workspace.Actor;
         var file = await CreatePresentationFileAsync(h, "missing-preview.txt", token);
         var row = (await h.Workspace.Provider.GetAsync(file, token)).Value!;
+        var content = (await h.Workspace.Provider.GetCurrentArtifactContentForOriginalStoreAsync(
+            h.Workspace.Configuration.StoreId, file, row.CurrentRevisionId, token)).Value!;
+        Assert.Equal(h.Parent, content.UploadAnchorFolderId); Assert.Equal(row.Name, content.ProviderContentReference);
         var folder = (await h.Workspace.Directories.ResolveProfileAsync(Guid.Parse(actor.ProfileId), "write", token)).Value!;
-        var path = Path.Combine(folder.DirectoryPath, row.Name); File.Delete(path);
+        var path = Path.Combine(folder.DirectoryPath, row.Name);
+        Assert.True(File.Exists(path)); File.Delete(path); Assert.False(File.Exists(path));
         var drivePath = Path.Combine(h.Workspace.Configuration.RootDirectory, ".9to1-files", "drive.json");
         var originalDrive = await File.ReadAllBytesAsync(drivePath, token);
         var originalHome = await File.ReadAllBytesAsync(Path.Combine(h.Root, "home.json"), token);
@@ -1292,13 +1296,24 @@ public sealed partial class FilesNativeBrowserMutationTests
             var opening = view.OpenOriginalTextPreviewLocationAsync(h.Workspace.Configuration.StoreId, h.Parent.Value,
                 file.Value, row.CurrentRevisionId!.Value.Value, token);
             var failure = await Record.ExceptionAsync(() => opening); Assert.NotNull(failure);
-            var original = Assert.Single(new AggregateException(failure).Flatten().InnerExceptions.OfType<FileNotFoundException>().Distinct());
-            Assert.Equal(path, original.FileName); Assert.True(opening.IsFaulted);
+            // The native action retains its original IO failure and withdraws the page. The restore
+            // then refuses its missing owner; close joins BOTH originals without replacing either.
+            var ownerRefusal = Assert.IsType<UnauthorizedAccessException>(
+                Assert.Single(new AggregateException(failure).Flatten().InnerExceptions.Distinct()));
+            Assert.Equal("The original Files page is unavailable.", ownerRefusal.Message); Assert.True(opening.IsFaulted);
             Assert.False(view.OriginalPublicationIsAlive); Assert.False(view.TryGetOriginalTextPreviewLocation(out _, out _, out _));
             var close = view.CloseAndDrainAsync(); Assert.Same(close, view.CloseAndDrainAsync());
             var closeFailure = await Record.ExceptionAsync(() => close); Assert.NotNull(closeFailure);
             Assert.True(close.IsFaulted);
-            Assert.Contains(new AggregateException(closeFailure).Flatten().InnerExceptions, cause => ReferenceEquals(cause, original));
+            var retained = new AggregateException(closeFailure).Flatten().InnerExceptions.Distinct().ToArray();
+            var original = Assert.Single(retained.OfType<FileNotFoundException>());
+            Assert.Equal(path, original.FileName);
+            Assert.Contains(retained, cause => ReferenceEquals(cause, ownerRefusal));
+            Assert.All(retained, cause => Assert.True(ReferenceEquals(cause, original) || ReferenceEquals(cause, ownerRefusal), cause.ToString()));
+            var repeatedFailure = await Record.ExceptionAsync(() => view.CloseAndDrainAsync());
+            Assert.Same(closeFailure, repeatedFailure);
+            Assert.Same(original, Assert.Single(new AggregateException(repeatedFailure!).Flatten().InnerExceptions
+                .OfType<FileNotFoundException>().Distinct()));
             Assert.Equal(originalDrive, await File.ReadAllBytesAsync(drivePath, token));
             Assert.Equal(originalHome, await File.ReadAllBytesAsync(Path.Combine(h.Root, "home.json"), token));
             Assert.False(File.Exists(path));
