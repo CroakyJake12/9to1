@@ -36,7 +36,7 @@ public sealed class SpacesResponsiveSidebarTests
             Assert.NotNull(selection);
             var summary = Authored<CuiContainerControl>(page, "space-details");
             var header = Authored<CuiContainerControl>(page, "space-app-header");
-            var workspace = Authored<CuiContainerControl>(page, "space-app-content");
+            var workspace = Authored<ContentControl>(page, "space-app-content");
             var layout = Authored<CuiContainerControl>(page, "spaces-layout");
             var conversationId = chat.ConversationId;
             var address = fixture.Session.Address.Value;

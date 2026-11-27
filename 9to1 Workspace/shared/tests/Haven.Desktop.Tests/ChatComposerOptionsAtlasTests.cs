@@ -469,9 +469,20 @@ public sealed class ChatComposerOptionsAtlasTests
             var origin = choice.TranslatePoint(default, top); Assert.NotNull(origin);
             var point = origin.Value + new Vector(choice.Bounds.Width / 2, choice.Bounds.Height / 2);
             Assert.True(choice.IsEffectivelyEnabled);
-            top.MouseMove(point);
-            top.MouseDown(point, MouseButton.Left); top.MouseUp(point, MouseButton.Left);
-            await SettleAsync(); // The caller retains and joins the original loader action.
+            var hit = top.InputHitTest(point) as Visual;
+            Assert.True(ReferenceEquals(hit, choice) || hit is not null && choice.IsVisualAncestorOf(hit),
+                $"The actual menu choice must own its pointer target: point={point}, choice={choice.Bounds}, top={top.Bounds}, hit={hit?.GetType().Name}.");
+            var clicks = 0;
+            EventHandler<RoutedEventArgs> clicked = (_, args) => { if (ReferenceEquals(args.Source, choice)) clicks++; };
+            choice.Click += clicked;
+            try
+            {
+                top.MouseMove(point);
+                top.MouseDown(point, MouseButton.Left); top.MouseUp(point, MouseButton.Left);
+                await SettleAsync(); // The caller retains and joins the original loader action.
+                Assert.True(clicks == 1, $"The actual native pointer journey must invoke the current choice once: clicks={clicks}, submenuOpen={menu.IsSubMenuOpen}, enabled={choice.IsEffectivelyEnabled}.");
+            }
+            finally { choice.Click -= clicked; }
         }
         internal async Task SettleAsync()
         {
