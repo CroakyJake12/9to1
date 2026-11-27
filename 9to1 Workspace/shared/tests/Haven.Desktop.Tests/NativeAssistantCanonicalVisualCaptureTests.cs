@@ -170,18 +170,18 @@ public sealed partial class AssistantOriginalMemoryTests
                 JsonSerializer.Serialize(diagnostic, new JsonSerializerOptions { WriteIndented = true }), Token);
         }
         Assert.True(hasScopedText);
-        var scopedText = Assert.IsType<SolidColorBrush>(scopedTextResource).Color;
-        Assert.Equal(scopedText, Assert.IsType<SolidColorBrush>(heading.Foreground).Color);
+        var scopedText = Assert.IsAssignableFrom<ISolidColorBrush>(scopedTextResource).Color;
+        Assert.Equal(scopedText, Assert.IsAssignableFrom<ISolidColorBrush>(heading.Foreground).Color);
         var button = window.GetVisualDescendants().OfType<Button>().First(control =>
             control.IsEffectivelyVisible && control.IsEnabled);
         var buttonHost = button.GetVisualAncestors().OfType<CuiSceneHost>().First();
         Assert.True(buttonHost.Resources.TryGetResource("CuiButtonForegroundBrush", buttonHost.ActualThemeVariant, out var buttonTextResource));
-        Assert.Equal(Assert.IsType<SolidColorBrush>(buttonTextResource).Color,
-            Assert.IsType<SolidColorBrush>(button.Foreground).Color);
+        Assert.Equal(Assert.IsAssignableFrom<ISolidColorBrush>(buttonTextResource).Color,
+            Assert.IsAssignableFrom<ISolidColorBrush>(button.Foreground).Color);
         Assert.True(buttonHost.Resources.TryGetResource("CuiButtonBrush", buttonHost.ActualThemeVariant, out var buttonBackgroundResource));
-        var scopedButton = Assert.IsType<SolidColorBrush>(buttonBackgroundResource).Color;
+        var scopedButton = Assert.IsAssignableFrom<ISolidColorBrush>(buttonBackgroundResource).Color;
         var animation = Stopwatch.StartNew();
-        while (button.Background is not SolidColorBrush brush || brush.Color != scopedButton)
+        while (button.Background is not ISolidColorBrush brush || brush.Color != scopedButton)
         {
             // Advance the real headless render timer/animation clock. The
             // primitive's initial null->brush transition is not its final colour.
@@ -203,10 +203,10 @@ public sealed partial class AssistantOriginalMemoryTests
         }
         // Preserve the actual frame even when the settled style assertion fails.
         // A timeout remains a real failure; no assertion or source join is waived.
-        var actualBackground = Assert.IsType<SolidColorBrush>(button.Background).Color;
+        var actualBackground = Assert.IsAssignableFrom<ISolidColorBrush>(button.Background).Color;
         Assert.Equal(scopedButton, actualBackground);
         Assert.True(CakeOS.Cui.Themes.CuiContrast.Ratio(
-            Assert.IsType<SolidColorBrush>(button.Foreground).Color, actualBackground) >= 4.5d,
+            Assert.IsAssignableFrom<ISolidColorBrush>(button.Foreground).Color, actualBackground) >= 4.5d,
             "The actual production button label must remain readable on its settled background.");
     }
     private static object DescribeCanonicalForeground(Control control)
@@ -230,7 +230,7 @@ public sealed partial class AssistantOriginalMemoryTests
     private static string? DescribeCanonicalResource(object? value) => value switch
     {
         null => null,
-        SolidColorBrush brush => brush.GetType().FullName + ": " + brush.Color,
+        ISolidColorBrush brush => brush.GetType().FullName + ": " + brush.Color,
         _ => value.GetType().FullName + ": " + value
     };
     private static Task ClickCanonicalCaptureControl(Window window, AssistantsNativeCuiSurface surface, string id, Func<bool> settled) =>
