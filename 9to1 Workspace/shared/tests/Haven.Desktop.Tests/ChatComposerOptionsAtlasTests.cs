@@ -461,9 +461,11 @@ public sealed class ChatComposerOptionsAtlasTests
             var choice = Assert.Single(choices, item => Id(item) == choiceId);
             var top = Assert.IsAssignableFrom<TopLevel>(TopLevel.GetTopLevel(choice));
             top.UpdateLayout();
+            // Native pointer hit testing must address the rendered submenu, not a queued
+            // headless composition update. Render in every run; writing evidence is optional.
+            using var frame = top.CaptureRenderedFrame(); Assert.NotNull(frame);
             if (captureName is not null && Environment.GetEnvironmentVariable("HAVEN_VISUAL_CAPTURE_DIR") is { Length: > 0 } directory)
             {
-                using var frame = top.CaptureRenderedFrame(); Assert.NotNull(frame);
                 Directory.CreateDirectory(directory); frame.Save(Path.Combine(directory, captureName + ".png"));
             }
             var origin = choice.TranslatePoint(default, top); Assert.NotNull(origin);
