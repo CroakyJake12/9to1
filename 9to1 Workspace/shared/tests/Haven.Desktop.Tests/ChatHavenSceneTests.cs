@@ -347,6 +347,109 @@ public sealed class ChatHavenSceneTests
         });
 
     [AvaloniaFact]
+    public Task Interleaved_transcript_updates_preserve_order_identity_disclosures_and_actions() =>
+        InComposerSceneAsync((scene, _, window) =>
+        {
+            static ToolActivity Activity(string title) =>
+                new(Guid.NewGuid(), title, "Completed observation", true, TimeSpan.FromSeconds(1), DateTimeOffset.UnixEpoch);
+            static void Press(Haven.UI.Components.Button button)
+            {
+                var keyboard = Assert.IsAssignableFrom<IHavenKeyboardInputTarget>(button);
+                Assert.True(keyboard.KeyDown(new HavenKeyInput(HavenKey.Enter, HavenKeyModifiers.None)));
+                Assert.True(keyboard.KeyUp(new HavenKeyInput(HavenKey.Enter, HavenKeyModifiers.None)));
+            }
+            static string ToolId(ToolActivity activity) => "tool-" + activity.Id.ToString("N");
+            var firstTool = Activity("First retained tool");
+            var removedTool = Activity("Removed tool");
+            var secondTool = Activity("Second response tool");
+            var first = new ChatSceneMessage(Guid.NewGuid(), MessageRole.Assistant, "First answer", "Haven", false, "",
+                [firstTool, removedTool]);
+            var second = new ChatSceneMessage(Guid.NewGuid(), MessageRole.Assistant, "Second answer", "Haven", false, "",
+                [secondTool]);
+            var user = new ChatSceneMessage(Guid.NewGuid(), MessageRole.User, "Question", "", false, "");
+            var removedUser = new ChatSceneMessage(Guid.NewGuid(), MessageRole.User, "Old follow-up", "", false, "");
+            scene.SyncMessages([user, first, removedUser, second]);
+            var firstItem = scene.Messages.GetItem(first.Id.ToString("N"));
+            var secondItem = scene.Messages.GetItem(second.Id.ToString("N"));
+            var retainedToolItem = scene.Messages.GetItem(ToolId(firstTool));
+            var removedToolItem = scene.Messages.GetItem(ToolId(removedTool));
+            var removedUserItem = scene.Messages.GetItem(removedUser.Id.ToString("N"));
+            var body = firstItem.GetComponent<Markdown>("Body");
+            var menu = firstItem.GetComponent<Haven.UI.Components.Button>("MessageMenu");
+            var generated = new Container { Name = "RetainedGeneratedResult" };
+            var generatedAction = new Haven.UI.Components.Button { Content = "Generated action" };
+            var generatedActions = 0;
+            generatedAction.Invoked += (_, _) => generatedActions++;
+            generated.Add(generatedAction);
+            scene.SetGeneratedContent(first.Id, [generated]);
+            var generatedHost = firstItem.GetComponent<Container>("GeneratedContent");
+            Press(firstItem.GetComponent<Haven.UI.Components.Button>("ActivityToggle"));
+
+            var insertedTool = Activity("Inserted tool");
+            var insertedUser = new ChatSceneMessage(Guid.NewGuid(), MessageRole.User, "New follow-up", "", false, "");
+            first = first with { ToolActivities = [insertedTool, firstTool] };
+            scene.SyncMessages([second, insertedUser, first, user]);
+            Assert.Equal(new[]
+            {
+                second.Id.ToString("N"), ToolId(secondTool), insertedUser.Id.ToString("N"),
+                first.Id.ToString("N"), ToolId(insertedTool), ToolId(firstTool), user.Id.ToString("N")
+            }, scene.Messages.Items.Select(item => item.InstanceID));
+            Assert.True(removedUserItem.IsDeleted);
+            Assert.True(removedToolItem.IsDeleted);
+
+            // Update an existing message in the middle, reorder its tools and insert another tool.
+            var streamedTool = Activity("Streamed tool");
+            first = first with { Content = "First answer continues", IsStreaming = true,
+                ToolActivities = [firstTool, streamedTool, insertedTool] };
+            scene.UpdateMessage(first);
+            Assert.Equal(new[]
+            {
+                second.Id.ToString("N"), ToolId(secondTool), insertedUser.Id.ToString("N"),
+                first.Id.ToString("N"), ToolId(firstTool), ToolId(streamedTool), ToolId(insertedTool), user.Id.ToString("N")
+            }, scene.Messages.Items.Select(item => item.InstanceID));
+            Assert.Same(firstItem, scene.Messages.GetItem(first.Id.ToString("N")));
+            Assert.Same(secondItem, scene.Messages.GetItem(second.Id.ToString("N")));
+            Assert.Same(retainedToolItem, scene.Messages.GetItem(ToolId(firstTool)));
+            Assert.Same(body, firstItem.GetComponent<Markdown>("Body"));
+            Assert.Equal(first.Content, body.Content);
+            Assert.Same(generatedHost, firstItem.GetComponent<Container>("GeneratedContent"));
+            Assert.Same(generated, Assert.Single(generatedHost.Children));
+            Assert.Same(menu, firstItem.GetComponent<Haven.UI.Components.Button>("MessageMenu"));
+            foreach (var activity in first.ToolActivities!)
+                Assert.Equal(HavenVisibility.Visible, scene.Messages.GetItem(ToolId(activity)).GetValue(HavenProperties.Visibility));
+            Assert.Equal(HavenVisibility.Collapsed, scene.Messages.GetItem(ToolId(secondTool)).GetValue(HavenProperties.Visibility));
+
+            // Repeating an already ordered projection must not structurally rebuild the item host.
+            var orderedItems = scene.Messages.Items.ToArray();
+            var structuralChanges = 0;
+            scene.Messages.Invalidated += (_, _) =>
+            {
+                if (scene.Messages.LastInvalidationKinds.HasFlag(HavenInvalidationKinds.Structure))
+                    structuralChanges++;
+            };
+            scene.SyncMessages([second, insertedUser, first, user]);
+            Assert.Equal(0, structuralChanges);
+            Assert.Equal(orderedItems.Length, scene.Messages.Items.Count);
+            for (var index = 0; index < orderedItems.Length; index++)
+                Assert.Same(orderedItems[index], scene.Messages.Items[index]);
+
+            // Retained generated and message controls still dispatch their original semantic actions.
+            Press(generatedAction);
+            Assert.Equal(1, generatedActions);
+            ChatMessageActionRequest? action = null;
+            scene.MessageActionRequested += (_, request) => action = request;
+            window.UpdateLayout();
+            Press(menu);
+            var popup = Assert.Single(scene.Root.Children.OfType<PopupMenu>());
+            Press(Assert.Single(popup.Card.DescendantsAndSelf().OfType<Haven.UI.Components.Button>(),
+                button => button.Content == "Copy"));
+            Assert.NotNull(action);
+            Assert.Equal(first.Id, action!.MessageId);
+            Assert.Equal(ChatMessageAction.Copy, action.Action);
+            Assert.Empty(scene.Root.Children.OfType<PopupMenu>());
+        });
+
+    [AvaloniaFact]
     public Task Transcript_sync_handles_120_messages_without_losing_dynamic_item_identity() =>
         InComposerSceneAsync((scene, _, _) =>
         {

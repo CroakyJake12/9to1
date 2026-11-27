@@ -426,8 +426,9 @@ internal sealed partial class ChatHavenScene : IDisposable
             else
             {
                 UpdateMessage(item, message);
-                var currentIndex = Messages.Items.ToList().IndexOf(item);
-                if (currentIndex != transcriptIndex) _dynamicUi.MoveItem("Messages", item.InstanceID, transcriptIndex);
+                // The target slot is already known; stable rows need no copied list or scan.
+                if (transcriptIndex >= Messages.Items.Count || !ReferenceEquals(Messages.Items[transcriptIndex], item))
+                    _dynamicUi.MoveItem("Messages", item.InstanceID, transcriptIndex);
             }
             transcriptIndex++;
             transcriptIndex = SyncToolActivities(message, transcriptIndex);
@@ -445,11 +446,19 @@ internal sealed partial class ChatHavenScene : IDisposable
             _messageItems[message.Id] = item;
         }
         else UpdateMessage(item, message);
-        var messageIndex = Messages.Items.ToList().IndexOf(item);
+        var messageIndex = FindTranscriptItemIndex(item);
         SyncToolActivities(message, Math.Max(0, messageIndex + 1));
         RestoreGeneratedContent(message.Id, item);
         SetHasMessages(true);
         RefreshHeaderActivities();
+    }
+
+    private int FindTranscriptItemIndex(DynamicUIItem item)
+    {
+        var items = Messages.Items;
+        for (var index = 0; index < items.Count; index++)
+            if (ReferenceEquals(items[index], item)) return index;
+        return -1;
     }
 
     public void SetGeneratedContent(Guid messageId, IReadOnlyList<HavenElement> elements)
@@ -619,8 +628,8 @@ internal sealed partial class ChatHavenScene : IDisposable
             {
                 item.SetVariables(ValuesFor(activity));
                 _toolOwners[activity.Id] = message.Id;
-                var currentIndex = Messages.Items.ToList().IndexOf(item);
-                if (currentIndex != index) _dynamicUi.MoveItem("Messages", item.InstanceID, index);
+                if (index >= Messages.Items.Count || !ReferenceEquals(Messages.Items[index], item))
+                    _dynamicUi.MoveItem("Messages", item.InstanceID, index);
             }
             index++;
         }
