@@ -6,6 +6,20 @@ Evidence levels: `code` (source inspected) · `test` (focused check passes) · `
 
 The owner-provided 26 November v5 Specification and Atlas govern the current native migration; their exact identities are recorded in the [migration assessment](../native-migration-20261126.md). The [22 November source register](../../specification/owner-references/2026-11-22-atlas-v4/README.md) and earlier entries retain their original dated scope.
 
+## Atlas takeover · 27 November 2026
+
+Owner-supplied Atlas v5 SHA-256 `9ce46ba954c95ccc025d17f2a5564c9e3b8adf53b4c752650dc725305c1841e6` is the design reference for this pass. The owner requested ordinary Spaces conversation entry, lower latency, replacement of legacy presentation and readiness for independent work. See [the takeover ledger](../atlas-takeover-20261127.md).
+
+| Capability and route | Classification | Current evidence and remaining gate |
+| --- | --- | --- |
+| Spaces ordinary entry, Atlas045 | Adaptation | Opens a fresh unsaved conversation within the retained rail/sidebar; saved, Study, Assistant and task route admission stays authoritative. Two added route cases pass in the58-case focused cohort; nine earlier fixture/route failures are being resolved. |
+| Spaces management, Atlas045 | Adaptation | Explicit Manage Spaces preserves the mounted workspace; context, parent, archive and creation controls remain in management. Rendering assertions now exercise the deliberate action. Successor rendered/native verification pending. |
+| Chat typography and width, Atlas045–046 | Adaptation | Rail60, sidebar232, header66, transcript/composer maximum820, stronger readable text and numeric font weights. Generated Markdown typography requires its own projection fix. Exact native comparison pending. |
+| Assistants catalogue/work, Atlas050–053 | Adaptation | Portrait cards, canonical wrapping layout, compact identity and existing optional Workspace. Seven focused routing/configuration cases pass; final composer and native viewport checks pending. |
+| UI lifetime and scrolling | Conflict corrected in source | Live repeated rows subscribe only for their owned lifetime;17 focused cases pass. Global Browser layout scanning is removed. Scroll layout/paint classification preserves geometry; owning check pending. |
+| Dulche status and capability projection | Conflict corrected | Persistent descending run index retains all2,586 records.65 Python service cases pass. Live status3–5ms and capabilities19ms after migration; no model restart. These are endpoint observations, not whole-app latency claims. |
+| Independent Build and interrupted responses | Incomplete acceptance | Real mission, tool, guarded verification, review and integration sources exist. Native real-model task acceptance, complete RT026 modes/journal and stopped partial-response durability remain open; existing scripted CPU results do not close them. |
+
 ## Native migration and usability · 26 November 2026
 
 The owner requested direct native use of Spaces, Build and Dulche, then identified the live Models page as unusable. The current acceptance path is: select the exact installed model, send without a separate load step, cancel the same response, reach performance/adapter controls, and preserve draft/history/profile state. Reference: RUN106, PICK001–009, IXSPACES025; Atlas `home-models`, `home-models-installed`, `home-model-details`; the direct optimiser and LoRA controls are also explicit owner requirements.

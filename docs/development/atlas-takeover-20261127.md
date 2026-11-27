@@ -40,3 +40,9 @@ Private current owner/heartbeat: `/home/jacob/.local/state/9to1-development/atla
 - 11:44: candidate Spaces patch opens ordinary entries into an unsaved conversation, preserves specific restored routes, separates management, aligns rail/sidebar/header/transcript dimensions with Atlas. Guarded tests/native review still pending.
 
 - 11:34: source and live process reconciled; Atlas requirements extracted; performance and independence audits running. No takeover product changes published yet.
+
+### 11:52 GMT implementation checkpoint
+
+The first focused batch at `5c946d4ae` completed: CUI17/17 and Assistants7/7 pass; Browse49/58 with the same nine earlier failures; Spaces rendering9/13 with four expectations tied to the previous always-visible manager. The root corrected explicit-management rendering expectations without dropping their action/source checks and fixes pool-thread controller notifications through an owned dispatcher task retained by session close. A stale queued state cannot overwrite the current projection. Focused rerun and native successor are pending.
+
+The live SQLite migration preserved2,586 archived runs, added only `runs_created`, and reduced observed status to3–5ms and capabilities to19ms. All original logs and receipts remain under the private takeover evidence root. No inference service was restarted or reconfigured.

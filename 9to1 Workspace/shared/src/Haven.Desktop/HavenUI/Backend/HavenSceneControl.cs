@@ -1029,7 +1029,9 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
         var fontFamily = HavenUiFont.Resolve(family);
         return new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface(fontFamily, italic ? FontStyle.Italic : FontStyle.Normal, Weight(weight), FontStretch.Normal), size, foreground) { MaxTextWidth = Math.Max(1, maxWidth) };
     }
-    private static FontWeight Weight(int weight) => weight switch { >= 800 => FontWeight.ExtraBold, >= 700 => FontWeight.Bold, >= 600 => FontWeight.SemiBold, >= 500 => FontWeight.Medium, _ => FontWeight.Normal };
+    // Avalonia and its font manager accept numeric weights, including the Atlas 550/750.
+    // Preserve the authored value instead of rounding it to a different named face.
+    private static FontWeight Weight(int weight) => (FontWeight)weight;
     private static HavenKey MapKey(Key key) => key switch { Key.Enter => HavenKey.Enter, Key.Space => HavenKey.Space, Key.Escape => HavenKey.Escape, Key.Tab => HavenKey.Tab, Key.Left => HavenKey.Left, Key.Right => HavenKey.Right, Key.Up => HavenKey.Up, Key.Down => HavenKey.Down, Key.Home => HavenKey.Home, Key.End => HavenKey.End, Key.Back => HavenKey.Backspace, Key.Delete => HavenKey.Delete, _ => HavenKey.Unknown };
     private void RefreshSubscriptions()
     {

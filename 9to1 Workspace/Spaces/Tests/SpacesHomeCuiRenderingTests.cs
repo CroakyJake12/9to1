@@ -72,12 +72,14 @@ public sealed class SpacesHomeCuiRenderingTests
                 window.Show();
                 for (var pass = 0; pass < 3; pass++) { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); using var frame = window.CaptureRenderedFrame(); }
 
-                var texts = root.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text).ToArray();
+                var texts = root.GetVisualDescendants().OfType<TextBlock>().Where(t => t.IsEffectivelyVisible).Select(t => t.Text).ToArray();
                 var rendered = string.Join(" | ", texts);
                 Assert.Contains("Chat", rendered); // Selected-Space content remains labelled outside the rail.
-                Assert.Contains("Spaces", rendered);
+                Assert.DoesNotContain("Manage Spaces", rendered);
+                Assert.DoesNotContain("No sources added", texts);
+                Assert.DoesNotContain("No extra capabilities enabled", texts);
                 var rail = Assert.Single(root.GetVisualDescendants().OfType<Control>(), control => control.Name == "spaces-sidebar");
-                Assert.Equal(70, rail.Bounds.Width);
+                Assert.Equal(60, rail.Bounds.Width);
                 Assert.DoesNotContain(rail.GetVisualDescendants().OfType<TextBlock>(), text => text.IsEffectivelyVisible && !string.IsNullOrEmpty(text.Text));
                 var buttons = rail.GetVisualDescendants().OfType<Button>().Where(button => button.Name is "first-party-space-open" or "open-custom-space").ToArray();
                 Assert.Equal(3, buttons.Length);
@@ -89,11 +91,21 @@ public sealed class SpacesHomeCuiRenderingTests
                 buttons[2].RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 await loader.WhenActionsIdleAsync();
                 Assert.Equal(("spaces.select", (object?)state.CustomSpaces[0].Id), Assert.Single(actions));
-                Assert.Contains(root.GetVisualDescendants().OfType<TextBox>(), input => input.Name == "spaces-search");
+                Assert.DoesNotContain(root.GetVisualDescendants().OfType<TextBox>(), input => input.Name == "spaces-search" && input.IsEffectivelyVisible);
                 Assert.DoesNotContain(rail.GetVisualDescendants().OfType<TextBox>(), input => input.Name == "spaces-search");
                 Assert.DoesNotContain("Create a Space to keep related conversations and work together", texts);
-                Assert.Contains("No sources added", texts);
-                Assert.Contains("No extra capabilities enabled", texts);
+                var manage = Assert.Single(rail.GetVisualDescendants().OfType<Button>(), button => button.Name == "manage-spaces");
+                manage.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await loader.WhenActionsIdleAsync();
+                Assert.Equal("spaces.manage", actions[^1].Command);
+                state = state with { IsManaging = true };
+                bindings.Refresh();
+                window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                var managementTexts = root.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text).ToArray();
+                Assert.Contains("Manage Spaces", managementTexts);
+                Assert.Contains("No sources added", managementTexts);
+                Assert.Contains("No extra capabilities enabled", managementTexts);
+                Assert.True(Assert.Single(root.GetVisualDescendants().OfType<TextBox>(), input => input.Name == "spaces-search").IsEffectivelyVisible);
 
                 // The same authored surface must restore its empty label when the real
                 // projection becomes empty, rather than permanently suppressing it.
@@ -262,7 +274,7 @@ public sealed class SpacesHomeCuiRenderingTests
                 "model-a", "Ask", "Space",
                 [new SpacesHomeContextReference(contextId, "/docs/notes.md", "Read", "Ready")],
                 [new SpacesHomeCapability("plugin.analysis", "Plugin:analysis")],
-                true, true, false));
+                true, true, false)) with { IsManaging = true };
             var bindings = new SpacesHomeCuiBindings(() => state, (_, _, _) => ValueTask.CompletedTask);
 
             using var loader = new CuiControlLoader(SpacesHomeCuiDocument.CreateControlRegistry());
@@ -425,7 +437,7 @@ public sealed class SpacesHomeCuiRenderingTests
             var id = Guid.NewGuid();
             var selection = new SpacesHomeSelection(id, "Details target", "Description", false, true, false, null,
                 "Default", "Ask", "Conversation", [], [], true, false, true) { CanEditDetails = true };
-            var state = StateWithSelection(selection);
+            var state = StateWithSelection(selection) with { IsManaging = true };
             var actions = new List<(string Command, object? Parameter)>();
             var bindings = new SpacesHomeCuiBindings(() => state, (command, parameter, _) =>
             { actions.Add((command, parameter)); return ValueTask.CompletedTask; });
@@ -525,6 +537,7 @@ public sealed class SpacesHomeCuiRenderingTests
             await registry.AddFileAsync(space.Id, "/tmp/visible-notes.txt");
             var controller = new SpacesHomeController(registry);
             await controller.SelectSpaceAsync(space.Id);
+            controller.ToggleManage();
             var row = Assert.Single(controller.State.Selection!.FileSources);
             object? dispatched = null;
             var bindings = new SpacesHomeCuiBindings(() => controller.State, async (command, parameter, token) =>

@@ -509,9 +509,21 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
 
     private void OnSpacesStateChanged(SpacesHomeViewState state)
     {
+        // Controller reads may settle on a pool thread. UI subscribers inspect the retained
+        // workspace, so retain the actual dispatcher operation with this session's commands.
+        // Close joins it; a superseded projection cannot publish a stale selection afterwards.
+        if (!Dispatcher.UIThread.CheckAccess())
+        {
+            lock (_gate)
+            {
+                if (_closing || !_published) return;
+                _commands.Add(Dispatcher.UIThread.InvokeAsync(() => OnSpacesStateChanged(state)).GetTask());
+            }
+            return;
+        }
         lock (_gate)
         {
-            if (_closing || !_published) return;
+            if (_closing || !_published || !ReferenceEquals(_spacesPage?.Controller.State, state)) return;
             UpdateAddress(state.Selection?.Id);
         }
         PublishStateChanged();
