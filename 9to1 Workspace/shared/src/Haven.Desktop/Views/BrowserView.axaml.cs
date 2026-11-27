@@ -93,6 +93,7 @@ public sealed partial class BrowserView : UserControl
                 _lifetime.Dispose();
                 _lifetime = new CancellationTokenSource();
             }
+            BrowserSafetyBootstrap.Attach(this);
             EnsureUtilities();
             _ = MountSelectedTabAsync();
         };

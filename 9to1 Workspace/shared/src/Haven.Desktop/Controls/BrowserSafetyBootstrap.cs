@@ -10,10 +10,7 @@
 using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Layout;
-using Avalonia.Threading;
-using Avalonia.VisualTree;
 using Haven.Desktop.Views;
 
 namespace Haven.Desktop.Controls;
@@ -28,115 +25,31 @@ internal static class BrowserSafetyBootstrap
     /// </summary>
     private static readonly ConditionalWeakTable<BrowserView, AttachmentMarker> Attached = new();
     /// <summary>
-    /// Stores startup timer locally so this component can preserve the dependency, cache, or state between member calls.
+    /// Attach the existing safety surface when its BrowserView enters the visual tree.
+    /// Native CUI routes never use BrowserView, so they must not pay for a full-window
+    /// descendant scan on every layout pass. The weak marker keeps reattachment idempotent.
     /// </summary>
-    private static DispatcherTimer? _startupTimer;
-    /// <summary>
-    /// Stores scheduled locally so this component can preserve the dependency, cache, or state between member calls.
-    /// </summary>
-    private static bool _scheduled;
-
-    /// <summary>
-    /// Performs the initialize step owned by this component.
-    /// </summary>
-    [ModuleInitializer]
-    internal static void Initialize()
+    internal static void Attach(BrowserView browserView)
     {
-        if (_scheduled) return;
-        _scheduled = true;
-        Dispatcher.UIThread.Post(StartPolling, DispatcherPriority.Background);
-    }
+        if (Attached.TryGetValue(browserView, out _)) return;
+        if (browserView.Content is not Grid grid) return;
 
-    /// <summary>
-    /// Performs the start polling step owned by this component.
-    /// </summary>
-    private static void StartPolling()
-    {
-        if (_startupTimer is not null) return;
-        _startupTimer = new DispatcherTimer
+        var button = new HavenButton
         {
-            Interval = TimeSpan.FromMilliseconds(100)
+            Content = "Browser safety",
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 470, 0),
+            Padding = new Thickness(9, 4),
+            FontSize = 10,
+            Flyout = new HavenAdaptivePopup { Content = new BrowserSafetyView() },
+            ZIndex = 20
         };
-        _startupTimer.Tick += OnStartupTick;
-        _startupTimer.Start();
-        TryAttachMainWindow();
-    }
-
-    /// <summary>
-    /// Handles the startup tick event raised by the UI or runtime.
-    /// </summary>
-    private static void OnStartupTick(object? sender, EventArgs e) => TryAttachMainWindow();
-
-    /// <summary>
-    /// Attempts to attach main window and reports the result without using failure for normal control flow.
-    /// </summary>
-    private static void TryAttachMainWindow()
-    {
-        try
-        {
-            if (Avalonia.Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime
-                {
-                    MainWindow: { } window
-                }) return;
-
-            StopPolling();
-            window.LayoutUpdated -= OnWindowLayoutUpdated;
-            window.LayoutUpdated += OnWindowLayoutUpdated;
-            AttachVisible(window);
-        }
-        catch (Exception)
-        {
-            // The real Browser view remains usable if optional safety-surface
-            // injection cannot attach during a transient startup layout.
-        }
-    }
-
-    /// <summary>
-    /// Performs the stop polling step owned by this component.
-    /// </summary>
-    private static void StopPolling()
-    {
-        if (_startupTimer is null) return;
-        _startupTimer.Stop();
-        _startupTimer.Tick -= OnStartupTick;
-        _startupTimer = null;
-    }
-
-    /// <summary>
-    /// Handles the window layout updated event raised by the UI or runtime.
-    /// </summary>
-    private static void OnWindowLayoutUpdated(object? sender, EventArgs e)
-    {
-        if (sender is Visual root) AttachVisible(root);
-    }
-
-    /// <summary>
-    /// Performs the attach visible step owned by this component.
-    /// </summary>
-    private static void AttachVisible(Visual root)
-    {
-        foreach (var browserView in root.GetVisualDescendants().OfType<BrowserView>().ToArray())
-        {
-            if (Attached.TryGetValue(browserView, out _)) continue;
-            if (browserView.Content is not Grid grid) continue;
-
-            var button = new HavenButton
-            {
-                Content = "Browser safety",
-                HorizontalAlignment = HorizontalAlignment.Right,
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0, 0, 470, 0),
-                Padding = new Thickness(9, 4),
-                FontSize = 10,
-                Flyout = new HavenAdaptivePopup { Content = new BrowserSafetyView() },
-                ZIndex = 20
-            };
-            ToolTip.SetTip(button, "Review model-requested form submissions and downloads");
-            button.Classes.Add("ghost");
-            Grid.SetRow(button, 3);
-            grid.Children.Add(button);
-            Attached.Add(browserView, new AttachmentMarker());
-        }
+        ToolTip.SetTip(button, "Review model-requested form submissions and downloads");
+        button.Classes.Add("ghost");
+        Grid.SetRow(button, 3);
+        grid.Children.Add(button);
+        Attached.Add(browserView, new AttachmentMarker());
     }
 
     /// <summary>
