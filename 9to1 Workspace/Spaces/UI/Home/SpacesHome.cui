@@ -318,6 +318,10 @@
             <If Condition="!{Binding selection.isRenaming}">
               <Container id="selected-space-header" Type="Vertical Stack" CellGap="4">
                 <Text id="selected-space-name" text="{Binding selection.name}" font-size="24" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+                <!-- The Space definition form sections (Parent Space, Context, Model and
+                     access, Capabilities) are configuration and belong to the explicit
+                     Manage/Settings destination (Atlas A064), never the default conversation
+                     presentation. The deliberate action row above stays as the entry surface. -->
                 <Container id="space-header-actions" Type="Wrap" CellGap="8">
                   <!-- Explicit creation lives INSIDE the canonical management surface and still uses the
                        real existing spaces.create action (never an immediate rail creation). -->
@@ -336,9 +340,13 @@
                     <Button id="edit-graph" action="EditGraph" content="Edit Space graph" Interactive="{Binding selection.canEditGraph}" accessible-name="Edit Space graph" />
                   </If>
                 </Container>
+                <If Condition="!{Binding spaces.isManaging}">
+                  <Button id="space-settings-open" action="spaces.manage" content="Space settings" accessible-name="Open Space settings for this Space" HorizontalAlignment="Left" Padding="10 7" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8" />
+                </If>
               </Container>
             </If>
             <Text id="selected-space-description" text="{Binding selection.description}" />
+            <If Condition="{Binding spaces.isManaging}">
             <Container id="space-move" accessible-name="Move selected Space" Type="Vertical Stack" CellGap="8" Interactive="{Binding selection.canEdit}">
               <Text id="space-move-heading" text="Parent Space" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
               <Input id="space-parent-select" Type="Select" ItemsSource="{Binding spaces.moveParentOptions}" SelectedIndex="{Binding spaces.selectedMoveParentIndex, mode=TwoWay, type=int}" accessible-name="Choose parent Space" />
@@ -386,6 +394,7 @@
                 <Text id="space-capabilities-empty-text" text="No extra capabilities enabled" foreground="{Resource CuiTextSoftBrush}" />
               </If>
             </Container>
+            </If>
           </Container>
         </Container>
       </Container>
