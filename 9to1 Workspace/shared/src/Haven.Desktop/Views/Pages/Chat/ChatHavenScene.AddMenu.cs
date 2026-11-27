@@ -169,6 +169,12 @@ internal sealed partial class ChatHavenScene
             return;
         }
 
+        // Settle the authored formatting close before the new native popup takes focus. Do this
+        // once per opening; live mention-query updates above keep their input/caret and do not
+        // force a fresh layout on every edit.
+        ComposerView.RefreshSurface();
+        ComposerView.UpdateLayout();
+
         var addButton = FindComposerAddButton();
         if (addButton is null || TopLevel.GetTopLevel(addButton) is not { } owner) return;
 
@@ -244,6 +250,7 @@ internal sealed partial class ChatHavenScene
 
         if (_addMenuPopup is not null) ((ISetLogicalParent)_addMenuPopup).SetParent(null);
         _addMenu.Hide();
+        ComposerView.RefreshSurface();
         if (!restoreFocus || _disposed || owner is null || focus is null || !focus.Focusable
             || !focus.IsEffectivelyEnabled || !focus.IsEffectivelyVisible || !focus.IsAttachedToVisualTree()
             || !ReferenceEquals(TopLevel.GetTopLevel(focus), owner)) return;

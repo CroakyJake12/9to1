@@ -40,7 +40,9 @@ public sealed class ChatComposerOptionsAtlasTests
             var input = Find<TextBox>(rig.View, "composer-input");
             rig.View.Input.SetSelection(2, 7);
             var settings = Find<Button>(rig.View, "settings-button");
-            var permissions = Find<Button>(rig.View, "permissions-button");
+            Assert.DoesNotContain(rig.View.GetVisualDescendants().OfType<Button>(),
+                button => Id(button) == "permissions-button");
+            Assert.True(rig.View.Bindings.IsActionAvailable("composer.permissions"));
             await rig.ClickAsync(settings);
             var panel = rig.Panel;
             Assert.True(Find<Button>(panel, "options-close").TryFindResource("CuiEffectiveThemeName", out var actualTheme));
@@ -93,18 +95,19 @@ public sealed class ChatComposerOptionsAtlasTests
             Assert.Equal(GenerativeUiResponseMode.PreferVisual, source.ResponseMode);
             Assert.Equal(1, source.ResponseModeWrites);
 
-            // A separate Permissions opener expands the same retained draft surface and
-            // owns its own placement/focus return. Merely opening it grants no permission.
-            await rig.ClickAsync(permissions);
+            // The existing direct permissions command remains available, opening the same
+            // transactional surface through the single visible Options trigger.
+            await rig.View.Bindings.DispatchAsync("composer.permissions", null, _token);
+            await rig.SettleAsync();
             panel = rig.Panel;
-            Assert.Same(permissions, rig.View.OptionsPopup!.PlacementTarget);
+            Assert.Same(settings, rig.View.OptionsPopup!.PlacementTarget);
             Assert.True(Find<Control>(panel, "options-permission-fields").IsEffectivelyVisible);
             await rig.ClickAsync(Choice(panel, "All actions"));
             rig.Window.MouseDown(new Point(4, 4), MouseButton.Left);
             rig.Window.MouseUp(new Point(4, 4), MouseButton.Left);
             await rig.SettleAsync();
             Assert.Null(rig.View.OptionsPopup);
-            Assert.Same(permissions, rig.Window.FocusManager?.GetFocusedElement());
+            Assert.Same(settings, rig.Window.FocusManager?.GetFocusedElement());
             Assert.Equal(0, source.ActionModeWrites);
             Assert.Same(input, Find<TextBox>(rig.View, "composer-input"));
             Assert.Equal(draft, rig.View.Input.Text);

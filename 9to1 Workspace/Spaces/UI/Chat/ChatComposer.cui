@@ -24,6 +24,10 @@
     <Action name="composer.set-response-mode.PreferText" command="composer.set-response-mode" parameter="PreferText" />
     <Action name="composer.set-response-mode.AlwaysText" command="composer.set-response-mode" parameter="AlwaysText" />
     <Action name="composer.toggle-formatting"><Toggle Target="FormattingOpen" /></Action>
+    <Action name="composer.close-formatting"><Set Target="FormattingOpen" Value="False" /></Action>
+    <Action name="composer.close-formatting-and-focus"><Set Target="FormattingOpen" Value="False" /><Set Target="FormatFocusRequested" Value="True" /></Action>
+    <Action name="composer.focus-draft" command="composer.focus-draft"><Set Target="FormatFocusRequested" Value="False" /></Action>
+    <Action name="composer.close-attach" command="composer.close-attach" />
     <Action name="composer.toggle-options-policy"><Toggle Target="OptionsPolicyOpen" /></Action>
     <Action name="composer.emoji-prev" command="query.previous" />
     <Action name="composer.emoji-next" command="query.next" />
@@ -31,11 +35,15 @@
   <Effects>
     <Effect name="expand-composer" Condition="{Binding Composer.IsExpanded}" Action="composer.layout-expand" />
     <Effect name="compact-composer" Condition="!{Binding Composer.IsExpanded}" Action="composer.layout-compact" />
+    <Effect name="attach-closes-formatting" Condition="{Binding Composer.IsAttachOpen}" Action="composer.close-formatting" />
+    <Effect name="formatting-closes-attach" Condition="{Binding FormattingOpen}" Action="composer.close-attach" />
+    <Effect name="formatting-close-focus" Condition="{Binding FormatFocusRequested}" Action="composer.focus-draft" />
   </Effects>
   <Variable Type="integer" ID="InputColumn">1</Variable>
   <Variable Type="integer" ID="InputSpan">1</Variable>
   <Variable Type="integer" ID="ControlsRow">0</Variable>
   <Variable Type="bool" ID="FormattingOpen">False</Variable>
+  <Variable Type="bool" ID="FormatFocusRequested">False</Variable>
   <Variable Type="bool" ID="SendModeOpen">False</Variable>
   <Variable Type="bool" ID="OptionsPolicyOpen">False</Variable>
   <Variable Type="string" ID="EmojiIcon" Source="{Binding Composer.EmojiIconCandidates}" Selection="RandomOnce" />
@@ -88,11 +96,6 @@
                 IsVisible="{Binding Composer.HasSendModePreference}" MinHeight="44" CornerRadius="22"
                 background="Transparent" Chromeless="true" accessible-name="Preferred Space send action"
                 tooltip="Enter uses this Space's saved action; Alt+Enter uses the opposite action once" />
-        <Button id="permissions-button" action="composer.permissions" IsVisible="{Binding Composer.HasSettings}"
-                Width="44" Height="44" Padding="10" CornerRadius="22" Background="Transparent" Chromeless="True"
-                accessible-name="Conversation permissions: {Binding Composer.PermissionLabel}" tooltip="Conversation permissions: {Binding Composer.PermissionLabel}">
-          <Image Source="avares://Haven/Assets/composer-permissions.svg" Width="22" Height="22" />
-        </Button>
         <Button id="cancel-edit-button" action="composer.cancel-edit" content="Cancel" MinHeight="44" IsVisible="{Binding Composer.IsEditing}" accessible-name="Cancel editing" />
         <!-- Deliberate wrap-around browsing. Runtime owns identity/position; CUI owns geometry.
              56px front-left +14px rear extension. No rear or dots for one eligible command. -->
@@ -248,7 +251,7 @@
       </Container>
     </Container>
 
-    <Container id="composer-floating-layer" Type="Floating" Target="composer-body" Placement="Above" action="composer.toggle-formatting">
+    <Container id="composer-floating-layer" Type="Floating" Target="composer-body" Placement="Above" action="composer.close-formatting-and-focus">
     <Container id="format-toolbar" Type="Wrap" CellGap="6" padding="8"
           background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding FormattingOpen}"
           accessible-name="Formatting toolbar">
@@ -258,6 +261,8 @@
       <Button action="composer.format.Link" content="🔗" MinWidth="36" MinHeight="36" accessible-name="Link" tooltip="Link" />
       <Button action="composer.format.Quote" content="❝" MinWidth="36" MinHeight="36" accessible-name="Quote" tooltip="Quote" />
       <Button action="composer.format.Bullet" content="•" MinWidth="36" MinHeight="36" accessible-name="Bullet list" tooltip="Bullet list" />
+      <Button id="format-close" action="composer.close-formatting-and-focus" content="×" MinWidth="36" MinHeight="36"
+              Chromeless="True" accessible-name="Close formatting" tooltip="Close formatting" />
     </Container>
     </Container>
   </Container>

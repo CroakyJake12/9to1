@@ -5,6 +5,7 @@ using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
@@ -282,6 +283,121 @@ public sealed class ChatAddMenuAtlasTests
             Assert.Equal(HavenVisibility.Visible, surface.CatalogBackButton.GetValue(HavenProperties.Visibility));
         }
         finally { window.Content = null; window.Close(); host.Root = null; }
+    }
+
+    [AvaloniaFact]
+    public async Task Attach_and_formatting_close_each_other_without_changing_the_live_draft_selection_or_permissions()
+    {
+        await using var rig = await Rig.CreateAsync(900, 700, "Professional", _token);
+        try
+        {
+            var view = rig.Scene.ComposerView;
+            var input = rig.Message;
+            const string draft = "Keep this selection and draft.";
+            input.Text = draft; input.Focus(); view.Input.SetSelection(5, 9);
+            var source = view.Bindings.Source;
+            var permission = source.ActionMode;
+            var selections = new List<AddMenuSelection>();
+            var fileActions = new List<AddMenu.AddMenuAction>();
+            var sends = 0;
+            rig.Scene.CatalogItemSelected += (_, selected) => selections.Add(selected);
+            rig.Scene.AddActionSelected += (_, action) => fileActions.Add(action);
+            rig.Scene.SendRequested += (_, _) => sends++;
+            await rig.SettleAsync();
+            var format = ComposerButton("format-button");
+
+            await ActivateAsync(format);
+            var firstToolbar = Assert.IsAssignableFrom<Control>(VisibleToolbar());
+            Assert.False(rig.Scene.AddMenuPopup!.IsOpen);
+            await ActivateAsync(rig.Add);
+            Assert.True(rig.Scene.AddMenuPopup!.IsOpen);
+            Assert.False(firstToolbar.IsEffectivelyVisible);
+            Assert.Null(VisibleToolbar());
+            Assert.True(CategoryHeaders(rig.Scene.AddMenuPrefab)[0].State.HasFlag(HavenElementState.Focused),
+                "Attach must receive final focus after the old formatting portal retires.");
+            AssertUnchanged();
+
+            // A formatting action admitted while Attach is open closes that exact popup.
+            // Focus the retained input first, making its existing Aa trigger available.
+            input.Focus(); await rig.SettleAsync();
+            Assert.True(format.IsEffectivelyVisible);
+            await ActivateAsync(format);
+            Assert.False(rig.Scene.AddMenuPopup.IsOpen);
+            var toolbar = Assert.IsAssignableFrom<Control>(VisibleToolbar());
+            AssertUnchanged();
+            var close = Assert.Single(toolbar.GetVisualDescendants().OfType<NativeButton>(),
+                button => AutomationProperties.GetAutomationId(button) == "format-close");
+            await ActivateAsync(close);
+            Assert.False(toolbar.IsEffectivelyVisible);
+            Assert.Null(VisibleToolbar());
+            Assert.True(input.IsKeyboardFocusWithin);
+            AssertUnchanged();
+
+            // Reopening verifies that close changed the authored state, not only native visibility.
+            await ActivateAsync(format);
+            Assert.NotNull(VisibleToolbar());
+            Assert.False(rig.Scene.AddMenuPopup.IsOpen);
+            Assert.Empty(selections); Assert.Empty(fileActions); Assert.Equal(0, sends);
+
+            NativeButton ComposerButton(string id) => Assert.Single(view.GetVisualDescendants().OfType<NativeButton>(),
+                button => AutomationProperties.GetAutomationId(button) == id);
+            Control? VisibleToolbar() => view.GetVisualDescendants().OfType<Control>()
+                .Concat(view.GetLogicalDescendants().OfType<Control>())
+                .FirstOrDefault(control => AutomationProperties.GetAutomationId(control) == "format-toolbar" && control.IsEffectivelyVisible);
+            async Task ActivateAsync(NativeButton button)
+            {
+                Assert.True(button.IsEffectivelyEnabled);
+                button.RaiseEvent(new RoutedEventArgs(NativeButton.ClickEvent));
+                await view.CaptureOriginalActionSettlement().WaitAsync(TimeSpan.FromSeconds(10), _token);
+                await rig.SettleAsync();
+            }
+            void AssertUnchanged()
+            {
+                Assert.Same(input, rig.Message);
+                Assert.Equal(draft, view.Input.Text);
+                Assert.Equal("this", view.Input.SelectedText);
+                Assert.Equal(5, view.Input.SelectionStart); Assert.Equal(4, view.Input.SelectionLength);
+                Assert.Equal(permission, source.ActionMode);
+            }
+        }
+        catch (Exception error) { rig.PrimaryFailure = error; throw; }
+    }
+
+    [AvaloniaFact]
+    public async Task Both_actual_formatting_sources_preserve_a_collapsed_caret_and_never_rewrite_an_unmounted_draft()
+    {
+        await using var rig = await Rig.CreateAsync(900, 700, "Professional", _token);
+        try
+        {
+            const string draft = "Keep this draft unchanged.";
+            var input = rig.Scene.Input;
+            input.Text = draft; input.SetSelection(5, 5);
+            var state = HavenOS.Apps.Spaces.Chat.ChatSpaceViewState.Empty;
+            state = state with { Composer = state.Composer with { Draft = draft } };
+            var writes = new List<string>();
+            ValueTask Dispatch(string command, object? parameter, CancellationToken token)
+            { writes.Add(command); return ValueTask.CompletedTask; }
+            var space = new ChatSpaceComposerSource(() => state, Dispatch, () => input);
+            var unmounted = new ChatSpaceComposerSource(() => state, Dispatch);
+            foreach (var command in new[] { "Bold", "Italic", "Code", "Link", "Quote", "Bullet" })
+            {
+                await rig.Scene.ComposerView.Bindings.Source.FormatSelection(command);
+                await space.FormatSelection(command);
+                await unmounted.FormatSelection(command);
+                Assert.Equal(draft, input.Text);
+                Assert.Equal(draft, state.Composer.Draft);
+                Assert.Equal(5, input.SelectionStart); Assert.Equal(0, input.SelectionLength);
+                Assert.Equal(5, input.CaretIndex);
+            }
+            Assert.Empty(writes);
+            input.SetSelection(5, 9);
+            await space.FormatSelection("Bold");
+            Assert.Equal("Keep **this** draft unchanged.", input.Text);
+            Assert.Equal("**this**", input.SelectedText);
+            Assert.Equal(5, input.SelectionStart);
+            Assert.Empty(writes); // The exact live editor owns this selection edit.
+        }
+        catch (Exception error) { rig.PrimaryFailure = error; throw; }
     }
 
     private static HavenButton[] CategoryHeaders(Prefab prefab) =>

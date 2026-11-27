@@ -32,7 +32,7 @@ internal sealed class ChatSpaceComposerSource : IChatComposerSource
     private ChatSpaceViewState Snapshot => _state();
 
     /// <summary>The live shared composer input port, when the shared view is attached. Null when
-    /// not yet mounted, in which case editing falls back to the controller's whole-draft state.</summary>
+    /// not yet mounted. Selection formatting requires this exact live input.</summary>
     private IChatComposerInputPort? LiveInput => _inputPort?.Invoke();
 
     public string Draft
@@ -91,7 +91,9 @@ internal sealed class ChatSpaceComposerSource : IChatComposerSource
             input.SetSelection(start, start + wrapped.Length);
             return ValueTask.CompletedTask;
         }
-        return FormatDraftWith(command);
+        // A collapsed caret or unavailable input is not authority to rewrite the whole draft.
+        // Match the ordinary Chat source: formatting only edits an explicit live selection.
+        return ValueTask.CompletedTask;
     }
 
     public ValueTask InsertEmoji(string emoji)
@@ -122,15 +124,6 @@ internal sealed class ChatSpaceComposerSource : IChatComposerSource
         "Bullet" => $"- {text}",
         _ => text
     };
-
-    private ValueTask FormatDraftWith(string command)
-    {
-        var draft = Snapshot.Composer.Draft ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(draft)) return ValueTask.CompletedTask;
-        var wrapped = Wrap(draft, command);
-        if (string.Equals(wrapped, draft, StringComparison.Ordinal)) return ValueTask.CompletedTask;
-        return _dispatch("chat.update-draft", wrapped, CancellationToken.None);
-    }
 
     private ValueTask InsertEmojiIntoDraft(string emoji)
     {

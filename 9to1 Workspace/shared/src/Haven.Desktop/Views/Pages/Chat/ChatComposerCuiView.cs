@@ -89,6 +89,9 @@ public interface IChatComposerSource
     bool CanQueue => IsSending && CanStop && HasPendingMessage && CanSend && !IsEditing;
     bool IsSafetyLocked { get; }
     bool HasAdd { get; }
+    /// <summary>Observe and dismiss the actual Attach presentation; no draft or catalogue is cloned.</summary>
+    bool IsAttachOpen => false;
+    ValueTask CloseAttach() => ValueTask.CompletedTask;
     bool HasSettings => true;
     ChatActionMode ActionMode => ChatActionMode.AllowBasicActions;
     GenerativeUiResponseMode ResponseMode => GenerativeUiResponseMode.Auto;
@@ -137,6 +140,7 @@ public sealed partial class ChatComposerBindings : ICuiWritableBindingContext, I
 {
     private readonly IChatComposerSource _source;
     private readonly Func<object, bool>? _ownsSubmitSender;
+    private readonly Func<ValueTask>? _focusDraft;
     private bool _settingsOpen;
     private object? _optionsTarget;
     private bool _optionsExpanded;
@@ -154,10 +158,12 @@ public sealed partial class ChatComposerBindings : ICuiWritableBindingContext, I
     // (which owns the query string + opaque cursor) backed by the typed ICuiPagedSource port exposed
     // below. No application C# page/query/selection cache exists here.
 
-    public ChatComposerBindings(IChatComposerSource source, Func<object, bool>? ownsSubmitSender = null)
+    public ChatComposerBindings(IChatComposerSource source, Func<object, bool>? ownsSubmitSender = null,
+        Func<ValueTask>? focusDraft = null)
     {
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _ownsSubmitSender = ownsSubmitSender;
+        _focusDraft = focusDraft;
     }
 
     private IReadOnlyList<CuiActionShelfItem> EligibleShelfActions()
@@ -277,6 +283,7 @@ public sealed partial class ChatComposerBindings : ICuiWritableBindingContext, I
                 value = !_source.IsSafetyLocked && !_source.IsSending && _source.HasPendingMessage && _source.CanSend;
                 return true;
             case "Composer.HasAdd": value = _source.HasAdd; return true;
+            case "Composer.IsAttachOpen": value = _source.IsAttachOpen; return true;
             case "Composer.HasSettings": value = _source.HasSettings; return true;
             case "Composer.HasSendModePreference": value = _source.HasSendModePreference; return true;
             case "Composer.PreferredSendModeLabel": value = _source.PreferredSendMode?.ToString() ?? "Choose send action"; return true;
@@ -385,6 +392,7 @@ public sealed partial class ChatComposerBindings : ICuiWritableBindingContext, I
             "composer.pause" => _source.CanPause,
             "composer.resume" => _source.CanResume,
             "composer.add" => _source.HasAdd,
+            "composer.close-attach" or "composer.focus-draft" => true,
             "composer.emoji" or "composer.emoji-toggle" or "composer.emoji-search" or "composer.emoji-insert" => _source.HasFormatting,
             "composer.settings" or "composer.permissions" => _source.HasSettings,
             "composer.toggle-permissions" => HasCurrentOptions,
@@ -440,7 +448,11 @@ public sealed partial class ChatComposerBindings : ICuiWritableBindingContext, I
             case "composer.submit" or "composer.prefer-steer" or "composer.prefer-queue" or "composer.send" or "composer.queue" or "composer.stop" or "composer.steer" or "composer.pause" or "composer.resume":
                 return ValueTask.FromException(new InvalidOperationException("This conversation action is no longer available."));
             case "composer.add":
-                return _source.Add();
+                return ChangeAttachVisibilityAsync(open: true);
+            case "composer.close-attach":
+                return ChangeAttachVisibilityAsync(open: false);
+            case "composer.focus-draft":
+                return _focusDraft?.Invoke() ?? ValueTask.CompletedTask;
             case "composer.settings" when _source.HasSettings:
                 return _settingsOpen ? CancelOptions() : OpenOptionsAsync();
             case "composer.permissions" when _source.HasSettings:
@@ -483,6 +495,14 @@ public sealed partial class ChatComposerBindings : ICuiWritableBindingContext, I
             default:
                 return ValueTask.FromException(new InvalidOperationException($"Chat composer CUI command '{command}' is not owned by the shared composer."));
         }
+    }
+
+    private async ValueTask ChangeAttachVisibilityAsync(bool open)
+    {
+        // Join the original presentation operation before refreshing the authored mutual-exclusion
+        // effects. Neither path writes the draft, selection, chips or conversation permissions.
+        await (open ? _source.Add() : _source.CloseAttach()).ConfigureAwait(false);
+        await Dispatcher.UIThread.InvokeAsync(Refresh).GetTask().ConfigureAwait(false);
     }
 
     private async ValueTask StopProjectedAsync()
@@ -844,7 +864,7 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
         string? owningAppId, CuiThemePreferenceContext? themePreference, bool initializeImmediately)
     {
         _bindings = new ChatComposerBindings(source ?? throw new ArgumentNullException(nameof(source)),
-            sender => ReferenceEquals(sender, FindComposerTextBox()));
+            sender => ReferenceEquals(sender, FindComposerTextBox()), FocusComposerInputAsync);
         _readiness = readiness ?? ChatComposerReadiness.Instance;
         var registry = new CuiControlRegistry();
         // Shared typed packaged-SVG image infrastructure for authored icon assets (e.g. the enlarged
@@ -1016,7 +1036,9 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
             _optionsPopup?.Close();
             return;
         }
-        var anchorId = _bindings.OptionsOpenedFromPermissions ? "permissions-button" : "settings-button";
+        // Direct permissions commands and the Options button share the same retained panel and
+        // visible trigger. The permissions command still opens its existing disclosure directly.
+        const string anchorId = "settings-button";
         var anchor = this.GetVisualDescendants().OfType<Button>().FirstOrDefault(control =>
             AutomationProperties.GetAutomationId(control) == anchorId);
         if (_closing || anchor is null || TopLevel.GetTopLevel(anchor) is not { } owner ||
@@ -1108,6 +1130,20 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
             finally { Reclaim(); }
             throw;
         }
+    }
+
+    private async ValueTask FocusComposerInputAsync()
+    {
+        var identity = _bindings.Source.ActionIdentity;
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (_closing || !Equals(identity, _bindings.Source.ActionIdentity) || _bindings.Source.IsAttachOpen ||
+                _bindings.TryGetValue("Composer.ShowSettings", out var settings) && settings is true) return;
+            // The authored close has already hidden the toolbar. Retire its native portal before
+            // returning focus, so the portal's opener-focus restoration cannot overwrite this.
+            TopLevel.GetTopLevel(this)?.UpdateLayout();
+            _input.Focus();
+        }, DispatcherPriority.Loaded).GetTask().ConfigureAwait(false);
     }
 
     private TextBox? FindComposerTextBox()

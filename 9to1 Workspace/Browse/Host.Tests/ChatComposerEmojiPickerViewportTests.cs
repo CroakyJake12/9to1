@@ -744,8 +744,11 @@ public sealed class ChatComposerEmojiPickerViewportTests
             Assert.Same(originalInput, FindInput(view));
             Assert.True(originalInput.IsFocused);
             Assert.Equal(5, originalInput.SelectionStart); Assert.Equal(9, originalInput.SelectionEnd);
-            foreach (var id in new[] { "add-button", "format-button", "emoji-button", "settings-button", "permissions-button", "send-button" })
+            foreach (var id in new[] { "add-button", "format-button", "emoji-button", "settings-button", "send-button" })
                 AssertFullyWithin(Authored<Button>(id), surface);
+            Assert.DoesNotContain(view.GetVisualDescendants().OfType<Button>(),
+                button => AutomationProperties.GetAutomationId(button) == "permissions-button");
+            Assert.True(view.Bindings.IsActionAvailable("composer.permissions"));
             AssertFullyWithin(originalInput, surface);
             Assert.True(originalInput.Bounds.Width >= 280, "An expanded narrow composer must give the retained input its full row.");
             window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);

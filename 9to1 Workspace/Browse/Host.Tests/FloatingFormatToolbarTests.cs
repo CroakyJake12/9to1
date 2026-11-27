@@ -162,6 +162,47 @@ public sealed class FloatingFormatToolbarTests
     }
 
     [AvaloniaFact]
+    public async Task Explicit_close_preserves_the_same_draft_selection_and_returns_focus_without_formatting()
+    {
+        var source = new Source { Draft = "Keep this draft unchanged." };
+        var view = new ChatComposerCuiView(source);
+        var window = CreateFooterWindow(view, 900, 700);
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var box = Assert.IsType<TextBox>(FindInput(view));
+            box.Focus(); view.Input.SetSelection(5, 9); PumpLayout(window);
+            var draft = view.Input.Text;
+            var selected = view.Input.SelectedText;
+            Click(window, FindButton(view, "format-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+            var toolbar = Assert.IsAssignableFrom<Control>(FindContainer(view, "format-toolbar"));
+            var close = Assert.Single(toolbar.GetVisualDescendants().OfType<Button>(),
+                button => AutomationProperties.GetAutomationId(button) == "format-close");
+            Assert.True(new Rect(0, 0, window.Width, window.Height).Contains(WindowBounds(close, window)));
+            Click(window, close);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+            Assert.False(toolbar.IsEffectivelyVisible);
+            Assert.Null(FindContainer(view, "format-toolbar"));
+            Assert.Same(box, FindInput(view));
+            Assert.Equal(draft, view.Input.Text);
+            Assert.Equal(selected, view.Input.SelectedText);
+            Assert.Equal(5, view.Input.SelectionStart); Assert.Equal(4, view.Input.SelectionLength);
+            Assert.True(box.IsKeyboardFocusWithin);
+            Assert.Equal(0, source.FormatCount);
+            Click(window, FindButton(view, "format-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+            Assert.Equal(6, FormattingCommands(Assert.IsAssignableFrom<Control>(FindContainer(view, "format-toolbar"))).Length);
+            Assert.Equal(draft, view.Input.Text);
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally { await FinishComposerTestAsync(window, view, testFailure); }
+    }
+
+    [AvaloniaFact]
     public async Task Pointer_click_on_first_line_input_lands_in_editable_text_not_the_toolbar()
     {
         var source = new Source { CanSend = true };
@@ -337,7 +378,7 @@ public sealed class FloatingFormatToolbarTests
             Assert.True(windowClient.Contains(WindowBounds(toolbar!, window)), "toolbar must stay inside the narrowed viewport");
             // Every formatting command must itself be visible and hit-testable, not merely the toolbar
             // outer rectangle: the authored Wrap keeps all six reachable at the narrowed width.
-            var commandButtons = toolbar!.GetVisualDescendants().OfType<Button>().ToArray();
+            var commandButtons = FormattingCommands(toolbar!);
             Assert.Equal(6, commandButtons.Length);
             foreach (var button in commandButtons)
             {
@@ -398,7 +439,7 @@ public sealed class FloatingFormatToolbarTests
 
             // Real pointer-click ALL SIX commands after narrow wrapping: each original format action
             // dispatches/settles, is preserved across successive use, and selection is retained.
-            var commandButtons = toolbar!.GetVisualDescendants().OfType<Button>().ToArray();
+            var commandButtons = FormattingCommands(toolbar!);
             Assert.Equal(6, commandButtons.Length);
             var expected = new[] { "Bold", "Italic", "Code", "Link", "Quote", "Bullet" };
             for (var i = 0; i < commandButtons.Length; i++)
@@ -503,7 +544,7 @@ public sealed class FloatingFormatToolbarTests
             Assert.Equal(removeCountBefore + 1, source.RemoveCount);
 
             // All six formatting commands still fit and dispatch at 300x620.
-            var commandButtons = toolbar!.GetVisualDescendants().OfType<Button>().ToArray();
+            var commandButtons = FormattingCommands(toolbar!);
             Assert.Equal(6, commandButtons.Length);
             var expected = new[] { "Bold", "Italic", "Code", "Link", "Quote", "Bullet" };
             for (var i = 0; i < commandButtons.Length; i++)
@@ -564,7 +605,7 @@ public sealed class FloatingFormatToolbarTests
 
             var toolbar = FindContainer(view, "format-toolbar");
             Assert.NotNull(toolbar);
-            var commandButtons = toolbar!.GetVisualDescendants().OfType<Button>().ToArray();
+            var commandButtons = FormattingCommands(toolbar!);
             Assert.Equal(6, commandButtons.Length);
             var expected = new[] { "Bold", "Italic", "Code", "Link", "Quote", "Bullet" };
             for (var i = 0; i < commandButtons.Length; i++)
@@ -921,8 +962,12 @@ public sealed class FloatingFormatToolbarTests
         root.GetVisualDescendants().OfType<Button>().SingleOrDefault(b =>
             AutomationProperties.GetAutomationId(b) == automationId);
 
+    private static Button[] FormattingCommands(Control toolbar) =>
+        toolbar.GetVisualDescendants().OfType<Button>()
+            .Where(button => AutomationProperties.GetAutomationId(button) != "format-close").ToArray();
+
     private static Button? ToolbarButton(Control toolbar, int index) =>
-        toolbar.GetVisualDescendants().OfType<Button>().ToArray().ElementAtOrDefault(index);
+        FormattingCommands(toolbar).ElementAtOrDefault(index);
 
     private static TextBox? FindInput(ContentControl root) =>
         root.GetVisualDescendants().OfType<TextBox>().SingleOrDefault(box =>

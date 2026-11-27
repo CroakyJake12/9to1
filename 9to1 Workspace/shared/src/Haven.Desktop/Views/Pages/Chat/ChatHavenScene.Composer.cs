@@ -39,6 +39,9 @@ internal sealed partial class ChatHavenScene
         public bool IsSending => _scene._isSending || ActiveTask?.IsRunning == true;
         public bool IsSafetyLocked => _scene._safetyLocked;
         public bool HasAdd { get; set; } = true;
+        // The composer starts loading before the scene finishes constructing its Attach owner.
+        public bool IsAttachOpen => _scene._addMenu?.IsOpen == true;
+        public ValueTask CloseAttach() { if (IsAttachOpen) _scene.HideAddMenu(); return ValueTask.CompletedTask; }
         public bool CanStop => ActiveTask is { } task ? task.CanStop : _scene._isSending;
         public bool CanRefreshTaskControls => ActiveTask?.CanRefreshControls == true;
         public ValueTask RefreshTaskControls() => ActiveTask is { CanRefreshControls: true } task ? task.RefreshControls() :
@@ -93,7 +96,8 @@ internal sealed partial class ChatHavenScene
     }
 
     /// <summary>Formatting edits the current selection in the real CUI input using the actual
-    /// selection endpoints, preserving forward/backward selection and the caret.</summary>
+    /// selection endpoints, preserving forward/backward selection and the caret. An empty
+    /// selection leaves the entire draft and caret unchanged.</summary>
     public void FormatComposerSelection(string command)
     {
         if (Input.SelectionLength <= 0) return;

@@ -117,7 +117,8 @@ public sealed class NativeComposerFloatingPortalTests
             // All six formatting commands are present, visible and dispatch the genuine authored actions.
             // Each format wraps the current selection, so we observe the real shared-input transformation
             // (the native scene source exposes no last-command probe).
-            var commandButtons = toolbar.GetVisualDescendants().OfType<Button>().ToArray();
+            var commandButtons = toolbar.GetVisualDescendants().OfType<Button>()
+                .Where(button => AutomationProperties.GetAutomationId(button) != "format-close").ToArray();
             Assert.Equal(6, commandButtons.Length);
             var expected = new (string Command, string Wrapped)[]
             {
@@ -142,6 +143,19 @@ public sealed class NativeComposerFloatingPortalTests
                 Assert.Equal(expected[i].Wrapped, view.Input.Text);
             }
 
+            // The explicit close is a presentation action, never a seventh formatting edit.
+            view.Input.Text = "Keep native draft";
+            view.Input.SetSelection(5, 11);
+            var close = Assert.Single(toolbar.GetVisualDescendants().OfType<Button>(),
+                button => AutomationProperties.GetAutomationId(button) == "format-close");
+            Assert.True(windowClient.Contains(WindowBounds(close, window)));
+            Click(close);
+            await view.CaptureOriginalActionSettlement().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            Assert.False(toolbar.IsEffectivelyVisible);
+            Assert.Equal("Keep native draft", view.Input.Text);
+            Assert.Equal("native", view.Input.SelectedText);
+            Assert.True(box.IsKeyboardFocusWithin);
             // The composer input control identity persists through the native open + command journey.
             Assert.Same(box, FindInput(view));
         }
