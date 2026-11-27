@@ -282,7 +282,7 @@ public sealed class ChatComposerOptionsAtlasTests
         var late = new IOException("controlled late original Options owner failure");
         await using var rig = await OptionsRig.CreateAsync("Glow", 720, 650, _token, source);
         rig.Release = () => held.TrySetException(late);
-        rig.ExpectedCloseCause = late;
+        rig.ExpectedCloseCauses.Add(late);
         rig.AdditionalOriginals.Add(held.Task);
         try
         {
@@ -304,6 +304,20 @@ public sealed class ChatComposerOptionsAtlasTests
             Assert.NotNull(actionError); Assert.NotNull(closeError);
             Assert.Contains(Leaves(actionError), cause => ReferenceEquals(cause, late));
             Assert.Contains(Leaves(closeError), cause => ReferenceEquals(cause, late));
+            // This case deliberately retires the native CUI publication before its held action
+            // fails. Its exact refusal to publish that late error is retained alongside the
+            // original IOException. Qualify every extra cause, then retain those same instances
+            // for cleanup; unrelated cancellation and independent failures remain failures.
+            foreach (var cause in Leaves(actionError).Concat(Leaves(closeError)).Distinct())
+            {
+                if (ReferenceEquals(cause, late)) continue;
+                Assert.True(responsePresentation);
+                var retirement = Assert.IsType<OperationCanceledException>(cause);
+                Assert.Equal("The original CUI scene publication retired.", retirement.Message);
+                Assert.Equal(CancellationToken.None, retirement.CancellationToken);
+                Assert.Contains("CuiSceneHost.DemandPublicationCurrent", retirement.StackTrace);
+                rig.ExpectedCloseCauses.Add(retirement);
+            }
             Assert.Equal("Keep the exact pending draft.", source.Draft);
             Assert.Equal(0, source.ActionModeWrites);
             Assert.Equal(GenerativeUiResponseMode.Auto, source.ResponseMode);
@@ -394,7 +408,8 @@ public sealed class ChatComposerOptionsAtlasTests
         private readonly CuiThemePreferenceContext _theme;
         private readonly CancellationToken _token;
         private Task? _close;
-        internal Exception? TestFailure, ExpectedCloseCause;
+        internal Exception? TestFailure;
+        internal readonly List<Exception> ExpectedCloseCauses = [];
         internal Action? Release;
         internal readonly List<Task> AdditionalOriginals = [];
         internal Control Panel => Assert.IsAssignableFrom<Control>(View.OptionsPopup?.Child);
@@ -454,6 +469,7 @@ public sealed class ChatComposerOptionsAtlasTests
             var origin = choice.TranslatePoint(default, top); Assert.NotNull(origin);
             var point = origin.Value + new Vector(choice.Bounds.Width / 2, choice.Bounds.Height / 2);
             Assert.True(choice.IsEffectivelyEnabled);
+            top.MouseMove(point);
             top.MouseDown(point, MouseButton.Left); top.MouseUp(point, MouseButton.Left);
             await SettleAsync(); // The caller retains and joins the original loader action.
         }
@@ -489,7 +505,8 @@ public sealed class ChatComposerOptionsAtlasTests
                 try { await original.WaitAsync(TimeSpan.FromSeconds(15), _token); }
                 catch (Exception error)
                 {
-                    if (ExpectedCloseCause is null || Leaves(error).Any(cause => !ReferenceEquals(cause, ExpectedCloseCause))) failures.Add(error);
+                    if (Leaves(error).Any(cause => !ExpectedCloseCauses.Any(expected => ReferenceEquals(cause, expected))))
+                        failures.Add(error);
                 }
             }
             // Do not detach a still-running original just because a bounded waiter timed out.

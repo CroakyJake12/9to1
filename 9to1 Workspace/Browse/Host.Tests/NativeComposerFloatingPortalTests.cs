@@ -70,6 +70,9 @@ public sealed class NativeComposerFloatingPortalTests
             view.Input.SetSelection(0, 2);
             Assert.Equal("draft", box!.Text);
             Assert.Equal(2, view.Input.SelectionLength);
+            // The changed draft can resize its native input. Settle that genuine layout before
+            // comparing the closed surface with an open out-of-flow toolbar.
+            PumpLayout(window);
 
             // Closed toolbar renders nothing (no portal, no bar anywhere).
             Assert.Null(FindToolbarAnywhere(window, view));
@@ -77,6 +80,7 @@ public sealed class NativeComposerFloatingPortalTests
             var surface = FindContainer(view, "composer-surface");
             Assert.NotNull(surface);
             var surfaceDesiredBefore = surface!.DesiredSize;
+            var surfaceBoundsBefore = WindowBounds(surface, window);
 
             // Open via a real pointer click on the visible Aa control in the composer leaf.
             var aa = FindButton(view, "format-button");
@@ -106,6 +110,7 @@ public sealed class NativeComposerFloatingPortalTests
 
             // Out-of-flow: opening the toolbar must not inflate the composer surface desired size.
             Assert.Equal(surfaceDesiredBefore, surface.DesiredSize);
+            Assert.Equal(surfaceBoundsBefore, WindowBounds(surface, window));
 
             // Exclusion from the protected composer input/chips/actions/footer regions.
             Assert.False(toolbarWin.Intersects(WindowBounds(box, window)), "floating toolbar must not cover the composer input");

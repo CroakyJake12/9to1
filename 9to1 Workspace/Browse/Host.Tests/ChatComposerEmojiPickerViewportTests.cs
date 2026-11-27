@@ -674,7 +674,7 @@ public sealed class ChatComposerEmojiPickerViewportTests
             await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
             PumpLayout(window);
 
-            foreach (var id in new[] { "add-button", "settings-button", "permissions-button", "send-button" })
+            foreach (var id in new[] { "add-button", "settings-button", "send-button" })
             {
                 var button = FindButton(view, id);
                 Assert.NotNull(button);
@@ -834,8 +834,11 @@ public sealed class ChatComposerEmojiPickerViewportTests
                 Assert.True(placeholder.IsEffectivelyVisible);
                 Assert.Single(placeholder.TextLayout.TextLines);
                 AssertFullyWithin(originalInput, surface);
-                foreach (var id in new[] { "add-button", "settings-button", "permissions-button" })
+                foreach (var id in new[] { "add-button", "settings-button" })
                     AssertFullyWithin(Authored<Button>(id), surface);
+                Assert.DoesNotContain(view.GetVisualDescendants().OfType<Button>(),
+                    button => AutomationProperties.GetAutomationId(button) == "permissions-button");
+                Assert.True(view.Bindings.IsActionAvailable("composer.permissions"));
             }
 
             T Authored<T>(string id) where T : Control => Assert.IsAssignableFrom<T>(
