@@ -60,14 +60,14 @@ public sealed partial class AssistantOriginalMemoryTests
                     Assert.Equal(fictionalName, controller.Snapshot.SelectedAssistant.Configuration.Name);
                     Assert.Equal(identity, Assert.Single((await rig.Bridge.ListAsync(Token)).Definitions).Identity);
                     await FlushNativeMemoryUi(window);
-                    await CaptureActualCanonicalScene(window, "assistants-configuration", evidence, identity, null,
+                    await CaptureActualCanonicalScene(window, "assistants-configuration", "configuration-back", evidence, identity, null,
                         "Saved fictional identity in actual Home/Den state; actual current configuration. No model/tool grant.");
                     await ClickCanonicalCaptureControl(window, surface, "configuration-back", () =>
                         surface.Bindings.TryGetValue("ShowWork", out var shown) && shown is true);
                     await ClickCanonicalCaptureControl(window, surface, "work-home", () =>
                         surface.Bindings.TryGetValue("ShowHome", out var shown) && shown is true);
                     Assert.Contains(window.GetVisualDescendants().OfType<TextBlock>(), text => text.IsEffectivelyVisible && text.Text == fictionalName);
-                    await CaptureActualCanonicalScene(window, "assistants-home", evidence, identity, null,
+                    await CaptureActualCanonicalScene(window, "assistants-home", "assistants-refresh", evidence, identity, null,
                         "Actual native home projects the SAME persisted canonical Assistant; no fabricated backend result.");
                     var open = Assert.Single(window.GetVisualDescendants().OfType<Button>(), button =>
                         button.IsEffectivelyVisible && AutomationProperties.GetName(button) == "Open this Assistant");
@@ -79,7 +79,7 @@ public sealed partial class AssistantOriginalMemoryTests
                     var binding = controller.Snapshot.ConversationBinding!; conversationId = binding.Conversation.Id;
                     Assert.Equal(identity, binding.Definition.Identity); Assert.Same(binding, surface.CurrentConversationBinding);
                     Assert.Empty(controller.Snapshot.Conversation!.Messages);
-                    await CaptureActualCanonicalScene(window, "assistants-conversation", evidence, identity, conversationId,
+                    await CaptureActualCanonicalScene(window, "assistants-conversation", "assistant-workspace-toggle", evidence, identity, conversationId,
                         "Actual canonical empty Chat conversation; model provider is deliberately unavailable. No fabricated messages or success.");
                 });
                 // The SAME view/controller/management actions have all joined before this
@@ -92,7 +92,7 @@ public sealed partial class AssistantOriginalMemoryTests
                     Assert.Equal(identity, controller.Snapshot.ConversationBinding!.Definition.Identity);
                     Assert.Equal(conversationId, controller.Snapshot.ConversationBinding.Conversation.Id);
                     Assert.Empty(controller.Snapshot.Conversation!.Messages);
-                    await CaptureActualCanonicalScene(window, "assistants-conversation-reopened", evidence, identity, conversationId,
+                    await CaptureActualCanonicalScene(window, "assistants-conversation-reopened", "assistant-workspace-toggle", evidence, identity, conversationId,
                         "SAME actual persisted identity/conversation after source close and reopen; no new model or Task work.");
                 });
             }); // The SAME process Memory/WRITE/SQLite/Den/Home sources have independently joined.
@@ -115,7 +115,7 @@ public sealed partial class AssistantOriginalMemoryTests
         }
     }
 
-    private static async Task CaptureActualCanonicalScene(Window window, string name, List<object> evidence,
+    private static async Task CaptureActualCanonicalScene(Window window, string name, string normalActionId, List<object> evidence,
         AssistantIdentity? identity, Guid? conversationId, string observation)
     {
         var appearance = CakeOS.Cui.Themes.CuiThemeScopeApplier.DetectAppearance().ToString();
@@ -124,13 +124,13 @@ public sealed partial class AssistantOriginalMemoryTests
             window.Width = width; window.Height = height;
             await FlushNativeMemoryUi(window);
             await CaptureActualCanonicalFrame(window, name + "-" + appearance + "-" + width + "x" + height,
-                evidence, identity, conversationId, observation, width, height, appearance);
+                normalActionId, evidence, identity, conversationId, observation, width, height, appearance);
         }
         window.Width = 1320; window.Height = 960;
         await FlushNativeMemoryUi(window);
     }
 
-    private static async Task CaptureActualCanonicalFrame(Window window, string name, List<object> evidence,
+    private static async Task CaptureActualCanonicalFrame(Window window, string name, string normalActionId, List<object> evidence,
         AssistantIdentity? identity, Guid? conversationId, string observation, int expectedWidth, int expectedHeight, string appearance)
     {
         window.UpdateLayout();
@@ -172,8 +172,13 @@ public sealed partial class AssistantOriginalMemoryTests
         Assert.True(hasScopedText);
         var scopedText = Assert.IsAssignableFrom<ISolidColorBrush>(scopedTextResource).Color;
         Assert.Equal(scopedText, Assert.IsAssignableFrom<ISolidColorBrush>(heading.Foreground).Color);
-        var button = window.GetVisualDescendants().OfType<Button>().First(control =>
-            control.IsEffectivelyVisible && control.IsEnabled);
+        // Each scene supplies an authored ordinary action. Primary/accent actions
+        // and template buttons have different palettes and cannot witness this contract.
+        var button = Assert.Single(window.GetVisualDescendants().OfType<Button>(), control =>
+            CuiRuntimeIdentity.GetStableId(control) == "id:" + normalActionId ||
+            CuiRuntimeIdentity.GetStableId(control)?.EndsWith("/id:" + normalActionId, StringComparison.Ordinal) == true);
+        Assert.True(button.IsEffectivelyVisible, "The authored normal action must be visible in the captured scene.");
+        Assert.True(button.IsEnabled, "The authored normal action must be available in the captured scene.");
         var buttonHost = button.GetVisualAncestors().OfType<CuiSceneHost>().First();
         Assert.True(buttonHost.Resources.TryGetResource("CuiButtonForegroundBrush", buttonHost.ActualThemeVariant, out var buttonTextResource));
         Assert.Equal(Assert.IsAssignableFrom<ISolidColorBrush>(buttonTextResource).Color,
