@@ -183,6 +183,7 @@ public sealed partial class AssistantOriginalMemoryTests
                     "The actual transcript must receive a finite, positive part of the viewport.");
                 Assert.True(scroll.Extent.Height > scroll.Viewport.Height + 100,
                     "The regression requires actual saved history beyond the visible transcript.");
+                AssertOriginalNavigationLane(window, surface);
                 var pinnedFooter = OriginalViewportBounds(window, footer);
                 var pinnedInput = OriginalViewportBounds(window, input);
                 var transcriptBounds = OriginalViewportBounds(window, transcript);
@@ -249,6 +250,30 @@ public sealed partial class AssistantOriginalMemoryTests
             Assert.False(surface.HasUnsavedChanges);
         });
     });
+
+    private static void AssertOriginalNavigationLane(Window window, AssistantsNativeCuiSurface surface)
+    {
+        var layout = Assert.IsType<CuiContainerControl>(OriginalViewportControl(window, "assistant-work-layout"));
+        var grid = Assert.IsType<Grid>(layout.Layout);
+        var expected = layout.Bounds.Width > 750 ? 218d : 0d;
+        object? Field(object? owner, string name) => owner?.GetType().GetField(name,
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.GetValue(owner);
+        var keyboard = Field(surface, "_workspaceKeyboard");
+        var ownedLayout = Field(keyboard, "_layout") as Control;
+        var work = Field(keyboard, "_work") as ContentControl;
+        var stored = CuiPropertyPresentation.TryGetExisting(layout, out var properties)
+            ? properties!.Resolve("ColumnSizes") : null;
+        string Value(string name) => surface.Bindings.TryGetValue(name, out var value) ? value?.ToString() ?? "null" : "missing";
+        var detail = $"Initial native navigation lane: expected={expected}, actual={grid.ColumnDefinitions[0].ActualWidth}, " +
+            $"definition={grid.ColumnDefinitions[0].Width}, layout={layout.Bounds}, Name={layout.Name}, " +
+            $"ColumnSizes={stored?.Value}, level={stored?.Level}, source={stored?.Source}, " +
+            $"keyboard={keyboard?.GetType().Name ?? "null"}, sameLayout={ReferenceEquals(layout, ownedLayout)}, " +
+            $"ownedLayout={ownedLayout?.Name ?? "null"}/{ownedLayout?.Bounds}, workContent={work?.Content?.GetType().Name ?? "null"}, " +
+            $"ShowWork={Value("ShowWork")}, ShowNavigation={Value("ShowAssistantNavigation")}, " +
+            $"Workspace={Value("ShowAssistantWorkspace")}, identity={Value("WorkspaceAssistantIdentity")}.";
+        Assert.True(ReferenceEquals(layout, ownedLayout) && stored?.Level == CuiPropertyLevel.Overlay &&
+            grid.ColumnDefinitions[0].Width.Value == expected && grid.ColumnDefinitions[0].ActualWidth == expected, detail);
+    }
 
     private static Control OriginalViewportControl(Window window, string id) => Assert.Single(
         window.GetVisualDescendants().OfType<CuiContainerControl>(), value => value.IsEffectivelyVisible && HasComposerId(value, id));
