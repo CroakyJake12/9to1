@@ -179,8 +179,12 @@ public sealed class Markdown : Container
 
     private static Container BuildQuote(string content)
     {
-        var quote = Surface("SurfaceRaised", "Border", "0px 0px 0px 3px", "12px 8px", "0px 8px 8px 0px");
-        quote.Add(TextBlock(FlattenInline(content), 13, 500));
+        // BorderWidth is a single length. A raised body inset over the border-coloured
+        // surface preserves the quote's three-pixel left rule without a four-sided stroke.
+        var quote = Surface("Border", "Transparent", "0px", "0px 0px 0px 3px", "0px 8px 8px 0px");
+        var body = Surface("SurfaceRaised", "Transparent", "0px", "12px 8px", "0px 8px 8px 0px");
+        body.Add(TextBlock(FlattenInline(content), 13, 500));
+        quote.Add(body);
         return quote;
     }
 
